@@ -11,6 +11,7 @@ export interface QuestionCardProps {
   format: Format
   options?: string[]
   onNext: (answer: string) => void
+  centered?: boolean
 }
 
 export default function QuestionCard({
@@ -20,6 +21,7 @@ export default function QuestionCard({
   format,
   options = [],
   onNext,
+  centered = true,
 }: QuestionCardProps) {
   const [answer, setAnswer] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -49,8 +51,8 @@ export default function QuestionCard({
         {questionNumber} of {totalQuestions}
       </span>
 
-      {/* Question + input + button, vertically centered */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md">
+      {/* Question + input + button */}
+      <div className={`flex-1 flex flex-col items-center w-full max-w-md ${centered ? 'justify-center' : 'justify-start pt-8'}`}>
         <h2 className="font-serif text-[22px] font-medium leading-[1.45] text-charcoal text-center text-balance mb-14">
           {question}
         </h2>

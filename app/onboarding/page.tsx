@@ -84,7 +84,7 @@ export default function OnboardingPage() {
         {/* 5. CTA */}
         <div style={fade(1200)} className="flex flex-col items-center gap-3 pb-4">
           <Link
-            href="/question-demo"
+            href="/assessment"
             className="block w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90"
             style={{ fontFamily: 'var(--font-newsreader), serif' }}
           >
