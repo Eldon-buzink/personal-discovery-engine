@@ -70,9 +70,15 @@ export default function QuestionCard({
             ref={textareaRef}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && hasAnswer) {
+                e.preventDefault()
+                handleNext()
+              }
+            }}
             placeholder="Type your answer…"
             rows={1}
-            className="w-full resize-none bg-transparent outline-none font-sans text-[15px] text-charcoal placeholder:text-muted border-b border-line pb-2 leading-relaxed"
+            className="w-full resize-none overflow-hidden bg-transparent outline-none font-sans text-[15px] text-charcoal placeholder:text-muted border-b border-line pb-2 leading-relaxed"
           />
         )}
 

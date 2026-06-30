@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
+import AuthModal from '@/components/known/AuthModal'
 import QuestionCard from '@/components/known/QuestionCard'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -134,7 +135,15 @@ function TopBar({ answeredCount }: { answeredCount: number }) {
   )
 }
 
-function EndScreen({ answeredCount }: { answeredCount: number }) {
+function EndScreen({
+  answeredCount,
+  onKeepGoing,
+  onReport,
+}: {
+  answeredCount: number
+  onKeepGoing: () => void
+  onReport: () => void
+}) {
   const f = (delay: number, duration = 0.6): CSSProperties => ({
     animation: `fadeIn ${duration}s ease both`,
     animationDelay: `${delay}ms`,
@@ -167,6 +176,7 @@ function EndScreen({ answeredCount }: { answeredCount: number }) {
             width: 220,
             height: 220,
             overflow: 'visible',
+            transformOrigin: 'center center',
             animation: 'blobReveal 1.1s cubic-bezier(0.22,1,0.36,1) both',
             animationDelay: '400ms',
           }}
@@ -209,8 +219,8 @@ function EndScreen({ answeredCount }: { answeredCount: number }) {
         {/* 7. Two-button fork */}
         <div className="flex flex-col gap-3 w-full" style={f(1800)}>
           {/* Primary */}
-          <Link
-            href="/assessment"
+          <button
+            onClick={onKeepGoing}
             className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left"
             style={{ background: '#262420' }}
           >
@@ -220,11 +230,11 @@ function EndScreen({ answeredCount }: { answeredCount: number }) {
             <span className="font-sans text-[12px] mt-1" style={{ color: 'rgba(247,244,237,0.6)' }}>
               A few more questions sharpen what else is there
             </span>
-          </Link>
+          </button>
 
           {/* Secondary */}
-          <Link
-            href="/question-demo"
+          <button
+            onClick={onReport}
             className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left border border-line"
             style={{ background: '#ffffff' }}
           >
@@ -234,7 +244,7 @@ function EndScreen({ answeredCount }: { answeredCount: number }) {
             <span className="font-sans text-[12px] text-muted mt-1">
               Go to your report now — you can always come back to this
             </span>
-          </Link>
+          </button>
         </div>
 
       </div>
@@ -248,6 +258,8 @@ export default function AssessmentPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answeredCount, setAnsweredCount] = useState(0)
   const [isDone, setIsDone] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalContext, setModalContext] = useState<'keep-going' | 'report'>('keep-going')
 
   // Resume from last unanswered question on mount
   useEffect(() => {
@@ -276,6 +288,11 @@ export default function AssessmentPage() {
     }
   }
 
+  function openModal(context: 'keep-going' | 'report') {
+    setModalContext(context)
+    setModalOpen(true)
+  }
+
   const question = QUESTIONS[currentIndex]
 
   return (
@@ -285,7 +302,11 @@ export default function AssessmentPage() {
       {/* pt-14 clears the fixed top bar */}
       <div className="pt-14">
         {isDone ? (
-          <EndScreen answeredCount={answeredCount} />
+          <EndScreen
+            answeredCount={answeredCount}
+            onKeepGoing={() => openModal('keep-going')}
+            onReport={() => openModal('report')}
+          />
         ) : (
           <QuestionCard
             key={currentIndex}
@@ -299,6 +320,14 @@ export default function AssessmentPage() {
           />
         )}
       </div>
+
+      <AuthModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        questionCount={answeredCount}
+        context={modalContext}
+        onSuccess={() => {}}
+      />
     </>
   )
 }
