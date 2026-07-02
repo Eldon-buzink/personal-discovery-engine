@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('[callback] exchangeCodeForSession error:', error.message)
+    } else {
+      console.log('[callback] session created for user:', data.user?.id)
+    }
+  } else {
+    console.warn('[callback] no code param in URL')
   }
 
   return response

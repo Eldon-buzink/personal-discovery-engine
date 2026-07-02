@@ -53,12 +53,14 @@ export default function AuthModal({
       const supabase = createClient()
 
       const raw = localStorage.getItem('known_session')
-      const session = raw ? (JSON.parse(raw) as { responses: unknown[] }) : { responses: [] }
+      // Store the full session object (responses + questionOrder + patternShown)
+      // The responses jsonb column holds the entire session so it can be restored later
+      const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
 
-      console.log('[AuthModal] inserting session to anonymous_sessions, responses:', session.responses.length)
+      console.log('[AuthModal] inserting session to anonymous_sessions, responses:', session.responses?.length ?? 0)
       const { data, error } = await supabase
         .from('anonymous_sessions')
-        .insert({ responses: session.responses })
+        .insert({ responses: session })
         .select('id')
         .single()
 

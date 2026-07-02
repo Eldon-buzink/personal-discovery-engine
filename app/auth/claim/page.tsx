@@ -13,17 +13,33 @@ export default function ClaimPage() {
 
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.error('[claim] getUser error:', userError.message)
+      } else {
+        console.log('[claim] user:', user?.id ?? 'null (not authenticated)')
+      }
 
       if (user) {
         const sessionId = localStorage.getItem('known_pending_session_id')
+        console.log('[claim] pending session id:', sessionId)
+
         if (sessionId) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('anonymous_sessions')
             .update({ claimed_by: user.id })
             .eq('id', sessionId)
 
-          localStorage.removeItem('known_pending_session_id')
+          if (updateError) {
+            console.error('[claim] update error:', updateError.message)
+          } else {
+            console.log('[claim] claimed_by set to', user.id)
+            localStorage.removeItem('known_pending_session_id')
+          }
+        } else {
+          console.warn('[claim] no known_pending_session_id in localStorage')
         }
       }
 

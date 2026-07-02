@@ -1,122 +1,96 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
+import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
+import { createClient } from '@/lib/supabase/client'
+import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
+import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
+import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import type { CompletedFacetRecord, PatternContent } from '@/lib/known/types'
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Session types ─────────────────────────────────────────────────────────────
 
 interface SessionResponse {
   questionId: number
-  value: string
+  value: number
+  answeredAt: string
+}
+
+interface PatternRecord {
+  facet: string
+  traitWord: string
   answeredAt: string
 }
 
 interface KnownSession {
+  questionOrder: number[]
   responses: SessionResponse[]
+  patternShown?: PatternRecord
+  revealedFacets?: string[]  // all facets that have fired a reveal (first + subsequent)
 }
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'known_session'
+const TOTAL = 120
 
 function loadSession(): KnownSession {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { responses: [] }
-    return JSON.parse(raw) as KnownSession
+    if (!raw) return { questionOrder: [], responses: [] }
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed) || typeof parsed !== 'object' || parsed === null) {
+      return { questionOrder: [], responses: [] }
+    }
+    return {
+      questionOrder: Array.isArray(parsed.questionOrder) ? parsed.questionOrder : [],
+      responses: Array.isArray(parsed.responses) ? parsed.responses : [],
+      patternShown: parsed.patternShown ?? undefined,
+      revealedFacets: Array.isArray(parsed.revealedFacets) ? parsed.revealedFacets : undefined,
+    }
   } catch {
-    return { responses: [] }
+    return { questionOrder: [], responses: [] }
   }
 }
 
-function saveResponse(questionId: number, value: string): KnownSession {
-  const session = loadSession()
-  const responses = session.responses.filter((r) => r.questionId !== questionId)
-  responses.push({ questionId, value, answeredAt: new Date().toISOString() })
-  const updated: KnownSession = { responses }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-  return updated
+function saveSession(session: KnownSession): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
 }
 
-// ── Questions ────────────────────────────────────────────────────────────────
+function shuffle(ids: number[]): number[] {
+  const a = [...ids]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
-const QUESTIONS = [
-  {
-    id: 1,
-    question: 'I feel energized after spending time with large groups of people.',
-    format: 'dot-scale' as const,
-  },
-  {
-    id: 2,
-    question: 'When making an important decision, what do you rely on most?',
-    format: 'custom-options' as const,
-    options: ['My gut feeling', 'Careful research', 'Advice from others', 'Past experience'],
-  },
-  {
-    id: 3,
-    question: 'I prefer having a clear plan rather than seeing where things go.',
-    format: 'dot-scale' as const,
-  },
-  {
-    id: 4,
-    question: 'Describe a moment when you felt completely in your element.',
-    format: 'free-text' as const,
-  },
-  {
-    id: 5,
-    question: 'I find it easy to adapt when plans change unexpectedly.',
-    format: 'dot-scale' as const,
-  },
-  {
-    id: 6,
-    question: 'In a group project, which role do you naturally take on?',
-    format: 'custom-options' as const,
-    options: [
-      'The organizer',
-      'The idea generator',
-      'The one who gets things done',
-      'The mediator',
-    ],
-  },
-  {
-    id: 7,
-    question: 'I tend to think carefully before speaking in group discussions.',
-    format: 'dot-scale' as const,
-  },
-  {
-    id: 8,
-    question: 'What drains your energy most?',
-    format: 'custom-options' as const,
-    options: [
-      'Too much social interaction',
-      'Lack of structure',
-      'Repetitive tasks',
-      'Conflict with others',
-    ],
-  },
-  {
-    id: 9,
-    question: 'I often notice details that other people miss.',
-    format: 'dot-scale' as const,
-  },
-  {
-    id: 10,
-    question: 'Describe how you typically feel at the end of a very busy day.',
-    format: 'free-text' as const,
-  },
-] as const
+function findFirstUnanswered(
+  questionOrder: number[],
+  answeredSet: Set<number>,
+  fromIndex = 0
+): number {
+  for (let i = fromIndex; i < questionOrder.length; i++) {
+    if (!answeredSet.has(questionOrder[i])) return i
+  }
+  return questionOrder.length
+}
 
-const TOTAL = QUESTIONS.length
+function scoreDirection(score: number): 'high' | 'mid' | 'low' {
+  return score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low'
+}
 
-// ── Sub-components ───────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function TopBar({ answeredCount }: { answeredCount: number }) {
   const progress = (answeredCount / TOTAL) * 100
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-cream border-b border-line flex items-center justify-between px-6">
       <Link href="/onboarding" className="font-sans text-sm text-muted">
@@ -135,12 +109,62 @@ function TopBar({ answeredCount }: { answeredCount: number }) {
   )
 }
 
-function EndScreen({
-  answeredCount,
+function TagPill({ label }: { label: string }) {
+  return (
+    <span
+      className="font-sans text-[11px] text-charcoal-soft"
+      style={{
+        border: '1px solid #C5C1B8',
+        borderRadius: 20,
+        padding: '4px 12px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </span>
+  )
+}
+
+function ContentCard({
+  eyebrow,
+  body,
+  delay,
+}: {
+  eyebrow: string
+  body: string
+  delay: number
+}) {
+  return (
+    <div
+      className="w-full"
+      style={{
+        background: '#ffffff',
+        border: '1px solid #E5E1D5',
+        borderRadius: 12,
+        padding: 16,
+        animation: `fadeIn 0.6s ease both`,
+        animationDelay: `${delay}ms`,
+      }}
+    >
+      <p
+        className="font-sans font-semibold uppercase text-muted"
+        style={{ fontSize: 10, letterSpacing: '0.08em', marginBottom: 8 }}
+      >
+        {eyebrow}
+      </p>
+      <p className="font-sans text-[13.5px] text-charcoal-soft leading-[1.55]">{body}</p>
+    </div>
+  )
+}
+
+function PatternDetectedScreen({
+  record,
+  isFirst,
   onKeepGoing,
   onReport,
 }: {
-  answeredCount: number
+  record: CompletedFacetRecord
+  isFirst: boolean
   onKeepGoing: () => void
   onReport: () => void
 }) {
@@ -149,11 +173,13 @@ function EndScreen({
     animationDelay: `${delay}ms`,
   })
 
+  const { traitWord, answeredCount, content } = record
+  const isLoading = content === null
+
   return (
     <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 py-12">
       <div className="flex flex-col items-center w-full max-w-[380px]">
 
-        {/* 1. Response count */}
         <p
           className="font-sans text-[12px] text-muted mb-2"
           style={{ ...f(0), letterSpacing: '0.04em' }}
@@ -161,15 +187,14 @@ function EndScreen({
           {answeredCount} responses · pattern identified
         </p>
 
-        {/* 2. Eyebrow */}
         <p
           className="font-sans text-[12px] uppercase font-semibold text-muted"
           style={{ ...f(200), letterSpacing: '0.08em', marginBottom: 24 }}
         >
-          Your first pattern
+          {isFirst ? 'Your first pattern' : 'Another pattern'}
         </p>
 
-        {/* 3. Blob + 4. Pulsing ring */}
+        {/* Blob */}
         <div
           style={{
             position: 'relative',
@@ -182,8 +207,9 @@ function EndScreen({
           }}
         >
           <AnimatedBlob
-            seed="u_played-2826-deliberate-autonomous"
-            word="Deliberate"
+            seed={`ring1-pattern-${traitWord.toLowerCase()}`}
+            hueOffset={record.hueOffset}
+            word={traitWord}
             size={220}
           />
           <div
@@ -199,132 +225,423 @@ function EndScreen({
           />
         </div>
 
-        {/* 5. Trait quote */}
-        <p
-          className="font-serif italic text-[18px] leading-[1.55] text-charcoal-soft text-center mt-8"
-          style={f(1300)}
-        >
-          You don&apos;t rush toward conclusions. Your responses showed a pattern
-          of holding space before committing.
-        </p>
+        {/* Loading vs loaded content — min-height reserves space so blob doesn't jump */}
+        <div style={{ width: '100%', minHeight: 420 }}>
+          {isLoading ? (
+            <p
+              className="font-sans text-[12px] text-muted text-center mt-6"
+              style={{ opacity: 0.65 }}
+            >
+              reading your responses…
+            </p>
+          ) : (
+            <>
+              {/* Quote */}
+              <p
+                className="font-serif italic text-[18px] leading-[1.55] text-charcoal-soft text-center mt-8"
+                style={f(0)}
+              >
+                {content!.trait_quote}
+              </p>
 
-        {/* 6. Sub-line */}
-        <p
-          className="font-sans text-[13px] text-muted text-center mt-3"
-          style={{ ...f(1500), marginBottom: 36 }}
-        >
-          This is the strongest signal so far — there&apos;s more underneath it.
-        </p>
+              {/* Tags */}
+              <div
+                className="flex flex-wrap justify-center gap-2 mt-4"
+                style={{ ...f(150), marginBottom: 4 }}
+              >
+                {content!.tags.map((tag) => (
+                  <TagPill key={tag} label={tag} />
+                ))}
+              </div>
 
-        {/* 7. Two-button fork */}
-        <div className="flex flex-col gap-3 w-full" style={f(1800)}>
-          {/* Primary */}
-          <button
-            onClick={onKeepGoing}
-            className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left"
-            style={{ background: '#262420' }}
-          >
-            <span className="font-sans text-[15px] font-medium text-cream">
-              Keep going
-            </span>
-            <span className="font-sans text-[12px] mt-1" style={{ color: 'rgba(247,244,237,0.6)' }}>
-              A few more questions sharpen what else is there
-            </span>
-          </button>
-
-          {/* Secondary */}
-          <button
-            onClick={onReport}
-            className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left border border-line"
-            style={{ background: '#ffffff' }}
-          >
-            <span className="font-sans text-[15px] font-medium text-charcoal">
-              See what we found
-            </span>
-            <span className="font-sans text-[12px] text-muted mt-1">
-              Go to your report now — you can always come back to this
-            </span>
-          </button>
+              {/* Cards */}
+              <div className="flex flex-col gap-3 w-full mt-6">
+                <ContentCard eyebrow="Go deeper" body={content!.go_deeper} delay={300} />
+                <ContentCard eyebrow="Worth trying" body={content!.worth_trying} delay={450} />
+              </div>
+            </>
+          )}
         </div>
 
+        {/* Action buttons — shown once content is ready */}
+        {!isLoading && (
+          <div className="flex flex-col gap-3 w-full mt-6" style={f(1900)}>
+            <button
+              onClick={onKeepGoing}
+              className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left"
+              style={{ background: '#262420' }}
+            >
+              <span className="font-sans text-[15px] font-medium text-cream">
+                Keep going
+              </span>
+              <span className="font-sans text-[12px] mt-1" style={{ color: 'rgba(247,244,237,0.6)' }}>
+                A few more questions sharpen what else is there
+              </span>
+            </button>
+
+            <button
+              onClick={onReport}
+              className="w-full rounded-[10px] py-4 px-5 flex flex-col text-left border border-line"
+              style={{ background: '#ffffff' }}
+            >
+              <span className="font-sans text-[15px] font-medium text-charcoal">
+                See what we found
+              </span>
+              <span className="font-sans text-[12px] text-muted mt-1">
+                Go to your report now — you can always come back
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+function PatternOverlay({
+  record,
+  onClose,
+  onReport,
+}: {
+  record: CompletedFacetRecord
+  onClose: () => void
+  onReport: () => void
+}) {
+  return (
+    <div
+      className="fixed inset-0 bg-cream overflow-y-auto"
+      style={{ zIndex: 4500 }}
+    >
+      <button
+        onClick={onClose}
+        className="fixed top-4 left-4 font-sans text-sm text-muted z-[4600]"
+        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        ← Back
+      </button>
+      <div className="pt-10">
+        <PatternDetectedScreen
+          record={record}
+          isFirst={false}
+          onKeepGoing={onClose}
+          onReport={onReport}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AssessmentPage() {
+  const router = useRouter()
+
+  const [questionOrder, setQuestionOrder] = useState<number[]>([])
+  const [answeredMap, setAnsweredMap] = useState<Map<number, number>>(new Map())
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answeredCount, setAnsweredCount] = useState(0)
-  const [isDone, setIsDone] = useState(false)
+
+  // First-pattern full-screen reveal
+  const [viewingPattern, setViewingPattern] = useState(false)
+
+  // All completed facets (first + subsequent), in reveal order
+  const [completedFacets, setCompletedFacets] = useState<CompletedFacetRecord[]>([])
+
+  // Toast queue for subsequent patterns
+  const [activeToast, setActiveToast] = useState<CompletedFacetRecord | null>(null)
+  const [toastQueue, setToastQueue] = useState<CompletedFacetRecord[]>([])
+
+  // Overlay when user taps "See it →" on a toast
+  const [overlayFacet, setOverlayFacet] = useState<string | null>(null)
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContext, setModalContext] = useState<'keep-going' | 'report'>('keep-going')
 
-  // Resume from last unanswered question on mount
+  // Auth check
   useEffect(() => {
-    const session = loadSession()
-    const answeredIds = new Set(session.responses.map((r) => r.questionId))
-    const count = answeredIds.size
-    setAnsweredCount(count)
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setIsAuthenticated(!!user))
+  }, [])
 
-    if (count >= TOTAL) {
-      setIsDone(true)
+  // Dequeue next toast when active slot clears
+  useEffect(() => {
+    if (activeToast === null && toastQueue.length > 0) {
+      const [next, ...rest] = toastQueue
+      setActiveToast(next)
+      setToastQueue(rest)
+    }
+  }, [activeToast, toastQueue])
+
+  // Restore or initialise session
+  useEffect(() => {
+    const stored = loadSession()
+
+    // If stored order isn't the full 120-item list the session is from a previous
+    // version. Start completely fresh — preserving a stale patternShown would
+    // permanently block pattern detection.
+    let session: KnownSession
+    if (stored.questionOrder.length === TOTAL) {
+      session = stored
     } else {
-      const firstUnanswered = QUESTIONS.findIndex((q) => !answeredIds.has(q.id))
-      setCurrentIndex(firstUnanswered === -1 ? 0 : firstUnanswered)
+      session = { questionOrder: shuffle(RING1_QUESTIONS.map((q) => q.id)), responses: [] }
+      saveSession(session)
+    }
+
+    const map = new Map<number, number>()
+    for (const r of session.responses) {
+      map.set(r.questionId, r.value)
+    }
+
+    const answeredSet = new Set(map.keys())
+    const firstUnanswered = findFirstUnanswered(session.questionOrder, answeredSet)
+
+    setQuestionOrder(session.questionOrder)
+    setAnsweredMap(map)
+    setCurrentIndex(firstUnanswered)
+
+    // Rebuild completedFacets from session. revealedFacets tracks all reveals;
+    // fall back to patternShown for sessions saved before revealedFacets existed.
+    let facetNames: string[] = session.revealedFacets ?? []
+    if (facetNames.length === 0 && session.patternShown) {
+      facetNames = [session.patternShown.facet]
+    }
+
+    if (facetNames.length > 0) {
+      const restored: CompletedFacetRecord[] = facetNames.map((facet, idx) => {
+        const score = computeFacetScore(facet, map) ?? 3.0
+        const word = session.patternShown?.facet === facet
+          ? session.patternShown.traitWord
+          : getTraitWord(facet, score)
+        const dir = scoreDirection(score)
+        return { facet, traitWord: word, scoreDirection: dir, hueOffset: idx, answeredCount: map.size, content: null }
+      })
+      setCompletedFacets(restored)
     }
   }, [])
 
-  function handleNext(value: string) {
-    const question = QUESTIONS[currentIndex]
-    const updated = saveResponse(question.id, value)
-    setAnsweredCount(updated.responses.length)
+  // ── Pattern trigger helper ─────────────────────────────────────────────────
 
-    if (currentIndex >= TOTAL - 1) {
-      setIsDone(true)
+  function triggerReveal(
+    facet: string,
+    traitWord: string,
+    dir: 'high' | 'mid' | 'low',
+    answeredCount: number,
+    session: KnownSession,
+    newRevealedFacets: string[]
+  ) {
+    const hueOffset = newRevealedFacets.length - 1
+    const record: CompletedFacetRecord = {
+      facet, traitWord, scoreDirection: dir, hueOffset, answeredCount, content: null,
+    }
+
+    const isFirst = !session.patternShown
+
+    setCompletedFacets((prev) => {
+      if (prev.some((r) => r.facet === facet)) return prev
+      return [...prev, record]
+    })
+
+    if (isFirst) {
+      const patternRecord: PatternRecord = { facet, traitWord, answeredAt: new Date().toISOString() }
+      saveSession({ ...session, patternShown: patternRecord, revealedFacets: newRevealedFacets })
+      setViewingPattern(true)
     } else {
-      setCurrentIndex(currentIndex + 1)
+      saveSession({ ...session, revealedFacets: newRevealedFacets })
+      setToastQueue((prev) => [...prev, record])
+    }
+
+    // Generate AI copy — updates completedFacets, active toast, and queue when ready
+    const assessmentId = localStorage.getItem('known_pending_session_id')
+    generatePatternCopy(facet, traitWord, dir, assessmentId)
+      .then((content: PatternContent) => {
+        setCompletedFacets((prev) =>
+          prev.map((r) => (r.facet === facet ? { ...r, content } : r))
+        )
+        setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
+        setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
+      })
+      .catch(() => {})
+  }
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  function handleNext(value: string) {
+    const numValue = parseInt(value, 10)
+    const questionId = questionOrder[currentIndex]
+    if (!questionId) return
+
+    const session = loadSession()
+    const responses = session.responses.filter((r) => r.questionId !== questionId)
+    responses.push({ questionId, value: numValue, answeredAt: new Date().toISOString() })
+    const updatedSession: KnownSession = { ...session, responses }
+    saveSession(updatedSession)
+
+    const newMap = new Map(answeredMap)
+    newMap.set(questionId, numValue)
+    setAnsweredMap(newMap)
+
+    const item = QUESTION_BY_ID.get(questionId)
+    if (process.env.NODE_ENV === 'development' && item) {
+      const facetItems = FACET_QUESTIONS.get(item.facet) ?? []
+      console.log(
+        '[pattern check] qId:', questionId,
+        '| facet:', item.facet,
+        '| facet IDs:', facetItems.map((q) => q.id),
+        '| answered:', facetItems.filter((q) => newMap.has(q.id)).map((q) => q.id),
+      )
+    }
+
+    if (item) {
+      const facetItems = FACET_QUESTIONS.get(item.facet) ?? []
+      const allAnswered = facetItems.every((q) => newMap.has(q.id))
+      const alreadyRevealed = (updatedSession.revealedFacets ?? []).includes(item.facet)
+
+      if (allAnswered && !alreadyRevealed) {
+        const score = computeFacetScore(item.facet, newMap)!
+        const traitWord = getTraitWord(item.facet, score)
+        const dir = scoreDirection(score)
+        const newRevealedFacets = [...(updatedSession.revealedFacets ?? []), item.facet]
+        triggerReveal(item.facet, traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
+      }
+    }
+
+    const newAnsweredSet = new Set(newMap.keys())
+    const next = findFirstUnanswered(questionOrder, newAnsweredSet, currentIndex + 1)
+    setCurrentIndex(next)
+  }
+
+  function handleKeepGoing() {
+    setViewingPattern(false)
+  }
+
+  function handleReport() {
+    if (isAuthenticated) {
+      router.push('/assessment')
+    } else {
+      setModalContext('report')
+      setModalOpen(true)
     }
   }
 
-  function openModal(context: 'keep-going' | 'report') {
-    setModalContext(context)
-    setModalOpen(true)
+  // Dev shortcut: pre-fill C6 Cautiousness items to reliably produce "Deliberate"
+  function handleDevSkip() {
+    console.log('[handleDevSkip] called')
+    const session = loadSession()
+    console.log('[handleDevSkip] patternShown:', session.patternShown ?? 'none')
+
+    // values chosen so avg after reverse-scoring = 3.0 → Mid → "Deliberate"
+    // items 117,118,119 are + keyed | item 120 is - keyed: reverse(4) = 2
+    const devAnswers: Array<[number, number]> = [
+      [117, 3], [118, 4], [119, 3], [120, 4],
+    ]
+
+    // Build a clean session with no prior pattern state so we can re-trigger cleanly
+    let responses = [...session.responses]
+    const sessionBase: KnownSession = { questionOrder: session.questionOrder, responses }
+    const newMap = new Map(answeredMap)
+    for (const [qId, val] of devAnswers) {
+      responses = responses.filter((r) => r.questionId !== qId)
+      responses.push({ questionId: qId, value: val, answeredAt: new Date().toISOString() })
+      newMap.set(qId, val)
+    }
+
+    const freshSession: KnownSession = { ...sessionBase, responses }
+    const score = computeFacetScore('Cautiousness', newMap)!
+    const traitWord = getTraitWord('Cautiousness', score)
+    const dir = scoreDirection(score)
+
+    setAnsweredMap(newMap)
+    setCompletedFacets([])
+    setViewingPattern(false)
+
+    const newAnsweredSet = new Set(newMap.keys())
+    setCurrentIndex(findFirstUnanswered(questionOrder, newAnsweredSet, 0))
+
+    triggerReveal('Cautiousness', traitWord, dir, newMap.size, freshSession, ['Cautiousness'])
   }
 
-  const question = QUESTIONS[currentIndex]
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const currentQuestionId = questionOrder[currentIndex]
+  const currentQuestion = currentQuestionId ? QUESTION_BY_ID.get(currentQuestionId) : undefined
+  const allDone = currentIndex >= TOTAL
+  const firstPattern = completedFacets[0] ?? null
+
+  // Overlay record (live — updates when AI content arrives)
+  const overlayRecord = overlayFacet
+    ? completedFacets.find((r) => r.facet === overlayFacet) ?? null
+    : null
 
   return (
     <>
-      <TopBar answeredCount={answeredCount} />
+      <TopBar answeredCount={answeredMap.size} />
 
-      {/* pt-14 clears the fixed top bar */}
       <div className="pt-14">
-        {isDone ? (
-          <EndScreen
-            answeredCount={answeredCount}
-            onKeepGoing={() => openModal('keep-going')}
-            onReport={() => openModal('report')}
+        {viewingPattern && firstPattern ? (
+          <PatternDetectedScreen
+            record={firstPattern}
+            isFirst={true}
+            onKeepGoing={handleKeepGoing}
+            onReport={handleReport}
           />
-        ) : (
+        ) : allDone ? (
+          <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 gap-6">
+            <p className="font-serif text-[22px] text-charcoal text-center leading-[1.45]">
+              That&apos;s everything.
+            </p>
+            <p className="font-sans text-[13px] text-muted text-center">
+              You&apos;ve answered all 120 questions.
+            </p>
+          </div>
+        ) : currentQuestion ? (
           <QuestionCard
             key={currentIndex}
             questionNumber={currentIndex + 1}
             totalQuestions={TOTAL}
-            question={question.question}
-            format={question.format}
-            options={'options' in question ? [...question.options] : undefined}
+            question={currentQuestion.text}
+            format="dot-scale"
             onNext={handleNext}
             centered={false}
+            scaleLabels={['Very Inaccurate', 'Very Accurate']}
           />
-        )}
+        ) : null}
       </div>
+
+      {/* Subsequent-pattern toast */}
+      {activeToast && (
+        <PatternToast
+          record={activeToast}
+          onDismiss={() => setActiveToast(null)}
+          onSeeIt={() => {
+            setOverlayFacet(activeToast.facet)
+            setActiveToast(null)
+          }}
+        />
+      )}
+
+      {/* Full-screen overlay when user taps "See it" on a toast */}
+      {overlayRecord && (
+        <PatternOverlay
+          record={overlayRecord}
+          onClose={() => setOverlayFacet(null)}
+          onReport={handleReport}
+        />
+      )}
+
+      {process.env.NODE_ENV === 'development' && !viewingPattern && !allDone && (
+        <button
+          onClick={handleDevSkip}
+          className="fixed bottom-4 right-4 font-sans text-[11px] text-muted/60 hover:text-muted underline"
+        >
+          Dev: skip to pattern
+        </button>
+      )}
 
       <AuthModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        questionCount={answeredCount}
+        questionCount={answeredMap.size}
         context={modalContext}
         onSuccess={() => {}}
       />

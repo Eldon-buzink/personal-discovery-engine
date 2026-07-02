@@ -12,6 +12,7 @@ export interface QuestionCardProps {
   options?: string[]
   onNext: (answer: string) => void
   centered?: boolean
+  scaleLabels?: [string, string]
 }
 
 export default function QuestionCard({
@@ -22,6 +23,7 @@ export default function QuestionCard({
   options = [],
   onNext,
   centered = true,
+  scaleLabels = ['Strongly disagree', 'Strongly agree'],
 }: QuestionCardProps) {
   const [answer, setAnswer] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -58,7 +60,7 @@ export default function QuestionCard({
         </h2>
 
         {format === 'dot-scale' && (
-          <DotScale value={answer} onChange={setAnswer} />
+          <DotScale value={answer} onChange={setAnswer} labels={scaleLabels} />
         )}
 
         {format === 'custom-options' && (
@@ -101,9 +103,11 @@ export default function QuestionCard({
 function DotScale({
   value,
   onChange,
+  labels,
 }: {
   value: string
   onChange: (v: string) => void
+  labels: [string, string]
 }) {
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -129,8 +133,8 @@ function DotScale({
 
       {/* Labels */}
       <div className="flex justify-between w-full">
-        <span className="font-sans text-[11px] text-muted">Strongly disagree</span>
-        <span className="font-sans text-[11px] text-muted">Strongly agree</span>
+        <span className="font-sans text-[11px] text-muted">{labels[0]}</span>
+        <span className="font-sans text-[11px] text-muted">{labels[1]}</span>
       </div>
     </div>
   )
