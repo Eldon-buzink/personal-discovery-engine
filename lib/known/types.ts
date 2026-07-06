@@ -6,6 +6,13 @@ export interface PatternContent {
   worth_trying: string
 }
 
+export interface PatternContentEntry {
+  facet: string
+  traitWord: string
+  scoreDirection: 'high' | 'mid' | 'low'
+  content: PatternContent
+}
+
 export interface CompletedFacetRecord {
   facet: string
   traitWord: string

@@ -8,11 +8,10 @@ import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
 import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
-import { createClient } from '@/lib/supabase/client'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
-import type { CompletedFacetRecord, PatternContent } from '@/lib/known/types'
+import type { CompletedFacetRecord, PatternContent, PatternContentEntry } from '@/lib/known/types'
 
 // ── Session types ─────────────────────────────────────────────────────────────
 
@@ -32,7 +31,8 @@ interface KnownSession {
   questionOrder: number[]
   responses: SessionResponse[]
   patternShown?: PatternRecord
-  revealedFacets?: string[]  // all facets that have fired a reveal (first + subsequent)
+  revealedFacets?: string[]
+  patternContents?: PatternContentEntry[]
 }
 
 // ── Session helpers ───────────────────────────────────────────────────────────
@@ -53,6 +53,16 @@ function loadSession(): KnownSession {
       responses: Array.isArray(parsed.responses) ? parsed.responses : [],
       patternShown: parsed.patternShown ?? undefined,
       revealedFacets: Array.isArray(parsed.revealedFacets) ? parsed.revealedFacets : undefined,
+      patternContents: Array.isArray(parsed.patternContents)
+        ? parsed.patternContents as PatternContentEntry[]
+        : typeof parsed.patternContents === 'object' && parsed.patternContents !== null
+          ? Object.entries(parsed.patternContents as Record<string, PatternContent>).map(([facet, content]) => ({
+              facet,
+              traitWord: parsed.patternShown?.facet === facet ? (parsed.patternShown as PatternRecord).traitWord : '',
+              scoreDirection: 'mid' as const,
+              content,
+            }))
+          : undefined,
     }
   } catch {
     return { questionOrder: [], responses: [] }
@@ -353,16 +363,7 @@ export default function AssessmentPage() {
   // Overlay when user taps "See it →" on a toast
   const [overlayFacet, setOverlayFacet] = useState<string | null>(null)
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalContext, setModalContext] = useState<'keep-going' | 'report'>('keep-going')
-
-  // Auth check
-  useEffect(() => {
-    createClient()
-      .auth.getUser()
-      .then(({ data: { user } }) => setIsAuthenticated(!!user))
-  }, [])
 
   // Dequeue next toast when active slot clears
   useEffect(() => {
@@ -451,7 +452,7 @@ export default function AssessmentPage() {
       setToastQueue((prev) => [...prev, record])
     }
 
-    // Generate AI copy — updates completedFacets, active toast, and queue when ready
+    // Generate AI copy — updates React state and persists to localStorage for report page
     const assessmentId = localStorage.getItem('known_pending_session_id')
     generatePatternCopy(facet, traitWord, dir, assessmentId)
       .then((content: PatternContent) => {
@@ -460,6 +461,11 @@ export default function AssessmentPage() {
         )
         setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
         setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
+        // Persist so /report can read it without a Supabase fetch
+        const s = loadSession()
+        const existing = s.patternContents ?? []
+        const newEntry: PatternContentEntry = { facet, traitWord, scoreDirection: dir, content }
+        saveSession({ ...s, patternContents: [...existing.filter(e => e.facet !== facet), newEntry] })
       })
       .catch(() => {})
   }
@@ -516,12 +522,7 @@ export default function AssessmentPage() {
   }
 
   function handleReport() {
-    if (isAuthenticated) {
-      router.push('/assessment')
-    } else {
-      setModalContext('report')
-      setModalOpen(true)
-    }
+    router.push('/report')
   }
 
   // Dev shortcut: pre-fill C6 Cautiousness items to reliably produce "Deliberate"
@@ -642,7 +643,7 @@ export default function AssessmentPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         questionCount={answeredMap.size}
-        context={modalContext}
+        context="keep-going"
         onSuccess={() => {}}
       />
     </>
