@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
-import { createClient } from '@/lib/supabase/client'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
 
@@ -116,37 +115,37 @@ function getBlobLayout(count: number): { height: number; positions: BlobPos[] } 
     positions: [{ size: 150, left: 105, top: 15 }],
   }
   if (count === 2) return {
-    height: 220,
+    height: 230,
     positions: [
-      { size: 135, left: 25,  top: 43 },
-      { size: 135, left: 200, top: 43 },
+      { size: 150, left: 30,  top: 35 },
+      { size: 120, left: 195, top: 50 },
     ],
   }
   if (count === 3) return {
-    height: 220,
+    height: 240,
     positions: [
-      { size: 130, left: 115, top: 5  },
-      { size: 125, left: 10,  top: 80 },
-      { size: 125, left: 225, top: 80 },
+      { size: 150, left: 105, top: 0  },
+      { size: 120, left: 5,   top: 95 },
+      { size: 120, left: 230, top: 95 },
     ],
   }
   if (count === 4) return {
-    height: 260,
+    height: 270,
     positions: [
-      { size: 120, left: 20,  top: 20  },
-      { size: 120, left: 220, top: 20  },
-      { size: 120, left: 20,  top: 140 },
-      { size: 120, left: 220, top: 140 },
+      { size: 150, left: 15,  top: 15  },
+      { size: 120, left: 200, top: 25  },
+      { size: 120, left: 20,  top: 145 },
+      { size: 120, left: 225, top: 145 },
     ],
   }
   return {
-    height: 260,
+    height: 270,
     positions: [
-      { size: 150, left: 105, top: 55  },
+      { size: 150, left: 105, top: 60  },
       { size: 120, left: 10,  top: 10  },
-      { size: 120, left: 230, top: 10  },
-      { size: 120, left: 10,  top: 130 },
-      { size: 120, left: 230, top: 130 },
+      { size: 120, left: 235, top: 10  },
+      { size: 120, left: 10,  top: 140 },
+      { size: 120, left: 235, top: 140 },
     ],
   }
 }
@@ -170,6 +169,55 @@ function BlobCluster({ facets }: { facets: FacetEntry[] }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Secondary pattern card ────────────────────────────────────────────────────
+
+function SecondaryPatternCard({ facet }: { facet: FacetEntry }) {
+  const hue = userCuratedHue(`ring1-pattern-${facet.traitWord.toLowerCase()}`, facet.hueOffset)
+  return (
+    <div style={{
+      background: 'white',
+      border: `1px solid ${line}`,
+      borderRadius: 12,
+      padding: 16,
+      minWidth: 220,
+      maxWidth: 260,
+      flexShrink: 0,
+      textAlign: 'left',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: `hsl(${hue},55%,55%)`, flexShrink: 0 }} />
+        <p style={{ fontFamily: serif, fontSize: 15, fontWeight: 600, color: charcoal, margin: 0 }}>
+          {facet.traitWord}
+        </p>
+      </div>
+      {facet.content ? (
+        <>
+          <p style={{
+            fontFamily: sans,
+            fontSize: 13,
+            color: charcoalSoft,
+            lineHeight: 1.55,
+            margin: '0 0 10px',
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+          }}>
+            {facet.content.trait_quote}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {facet.content.tags.slice(0, 2).map((t) => (
+              <TagPill key={t} label={t} hue={hue} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: 0 }}>Loading…</p>
+      )}
     </div>
   )
 }
@@ -342,7 +390,7 @@ function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
   )
 }
 
-function BranchSuggestionCard() {
+function BranchSuggestionCard({ onStartEnvironment }: { onStartEnvironment: () => void }) {
   return (
     <div style={{
       padding: 2,
@@ -363,11 +411,12 @@ function BranchSuggestionCard() {
           Based on what we found so far, your environment might be worth exploring.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <Link href="/assessment">
-            <button style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
-              Start Your environment →
-            </button>
-          </Link>
+          <button
+            onClick={onStartEnvironment}
+            style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}
+          >
+            Start Your environment →
+          </button>
         </div>
       </div>
     </div>
@@ -380,7 +429,12 @@ export default function ReportPage() {
   const [facets, setFacets] = useState<FacetEntry[]>([])
   const [totalAnswered, setTotalAnswered] = useState(0)
   const [ring1Complete, setRing1Complete] = useState(false)
-  const [contentLoading, setContentLoading] = useState(false)
+  const [showEnvToast, setShowEnvToast] = useState(false)
+
+  function handleStartEnvironment() {
+    setShowEnvToast(true)
+    setTimeout(() => setShowEnvToast(false), 3000)
+  }
 
   // Transition 3 entry: cream covers navigation gap, then fades out over 600ms
   const [entryCream, setEntryCream] = useState(0)
@@ -400,7 +454,6 @@ export default function ReportPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem('known_session')
-    const assessmentId = localStorage.getItem('known_pending_session_id')
 
     console.log('[report] known_session raw:', raw)
     if (!raw) {
@@ -447,31 +500,6 @@ export default function ReportPage() {
       return { facet, traitWord, hueOffset: idx, content: pc?.content ?? null }
     })
     setFacets(initial)
-
-    if (!hasLocalContent) {
-      // No patternContents in session — try to pull copy from Supabase
-      setContentLoading(true)
-      const supabase = createClient()
-      const baseQuery = supabase
-        .from('report_content')
-        .select('facet, trait_quote, where_it_shows_up, tags, go_deeper, worth_trying')
-        .in('facet', facetNames)
-        .order('generated_at', { ascending: false })
-
-      ;(assessmentId ? baseQuery.eq('assessment_id', assessmentId) : baseQuery)
-        .then(({ data, error }) => {
-          setContentLoading(false)
-          if (error || !data || data.length === 0) return
-          const byFacet = new Map(data.map((row) => [row.facet, {
-            trait_quote: row.trait_quote ?? '',
-            where_it_shows_up: row.where_it_shows_up ?? '',
-            tags: row.tags ?? [],
-            go_deeper: row.go_deeper ?? '',
-            worth_trying: row.worth_trying ?? '',
-          } as PatternContent]))
-          setFacets((prev) => prev.map((f) => ({ ...f, content: byFacet.get(f.facet) ?? f.content })))
-        })
-    }
   }, [])
 
   const isUnlocked = facets.length > 0
@@ -533,21 +561,35 @@ export default function ReportPage() {
                   ) : (
                     <PatternLoadingState
                       traitWord={primaryFacet!.traitWord}
-                      isLoading={contentLoading}
+                      isLoading={true}
                     />
                   )}
                 </div>
 
-                {/* Only show What's next when content is ready */}
+                {/* Secondary pattern cards — shown when more than one pattern exists */}
+                {facets.length > 1 && (
+                  <div style={{ marginTop: 32, marginLeft: -22, marginRight: -22 }}>
+                    <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: gray, fontWeight: 600, marginBottom: 12, paddingLeft: 22, textAlign: 'left' }}>
+                      Other patterns
+                    </p>
+                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingLeft: 22, paddingRight: 22, paddingBottom: 4 }}>
+                      {facets.slice(1).map((f) => (
+                        <SecondaryPatternCard key={f.facet} facet={f} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Only show What's next when primary content is ready */}
                 {hasContent && (
                   <>
                     <WhatsnextDivider />
                     {ring1Complete ? (
-                      <BranchSuggestionCard />
+                      <BranchSuggestionCard onStartEnvironment={handleStartEnvironment} />
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <ContinueRing1Card totalAnswered={totalAnswered} />
-                        <BranchSuggestionCard />
+                        <BranchSuggestionCard onStartEnvironment={handleStartEnvironment} />
                       </div>
                     )}
                   </>
@@ -568,6 +610,31 @@ export default function ReportPage() {
 
         </div>
       </div>
+
+      {/* Environment branch coming-soon toast */}
+      {showEnvToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: charcoal,
+          color: cream,
+          borderRadius: 10,
+          padding: '13px 20px',
+          fontFamily: sans,
+          fontSize: 13.5,
+          lineHeight: 1.5,
+          textAlign: 'center',
+          maxWidth: 340,
+          width: 'calc(100% - 48px)',
+          zIndex: 1000,
+          animation: 'slideUp 0.3s ease both',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        }}>
+          Branch assessments are coming soon. Keep going with Ring 1 for now.
+        </div>
+      )}
     </>
   )
 }

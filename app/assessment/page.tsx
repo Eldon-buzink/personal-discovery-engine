@@ -167,6 +167,45 @@ function ContentCard({
   )
 }
 
+function FindingPatternLoader() {
+  const [dots, setDots] = useState('.')
+  const [showSecondary, setShowSecondary] = useState(false)
+
+  useEffect(() => {
+    const dotInterval = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? '.' : d + '.'))
+    }, 500)
+    const secondaryTimer = setTimeout(() => setShowSecondary(true), 1500)
+    return () => { clearInterval(dotInterval); clearTimeout(secondaryTimer) }
+  }, [])
+
+  return (
+    <div style={{ textAlign: 'center', paddingTop: 32 }}>
+      <p style={{
+        fontFamily: 'var(--font-newsreader), Georgia, serif',
+        fontStyle: 'italic',
+        fontSize: 18,
+        color: '#56534D',
+        margin: '0 0 14px',
+        lineHeight: 1.55,
+      }}>
+        Finding your pattern{dots}
+      </p>
+      <p style={{
+        fontFamily: 'var(--font-inter), system-ui, sans-serif',
+        fontSize: 13,
+        color: '#8C8A83',
+        margin: 0,
+        lineHeight: 1.6,
+        opacity: showSecondary ? 1 : 0,
+        transition: 'opacity 0.6s ease',
+      }}>
+        This is written specifically for your answers, not a template.
+      </p>
+    </div>
+  )
+}
+
 function PatternDetectedScreen({
   record,
   isFirst,
@@ -240,12 +279,7 @@ function PatternDetectedScreen({
         {/* Loading vs loaded content — min-height reserves space so blob doesn't jump */}
         <div style={{ width: '100%', minHeight: 420 }}>
           {isLoading ? (
-            <p
-              className="font-sans text-[12px] text-muted text-center mt-6"
-              style={{ opacity: 0.65 }}
-            >
-              reading your responses…
-            </p>
+            <FindingPatternLoader />
           ) : (
             <>
               {/* Quote */}
@@ -476,22 +510,26 @@ export default function AssessmentPage() {
       setToastQueue((prev) => [...prev, record])
     }
 
-    // Generate AI copy — updates React state and persists to localStorage for report page
-    const assessmentId = localStorage.getItem('known_pending_session_id')
-    generatePatternCopy(facet, traitWord, dir, assessmentId)
-      .then((content: PatternContent) => {
-        setCompletedFacets((prev) =>
-          prev.map((r) => (r.facet === facet ? { ...r, content } : r))
-        )
-        setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
-        setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
-        // Persist so /report can read it without a Supabase fetch
-        const s = loadSession()
-        const existing = s.patternContents ?? []
-        const newEntry: PatternContentEntry = { facet, traitWord, scoreDirection: dir, content }
-        saveSession({ ...s, patternContents: [...existing.filter(e => e.facet !== facet), newEntry] })
-      })
-      .catch(() => {})
+    // Use cached content if already generated; otherwise call API
+    const cachedContent = loadSession().patternContents?.find((e) => e.facet === facet)?.content ?? null
+    if (cachedContent) {
+      setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, content: cachedContent } : r)))
+      setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content: cachedContent } : cur))
+      setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content: cachedContent } : r)))
+    } else {
+      const assessmentId = localStorage.getItem('known_pending_session_id')
+      generatePatternCopy(facet, traitWord, dir, assessmentId)
+        .then((content: PatternContent) => {
+          setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, content } : r)))
+          setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
+          setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
+          const s = loadSession()
+          const existing = s.patternContents ?? []
+          const newEntry: PatternContentEntry = { facet, traitWord, scoreDirection: dir, content }
+          saveSession({ ...s, patternContents: [...existing.filter((e) => e.facet !== facet), newEntry] })
+        })
+        .catch(() => {})
+    }
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
