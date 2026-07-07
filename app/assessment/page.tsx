@@ -630,6 +630,58 @@ export default function AssessmentPage() {
     triggerReveal('Cautiousness', traitWord, dir, newMap.size, freshSession, ['Cautiousness'])
   }
 
+  // Dev: add Self-Efficacy as a second pattern (additive — does not reset session)
+  function handleDevPattern2() {
+    const session = loadSession()
+    const existingRevealed = session.revealedFacets ?? []
+    if (existingRevealed.includes('Self-Efficacy')) return
+
+    const devAnswers: Array<[number, number]> = [[5, 4], [35, 4], [65, 4], [95, 4]]
+    let responses = [...session.responses]
+    const newMap = new Map(answeredMap)
+    for (const [qId, val] of devAnswers) {
+      responses = responses.filter((r) => r.questionId !== qId)
+      responses.push({ questionId: qId, value: val, answeredAt: new Date().toISOString() })
+      newMap.set(qId, val)
+    }
+
+    const updatedSession: KnownSession = { ...session, responses }
+    const score = computeFacetScore('Self-Efficacy', newMap)!
+    const traitWord = getTraitWord('Self-Efficacy', score)
+    const dir = scoreDirection(score)
+    const newRevealedFacets = [...existingRevealed, 'Self-Efficacy']
+
+    setAnsweredMap(newMap)
+    setCurrentIndex(findFirstUnanswered(questionOrder, new Set(newMap.keys()), 0))
+    triggerReveal('Self-Efficacy', traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
+  }
+
+  // Dev: add Friendliness as a third pattern (additive — does not reset session)
+  function handleDevPattern3() {
+    const session = loadSession()
+    const existingRevealed = session.revealedFacets ?? []
+    if (existingRevealed.includes('Friendliness')) return
+
+    const devAnswers: Array<[number, number]> = [[2, 4], [32, 4], [62, 4], [92, 4]]
+    let responses = [...session.responses]
+    const newMap = new Map(answeredMap)
+    for (const [qId, val] of devAnswers) {
+      responses = responses.filter((r) => r.questionId !== qId)
+      responses.push({ questionId: qId, value: val, answeredAt: new Date().toISOString() })
+      newMap.set(qId, val)
+    }
+
+    const updatedSession: KnownSession = { ...session, responses }
+    const score = computeFacetScore('Friendliness', newMap)!
+    const traitWord = getTraitWord('Friendliness', score)
+    const dir = scoreDirection(score)
+    const newRevealedFacets = [...existingRevealed, 'Friendliness']
+
+    setAnsweredMap(newMap)
+    setCurrentIndex(findFirstUnanswered(questionOrder, new Set(newMap.keys()), 0))
+    triggerReveal('Friendliness', traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const currentQuestionId = questionOrder[currentIndex]
@@ -712,12 +764,17 @@ export default function AssessmentPage() {
       )}
 
       {process.env.NODE_ENV === 'development' && !viewingPattern && !allDone && (
-        <button
-          onClick={handleDevSkip}
-          className="fixed bottom-4 right-4 font-sans text-[11px] text-muted/60 hover:text-muted underline"
-        >
-          Dev: skip to pattern
-        </button>
+        <div className="fixed bottom-4 right-4 flex flex-col items-end gap-2">
+          <button onClick={handleDevSkip} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: skip to pattern
+          </button>
+          <button onClick={handleDevPattern2} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: add 2nd pattern
+          </button>
+          <button onClick={handleDevPattern3} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: add 3rd pattern
+          </button>
+        </div>
       )}
 
       <AuthModal
