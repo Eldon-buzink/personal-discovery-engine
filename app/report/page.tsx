@@ -176,44 +176,66 @@ function BlobCluster({ facets }: { facets: FacetEntry[] }) {
 // ── Secondary pattern card ────────────────────────────────────────────────────
 
 function SecondaryPatternCard({ facet }: { facet: FacetEntry }) {
+  const [expanded, setExpanded] = useState(false)
   const hue = userCuratedHue(`ring1-pattern-${facet.traitWord.toLowerCase()}`, facet.hueOffset)
+
   return (
     <div style={{
       background: 'white',
       border: `1px solid ${line}`,
       borderRadius: 12,
       padding: 16,
-      minWidth: 220,
-      maxWidth: 260,
+      width: expanded ? 280 : 240,
       flexShrink: 0,
       textAlign: 'left',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: `hsl(${hue},55%,55%)`, flexShrink: 0 }} />
-        <p style={{ fontFamily: serif, fontSize: 15, fontWeight: 600, color: charcoal, margin: 0 }}>
-          {facet.traitWord}
-        </p>
-      </div>
+      <p style={{ fontFamily: serif, fontSize: 16, fontWeight: 600, color: charcoal, margin: '0 0 8px' }}>
+        {facet.traitWord}
+      </p>
       {facet.content ? (
         <>
           <p style={{
             fontFamily: sans,
+            fontStyle: 'italic',
             fontSize: 13,
             color: charcoalSoft,
             lineHeight: 1.55,
             margin: '0 0 10px',
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical' as const,
-            overflow: 'hidden',
+            ...(!expanded ? {
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical' as const,
+              overflow: 'hidden',
+            } : {}),
           }}>
             {facet.content.trait_quote}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-            {facet.content.tags.slice(0, 2).map((t) => (
-              <TagPill key={t} label={t} hue={hue} />
-            ))}
-          </div>
+
+          {expanded && (
+            <>
+              <p style={{ fontFamily: sans, fontSize: 13, color: charcoalSoft, lineHeight: 1.6, margin: '0 0 12px' }}>
+                {facet.content.where_it_shows_up}
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
+                {facet.content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
+              </div>
+              <p style={{ fontFamily: sans, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: gray, fontWeight: 600, margin: '0 0 3px' }}>Go deeper</p>
+              <p style={{ fontFamily: sans, fontSize: 13, color: charcoalSoft, lineHeight: 1.6, margin: '0 0 12px' }}>
+                {facet.content.go_deeper}
+              </p>
+              <p style={{ fontFamily: sans, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: gray, fontWeight: 600, margin: '0 0 3px' }}>Worth trying</p>
+              <p style={{ fontFamily: sans, fontSize: 13, color: charcoalSoft, lineHeight: 1.6, margin: '0 0 12px' }}>
+                {facet.content.worth_trying}
+              </p>
+            </>
+          )}
+
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: sans, fontSize: 13, color: 'hsl(175,55%,38%)', fontWeight: 500 }}
+          >
+            {expanded ? 'Show less' : 'See full pattern →'}
+          </button>
         </>
       ) : (
         <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: 0 }}>Loading…</p>
@@ -366,6 +388,22 @@ function WhatsnextDivider() {
 }
 
 // ── What's next cards ─────────────────────────────────────────────────────────
+
+function Ring1CompleteCard() {
+  return (
+    <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
+      <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', color: 'rgba(247,244,237,0.6)', fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
+        Ring 1
+      </p>
+      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
+        Ring 1 complete
+      </p>
+      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
+        {"You've answered all 120 questions. Your full pattern is mapped."}
+      </p>
+    </div>
+  )
+}
 
 function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
   return (
@@ -584,14 +622,14 @@ export default function ReportPage() {
                 {hasContent && (
                   <>
                     <WhatsnextDivider />
-                    {ring1Complete ? (
-                      <BranchSuggestionCard onStartEnvironment={handleStartEnvironment} />
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {ring1Complete ? (
+                        <Ring1CompleteCard />
+                      ) : (
                         <ContinueRing1Card totalAnswered={totalAnswered} />
-                        <BranchSuggestionCard onStartEnvironment={handleStartEnvironment} />
-                      </div>
-                    )}
+                      )}
+                      <BranchSuggestionCard onStartEnvironment={handleStartEnvironment} />
+                    </div>
                   </>
                 )}
               </>
