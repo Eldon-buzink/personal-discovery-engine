@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
 import PatternToast from '@/components/known/PatternToast'
@@ -204,35 +204,37 @@ function PatternDetectedScreen({
           {isFirst ? 'Your first pattern' : 'Another pattern'}
         </p>
 
-        {/* Blob */}
-        <div
-          style={{
-            position: 'relative',
-            width: 220,
-            height: 220,
-            overflow: 'visible',
-            transformOrigin: 'center center',
-            animation: 'blobReveal 1.1s cubic-bezier(0.22,1,0.36,1) both',
-            animationDelay: '400ms',
-          }}
-        >
-          <AnimatedBlob
-            seed={`ring1-pattern-${traitWord.toLowerCase()}`}
-            hueOffset={record.hueOffset}
-            word={traitWord}
-            size={220}
-          />
+        {/* Blob — fixed 280px container prevents layout shift */}
+        <div style={{ height: 280, overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div
             style={{
-              position: 'absolute',
-              inset: 6,
-              borderRadius: '50%',
-              border: '1px solid hsl(8, 50%, 65%)',
-              pointerEvents: 'none',
-              animation: 'pulseRing 2.4s ease-out both',
-              animationDelay: '1200ms',
+              position: 'relative',
+              width: 220,
+              height: 220,
+              overflow: 'visible',
+              transformOrigin: 'center center',
+              animation: 'blobReveal 1.1s cubic-bezier(0.22,1,0.36,1) both',
+              animationDelay: '400ms',
             }}
-          />
+          >
+            <AnimatedBlob
+              seed={`ring1-pattern-${traitWord.toLowerCase()}`}
+              hueOffset={record.hueOffset}
+              word={traitWord}
+              size={220}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 6,
+                borderRadius: '50%',
+                border: '1px solid hsl(8, 50%, 65%)',
+                pointerEvents: 'none',
+                animation: 'pulseRing 2.4s ease-out both',
+                animationDelay: '1200ms',
+              }}
+            />
+          </div>
         </div>
 
         {/* Loading vs loaded content — min-height reserves space so blob doesn't jump */}
@@ -365,6 +367,23 @@ export default function AssessmentPage() {
 
   const [modalOpen, setModalOpen] = useState(false)
 
+  // ── Transition state ───────────────────────────────────────────────────────
+  const [questionOpacity, setQuestionOpacity] = useState(1)
+  const [creamOpacity, setCreamOpacity] = useState(0)
+  const [creamDuration, setCreamDuration] = useState('0.35s')
+  const [entryStyle, setEntryStyle] = useState<CSSProperties>({ opacity: 1 })
+
+  useLayoutEffect(() => {
+    if (sessionStorage.getItem('known_from') !== 'onboarding') return
+    sessionStorage.removeItem('known_from')
+    setEntryStyle({ opacity: 0, transform: 'translateY(20px)' })
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setEntryStyle({ opacity: 1, transform: 'translateY(0)', transition: 'opacity 0.45s ease, transform 0.45s ease' })
+      })
+    })
+  }, [])
+
   // Dequeue next toast when active slot clears
   useEffect(() => {
     if (activeToast === null && toastQueue.length > 0) {
@@ -446,7 +465,12 @@ export default function AssessmentPage() {
     if (isFirst) {
       const patternRecord: PatternRecord = { facet, traitWord, answeredAt: new Date().toISOString() }
       saveSession({ ...session, patternShown: patternRecord, revealedFacets: newRevealedFacets })
-      setViewingPattern(true)
+
+      // Transition 2: question fades → cream beat → blob emerges
+      setQuestionOpacity(0)
+      setTimeout(() => { setCreamDuration('0.35s'); setCreamOpacity(1) }, 500)
+      setTimeout(() => { setViewingPattern(true); setQuestionOpacity(1) }, 900)
+      setTimeout(() => { setCreamDuration('0.6s'); setCreamOpacity(0) }, 1700)
     } else {
       saveSession({ ...session, revealedFacets: newRevealedFacets })
       setToastQueue((prev) => [...prev, record])
@@ -522,7 +546,13 @@ export default function AssessmentPage() {
   }
 
   function handleReport() {
-    router.push('/report')
+    // Snap cream to full immediately — no animation gap during navigation
+    setCreamDuration('0s')
+    setCreamOpacity(1)
+    requestAnimationFrame(() => {
+      sessionStorage.setItem('known_from', 'pattern')
+      router.push('/report')
+    })
   }
 
   // Dev shortcut: pre-fill C6 Cautiousness items to reliably produce "Deliberate"
@@ -576,9 +606,20 @@ export default function AssessmentPage() {
 
   return (
     <>
+      {/* Cream overlay for transition 2 (question → pattern) */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000,
+        background: '#F5F2EB',
+        opacity: creamOpacity,
+        pointerEvents: 'none',
+        transition: `opacity ${creamDuration} ease`,
+      }} />
+
       <TopBar answeredCount={answeredMap.size} />
 
-      <div className="pt-14">
+      <div className="pt-14" style={entryStyle}>
         {viewingPattern && firstPattern ? (
           <PatternDetectedScreen
             record={firstPattern}
@@ -596,16 +637,18 @@ export default function AssessmentPage() {
             </p>
           </div>
         ) : currentQuestion ? (
-          <QuestionCard
-            key={currentIndex}
-            questionNumber={currentIndex + 1}
-            totalQuestions={TOTAL}
-            question={currentQuestion.text}
-            format="dot-scale"
-            onNext={handleNext}
-            centered={false}
-            scaleLabels={['Very Inaccurate', 'Very Accurate']}
-          />
+          <div style={{ opacity: questionOpacity, transition: 'opacity 0.35s ease' }}>
+            <QuestionCard
+              key={currentIndex}
+              questionNumber={currentIndex + 1}
+              totalQuestions={TOTAL}
+              question={currentQuestion.text}
+              format="dot-scale"
+              onNext={handleNext}
+              centered={false}
+              scaleLabels={['Very Inaccurate', 'Very Accurate']}
+            />
+          </div>
         ) : null}
       </div>
 

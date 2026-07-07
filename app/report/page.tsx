@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import { createClient } from '@/lib/supabase/client'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
@@ -382,6 +382,22 @@ export default function ReportPage() {
   const [ring1Complete, setRing1Complete] = useState(false)
   const [contentLoading, setContentLoading] = useState(false)
 
+  // Transition 3 entry: cream covers navigation gap, then fades out over 600ms
+  const [entryCream, setEntryCream] = useState(0)
+
+  useLayoutEffect(() => {
+    if (sessionStorage.getItem('known_from') !== 'pattern') return
+    sessionStorage.removeItem('known_from')
+    // Snap cream to full (no transition) — content fully loaded underneath
+    setEntryCream(1)
+    // Two frames later: cream fades out revealing the report
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setEntryCream(0)
+      })
+    })
+  }, [])
+
   useEffect(() => {
     const raw = localStorage.getItem('known_session')
     const assessmentId = localStorage.getItem('known_pending_session_id')
@@ -468,6 +484,17 @@ export default function ReportPage() {
 
   return (
     <>
+      {/* Entry cream overlay for transition 3 — bridges navigation gap */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000,
+        background: '#F5F2EB',
+        opacity: entryCream,
+        pointerEvents: 'none',
+        transition: entryCream === 1 ? 'none' : 'opacity 0.6s ease',
+      }} />
+
       <TopBar />
 
       <div style={{ background: cream, minHeight: '100vh', paddingTop: 52 }}>

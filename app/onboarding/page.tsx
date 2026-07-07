@@ -1,4 +1,7 @@
-import Link from 'next/link'
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import type { CSSProperties } from 'react'
 
 function fade(delayMs: number): CSSProperties {
@@ -19,17 +22,35 @@ const trustItems = [
   },
   {
     bold: 'What you tell us stays yours.',
-    rest: 'Nothing is shared or sold — and there\'s nothing here to perform.',
+    rest: "Nothing is shared or sold — and there's nothing here to perform.",
   },
   {
     bold: 'Go at your own pace.',
-    rest: 'You can stop and pick up later — nothing is lost.',
+    rest: "You can stop and pick up later — nothing is lost.",
   },
 ]
 
 export default function OnboardingPage() {
+  const router = useRouter()
+  const [exiting, setExiting] = useState(false)
+
+  function handleStart() {
+    setExiting(true)
+    setTimeout(() => {
+      sessionStorage.setItem('known_from', 'onboarding')
+      router.push('/assessment')
+    }, 320)
+  }
+
   return (
-    <main className="bg-cream min-h-screen py-16 px-6">
+    <main
+      className="bg-cream min-h-screen py-16 px-6"
+      style={{
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        opacity: exiting ? 0 : 1,
+        transform: exiting ? 'translateY(-18px)' : 'none',
+      }}
+    >
       <div className="max-w-[480px] mx-auto flex flex-col gap-10">
 
         {/* 1. Wordmark */}
@@ -83,13 +104,13 @@ export default function OnboardingPage() {
 
         {/* 5. CTA */}
         <div style={fade(1200)} className="flex flex-col items-center gap-3 pb-4">
-          <Link
-            href="/assessment"
-            className="block w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90"
+          <button
+            onClick={handleStart}
+            className="w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90 cursor-pointer"
             style={{ fontFamily: 'var(--font-newsreader), serif' }}
           >
             Start
-          </Link>
+          </button>
           <p className="font-sans text-[13px] text-muted">
             Takes most people 12–15 minutes, in one go or several
           </p>
