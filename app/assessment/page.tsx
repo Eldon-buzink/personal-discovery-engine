@@ -99,22 +99,28 @@ function scoreDirection(score: number): 'high' | 'mid' | 'low' {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function TopBar({ answeredCount }: { answeredCount: number }) {
+function TopBar({ answeredCount, hasPatterns }: { answeredCount: number; hasPatterns: boolean }) {
   const progress = (answeredCount / TOTAL) * 100
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-cream border-b border-line flex items-center justify-between px-6">
       <Link href="/onboarding" className="font-sans text-sm text-muted">
         ← Save and exit
       </Link>
-      <div className="flex items-center gap-3">
-        <span className="font-sans text-[13px] text-muted">Getting closer</span>
-        <div className="w-[120px] h-[3px] rounded-full bg-line overflow-hidden">
-          <div
-            className="h-full rounded-full bg-charcoal transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
+      {hasPatterns ? (
+        <Link href="/report" className="font-sans text-[12px] text-muted" style={{ textDecoration: 'none' }}>
+          View report →
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3">
+          <span className="font-sans text-[13px] text-muted">Getting closer</span>
+          <div className="w-[120px] h-[3px] rounded-full bg-line overflow-hidden">
+            <div
+              className="h-full rounded-full bg-charcoal transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }
@@ -707,7 +713,7 @@ export default function AssessmentPage() {
         transition: `opacity ${creamDuration} ease`,
       }} />
 
-      <TopBar answeredCount={answeredMap.size} />
+      <TopBar answeredCount={answeredMap.size} hasPatterns={completedFacets.length > 0} />
 
       <div className="pt-14" style={entryStyle}>
         {viewingPattern && firstPattern ? (

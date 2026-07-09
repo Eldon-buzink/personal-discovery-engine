@@ -11,6 +11,9 @@ export interface PatternContentEntry {
   traitWord: string
   scoreDirection: 'high' | 'mid' | 'low'
   content: PatternContent
+  branch?: string
+  dimensionScores?: Record<string, number>
+  strongConditions?: Array<{ label: string; traitWord: string; score: number }>
 }
 
 export interface CompletedFacetRecord {

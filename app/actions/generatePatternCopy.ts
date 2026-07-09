@@ -8,6 +8,14 @@ import type { PatternContent } from '@/lib/known/types'
 // One-line descriptions of what each facet actually measures behaviorally.
 // Used to give the model concrete grounding before it writes copy.
 
+const ENV_DIMENSION_CONTEXT: Record<string, string> = {
+  'Autonomy':          'How strongly this person needs control over their own schedule, working conditions, and approach — their drive for self-directed work over managed structures',
+  'Competence':        'How much this person is disrupted by interruptions, noise, and surrounding activity — their need for unbroken stretches of quiet, focused time to produce their best work',
+  'Structure':         'How much this person needs extended, single-threaded time to do their best work — their preference for deep engagement over task-switching and fragmented attention',
+  'Low Interruption':  'How much this person is disrupted by interruptions, noise, and surrounding activity — their need for unbroken stretches of quiet, focused time',
+  'Deep Focus':        'How much this person needs extended, uninterrupted concentration to do their best work — their preference for going deep on one thing over rapidly switching between many',
+}
+
 const FACET_BEHAVIORAL_CONTEXT: Record<string, string> = {
   // Neuroticism
   Anxiety:               'How much this person tends to worry, anticipate negative outcomes, and feel a background sense of unease',
@@ -65,8 +73,39 @@ const SYSTEM_PROMPT =
 function buildUserPrompt(
   facetName: string,
   traitWord: string,
-  scoreDirection: 'high' | 'mid' | 'low'
+  scoreDirection: 'high' | 'mid' | 'low',
+  branch?: string,
+  strongConditions?: { label: string; traitWord: string; score: number }[]
 ): string {
+  if (branch === 'environment') {
+    const behavioralContext = ENV_DIMENSION_CONTEXT[facetName] ?? `The ${facetName} environmental dimension`
+    const directionDesc = SCORE_DIRECTION_DESCRIPTIONS[scoreDirection](facetName)
+
+    let combinationNote = ''
+    if (strongConditions && strongConditions.length > 1) {
+      combinationNote = `\n\nThis person shows strong patterns across multiple environmental dimensions:\n` +
+        strongConditions.map(sc => `- ${sc.label}: "${sc.traitWord}" (score: ${sc.score.toFixed(1)})`).join('\n') +
+        `\n\nThe primary dimension is ${facetName}. Write copy that describes the combination — how these needs interact or reinforce each other — rather than focusing on only one.`
+    }
+
+    return `${directionDesc}.
+
+What ${facetName} actually measures as an environmental condition: ${behavioralContext}.
+
+Their primary environment pattern word is "${traitWord}".${combinationNote}
+
+This is NOT a personality trait — it's an environmental condition that determines when and where this person does their best work.
+
+Write the following copy and return as JSON only, no markdown:
+{
+  "trait_quote": "A 1-2 sentence observation about this person's environmental needs. First person, present tense. Make it specific and behavioral — what they actually notice in themselves, not a label. Example for Deep Focus: 'You don't do your best thinking in short windows. You need time to actually sink in before you can produce anything that feels like real work.'",
+  "where_it_shows_up": "2-3 sentences naming a concrete, specific real-world situation where this environmental need becomes most visible — a specific work scenario, type of day, or recurring moment of friction. Behavioral and specific, not abstract.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this environmental pattern looks like in practice"],
+  "go_deeper": "2 sentences. First: name the cost — what happens to this person when their environment doesn't match their needs. Second: point toward a related pattern or something worth exploring further.",
+  "worth_trying": "1-2 sentences. A specific, practical change this person can try this week to better match their environment to their actual needs. Not generic advice — tied directly to what their pattern reveals."
+}`
+  }
+
   const behavioralContext = FACET_BEHAVIORAL_CONTEXT[facetName] ?? `The ${facetName} facet of personality`
   const directionDesc = SCORE_DIRECTION_DESCRIPTIONS[scoreDirection](facetName)
 
@@ -100,9 +139,11 @@ export async function generatePatternCopy(
   facetName: string,
   traitWord: string,
   scoreDirection: 'high' | 'mid' | 'low',
-  assessmentId: string | null
+  assessmentId: string | null,
+  branch?: string,
+  strongConditions?: { label: string; traitWord: string; score: number }[]
 ): Promise<PatternContent> {
-  console.log('[generatePatternCopy] called with:', { facetName, traitWord, scoreDirection, assessmentId })
+  console.log('[generatePatternCopy] called with:', { facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions })
   let content: PatternContent
 
   try {
@@ -113,7 +154,7 @@ export async function generatePatternCopy(
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(facetName, traitWord, scoreDirection) }],
+      messages: [{ role: 'user', content: buildUserPrompt(facetName, traitWord, scoreDirection, branch, strongConditions) }],
     })
 
     const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
