@@ -32,7 +32,6 @@ const charcoalSoft = '#56534D'
 const charcoal = '#262420'
 const cream = '#F7F4ED'
 const line = '#E5E1D5'
-const teal = '#2A5C4E'
 
 const sans = 'var(--font-inter), system-ui, sans-serif'
 const serif = 'var(--font-newsreader), serif'
