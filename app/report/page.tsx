@@ -454,7 +454,7 @@ function OrbitCluster({
 function UnlockedContent({
   traitWord, content, hue,
   subtitle = 'Your first pattern',
-  source = 'From your Ring 1 assessment',
+  source = 'From your assessment',
 }: {
   traitWord: string
   content: PatternContent
@@ -604,11 +604,8 @@ function WhatsnextDivider() {
 function Ring1CompleteCard() {
   return (
     <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-      <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', color: 'rgba(247,244,237,0.6)', fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
-        Ring 1
-      </p>
       <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
-        Ring 1 complete
+        Fully mapped.
       </p>
       <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
         {"You've answered all 120 questions. Your full pattern is mapped."}
@@ -620,9 +617,6 @@ function Ring1CompleteCard() {
 function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
   return (
     <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-      <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', color: 'rgba(247,244,237,0.6)', fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
-        Ring 1
-      </p>
       <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
         Keep discovering
       </p>
@@ -828,7 +822,7 @@ export default function ReportPage() {
       ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
       : suggestion.isTargeted
       ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
-      : { leftText: "There's more underneath this.", rightLabel: 'Continue Ring 1 →', rightHref: '/assessment' }
+      : { leftText: "There's more underneath this.", rightLabel: 'Keep discovering →', rightHref: '/assessment' }
 
   return (
     <>
@@ -890,7 +884,7 @@ export default function ReportPage() {
                     <WhatsnextDivider />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {ring1Complete ? <Ring1CompleteCard /> : <ContinueRing1Card totalAnswered={totalAnswered} />}
-                      {suggestion && nextBranchLabel && nextBranchHref && (
+                      {suggestion && nextBranchLabel && nextBranchHref && (suggestion.isTargeted || ring1Complete) && (
                         <BranchSuggestionCard
                           branchLabel={nextBranchLabel}
                           href={nextBranchHref}
@@ -902,7 +896,7 @@ export default function ReportPage() {
                 )}
               </>
             ) : (
-              <LockedCard branchName="Ring 1" />
+              <LockedCard branchName="the assessment" />
             )}
           </section>
 
