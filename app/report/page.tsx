@@ -7,6 +7,8 @@ import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
 import { suggestNextBranch } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion } from '@/lib/known/branchSuggestion'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
+import SiteNav, { NAV_H } from '@/components/known/SiteNav'
+import SiteFooter from '@/components/known/SiteFooter'
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -133,30 +135,6 @@ function TagPill({ label, hue = 8 }: { label: string; hue?: number }) {
   )
 }
 
-// ── Mini topbar ───────────────────────────────────────────────────────────────
-
-function TopBar() {
-  return (
-    <header style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0,
-      height: 52,
-      background: cream,
-      borderBottom: `1px solid ${line}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 22px',
-      zIndex: 100,
-    }}>
-      <Link href="/assessment" style={{ fontFamily: sans, fontSize: 13, color: gray, textDecoration: 'none' }}>
-        ← Back
-      </Link>
-      <p style={{ fontFamily: serif, fontSize: 14, fontWeight: 600, color: charcoal, margin: 0 }}>known</p>
-      <div style={{ width: 50 }} />
-    </header>
-  )
-}
 
 // ── Interactive blob cluster ───────────────────────────────────────────────────
 
@@ -836,10 +814,10 @@ export default function ReportPage() {
         transition: entryCream === 1 ? 'none' : 'opacity 0.6s ease',
       }} />
 
-      <TopBar />
+      <SiteNav />
       {stickyBar && <StickyBar {...stickyBar} />}
 
-      <div style={{ background: cream, minHeight: '100vh', paddingTop: 52 }}>
+      <div style={{ background: cream, minHeight: '100vh', paddingTop: NAV_H }}>
         <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 22px 64px' }}>
 
           {/* ── Intro ─────────────────────────────────────── */}
@@ -1005,16 +983,16 @@ export default function ReportPage() {
             )
           })()}
 
-          {/* ── Footer ────────────────────────────────────── */}
-          <footer style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
-            <p style={{ fontFamily: serif, fontSize: 14, color: charcoal, marginBottom: 6 }}>known</p>
+          {/* ── Report footer note ─────────────────────── */}
+          <div style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
             <p style={{ fontFamily: sans, fontSize: 11.5, color: gray }}>
               A living report — it grows as you keep exploring.
             </p>
-          </footer>
+          </div>
 
         </div>
       </div>
+      <SiteFooter />
 
     </>
   )

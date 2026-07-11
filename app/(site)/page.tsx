@@ -603,23 +603,6 @@ export default function LandingPage() {
       <style>{landingCSS}</style>
       <div style={{ background:cream, color:charcoal, fontFamily:sans }}>
 
-        {/* ── NAV ──────────────────────────────────────────────────── */}
-        <nav style={{
-          position:'fixed', top:0, left:0, right:0, zIndex:100,
-          display:'flex', alignItems:'center', justifyContent:'space-between',
-          padding:'20px 48px',
-          background:'rgba(245,242,235,0.88)',
-          backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)',
-          borderBottom:`1px solid ${c12}`,
-        }}>
-          <span style={{ fontFamily:serif, fontSize:22, fontWeight:400, letterSpacing:'-0.02em', color:charcoal }}>Known</span>
-          <Link href="/onboarding">
-            <button style={{ background:charcoal, color:cream, border:'none', borderRadius:100, padding:'10px 22px', fontFamily:sans, fontSize:14, fontWeight:500, cursor:'pointer', letterSpacing:'0.01em' }}>
-              Start for free
-            </button>
-          </Link>
-        </nav>
-
         {/* ── HERO ─────────────────────────────────────────────────── */}
         <section style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'120px 48px 80px', position:'relative', overflow:'hidden' }}>
           <div className="lp-hero-inner">
@@ -813,7 +796,7 @@ export default function LandingPage() {
         </section>
 
         {/* ── PROCESS STEPPER ──────────────────────────────────────── */}
-        <section style={{ padding:'120px 48px', maxWidth:1200, margin:'0 auto' }}>
+        <section id="how-it-works" style={{ padding:'120px 48px', maxWidth:1200, margin:'0 auto' }}>
           <div style={{ marginBottom:72 }}>
             <p style={{ fontSize:11, fontWeight:500, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:20 }}>Inside the assessment</p>
             <h2 style={{ fontFamily:serif, fontSize:'clamp(32px,4vw,52px)', fontWeight:300, letterSpacing:'-0.03em', lineHeight:1.1, color:charcoal, maxWidth:560 }}>
@@ -893,17 +876,6 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-
-        {/* ── FOOTER ───────────────────────────────────────────────── */}
-        <footer style={{ background:charcoal, color:'rgba(245,242,235,0.4)', padding:'40px 48px', display:'flex', alignItems:'center', justifyContent:'space-between', fontSize:13 }}>
-          <span style={{ fontFamily:serif, fontSize:18, color:'rgba(245,242,235,0.7)', fontWeight:300 }}>Known</span>
-          <span style={{ maxWidth:360, textAlign:'center', fontSize:12, lineHeight:1.5 }}>Built on proven psychological frameworks used in organisational and clinical psychology research. Not a substitute for therapy or clinical psychological assessment.</span>
-          <div style={{ display:'flex', gap:28 }}>
-            {['Privacy', 'Methodology', 'About'].map(lnk => (
-              <Link key={lnk} href={`/${lnk.toLowerCase()}`} style={{ color:'rgba(245,242,235,0.4)', textDecoration:'none', fontSize:13 }}>{lnk}</Link>
-            ))}
-          </div>
-        </footer>
 
       </div>
     </>
