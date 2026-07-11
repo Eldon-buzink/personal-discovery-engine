@@ -128,14 +128,6 @@ const DEFAULT_ORDER: Branch[] = [
   "energy",
 ];
 
-const BRANCH_LABELS: Record<Branch, string> = {
-  environment: "Your Environment",
-  relationships: "Your Relationships",
-  energy: "Your Energy",
-  working_style: "Your Working Style",
-  direction: "Your Direction",
-};
-
 const FALLBACK_REASONS = [
   "You've covered good ground — this one rounds out the picture.",
   "There's more to see here — this branch fills in a different part of the picture.",
@@ -205,7 +197,6 @@ export function suggestNextBranch(
 }
 
 function buildTargetedReason(branch: Branch, facets: string[]): string {
-  const label = BRANCH_LABELS[branch];
   const facetList = formatFacetList(facets.slice(0, 2)); // cap at 2 for readable copy
   return `Your ${facetList} came through strongly — worth seeing how that shows up in ${branchContext(branch)}.`;
 }

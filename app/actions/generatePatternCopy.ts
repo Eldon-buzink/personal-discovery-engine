@@ -58,6 +58,13 @@ const FACET_BEHAVIORAL_CONTEXT: Record<string, string> = {
   Cautiousness:          'How much this person deliberates before acting — their tendency to think carefully before committing',
 }
 
+const RELATIONSHIPS_QUADRANT_CONTEXT: Record<string, string> = {
+  Open:        'Low on both anxiety and avoidance. Comfortable letting people in, depends on others without distress, and rarely worries about whether relationships are secure. Closeness feels natural rather than threatening.',
+  Independent: 'Low anxiety but high avoidance. Not preoccupied with relationships, and prefers more emotional and physical distance — even in close ones. Self-reliant by orientation, not by necessity. Comfortable alone.',
+  Attached:    'High anxiety but low avoidance. Wants closeness and doesn\'t shy away from it, but regularly worries whether the connection is mutual, solid, or enough. The concern isn\'t distance — it\'s security.',
+  Cautious:    'High on both anxiety and avoidance. Simultaneously worried about relationships and inclined to keep distance from them. Distance functions as protection. May want connection but finds the risk of it difficult to hold.',
+}
+
 const SCORE_DIRECTION_DESCRIPTIONS: Record<'high' | 'mid' | 'low', (facet: string) => string> = {
   high: (f) => `This person scores HIGH on ${f} — they strongly and consistently exhibit this trait`,
   mid:  (f) => `This person scores in the MIDDLE on ${f} — they show this trait situationally, not across the board`,
@@ -77,6 +84,25 @@ function buildUserPrompt(
   branch?: string,
   strongConditions?: { label: string; traitWord: string; score: number }[]
 ): string {
+  if (branch === 'relationships') {
+    const quadrantContext = RELATIONSHIPS_QUADRANT_CONTEXT[traitWord] ?? `The ${traitWord} attachment pattern`
+
+    return `This person's attachment pattern is "${traitWord}".
+
+What this pattern actually means: ${quadrantContext}.
+
+This is NOT a judgement about whether they're a good partner or friend — it's a description of how they are wired around closeness, reliance, and emotional proximity.
+
+Write the following copy and return as JSON only, no markdown:
+{
+  "trait_quote": "A 1-2 sentence observation about how this person actually experiences close relationships — what they notice in themselves, what they feel or avoid feeling. First person, present tense. Make it specific and behavioral — something the reader would immediately recognise as true about themselves. Do not use the words 'anxiety', 'avoidance', 'attachment', 'Open', 'Independent', 'Attached', or 'Cautious'. Example for Open: 'Most relationships don't feel like a balancing act to you. You can lean on people when you need to, and you don't spend much time wondering where you stand.'",
+  "where_it_shows_up": "2-3 sentences naming a concrete, specific real-world situation where this pattern becomes most visible — a moment of tension, a type of conversation, a recurring dynamic with someone close. Behavioral and specific, not abstract.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this attachment pattern looks like in action"],
+  "go_deeper": "2 sentences. First: name what this pattern costs — the friction or blind spot it creates in real relationships. Second: point toward something worth noticing or exploring further — not a prescriptive fix, just something to pay attention to.",
+  "worth_trying": "1-2 sentences. A specific, low-stakes experiment for this week — something concrete to notice or try in an actual relationship, tied directly to what their pattern reveals."
+}`
+  }
+
   if (branch === 'environment') {
     const behavioralContext = ENV_DIMENSION_CONTEXT[facetName] ?? `The ${facetName} environmental dimension`
     const directionDesc = SCORE_DIRECTION_DESCRIPTIONS[scoreDirection](facetName)

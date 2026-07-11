@@ -6,6 +6,7 @@ import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
 import { suggestNextBranch } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion } from '@/lib/known/branchSuggestion'
+import RelationshipsVisual from '@/components/known/RelationshipsVisual'
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -795,7 +796,7 @@ export default function ReportPage() {
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
 
-  const suggestRelationships = !!relEntry || ((envEntry?.dimensionScores?.autonomy ?? 0) > 3.5)
+  const suggestRelationships = !!relEntry || !!envEntry
 
   const completedBranches: Branch[] = [
     ...(envEntry ? ['environment' as Branch] : []),
@@ -960,6 +961,47 @@ export default function ReportPage() {
                   />
                 )}
               </>
+            )
+          })()}
+
+          {/* ── Branch 3: How I connect ───────────────────── */}
+          {isUnlocked && suggestRelationships && (() => {
+            const relHue = relEntry
+              ? userCuratedHue(`rel-pattern-${relEntry.traitWord.toLowerCase()}`, 0)
+              : 8
+            return (
+              <section style={{ textAlign: 'center' }}>
+                <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+                  How I connect
+                </p>
+
+                {relEntry ? (
+                  <>
+                    <div style={{ width: '100%', maxWidth: 400, margin: '8px auto 0' }}>
+                      <RelationshipsVisual
+                        traitWord={relEntry.traitWord}
+                        partnerDistance={relEntry.dimensionScores?.partnerDistance ?? 0.5}
+                        hue={relHue}
+                      />
+                    </div>
+                    <div style={{ marginTop: 20 }}>
+                      {relEntry.content ? (
+                        <UnlockedContent
+                          traitWord={relEntry.traitWord}
+                          content={relEntry.content}
+                          hue={relHue}
+                          subtitle="Your relationships pattern"
+                          source="From your relationships branch"
+                        />
+                      ) : (
+                        <PatternLoadingState traitWord={relEntry.traitWord} isLoading={true} />
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <LockedCard branchName="Your relationships" href="/assessment/relationships" />
+                )}
+              </section>
             )
           })()}
 

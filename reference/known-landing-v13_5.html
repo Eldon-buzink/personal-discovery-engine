@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Known — Understand yourself, finally</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F5F2EB;
+    --charcoal: #1C1C1A;
+    --charcoal-80: rgba(28,28,26,0.8);
+    --charcoal-40: rgba(28,28,26,0.4);
+    --charcoal-12: rgba(28,28,26,0.12);
+    --warm-mid: #E8E3D8;
+    --warm-dark: #2A2720;
+
+    /* 8-hue blob palette — matches known-full-flow.html */
+    --coral:      #E8715A;
+    --amber:      #D4924A;
+    --moss:       #7A9E6E;
+    --teal:       #4A9E9A;
+    --sky:        #5A8FBF;
+    --periwinkle: #7A7ABF;
+    --plum:       #9E5A9A;
+    --rose:       #D45A7A;
+
+    --font-display: 'Newsreader', Georgia, serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--charcoal);
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(245,242,235,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--charcoal-12);
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--charcoal);
+    text-decoration: none;
+  }
+  .nav-cta {
+    background: var(--charcoal);
+    color: var(--cream);
+    border: none;
+    border-radius: 100px;
+    padding: 10px 22px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.75; }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    max-width: 1100px;
+    width: 100%;
+  }
+  .hero-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 24px;
+  }
+  .hero-h1 {
+    font-family: var(--font-display);
+    font-size: clamp(42px, 5.5vw, 68px);
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--charcoal);
+    margin-bottom: 28px;
+  }
+  .hero-h1 em {
+    font-style: italic;
+    font-weight: 300;
+  }
+  .hero-sub {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--charcoal-80);
+    max-width: 420px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+  .hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--charcoal);
+    color: var(--cream);
+    border: none;
+    border-radius: 100px;
+    padding: 14px 30px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.75; }
+  .hero-note {
+    font-size: 13px;
+    color: var(--charcoal-40);
+    font-weight: 400;
+  }
+
+  /* Hero blob canvas */
+  .hero-blob-wrap {
+    flex: 0 0 520px;
+    width: 520px;
+    height: 540px;
+    position: relative;
+  }
+  /* Trait label hidden — label is a DOM div injected by JS */
+  .hero-trait-label { display: none; }
+
+  /* ─── FACTS STRIP ─── */
+  #facts {
+    background: var(--charcoal);
+    color: var(--cream);
+    padding: 80px 48px;
+    position: relative;
+    overflow: hidden; /* blur filter clips at section boundary — intentional */
+  }
+  .facts-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+  .facts-headline {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.5vw, 32px);
+    font-weight: 300;
+    color: var(--cream);
+    max-width: 560px;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    margin-bottom: 56px;
+  }
+  .facts-headline em { font-style: italic; font-weight: 300; color: rgba(245,242,235,0.65); }
+  .facts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    position: relative;
+    z-index: 2;
+  }
+  .fact-item {
+    position: relative;
+  }
+  /* Single full-section canvas replaces per-item canvases */
+  #facts-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .fact-num {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 6vw, 80px);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+  .fact-desc {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(245,242,235,0.65);
+    max-width: 260px;
+  }
+  .fact-cite {
+    font-size: 11px;
+    color: rgba(245,242,235,0.3);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── USP BENTO ─── */
+  #usp {
+    padding: 120px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 20px;
+  }
+  .section-heading {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--charcoal);
+    margin-bottom: 64px;
+    max-width: 560px;
+  }
+  .section-heading em { font-style: italic; }
+
+  /* Bento grid */
+  .bento-row-1 {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .bento-row-2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .bento-card {
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+  }
+  .bento-card.light {
+    background: var(--warm-mid);
+  }
+  .bento-card.dark {
+    background: var(--charcoal);
+    color: var(--cream);
+  }
+  .bento-card.cream {
+    background: var(--cream);
+    border: 1.5px solid var(--charcoal-12);
+  }
+
+  .bento-card-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 12px;
+  }
+  .bento-card.dark .bento-card-eyebrow { color: rgba(245,242,235,0.4); }
+  .bento-card-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .bento-card.dark .bento-card-title { color: var(--cream); }
+  .bento-card-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--charcoal-80);
+    font-weight: 300;
+  }
+  .bento-card.dark .bento-card-desc { color: rgba(245,242,235,0.65); }
+
+  /* Large cluster card */
+  .bento-cluster-card {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .bento-cluster-canvas-wrap {
+    flex: 1;
+    position: relative;
+    margin: 20px -10px -10px;
+    min-height: 320px;
+    overflow: visible;
+  }
+  #bento-cluster-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Right column cards */
+  .bento-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .bento-right-col .bento-card {
+    flex: 1;
+    min-height: 220px;
+  }
+
+  /* Orbit visual card */
+  .bento-orbit-wrap {
+    position: relative;
+    height: 170px;
+    margin-top: 14px;
+    overflow: visible;
+  }
+  #bento-orbit-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Connect relationship visual */
+  .bento-connect-wrap {
+    position: relative;
+    height: 90px;
+    margin-top: 16px;
+  }
+  #bento-connect-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Bottom text cards */
+  .bento-text-card-num {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .bento-free-badge {
+    display: inline-block;
+    background: rgba(245,242,235,0.15);
+    border: 1px solid rgba(245,242,235,0.2);
+    color: rgba(245,242,235,0.8);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 16px;
+  }
+
+  .report-ctas {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .btn-ghost {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--charcoal-80);
+    text-decoration: none;
+    border-bottom: 1px solid var(--charcoal-40);
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-ghost:hover { color: var(--charcoal); border-color: var(--charcoal); }
+
+  /* ─── REPORT PREVIEW ─── */
+  #report {
+    background: var(--warm-mid);
+    padding: 120px 48px;
+    overflow: hidden;
+  }
+  .report-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .report-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-bottom: 64px;
+  }
+  .report-browser {
+    background: var(--cream);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(28,28,26,0.12), 0 4px 12px rgba(28,28,26,0.06);
+  }
+  .browser-chrome {
+    background: #EDEDEA;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(28,28,26,0.08);
+  }
+  .browser-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .browser-dot.red { background: #E8715A; }
+  .browser-dot.yellow { background: #D4924A; }
+  .browser-dot.green { background: #7A9E6E; }
+  .browser-url {
+    flex: 1;
+    background: rgba(28,28,26,0.06);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--charcoal-40);
+    margin-left: 8px;
+  }
+  .browser-content {
+    padding: 24px 28px 28px;
+  }
+
+  /* Report view — cluster + quote + pills (screenshot 9) */
+  .report-view-header { margin-bottom: 6px; }
+  .report-view-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+  }
+  .report-view-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--charcoal);
+    margin-bottom: 4px;
+  }
+  .report-view-sub {
+    font-size: 12px;
+    color: var(--charcoal-40);
+    font-weight: 300;
+    margin-bottom: 0;
+  }
+  .report-cluster-wrap {
+    position: relative;
+    height: 180px;
+    margin: 12px -4px 4px;
+  }
+  #report-cluster-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .report-view-quote {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--charcoal-80);
+    border-left: 2px solid var(--charcoal-12);
+    padding-left: 12px;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  .report-view-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .report-pill {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--charcoal-12);
+    color: var(--charcoal-80);
+    font-weight: 400;
+  }
+
+  /* Right side report copy */
+  .report-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 24px;
+  }
+  .report-copy-quote {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.25;
+    color: var(--charcoal);
+    letter-spacing: -0.02em;
+  }
+  .report-copy-desc {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--charcoal-80);
+    font-weight: 300;
+  }
+  .descriptor-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .descriptor-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 400;
+    border: 1.5px solid var(--charcoal-12);
+    color: var(--charcoal-80);
+  }
+
+  /* ─── HORIZONTAL STEPPER / PROCESS ─── */
+  #process {
+    padding: 120px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .process-header { margin-bottom: 72px; }
+
+  /* Horizontal track */
+  .stepper {
+    position: relative;
+  }
+  /* Top connecting line */
+  .stepper-track {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+    margin-bottom: 0;
+  }
+  /* Horizontal line through nodes */
+  .stepper-track::before {
+    content: '';
+    position: absolute;
+    top: 28px; /* aligns with node centre */
+    left: calc(12.5%);
+    right: calc(12.5%);
+    height: 1px;
+    background: var(--charcoal-12);
+    z-index: 0;
+  }
+
+  .step-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 20px;
+    position: relative;
+  }
+
+  /* Node: number + dot on line */
+  .step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    position: relative;
+    z-index: 2;
+  }
+  .step-num {
+    font-family: var(--font-display);
+    font-size: 44px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--charcoal);
+  }
+  .step-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 2px solid var(--charcoal-40);
+  }
+
+  .step-panel {}
+  .step-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 10px;
+  }
+  .step-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--charcoal);
+    margin-bottom: 10px;
+  }
+  .step-desc {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--charcoal-80);
+    font-weight: 300;
+  }
+  .step-duration {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--charcoal-40);
+    background: var(--charcoal-12);
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  /* ─── BLOG ─── */
+  #blog {
+    padding: 120px 48px;
+    background: var(--cream);
+  }
+  .blog-inner { max-width: 1200px; margin: 0 auto; }
+  .blog-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 48px;
+  }
+  .blog-link {
+    font-size: 13px;
+    color: var(--charcoal-40);
+    text-decoration: none;
+    border-bottom: 1px solid var(--charcoal-12);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  .blog-link:hover { color: var(--charcoal); }
+
+  .blog-scroll {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    /* 4th card partially visible */
+    margin-right: -60px;
+    padding-right: 60px;
+    overflow: visible;
+  }
+  .blog-card {
+    background: var(--warm-mid);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .blog-card-img {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+  #blog-card-canvas-0,
+  #blog-card-canvas-1,
+  #blog-card-canvas-2,
+  #blog-card-canvas-3 {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .blog-card-body { padding: 28px 28px 32px; }
+  .blog-card-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 10px;
+  }
+  .blog-card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--charcoal);
+    margin-bottom: 10px;
+  }
+  .blog-card-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--charcoal-40);
+    font-weight: 300;
+  }
+  .blog-card-meta {
+    padding: 0 28px 24px;
+    font-size: 11px;
+    color: var(--charcoal-40);
+    letter-spacing: 0.04em;
+    margin-top: auto;
+  }
+  .blog-card-link {
+    color: var(--charcoal-80);
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0;
+    transition: color 0.15s;
+  }
+  .blog-card-link:hover { color: var(--charcoal); }
+
+  /* ─── END CTA ─── */
+  #cta {
+    padding: 60px 48px 80px;
+    background: var(--charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cta-card {
+    background: var(--cream);
+    border-radius: 24px;
+    padding: 80px 80px 72px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 900px;
+    width: 100%;
+    isolation: isolate;
+  }
+  #cta-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .cta-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .cta-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-40);
+    margin-bottom: 20px;
+  }
+  .cta-heading {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4.5vw, 58px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--charcoal);
+    margin-bottom: 20px;
+  }
+  .cta-heading em { font-style: italic; }
+  .cta-sub {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--charcoal-80);
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+  .cta-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cta-note {
+    font-size: 13px;
+    color: var(--charcoal-40);
+    margin-top: 16px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--charcoal);
+    color: rgba(245,242,235,0.4);
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: rgba(245,242,235,0.7);
+    font-weight: 300;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Known</a>
+  <button class="nav-cta">Start for free</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="hero-eyebrow">Personal discovery engine</p>
+      <h1 class="hero-h1">See the pattern<br><em>behind how you work</em></h1>
+      <p class="hero-sub">A 15-minute assessment that surfaces what's actually driving you — your traits, your loops, your energy. Not a type. A picture. Free, no account needed.</p>
+      <div class="hero-actions">
+        <button class="btn-primary">Discover yourself →</button>
+        <span class="hero-note">No account needed &nbsp;·&nbsp; Takes 12–15 min</span>
+      </div>
+    </div>
+    <div class="hero-blob-wrap" id="hero-blob-wrap">
+      <!-- SVG injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- FACTS -->
+<section id="facts">
+  <div id="facts-svg-wrap" style="position:absolute;inset:0;pointer-events:none;z-index:1;width:100%;height:100%;"></div>
+  <div class="facts-inner" style="position:relative;z-index:2;">
+    <p class="facts-headline">Most people spend years stuck in the same decision loops.<br><em>The pattern is always traceable.</em></p>
+    <div class="facts-grid">
+      <div class="fact-item">
+        <div class="fact-num">77%</div>
+        <div class="fact-desc">of workers report burnout — most without understanding why the pattern keeps recurring.</div>
+        <div class="fact-cite">Deloitte Global Millennial Survey, 2023</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-num">2.7×</div>
+        <div class="fact-desc">more likely to make a poor career decision without a clear model of your own decision-making patterns.</div>
+        <div class="fact-cite">Journal of Vocational Behavior, 2021</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-num">12 yrs</div>
+        <div class="fact-desc">average gap between the onset of a stuck pattern and getting real clarity on what's driving it.</div>
+        <div class="fact-cite">WHO Mental Health Atlas, 2022</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- USP BENTO -->
+<section id="usp">
+  <p class="section-eyebrow">What you get</p>
+  <h2 class="section-heading">Six dimensions.<br><em>One clear picture.</em></h2>
+
+  <!-- Row 1: large cluster card + two right cards -->
+  <div class="bento-row-1">
+    <!-- Large cluster card -->
+    <div class="bento-card light bento-cluster-card">
+      <div>
+        <p class="bento-card-eyebrow">Who you are</p>
+        <p class="bento-card-title">Your trait cluster,<br>made visible</p>
+        <p class="bento-card-desc">Not a label. An organic map of how your traits relate and reinforce each other.</p>
+      </div>
+      <div class="bento-cluster-canvas-wrap" id="bento-cluster-wrap" style="position:relative;">
+        <!-- SVG injected by JS -->
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="bento-right-col">
+      <div class="bento-card cream">
+        <p class="bento-card-eyebrow">Where you thrive</p>
+        <p class="bento-card-title">Your ideal environment</p>
+        <div class="bento-orbit-wrap" id="bento-orbit-wrap" style="position:relative;">
+          <!-- SVG injected by JS -->
+        </div>
+        <p class="bento-card-desc" style="margin-top:16px;">The settings, structures, and contexts where you naturally do your best work.</p>
+      </div>
+      <div class="bento-card light">
+        <p class="bento-card-eyebrow">How you connect</p>
+        <p class="bento-card-title">Relationship patterns</p>
+        <div class="bento-connect-wrap" id="bento-connect-wrap" style="position:relative;">
+          <!-- SVG injected by JS -->
+        </div>
+        <p class="bento-card-desc" style="margin-top:14px;">How you show up in relationships — what energises you, what drains you, how others experience you.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: three text-forward cards -->
+  <div class="bento-row-2">
+    <div class="bento-card cream">
+      <p class="bento-card-eyebrow">What gives you energy</p>
+      <p class="bento-card-title" style="font-size:22px;">The fuel behind<br>your best days</p>
+      <p class="bento-card-desc" style="margin-top:12px;">Specific activities, environments, and interactions that restore rather than deplete you.</p>
+    </div>
+    <div class="bento-card dark">
+      <span class="bento-free-badge">Free forever</span>
+      <p class="bento-card-title">No consultant.<br>No credit card.</p>
+      <p class="bento-card-desc">The kind of insight that used to cost thousands in coaching sessions. Now free, private, and instant.</p>
+    </div>
+    <div class="bento-card light">
+      <p class="bento-card-eyebrow">Actionable insights</p>
+      <p class="bento-card-title" style="font-size:22px;">Built to use,<br>not just read</p>
+      <p class="bento-card-desc" style="margin-top:12px;">Every dimension comes with concrete, specific implications — for work, for relationships, for decisions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REPORT PREVIEW -->
+<section id="report">
+  <div class="report-inner">
+    <div class="report-header">
+      <!-- Browser frame with full summary view -->
+      <div class="report-browser">
+        <div class="browser-chrome">
+          <div class="browser-dot red"></div>
+          <div class="browser-dot yellow"></div>
+          <div class="browser-dot green"></div>
+          <div class="browser-url">known.so/report</div>
+        </div>
+        <div class="browser-content">
+          <div class="report-view-header">
+            <span class="report-view-label">WHO YOU ARE &nbsp;·&nbsp; TRAIT 1 OF 5</span>
+          </div>
+          <h3 class="report-view-title">Deliberate</h3>
+          <p class="report-view-sub">One of 5 traits discovered in your assessment</p>
+          <div class="report-cluster-wrap" id="report-cluster-wrap" style="position:relative;">
+            <!-- SVG injected by JS -->
+          </div>
+          <div class="report-view-quote">"You don't rush toward conclusions. Your responses showed a pattern of holding space before committing."</div>
+          <div class="report-view-pills">
+            <span class="report-pill">Slow to commit</span>
+            <span class="report-pill">High threshold</span>
+            <span class="report-pill">Durable once decided</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="report-copy">
+        <p class="report-copy-quote">"Not a type. Not a score. Everything about you, in one place."</p>
+        <p class="report-copy-desc">Your Known report shows all six dimensions together — so you can see not just who you are, but how the parts connect.</p>
+        <div class="descriptor-pills">
+          <span class="descriptor-pill">Deliberately autonomous</span>
+          <span class="descriptor-pill">Deep-focus worker</span>
+          <span class="descriptor-pill">Systems thinker</span>
+          <span class="descriptor-pill">Selectively social</span>
+        </div>
+        <div class="report-ctas">
+          <button class="btn-primary">Discover yourself →</button>
+          <a href="#" class="btn-ghost">See an example report</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS STEPPER -->
+<section id="process">
+  <div class="process-header">
+    <p class="section-eyebrow">Inside the assessment</p>
+    <h2 class="section-heading">Four stages.<br><em>One honest picture.</em></h2>
+  </div>
+
+  <div class="stepper">
+    <div class="stepper-track">
+      <div class="step-col">
+        <div class="step-node">
+          <div class="step-num">1</div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="step-panel">
+          <p class="step-label">Stage one</p>
+          <h3 class="step-title">You answer naturally</h3>
+          <p class="step-desc">60–80 questions that feel like real scenarios, not abstract sliders. Patterns emerge from how you respond, not what you say.</p>
+          <span class="step-duration">~8 minutes</span>
+        </div>
+      </div>
+      <div class="step-col">
+        <div class="step-node">
+          <div class="step-num">2</div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="step-panel">
+          <p class="step-label">Stage two</p>
+          <h3 class="step-title">Frameworks do the work</h3>
+          <p class="step-desc">Fifty years of personality research — distilled, applied, interpreted. The same foundations behind expensive coaching, made accessible.</p>
+          <span class="step-duration">Instant analysis</span>
+        </div>
+      </div>
+      <div class="step-col">
+        <div class="step-node">
+          <div class="step-num">3</div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="step-panel">
+          <p class="step-label">Stage three</p>
+          <h3 class="step-title">Your cluster takes shape</h3>
+          <p class="step-desc">Your traits mapped into an organic visual cluster — not a radar chart. The shape and arrangement are unique to you.</p>
+          <span class="step-duration">Visualised in real time</span>
+        </div>
+      </div>
+      <div class="step-col">
+        <div class="step-node">
+          <div class="step-num">4</div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="step-panel">
+          <p class="step-label">Stage four</p>
+          <h3 class="step-title">Six dimensions, fully explained</h3>
+          <p class="step-desc">Who you are, where you thrive, how you connect, what gives you energy, how you work, and where you get stuck.</p>
+          <span class="step-duration">Yours to keep</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESSIVE REVEAL CONCEPT -->
+<section id="progressive" style="padding:100px 48px;background:var(--warm-mid);">
+  <div style="max-width:960px;margin:0 auto;">
+    <p style="font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+      color:var(--charcoal-40);margin-bottom:20px;">How it's different</p>
+    <h2 style="font-family:var(--font-display);font-size:clamp(28px,3.5vw,46px);font-weight:300;
+      letter-spacing:-0.03em;line-height:1.1;color:var(--charcoal);margin-bottom:20px;max-width:600px;">
+      We don't make you wait.<br><em>We show you as we find it.</em>
+    </h2>
+    <p style="font-size:16px;line-height:1.7;color:var(--charcoal-80);font-weight:300;
+      max-width:540px;margin-bottom:60px;">
+      Most assessments drag you through 80 questions before telling you anything.
+      Known surfaces results as they emerge — so you can see if we're onto something
+      before you commit to the full picture.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      <div style="background:var(--cream);border-radius:16px;padding:32px;">
+        <div style="font-family:var(--font-display);font-size:40px;font-weight:300;
+          letter-spacing:-0.04em;color:var(--charcoal);margin-bottom:12px;">1</div>
+        <p style="font-size:15px;font-weight:500;color:var(--charcoal);margin-bottom:8px;">Answer a few questions</p>
+        <p style="font-size:13px;line-height:1.6;color:var(--charcoal-40);font-weight:300;">
+          We show you your first trait cluster after the first 15 questions. No waiting.
+        </p>
+      </div>
+      <div style="background:var(--cream);border-radius:16px;padding:32px;">
+        <div style="font-family:var(--font-display);font-size:40px;font-weight:300;
+          letter-spacing:-0.04em;color:var(--charcoal);margin-bottom:12px;">2</div>
+        <p style="font-size:15px;font-weight:500;color:var(--charcoal);margin-bottom:8px;">See if it resonates</p>
+        <p style="font-size:13px;line-height:1.6;color:var(--charcoal-40);font-weight:300;">
+          If what we've found doesn't feel right, stop. If it does, keep going for the full report.
+        </p>
+      </div>
+      <div style="background:var(--cream);border-radius:16px;padding:32px;">
+        <div style="font-family:var(--font-display);font-size:40px;font-weight:300;
+          letter-spacing:-0.04em;color:var(--charcoal);margin-bottom:12px;">3</div>
+        <p style="font-size:15px;font-weight:500;color:var(--charcoal);margin-bottom:8px;">Go deeper where it matters</p>
+        <p style="font-size:13px;line-height:1.6;color:var(--charcoal-40);font-weight:300;">
+          If your results show a strong pattern around connections or energy, we'll recommend
+          a specialised assessment to go further.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog">
+  <div class="blog-inner">
+    <div class="blog-header">
+      <div>
+        <p class="section-eyebrow" style="margin-bottom:8px;">From the journal</p>
+        <h2 class="section-heading" style="margin-bottom:0;font-size:clamp(24px,3vw,36px);">On knowing yourself</h2>
+      </div>
+      <a href="#" class="blog-link">All articles →</a>
+    </div>
+    <div class="blog-scroll">
+      <div class="blog-card">
+        <div class="blog-card-img">
+          <div id="blog-card-svg-0" style="position:absolute;inset:0;"></div>
+        </div>
+        <div class="blog-card-body">
+          <p class="blog-card-tag">Self-knowledge</p>
+          <h3 class="blog-card-title">Why "knowing yourself" is harder than it sounds</h3>
+          <p class="blog-card-desc">The gap between who we think we are and how others actually experience us.</p>
+        </div>
+        <div class="blog-card-meta">6 min read &nbsp;·&nbsp; <a href="#" class="blog-card-link">Read article →</a></div>
+      </div>
+      <div class="blog-card">
+        <div class="blog-card-img">
+          <div id="blog-card-svg-1" style="position:absolute;inset:0;"></div>
+        </div>
+        <div class="blog-card-body">
+          <p class="blog-card-tag">Research</p>
+          <h3 class="blog-card-title">The Big Five aren't a personality type</h3>
+          <p class="blog-card-desc">What the research actually says — and why most tools get it wrong.</p>
+        </div>
+        <div class="blog-card-meta">8 min read &nbsp;·&nbsp; <a href="#" class="blog-card-link">Read article →</a></div>
+      </div>
+      <div class="blog-card">
+        <div class="blog-card-img">
+          <div id="blog-card-svg-2" style="position:absolute;inset:0;"></div>
+        </div>
+        <div class="blog-card-body">
+          <p class="blog-card-tag">Work</p>
+          <h3 class="blog-card-title">The autonomy trap: when independence becomes isolation</h3>
+          <p class="blog-card-desc">High autonomy scores predict success — until they don't.</p>
+        </div>
+        <div class="blog-card-meta">5 min read &nbsp;·&nbsp; <a href="#" class="blog-card-link">Read article →</a></div>
+      </div>
+      <div class="blog-card" style="opacity:0.6;">
+        <div class="blog-card-img">
+          <div id="blog-card-svg-3" style="position:absolute;inset:0;"></div>
+        </div>
+        <div class="blog-card-body">
+          <p class="blog-card-tag">Patterns</p>
+          <h3 class="blog-card-title">Stuck patterns aren't flaws — they're signals</h3>
+          <p class="blog-card-desc">What your recurring frustrations are actually trying to tell you.</p>
+        </div>
+        <div class="blog-card-meta">7 min read &nbsp;·&nbsp; <a href="#" class="blog-card-link">Read article →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- END CTA -->
+<section id="cta">
+  <div class="cta-card">
+    <div id="cta-svg-wrap" style="position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:24px;overflow:hidden;"></div>
+    <div class="cta-inner">
+      <p class="cta-eyebrow">Free · Private · 15 minutes</p>
+      <h2 class="cta-heading">You already sense<br><em>there's more to know.</em></h2>
+      <p class="cta-sub">Most people spend years trying to understand themselves. Known gives you that map in 15 minutes — grounded in research, not guesswork.</p>
+      <div class="cta-actions">
+        <button class="btn-primary" style="font-size:15px;padding:15px 34px;">Start your report — it's free</button>
+        <a href="#" class="btn-ghost">See an example report</a>
+      </div>
+      <p class="cta-note">No account &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; No consultant</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Known</span>
+  <span style="max-width:360px;text-align:center;font-size:12px;line-height:1.5;">Built on proven psychological frameworks used in organisational and clinical psychology research. Not a substitute for therapy or clinical psychological assessment.</span>
+  <div style="display:flex;gap:28px;">
+    <a href="#" style="color:rgba(245,242,235,0.4);text-decoration:none;font-size:13px;">Privacy</a>
+    <a href="#" style="color:rgba(245,242,235,0.4);text-decoration:none;font-size:13px;">Methodology</a>
+    <a href="#" style="color:rgba(245,242,235,0.4);text-decoration:none;font-size:13px;">About</a>
+  </div>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+// BLOB ENGINE — exact copy of known-full-flow.html system
+// SVG paths + feGaussianBlur filter + off-centre radialGradient + DOM labels
+// ════════════════════════════════════════════════════════════════════════
+
+const USER_SEED = "u_played-2826-deliberate-autonomous";
+const ns = 'http://www.w3.org/2000/svg';
+
+// ── Seeded random (same as report) ──
+function hashSeed(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))%9973; } return h; }
+function seededRandom(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ── Curated 8-hue palette (exact from report) ──
+const curatedHues = [
+  { name:'Coral', hue:8 }, { name:'Amber', hue:35 }, { name:'Moss', hue:145 },
+  { name:'Teal', hue:175 }, { name:'Sky', hue:205 }, { name:'Periwinkle', hue:235 },
+  { name:'Plum', hue:290 }, { name:'Rose', hue:335 }
+];
+function userCuratedHue(seedStr, offset){
+  const base = hashSeed(seedStr + offset);
+  const bucket = base % curatedHues.length;
+  const jitter = (hashSeed(seedStr + offset + 'jitter') % 21) - 10;
+  return (curatedHues[bucket].hue + jitter + 360) % 360;
+}
+
+// ── Build stable per-point motion profile (same as report) ──
+function buildPointMotionProfile(seed, points){
+  const rand = seededRandom(seed);
+  const profile = [];
+  for(let i=0;i<points;i++){
+    profile.push({ phase: rand()*Math.PI*2, freq: 0.4+rand()*0.5, ampScale: 0.7+rand()*0.6 });
+  }
+  return profile;
+}
+
+// ── Generate animated blob path (exact copy from report, irregularity=0.3) ──
+function generateAnimatedBlobPath(cx, cy, baseRadius, profile, irregularity, t){
+  const points = profile.length;
+  const angleStep = (Math.PI*2)/points;
+  const pts = [];
+  for(let i=0;i<points;i++){
+    const angle = i*angleStep;
+    const p = profile[i];
+    const wobble = Math.sin(t*p.freq+p.phase)*irregularity*p.ampScale;
+    const r = baseRadius*(1+wobble);
+    pts.push({x: cx+Math.cos(angle)*r, y: cy+Math.sin(angle)*r});
+  }
+  function catmullToBezier(p0,p1,p2,p3){
+    const c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6};
+    const c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
+    return {c1,c2,end:p2};
+  }
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} `;
+  for(let i=0;i<points;i++){
+    const p0=pts[(i-1+points)%points], p1=pts[i], p2=pts[(i+1)%points], p3=pts[(i+2)%points];
+    const seg = catmullToBezier(p0,p1,p2,p3);
+    d += `C ${seg.c1.x.toFixed(1)} ${seg.c1.y.toFixed(1)}, ${seg.c2.x.toFixed(1)} ${seg.c2.y.toFixed(1)}, ${seg.end.x.toFixed(1)} ${seg.end.y.toFixed(1)} `;
+  }
+  return d + 'Z';
+}
+
+// ── Create an SVG with a blur filter, return {svg, defs, filterId} ──
+function makeBlobSvg(viewW, viewH, blurStd, extraStyle){
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${viewW} ${viewH}`);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.style.overflow = 'visible';
+  svg.style.position = 'absolute';
+  svg.style.left = '0'; svg.style.top = '0';
+  if(extraStyle) Object.assign(svg.style, extraStyle);
+  const defs = document.createElementNS(ns, 'defs');
+  svg.appendChild(defs);
+  const filterId = 'blur-' + Math.random().toString(36).slice(2);
+  const filter = document.createElementNS(ns, 'filter');
+  filter.setAttribute('id', filterId);
+  filter.setAttribute('x','-50%'); filter.setAttribute('y','-50%');
+  filter.setAttribute('width','200%'); filter.setAttribute('height','200%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="${blurStd}"/>`;
+  defs.appendChild(filter);
+  return { svg, defs, filterId };
+}
+
+// ── Create one blob path element with gradient (exact report approach) ──
+// isActive: uses the full 4-stop gradient; inactive: 2-stop dimmer
+function makeBlobPath(defs, gradIdBase, hue, isActive, filterId){
+  const gradId = gradIdBase + '-' + Math.random().toString(36).slice(2);
+  const grad = document.createElementNS(ns, 'radialGradient');
+  grad.setAttribute('id', gradId);
+  grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+  if(isActive){
+    grad.innerHTML = `
+      <stop offset="0%"   stop-color="hsl(${hue},80%,62%)" stop-opacity="1"/>
+      <stop offset="45%"  stop-color="hsl(${hue},78%,60%)" stop-opacity="0.88"/>
+      <stop offset="75%"  stop-color="hsl(${hue},70%,68%)" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="hsl(${hue},60%,80%)" stop-opacity="0"/>`;
+  } else {
+    grad.innerHTML = `
+      <stop offset="0%"   stop-color="hsl(${hue},60%,76%)" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="hsl(${hue},55%,85%)" stop-opacity="0"/>`;
+  }
+  defs.appendChild(grad);
+  const pathEl = document.createElementNS(ns, 'path');
+  pathEl.setAttribute('fill', `url(#${gradId})`);
+  pathEl.setAttribute('filter', `url(#${filterId})`);
+  return pathEl;
+}
+
+// Master animation loop — all blobs register here
+const allBlobTasks = [];
+let masterStartTime = null;
+function masterTick(timestamp){
+  if(masterStartTime === null) masterStartTime = timestamp;
+  const t = (timestamp - masterStartTime) / 1000;
+  allBlobTasks.forEach(task => task(t));
+  requestAnimationFrame(masterTick);
+}
+requestAnimationFrame(masterTick);
+
+// ════════════════════════════════════════════════════════════════════════
+// HERO — 5 trait blobs, one active (centre, large), 4 in orbit
+// On transition: the next orbit blob moves+grows to centre, active shrinks to orbit
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('hero-blob-wrap');
+  if(!wrap) return;
+  const VW = 520, VH = 540;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 18);
+
+  // All 5 traits — each has a fixed "orbit" position and an "active" size
+  // The one that is active sits at centre (VW/2, VH*0.48)
+  const CX = VW * 0.5, CY = VH * 0.48;
+  const TRAITS = [
+    { word:'Deliberate', hueOff:0,  orbitX:115, orbitY:115, orbitR:72 },
+    { word:'Autonomous', hueOff:5,  orbitX:392, orbitY: 75, orbitR:80 },
+    { word:'Reflective', hueOff:10, orbitX:105, orbitY:390, orbitR:68 },
+    { word:'Durable',    hueOff:20, orbitX:378, orbitY:415, orbitR:64 },
+    { word:'Creative',   hueOff:15, orbitX:260, orbitY: 55, orbitR:60 },
+  ];
+  const ACTIVE_R = 140;
+  let activeIdx = 0;
+
+  // Build one grad + path per trait
+  const traitData = TRAITS.map((tr, i) => {
+    const hue = userCuratedHue(USER_SEED, tr.hueOff);
+    const profile = buildPointMotionProfile(hashSeed(tr.word+'-shape'), 9);
+
+    const gradId = `hero-grad-${i}`;
+    const grad = document.createElementNS(ns, 'radialGradient');
+    grad.setAttribute('id', gradId);
+    grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+    defs.appendChild(grad);
+
+    const pathEl = document.createElementNS(ns, 'path');
+    pathEl.setAttribute('fill', `url(#${gradId})`);
+    pathEl.setAttribute('filter', `url(#${filterId})`);
+    svg.appendChild(pathEl);
+
+    return { ...tr, hue, profile, grad, pathEl,
+      // current interpolated state
+      curX: i===0 ? CX : tr.orbitX,
+      curY: i===0 ? CY : tr.orbitY,
+      curR: i===0 ? ACTIVE_R : tr.orbitR,
+      curActive: i===0 ? 1 : 0,  // 0=inactive, 1=active (gradient weight)
+    };
+  });
+
+  function setGrad(td, weight){
+    // weight 0=inactive dim, 1=active bright, interpolated in between
+    const h = td.hue;
+    const op0 = 0.6 + weight * 0.38;   // 0.60 → 0.98
+    const op1 = 0.38 + weight * 0.50;  // 0.38 → 0.88
+    const op2 = 0.0  + weight * 0.40;  // 0.00 → 0.40
+    td.grad.innerHTML = `
+      <stop offset="0%"   stop-color="hsl(${h},${65+weight*15}%,${70-weight*8}%)" stop-opacity="${op0.toFixed(2)}"/>
+      <stop offset="50%"  stop-color="hsl(${h},${60+weight*18}%,${72-weight*12}%)" stop-opacity="${op1.toFixed(2)}"/>
+      <stop offset="80%"  stop-color="hsl(${h},55%,80%)" stop-opacity="${op2.toFixed(2)}"/>
+      <stop offset="100%" stop-color="hsl(${h},50%,85%)" stop-opacity="0"/>`;
+  }
+
+  // Init gradients
+  traitData.forEach((td, i) => setGrad(td, td.curActive));
+
+  // Insert SVG before labels
+  wrap.insertBefore(svg, wrap.firstChild);
+
+  // ── Two crossfading label elements for the active trait ──
+  const labelCSS = `position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
+    pointer-events:none;font-family:'Newsreader',Georgia,serif;font-style:italic;
+    font-size:34px;letter-spacing:-0.02em;white-space:nowrap;will-change:opacity;`;
+  const labelA = document.createElement('div');
+  const labelB = document.createElement('div');
+  labelA.style.cssText = labelCSS + 'opacity:1;';
+  labelB.style.cssText = labelCSS + 'opacity:0;';
+  labelA.textContent = TRAITS[0].word;
+  labelA.style.color = `hsl(${traitData[0].hue},40%,22%)`;
+  labelB.style.color = `hsl(${traitData[0].hue},40%,22%)`;
+  wrap.appendChild(labelA);
+  wrap.appendChild(labelB);
+
+  // ── Orbit labels — one per trait, shown when NOT active ──
+  const orbitLabels = traitData.map((td, i) => {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `position:absolute;transform:translate(-50%,-50%);pointer-events:none;
+      font-family:Inter,sans-serif;font-size:14px;font-weight:500;
+      color:rgba(28,28,26,0.7);letter-spacing:0.005em;
+      transition:opacity 0.4s ease;`;
+    lbl.textContent = td.word;
+    lbl.style.opacity = i === 0 ? '0' : '1';  // active starts hidden
+    wrap.appendChild(lbl);
+    return lbl;
+  });
+
+  function positionOrbitLabel(lbl, td){
+    // Place label just below/above the blob depending on vertical position
+    const belowCentre = td.curY > CY * 0.7;
+    const lx = td.curX;
+    const ly = td.curY + (belowCentre ? -(td.curR * 0.55 + 18) : (td.curR * 0.55 + 18));
+    lbl.style.left = (lx / VW * 100) + '%';
+    lbl.style.top  = (ly / VH * 100) + '%';
+  }
+
+  // Smooth lerp helper
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  const LERP_SPD = 0.055; // position/size lerp speed per frame
+
+  // Hue lerp (shortest arc)
+  let currentHue = traitData[0].hue, targetHue = traitData[0].hue;
+  function lerpHue(a, b, t){
+    let d = b - a; if(d > 180) d -= 360; if(d < -180) d += 360;
+    return a + d * t;
+  }
+
+  // Crossfade state
+  let traitTimer = 0, crossfading = false, crossFrame = 0;
+  let activeLbl = labelA, inactiveLbl = labelB;
+  const INTERVAL = 220, CROSS = 40;
+
+  allBlobTasks.push(function(t){
+    // ── Position lerp: each blob moves toward its target ──
+    traitData.forEach((td, i) => {
+      const isActive = i === activeIdx;
+      const tx = isActive ? CX      : td.orbitX;
+      const ty = isActive ? CY      : td.orbitY;
+      const tr = isActive ? ACTIVE_R: td.orbitR;
+      const tw = isActive ? 1 : 0;
+
+      td.curX = lerp(td.curX, tx, LERP_SPD);
+      td.curY = lerp(td.curY, ty, LERP_SPD);
+      td.curR = lerp(td.curR, tr, LERP_SPD);
+      td.curActive = lerp(td.curActive, tw, LERP_SPD * 0.8);
+
+      setGrad(td, td.curActive);
+      td.pathEl.setAttribute('d',
+        generateAnimatedBlobPath(td.curX, td.curY, td.curR, td.profile, 0.3, t)
+      );
+
+      // Orbit label: visible when not active, positioned at current blob location
+      if(!isActive){
+        positionOrbitLabel(orbitLabels[i], td);
+        orbitLabels[i].style.opacity = Math.min(1, (1 - td.curActive) * 1.4).toFixed(2);
+      } else {
+        orbitLabels[i].style.opacity = '0';
+      }
+    });
+
+    // Hue lerp
+    if(Math.abs(currentHue - targetHue) > 0.3){
+      currentHue = lerpHue(currentHue, targetHue, 0.028);
+    }
+
+    // Timer
+    traitTimer++;
+    if(!crossfading && traitTimer >= INTERVAL){
+      // Pick next: cycle through non-active traits in order
+      const nextIdx = (activeIdx + 1) % TRAITS.length;
+      activeIdx = nextIdx;
+      targetHue = traitData[nextIdx].hue;
+
+      // Crossfade the centre label
+      inactiveLbl.textContent = TRAITS[nextIdx].word;
+      inactiveLbl.style.color = `hsl(${traitData[nextIdx].hue},40%,22%)`;
+      inactiveLbl.style.opacity = '0';
+      crossfading = true; crossFrame = 0; traitTimer = 0;
+    }
+
+    if(crossfading){
+      crossFrame++;
+      const p = Math.min(1, crossFrame / CROSS);
+      const ease = p * p * (3 - 2 * p); // smoothstep
+      activeLbl.style.opacity  = (1 - ease).toFixed(3);
+      inactiveLbl.style.opacity = ease.toFixed(3);
+      if(crossFrame >= CROSS){
+        [activeLbl, inactiveLbl] = [inactiveLbl, activeLbl];
+        crossfading = false;
+      }
+    }
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// FACTS — blobs positioned precisely behind the large number text
+// Uses actual DOM measurement so cy matches real pixel layout
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('facts-svg-wrap');
+  const section = document.getElementById('facts');
+  if(!wrap || !section) return;
+
+  // We wait one frame for layout to settle, then measure and build
+  requestAnimationFrame(() => {
+    const sW = section.clientWidth;
+    const sH = section.clientHeight;
+
+    // Measure where the fact numbers actually are
+    // They're inside .facts-grid which starts after headline + margin
+    // Use the first fact-num element's position relative to the section
+    const nums = section.querySelectorAll('.fact-num');
+    const grid = section.querySelector('.facts-grid');
+
+    // Get grid offset from top of section
+    const sRect = section.getBoundingClientRect();
+    const gRect = grid ? grid.getBoundingClientRect() : null;
+
+    // Measure each fact-num element directly — most reliable approach
+    const gridTopInSection = gRect ? (gRect.top - sRect.top) : sH * 0.58;
+    const blobCY = gridTopInSection + 44;
+
+    const HUES = [5, 15, 35];
+    const blobCXs = [];
+    nums.forEach((num, i) => {
+      const nRect = num.getBoundingClientRect();
+      // Centre blob on the number text: left edge + half its rendered width
+      blobCXs.push(nRect.left - sRect.left + nRect.width * 0.5);
+    });
+    // Fallback if nums not found
+    if(blobCXs.length < 3){
+      const innerW = Math.min(sW - 96, 1100);
+      const innerLeft = (sW - innerW) / 2;
+      const colW = (innerW - 96) / 3;
+      blobCXs[0] = innerLeft + colW * 0.5;
+      blobCXs[1] = innerLeft + colW + 48 + colW * 0.5;
+      blobCXs[2] = innerLeft + colW * 2 + 96 + colW * 0.5;
+    }
+
+    const { svg, defs, filterId } = makeBlobSvg(sW, sH, 22, {
+      width:'100%', height:'100%', position:'absolute', inset:'0'
+    });
+    svg.setAttribute('viewBox', `0 0 ${sW} ${sH}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+
+    const COLS = [
+      { cx: blobCXs[0], cy: blobCY, r: 78, hueOffset: 5  },
+      { cx: blobCXs[1], cy: blobCY, r: 78, hueOffset: 15 },
+      { cx: blobCXs[2], cy: blobCY, r: 74, hueOffset: 35 },
+    ];
+
+    const blobs = COLS.map((col, i) => {
+      const hue = userCuratedHue(USER_SEED, col.hueOffset);
+      const profile = buildPointMotionProfile(hashSeed('facts-col-'+i), 9);
+      const pathEl = makeBlobPath(defs, 'facts-'+i, hue, true, filterId);
+      svg.appendChild(pathEl);
+      return { pathEl, profile, cx:col.cx, cy:col.cy, r:col.r };
+    });
+
+    wrap.appendChild(svg);
+    allBlobTasks.push(t => blobs.forEach(b =>
+      b.pathEl.setAttribute('d', generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, t))
+    ));
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// BENTO: WHO YOU ARE — trait cluster
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('bento-cluster-wrap');
+  if(!wrap) return;
+  const VW = 500, VH = 320;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 14);
+
+  const TRAITS = [
+    { word:'Deliberate', hueOff:0,  cx:250, cy:160, r:112, active:true  },
+    { word:'Autonomous', hueOff:5,  cx:102, cy:118, r:72,  active:false },
+    { word:'Reflective', hueOff:10, cx:390, cy:105, r:66,  active:false },
+    { word:'Durable',    hueOff:20, cx:108, cy:235, r:62,  active:false },
+    { word:'Selective',  hueOff:35, cx:385, cy:228, r:58,  active:false },
+  ];
+
+  const blobData = TRAITS.map((t, i) => {
+    const hue = userCuratedHue(USER_SEED, t.hueOff);
+    const profile = buildPointMotionProfile(hashSeed(t.word+'-shape'), 9);
+    const pathEl = makeBlobPath(defs, 'bcluster-'+i, hue, t.active, filterId);
+    svg.appendChild(pathEl);
+
+    // DOM label
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `position:absolute;transform:translate(-50%,-50%);pointer-events:none;`;
+    lbl.style.left = (t.cx/VW*100)+'%';
+    lbl.style.top  = (t.cy/VH*100)+'%';
+    if(t.active){
+      lbl.style.cssText += `font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:22px;color:hsl(${userCuratedHue(USER_SEED,t.hueOff)},45%,24%);`;
+    } else {
+      lbl.style.cssText += `font-family:Inter,sans-serif;font-size:12.5px;font-weight:500;color:rgba(28,28,26,0.58);`;
+    }
+    lbl.textContent = t.word;
+    wrap.appendChild(lbl);
+
+    return { pathEl, profile, cx:t.cx, cy:t.cy, r:t.r };
+  });
+
+  // SVG goes in first so labels (already appended to wrap) render above it
+  wrap.insertBefore(svg, wrap.firstChild);
+  allBlobTasks.push(t => blobData.forEach(b =>
+    b.pathEl.setAttribute('d', generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t))
+  ));
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// BENTO: WHERE YOU THRIVE — orbit blobs around "You" centre
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('bento-orbit-wrap');
+  if(!wrap) return;
+  // Only 3 environment blobs, bigger, labels above SVG
+  const VW = 380, VH = 160;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 12);
+
+  const CX = VW*0.48, CY = VH*0.52;
+  // 3 blobs only, spread wide, larger
+  const ENV = [
+    { word:'Autonomy',  angle:-0.6, dist:108, r:46, hueOff:5  },
+    { word:'Async',     angle:2.65, dist:100, r:42, hueOff:10 },
+    { word:'Deep work', angle:0.35, dist:106, r:44, hueOff:15 },
+  ];
+
+  const envData = ENV.map((e, i) => {
+    const hue = userCuratedHue(USER_SEED, e.hueOff);
+    const profile = buildPointMotionProfile(hashSeed(e.word+'-env'), 8);
+    const cx = CX + Math.cos(e.angle)*e.dist;
+    const cy = CY + Math.sin(e.angle)*e.dist*0.65;
+    const pathEl = makeBlobPath(defs, 'env-'+i, hue, false, filterId);
+    svg.appendChild(pathEl);
+    return { pathEl, profile, cx, cy, r:e.r, lx:cx, ly:cy };
+  });
+
+  // "You" — active style (brighter), small
+  const youHue = userCuratedHue(USER_SEED, 0);
+  const youProfile = buildPointMotionProfile(hashSeed('you-centre'), 8);
+  const youPath = makeBlobPath(defs, 'you-centre', youHue, true, filterId);
+  svg.appendChild(youPath);
+
+  // Insert SVG FIRST so DOM labels render above it
+  wrap.insertBefore(svg, wrap.firstChild);
+
+  // Labels appended after SVG — appear on top
+  ENV.forEach((e, i) => {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `position:absolute;transform:translate(-50%,-50%);pointer-events:none;
+      font-family:Inter,sans-serif;font-size:13px;font-weight:400;color:rgba(28,28,26,0.65);`;
+    lbl.style.left = (envData[i].lx/VW*100)+'%';
+    lbl.style.top  = (envData[i].ly/VH*100)+'%';
+    lbl.textContent = e.word;
+    wrap.appendChild(lbl);
+  });
+
+  const youLbl = document.createElement('div');
+  youLbl.style.cssText = `position:absolute;transform:translate(-50%,-50%);pointer-events:none;
+    font-family:Inter,sans-serif;font-size:13px;font-weight:500;color:hsl(${youHue},45%,24%);`;
+  youLbl.style.left = (CX/VW*100)+'%';
+  youLbl.style.top  = (CY/VH*100)+'%';
+  youLbl.textContent = 'You';
+  wrap.appendChild(youLbl);
+
+  allBlobTasks.push(t => {
+    envData.forEach(b => b.pathEl.setAttribute('d', generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, t)));
+    youPath.setAttribute('d', generateAnimatedBlobPath(CX, CY, 20, youProfile, 0.25, t));
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// BENTO: HOW YOU CONNECT — "You" solid + "Someone close" dashed with glow
+// Uses SVG circles, not blobs
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('bento-connect-wrap');
+  if(!wrap) return;
+  const VW = 380, VH = 110;
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+  svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+  svg.style.overflow = 'visible';
+  const defs = document.createElementNS(ns, 'defs');
+  svg.appendChild(defs);
+
+  const r = 38;
+  const youX = VW*0.30, themX = VW*0.66, cy = VH*0.52;
+  const hue = 340; // Hardcoded warm rose — userCuratedHue maps offset 1 to sky blue with this seed
+
+  // Glow gradient for "Someone close"
+  const glowId = 'connect-glow';
+  const glowGrad = document.createElementNS(ns, 'radialGradient');
+  glowGrad.setAttribute('id', glowId);
+  glowGrad.setAttribute('cx','50%'); glowGrad.setAttribute('cy','50%'); glowGrad.setAttribute('r','50%');
+  glowGrad.innerHTML = `
+    <stop offset="0%"   stop-color="hsl(${hue},70%,70%)" stop-opacity="0.35"/>
+    <stop offset="100%" stop-color="hsl(${hue},60%,80%)" stop-opacity="0"/>`;
+  defs.appendChild(glowGrad);
+
+  // Glow circle behind dashed circle
+  const glowCircle = document.createElementNS(ns, 'circle');
+  glowCircle.setAttribute('cx', themX); glowCircle.setAttribute('cy', cy);
+  glowCircle.setAttribute('r', r*1.9);
+  glowCircle.setAttribute('fill', `url(#${glowId})`);
+  svg.appendChild(glowCircle);
+
+  // Dashed line connecting them
+  const line = document.createElementNS(ns, 'line');
+  line.setAttribute('x1', youX+r); line.setAttribute('y1', cy);
+  line.setAttribute('x2', themX-r); line.setAttribute('y2', cy);
+  line.setAttribute('stroke','rgba(28,28,26,0.15)'); line.setAttribute('stroke-width','1.5');
+  line.setAttribute('stroke-dasharray','4,4');
+  svg.appendChild(line);
+
+  // "Someone close" — dashed circle
+  const dashed = document.createElementNS(ns, 'circle');
+  dashed.setAttribute('cx', themX); dashed.setAttribute('cy', cy); dashed.setAttribute('r', r);
+  dashed.setAttribute('fill', `hsl(${hue},65%,90%)`);
+  dashed.setAttribute('fill-opacity','0.25');
+  dashed.setAttribute('stroke', `hsl(${hue},60%,65%)`);
+  dashed.setAttribute('stroke-width','1.5');
+  dashed.setAttribute('stroke-dasharray','5,4');
+  svg.appendChild(dashed);
+
+  // "You" — solid dark circle
+  const youCircle = document.createElementNS(ns, 'circle');
+  youCircle.setAttribute('cx', youX); youCircle.setAttribute('cy', cy); youCircle.setAttribute('r', r);
+  youCircle.setAttribute('fill', '#2A2720');
+  svg.appendChild(youCircle);
+
+  // Labels
+  const youText = document.createElementNS(ns, 'text');
+  youText.setAttribute('x', youX); youText.setAttribute('y', cy+4);
+  youText.setAttribute('text-anchor','middle');
+  youText.setAttribute('font-family','Inter,sans-serif'); youText.setAttribute('font-size','11');
+  youText.setAttribute('font-weight','600'); youText.setAttribute('fill','rgba(245,242,235,0.9)');
+  youText.textContent = 'You';
+  svg.appendChild(youText);
+
+  const themText = document.createElementNS(ns, 'text');
+  themText.setAttribute('x', themX); themText.setAttribute('y', cy);
+  themText.setAttribute('text-anchor','middle');
+  themText.setAttribute('font-family','Inter,sans-serif'); themText.setAttribute('font-size','10');
+  themText.setAttribute('fill', `hsl(${hue},50%,38%)`);
+  themText.innerHTML = `<tspan x="${themX}" dy="-6">Someone</tspan><tspan x="${themX}" dy="13">close</tspan>`;
+  svg.appendChild(themText);
+
+  wrap.appendChild(svg);
+
+  // Pulse the glow
+  allBlobTasks.push(t => {
+    const pulse = 1 + Math.sin(t*1.2)*0.08;
+    glowCircle.setAttribute('r', r*1.9*pulse);
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// REPORT PREVIEW CLUSTER
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('report-cluster-wrap');
+  if(!wrap) return;
+  const VW = 460, VH = 180;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 11);
+
+  const TRAITS = [
+    { word:'Deliberate', hueOff:0,  cx:230, cy:98,  r:68, active:true  },
+    { word:'Autonomous', hueOff:5,  cx:118, cy:80,  r:42, active:false },
+    { word:'Reflective', hueOff:10, cx:340, cy:72,  r:38, active:false },
+    { word:'Durable',    hueOff:20, cx:122, cy:148, r:36, active:false },
+    { word:'Selective',  hueOff:35, cx:336, cy:148, r:34, active:false },
+  ];
+
+  const blobData = TRAITS.map((tr, i) => {
+    const hue = userCuratedHue(USER_SEED, tr.hueOff);
+    const profile = buildPointMotionProfile(hashSeed(tr.word+'-rpc'), 9);
+    const pathEl = makeBlobPath(defs, 'rpc-'+i, hue, tr.active, filterId);
+    svg.appendChild(pathEl);
+
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `position:absolute;transform:translate(-50%,-50%);pointer-events:none;`;
+    lbl.style.left = (tr.cx/VW*100)+'%';
+    lbl.style.top  = (tr.cy/VH*100)+'%';
+    if(tr.active){
+      lbl.style.cssText += `font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:14px;color:hsl(${hue},45%,24%);`;
+    } else {
+      lbl.style.cssText += `font-family:Inter,sans-serif;font-size:9px;color:rgba(28,28,26,0.46);`;
+    }
+    lbl.textContent = tr.word;
+    wrap.appendChild(lbl);
+
+    return { pathEl, profile, cx:tr.cx, cy:tr.cy, r:tr.r };
+  });
+
+  wrap.insertBefore(svg, wrap.firstChild);
+  allBlobTasks.push(t => blobData.forEach(b =>
+    b.pathEl.setAttribute('d', generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t))
+  ));
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// BLOG CARD THUMBNAILS
+// ════════════════════════════════════════════════════════════════════════
+[
+  [0, 10], [1, 5], [2, 20], [3, 35]
+].forEach(([i, hueOff2]) => {
+  const wrap = document.getElementById('blog-card-svg-'+i);
+  if(!wrap) return;
+  const VW = 300, VH = 200;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 14);
+
+  const hue1 = userCuratedHue(USER_SEED, hueOff2);
+  const hue2 = userCuratedHue(USER_SEED, hueOff2 + 7);
+  const b1 = { profile: buildPointMotionProfile(hashSeed('blog-'+i+'-a'), 9), cx:VW*0.36, cy:VH*0.52, r:68 };
+  const b2 = { profile: buildPointMotionProfile(hashSeed('blog-'+i+'-b'), 9), cx:VW*0.62, cy:VH*0.48, r:62 };
+
+  const p1 = makeBlobPath(defs, 'blog-'+i+'-a', hue1, true, filterId);
+  const p2 = makeBlobPath(defs, 'blog-'+i+'-b', hue2, true, filterId);
+  svg.appendChild(p1); svg.appendChild(p2);
+  wrap.appendChild(svg);
+  b1.pathEl = p1; b2.pathEl = p2;
+
+  allBlobTasks.push(t => {
+    p1.setAttribute('d', generateAnimatedBlobPath(b1.cx, b1.cy, b1.r, b1.profile, 0.3, t));
+    p2.setAttribute('d', generateAnimatedBlobPath(b2.cx, b2.cy, b2.r, b2.profile, 0.3, t));
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// CTA CARD HALO — warm ambient blobs
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('cta-svg-wrap');
+  if(!wrap) return;
+  const VW = 900, VH = 420;
+  const { svg, defs, filterId } = makeBlobSvg(VW, VH, 30, {width:'100%',height:'100%'});
+  svg.setAttribute('preserveAspectRatio','xMidYMid slice');
+
+  const HALOS = [
+    { cx:VW*0.08, cy:VH*0.50, r:200, hueOff:35 },
+    { cx:VW*0.92, cy:VH*0.50, r:170, hueOff:5  },
+    { cx:VW*0.50, cy:VH*1.0,  r:150, hueOff:15 },
+  ];
+
+  const haloData = HALOS.map((h, i) => {
+    const hue = userCuratedHue(USER_SEED, h.hueOff);
+    const profile = buildPointMotionProfile(hashSeed('cta-halo-'+i), 9);
+    const pathEl = makeBlobPath(defs, 'cta-'+i, hue, false, filterId);
+    svg.appendChild(pathEl);
+    return { pathEl, profile, cx:h.cx, cy:h.cy, r:h.r };
+  });
+
+  wrap.appendChild(svg);
+  allBlobTasks.push(t => haloData.forEach((b, i) => {
+    const wobX = Math.sin(t*0.3+i*2)*VW*0.025;
+    const wobY = Math.cos(t*0.25+i*2)*VH*0.03;
+    b.pathEl.setAttribute('d', generateAnimatedBlobPath(b.cx+wobX, b.cy+wobY, b.r, b.profile, 0.28, t));
+  }));
+})();
+</script>
+</body>
+</html>
+</body>
+</html>

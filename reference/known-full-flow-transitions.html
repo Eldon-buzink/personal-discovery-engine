@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Known — full flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F7F4ED; --cream-deep:#EFEAE0; --charcoal:#262420; --charcoal-soft:#56534D;
+    --gray:#8C8A83; --gray-light:#D8D4C8; --line:#E5E1D5; --white:#FDFCF9; --teal:#3D6B5C;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--cream); font-family:'Inter',sans-serif; color:var(--charcoal); -webkit-font-smoothing:antialiased; }
+
+  /* ===== flow nav shell ===== */
+  .flow-nav{
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    background:var(--charcoal); padding:10px 16px;
+    display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+    font-size:11.5px;
+  }
+  .flow-nav-label{ color:var(--gray-light); margin-right:6px; }
+  .flow-nav-btn{
+    font-size:11.5px; padding:6px 11px; border-radius:6px; border:1px solid rgba(247,244,237,0.25);
+    background:transparent; color:var(--cream); cursor:pointer;
+  }
+  .flow-nav-btn.active{ background:var(--cream); color:var(--charcoal); border-color:var(--cream); }
+  .flow-screen{ display:none; padding-top:46px; min-height:100vh; }
+  .flow-screen.active{ display:block; }
+
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ===== transition overlay ===== */
+  #transitionOverlay{
+    position:fixed; inset:0; z-index:2000;
+    background:var(--cream);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.35s ease;
+  }
+  #transitionOverlay.fade-in{ opacity:1; pointer-events:all; }
+  #transitionOverlay.fade-out{ opacity:0; pointer-events:none; }
+
+  /* travelling blob overlay for pattern→report */
+  #blobTravelOverlay{
+    position:fixed; inset:0; z-index:1999;
+    pointer-events:none;
+    opacity:0;
+  }
+  #blobTravelOverlay.active{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div id="transitionOverlay"></div>
+<div id="blobTravelOverlay"><svg id="blobTravelSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;"></svg></div>
+
+<!-- ===== AUTH MODAL ===== -->
+<div id="authModalBackdrop" style="
+  display:none; position:fixed; inset:0; z-index:3000;
+  background:rgba(38,36,32,0.55); backdrop-filter:blur(3px);
+  align-items:center; justify-content:center; padding:24px;
+">
+  <div id="authModal" style="
+    background:var(--cream); border-radius:18px; padding:32px 28px 26px;
+    max-width:400px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.18);
+    position:relative; opacity:0; transform:translateY(12px);
+    transition:opacity 0.3s ease, transform 0.3s ease;
+  ">
+    <p id="authModalEyebrow" style="
+      font-size:11px; letter-spacing:0.07em; text-transform:uppercase;
+      color:var(--gray); font-weight:600; margin:0 0 10px; text-align:center;
+    ">Save your progress</p>
+    <h2 id="authModalHeadline" style="
+      font-family:'Newsreader',serif; font-size:22px; font-weight:500;
+      line-height:1.35; text-align:center; margin:0 0 10px; color:var(--charcoal);
+    ">Save your progress to explore Your relationships</h2>
+    <p id="authModalSub" style="
+      font-size:13.5px; color:var(--charcoal-soft); line-height:1.6;
+      text-align:center; margin:0 0 24px;
+    ">You've answered 28 questions. Leave your email and we'll make sure none of it disappears.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input id="authEmailInput" type="email" placeholder="Your email address" style="
+        width:100%; padding:14px 16px; border-radius:10px; border:1.5px solid var(--line);
+        background:var(--white); font-size:15px; font-family:'Inter',sans-serif;
+        color:var(--charcoal); outline:none; transition:border-color 0.15s ease;
+        box-sizing:border-box;
+      ">
+      <button id="authModalCta" style="
+        width:100%; background:var(--charcoal); color:var(--cream); border:none;
+        border-radius:10px; padding:15px; font-size:15px; font-weight:500;
+        cursor:pointer; font-family:'Inter',sans-serif;
+      ">Save and continue</button>
+    </div>
+
+    <p style="font-size:12px; color:var(--gray); text-align:center; margin:14px 0 0; line-height:1.5;">
+      No password needed yet. We'll send you a link.
+    </p>
+
+    <div style="border-top:1px solid var(--line); margin:18px 0 0; padding-top:14px; text-align:center;">
+      <button id="authModalSkip" style="
+        background:none; border:none; font-size:12.5px; color:var(--gray);
+        cursor:pointer; font-family:'Inter',sans-serif; text-decoration:underline;
+        text-underline-offset:2px;
+      ">Skip — I don't mind starting over</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 1: ONBOARDING ============ -->
+<div class="flow-screen active" id="screenOnboarding">
+<style>
+  #screenOnboarding .stage{ max-width:480px; margin:0 auto; padding:40px 26px 60px; }
+  #screenOnboarding .wordmark{ font-family:'Newsreader',serif; font-weight:600; font-size:16px; text-align:center; margin:0 0 40px; opacity:0; animation:fadeIn 0.6s ease forwards; }
+  #screenOnboarding .beat{ opacity:0; animation:fadeIn 0.6s ease forwards; }
+  #screenOnboarding .beat + .beat{ margin-top:30px; }
+  #screenOnboarding .mirror-line{ font-family:'Newsreader',serif; font-style:italic; font-size:20px; line-height:1.5; text-align:center; color:var(--charcoal-soft); margin:0; animation-delay:0.1s; }
+  #screenOnboarding hr.div{ border:none; border-top:1px solid var(--line); margin:30px 0; }
+  #screenOnboarding .eyebrow{ font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 14px; text-align:center; }
+  #screenOnboarding h1{ font-family:'Newsreader',serif; font-size:25px; font-weight:500; line-height:1.35; text-align:center; margin:0 0 14px; animation-delay:0.25s; }
+  #screenOnboarding .diff-body{ font-size:14.5px; line-height:1.65; color:var(--charcoal-soft); text-align:center; max-width:400px; margin:0 auto; animation-delay:0.35s; }
+  #screenOnboarding .what-to-expect{ display:flex; flex-direction:column; gap:13px; max-width:400px; margin:0 auto; animation-delay:0.65s; }
+  #screenOnboarding .expect-row{ display:flex; align-items:baseline; gap:12px; }
+  #screenOnboarding .expect-mark{ width:5px; height:5px; border-radius:50%; background:var(--gray); flex-shrink:0; position:relative; top:-4px; }
+  #screenOnboarding .expect-text{ font-size:13.5px; line-height:1.6; color:var(--charcoal-soft); margin:0; }
+  #screenOnboarding .expect-text b{ color:var(--charcoal); font-weight:600; }
+  #screenOnboarding .start-area{ margin-top:34px; animation-delay:0.8s; }
+  #screenOnboarding .start-btn{ width:100%; max-width:400px; margin:0 auto; display:block; background:var(--charcoal); color:var(--cream); border:none; border-radius:11px; padding:16px; font-size:15px; font-weight:500; cursor:pointer; }
+  #screenOnboarding .start-sub{ text-align:center; font-size:12.5px; color:var(--gray); margin-top:14px; }
+</style>
+
+<div class="stage">
+  <p class="wordmark">known</p>
+  <div class="beat"><p class="mirror-line">You're here because something isn't quite clicking — not in a crisis way, just a sense that you're making decisions without really knowing why.</p></div>
+  <hr class="div">
+  <div class="beat">
+    <p class="eyebrow">This isn't a personality test</p>
+    <h1>There's no wrong way to answer any of this.</h1>
+    <p class="diff-body">No types, no scores, no "you are a..." label to live up to. Just a clearer picture of how you actually work — built from how you answer, not from a quiz you can game.</p>
+  </div>
+  <hr class="div">
+  <div class="beat what-to-expect">
+    <div class="expect-row"><span class="expect-mark"></span><p class="expect-text"><b>Built on real psychology.</b> The same models researchers and trained consultants use — not invented categories.</p></div>
+    <div class="expect-row"><span class="expect-mark"></span><p class="expect-text"><b>What you tell us stays yours.</b> Nothing is shared or sold — and there's nothing here to perform.</p></div>
+    <div class="expect-row"><span class="expect-mark"></span><p class="expect-text"><b>Go at your own pace.</b> You can stop and pick up later — nothing is lost.</p></div>
+  </div>
+  <div class="beat start-area">
+    <button class="start-btn" id="onboardingStart">Start</button>
+    <p class="start-sub">Takes most people 12–15 minutes, in one go or several</p>
+  </div>
+</div>
+</div>
+
+<!-- ============ SCREEN 2: QUESTION SCREEN ============ -->
+<div class="flow-screen" id="screenQuestion">
+<style>
+  #screenQuestion .topbar{ display:flex; align-items:center; justify-content:space-between; padding:14px 26px; }
+  #screenQuestion .exit-link{ font-size:13px; color:var(--gray); text-decoration:none; }
+  #screenQuestion .proximity{ display:flex; align-items:center; gap:8px; }
+  #screenQuestion .proximity-track{ width:64px; height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
+  #screenQuestion .proximity-fill{ height:100%; border-radius:3px; background:var(--teal); transition:width 0.5s ease; }
+  #screenQuestion .proximity-label{ font-size:11px; color:var(--gray); }
+  #screenQuestion .q-stage{ max-width:480px; margin:0 auto; padding:30px 26px 50px; min-height:46vh; display:flex; flex-direction:column; justify-content:center; }
+  #screenQuestion .q-eyebrow{ font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 22px; text-align:center; }
+  #screenQuestion .q-text{ font-family:'Newsreader',serif; font-size:24px; font-weight:500; line-height:1.4; text-align:center; margin:0 0 36px; }
+  #screenQuestion .state-panel{ display:none; }
+  #screenQuestion .state-panel.active{ display:block; }
+  #screenQuestion .scale-horizontal{ display:flex; flex-direction:column; gap:14px; }
+  #screenQuestion .scale-points{ display:flex; justify-content:space-between; align-items:center; padding:0 4px; }
+  #screenQuestion .scale-point{ width:42px; height:42px; border-radius:50%; border:1.5px solid var(--line); background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; flex-shrink:0; }
+  #screenQuestion .scale-point:hover{ border-color:var(--gray-light); }
+  #screenQuestion .scale-point.selected{ background:var(--charcoal); border-color:var(--charcoal); }
+  #screenQuestion .scale-connector{ flex:1; height:1px; background:var(--line); margin:0 2px; }
+  #screenQuestion .scale-poles{ display:flex; justify-content:space-between; font-size:12px; color:var(--gray); padding:0 2px; }
+  #screenQuestion .scale-options{ display:flex; flex-direction:column; gap:10px; }
+  #screenQuestion .scale-option{ border:1px solid var(--line); background:var(--white); border-radius:11px; padding:15px 18px; font-size:14.5px; color:var(--charcoal); cursor:pointer; text-align:left; transition:border-color 0.15s ease, background 0.15s ease; }
+  #screenQuestion .scale-option:hover{ border-color:var(--gray-light); background:var(--cream-deep); }
+  #screenQuestion .scale-option.selected{ border-color:var(--charcoal); background:var(--cream-deep); font-weight:500; }
+  #screenQuestion .open-marker{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:18px; }
+  #screenQuestion .open-marker-dot{ width:6px; height:6px; border-radius:50%; background:var(--teal); }
+  #screenQuestion .open-marker-text{ font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--teal); font-weight:600; }
+  #screenQuestion .open-textarea{ width:100%; border:1px solid var(--line); background:var(--white); border-radius:12px; padding:16px 18px; font-family:'Inter',sans-serif; font-size:14.5px; line-height:1.6; color:var(--charcoal); resize:none; min-height:110px; }
+  #screenQuestion .open-textarea:focus{ outline:none; border-color:var(--charcoal-soft); }
+  #screenQuestion .open-hint{ font-size:12px; color:var(--gray); margin-top:10px; text-align:center; }
+  #screenQuestion .continue-btn{ width:100%; background:var(--charcoal); color:var(--cream); border:none; border-radius:10px; padding:15px; font-size:14.5px; font-weight:500; cursor:pointer; margin-top:28px; opacity:0.35; pointer-events:none; transition:opacity 0.2s ease; }
+  #screenQuestion .continue-btn.enabled{ opacity:1; pointer-events:auto; }
+  #screenQuestion .dev-panel{ background:var(--cream-deep); border-top:1px solid var(--line); padding:14px 20px; }
+  #screenQuestion .dev-panel-label{ font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); text-align:center; margin:0 0 8px; }
+  #screenQuestion .dev-controls{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  #screenQuestion .dev-btn{ font-size:12px; padding:7px 13px; border-radius:7px; border:1px solid var(--gray-light); background:var(--white); color:var(--charcoal-soft); cursor:pointer; }
+  #screenQuestion .dev-btn.active{ background:var(--charcoal); color:var(--cream); border-color:var(--charcoal); }
+  #screenQuestion .dev-rule{ font-size:11.5px; color:var(--gray); text-align:center; margin:8px auto 0; max-width:420px; line-height:1.5; }
+</style>
+
+<div class="topbar">
+  <a class="exit-link" href="#">← Save and exit</a>
+  <div class="proximity"><span class="proximity-label">Getting closer</span><div class="proximity-track"><div class="proximity-fill" style="width:35%;"></div></div></div>
+</div>
+<div class="q-stage">
+  <div class="state-panel active" id="panelA">
+    <p class="q-eyebrow">Question 9 · default format</p>
+    <p class="q-text">[ Question text — a clean, symmetric degree-of-agreement question ]</p>
+    <div class="scale-horizontal">
+      <div class="scale-points" id="pointsA">
+        <div class="scale-point" data-val="1"></div><div class="scale-connector"></div>
+        <div class="scale-point" data-val="2"></div><div class="scale-connector"></div>
+        <div class="scale-point" data-val="3"></div><div class="scale-connector"></div>
+        <div class="scale-point" data-val="4"></div><div class="scale-connector"></div>
+        <div class="scale-point" data-val="5"></div>
+      </div>
+      <div class="scale-poles"><span>Strongly disagree</span><span>Strongly agree</span></div>
+    </div>
+    <button class="continue-btn" id="continueA">Continue</button>
+  </div>
+  <div class="state-panel" id="panelB">
+    <p class="q-eyebrow">Question 14 · distinct-response exception</p>
+    <p class="q-text">[ Question text — where the real answers are qualitatively different, not just stronger/weaker agreement ]</p>
+    <div class="scale-options" id="optionsB">
+      <button class="scale-option" data-val="1">[ Response option 1 — a genuinely different behavior ]</button>
+      <button class="scale-option" data-val="2">[ Response option 2 ]</button>
+      <button class="scale-option" data-val="3">[ Response option 3 — neutral / depends ]</button>
+      <button class="scale-option" data-val="4">[ Response option 4 ]</button>
+      <button class="scale-option" data-val="5">[ Response option 5 — a different behavior, opposite end ]</button>
+    </div>
+    <button class="continue-btn" id="continueB">Continue</button>
+  </div>
+  <div class="state-panel" id="panelOpen">
+    <div class="open-marker"><span class="open-marker-dot"></span><span class="open-marker-text">Tell us in your own words</span></div>
+    <p class="q-text">[ Open question — fires when two prior answers on the same dimension contradict each other. Max twice per Ring 1. ]</p>
+    <textarea class="open-textarea" id="openTextarea" placeholder="There's no wrong answer here — just write what's actually true for you."></textarea>
+    <p class="open-hint">This helps us get your pattern right, not just fast.</p>
+    <button class="continue-btn" id="continueOpen">Continue</button>
+  </div>
+</div>
+<div class="dev-panel">
+  <p class="dev-panel-label">Question type preview — not part of the real product chrome</p>
+  <div class="dev-controls">
+    <button class="dev-btn active" data-panel="panelA">A — Default scale</button>
+    <button class="dev-btn" data-panel="panelB">B — Custom options (exception)</button>
+    <button class="dev-btn" data-panel="panelOpen">Open (contradiction)</button>
+  </div>
+  <p class="dev-rule" id="ruleText">Default: use the generic agree/disagree scale for any question where intensity alone captures the answer.</p>
+</div>
+</div>
+
+<!-- ============ SCREEN 3: PATTERN DETECTED ============ -->
+<div class="flow-screen" id="screenPattern">
+<style>
+  #screenPattern .pstage{ min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center; }
+  #screenPattern .progress-trace{ font-size:12px; color:var(--gray); letter-spacing:0.04em; margin-bottom:40px; opacity:0; animation:fadeIn 0.6s ease forwards; }
+  #screenPattern .reveal-eyebrow{ font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 24px; opacity:0; animation:fadeIn 0.6s ease forwards; animation-delay:0.2s; }
+  #screenPattern .blob-stage{ width:220px; height:220px; display:flex; align-items:center; justify-content:center; margin-bottom:30px; position:relative; opacity:0; transform:scale(0.85); animation:revealCircle 1.1s cubic-bezier(0.22,1,0.36,1) forwards; animation-delay:0.4s; }
+  #screenPattern .ring-pulse{ position:absolute; inset:6px; border-radius:50%; border:1px solid hsl(8,50%,65%); opacity:0; animation:pulseRing 2.4s ease-out forwards; animation-delay:1.2s; pointer-events:none; }
+  #screenPattern .blob-word{ font-family:'Newsreader',serif; font-style:italic; font-weight:600; font-size:30px; position:absolute; z-index:5; pointer-events:none; }
+  #screenPattern .reveal-line{ font-family:'Newsreader',serif; font-style:italic; font-size:18px; line-height:1.55; max-width:380px; margin:0 0 8px; color:var(--charcoal-soft); opacity:0; animation:fadeIn 0.7s ease forwards; animation-delay:1.3s; }
+  #screenPattern .reveal-sub{ font-size:13px; color:var(--gray); margin:0 0 36px; opacity:0; animation:fadeIn 0.7s ease forwards; animation-delay:1.5s; }
+  #screenPattern .fork{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:380px; opacity:0; animation:fadeIn 0.7s ease forwards; animation-delay:1.8s; }
+  #screenPattern .fork-btn{ width:100%; padding:16px 20px; border-radius:10px; font-size:14.5px; font-weight:500; cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:3px; }
+  #screenPattern .fork-primary{ background:var(--charcoal); color:var(--cream); border:none; }
+  #screenPattern .fork-primary .fork-sub{ color:rgba(247,244,237,0.6); }
+  #screenPattern .fork-secondary{ background:var(--white); color:var(--charcoal); border:1px solid var(--line); }
+  #screenPattern .fork-secondary .fork-sub{ color:var(--gray); }
+  #screenPattern .fork-sub{ font-size:12px; font-weight:400; }
+  @keyframes revealCircle{ from{opacity:0; transform:scale(0.85);} to{opacity:1; transform:scale(1);} }
+  @keyframes pulseRing{ 0%{opacity:0.5; transform:scale(1);} 100%{opacity:0; transform:scale(1.35);} }
+</style>
+<div class="pstage">
+  <p class="progress-trace">28 responses · pattern identified</p>
+  <p class="reveal-eyebrow">Your first pattern</p>
+  <div class="blob-stage" id="patternBlobStage">
+    <div class="ring-pulse"></div>
+    <svg viewBox="0 0 220 220" width="220" height="220" id="patternBlobSvg" style="overflow:visible;"></svg>
+    <span class="blob-word" id="patternBlobWord">Deliberate</span>
+  </div>
+  <p class="reveal-line">You don't rush toward conclusions. Your responses showed a pattern of holding space before committing.</p>
+  <p class="reveal-sub">This is the strongest signal so far — there's more underneath it.</p>
+  <div class="fork">
+    <button class="fork-btn fork-primary" id="patternContinue"><span>Keep going</span><span class="fork-sub">A few more questions sharpen this and surface what else is there</span></button>
+    <button class="fork-btn fork-secondary" id="patternReport"><span>See what we found</span><span class="fork-sub">Go to your report now — you can always come back to this</span></button>
+  </div>
+</div>
+</div>
+
+<!-- ============ SCREEN 4: FULL REPORT (all branches, cheat view) ============ -->
+<div class="flow-screen" id="screenReport">
+<style>
+  #screenReport .rpage{ max-width:560px; margin:0 auto; padding:0 22px 100px; }
+  #screenReport .cheat-banner{ background:var(--charcoal); color:var(--cream); font-size:12px; text-align:center; padding:10px 16px; margin-bottom:0; }
+  #screenReport .intro{ padding:44px 0 30px; text-align:center; }
+  #screenReport .intro-eyebrow{ font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 12px; }
+  #screenReport .intro h1{ font-family:'Newsreader',serif; font-size:27px; font-weight:500; line-height:1.3; margin:0 0 12px; }
+  #screenReport .intro p.sub{ font-size:13.5px; color:var(--charcoal-soft); max-width:380px; margin:0 auto; line-height:1.6; }
+
+  #screenReport .section-divider{ text-align:center; padding:44px 0 28px; border-top:1px solid var(--line); margin-top:40px; }
+  #screenReport .section-marker{ font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 10px; }
+  #screenReport .section-line{ font-family:'Newsreader',serif; font-style:italic; font-size:15px; color:var(--charcoal-soft); max-width:340px; margin:0 auto; line-height:1.5; }
+
+  #screenReport .branch-eyebrow{ font-size:12px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:600; margin:0 0 6px; text-align:center; }
+  #screenReport h2.branch-h{ font-family:'Newsreader',serif; font-size:25px; font-weight:600; margin:0 0 6px; text-align:center; }
+  #screenReport .branch-tagline{ font-size:13px; color:var(--gray); margin:0 0 22px; text-align:center; }
+  #screenReport .branch-quote{ font-family:'Newsreader',serif; font-style:italic; font-size:17px; line-height:1.5; text-align:center; max-width:420px; margin:0 auto 24px; color:var(--charcoal-soft); }
+
+  #screenReport .hero-stage{ position:relative; overflow:visible; min-height:200px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+  #screenReport .lbl{ font-family:'Newsreader',serif; font-style:italic; }
+
+  #screenReport .cluster-stage-wrap{ position:relative; }
+  #screenReport .blob-cluster-label{ font-family:'Newsreader',serif; font-style:italic; font-weight:500; position:absolute; z-index:5; pointer-events:none; text-align:center; }
+
+  #screenReport .orbit-wrap{ position:relative; width:100%; height:260px; margin-bottom:6px; }
+  #screenReport .orbit-ring{ position:absolute; left:50%; top:50%; border:1px dashed var(--gray-light); border-radius:50%; transform:translate(-50%,-50%); }
+  #screenReport .orbit-center-group{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; z-index:5; }
+  #screenReport .orbit-center-dot{ width:30px; height:30px; border-radius:50%; background:var(--charcoal); border:4px solid var(--cream); box-shadow:0 0 0 1px var(--line); }
+  #screenReport .orbit-center-label{ font-size:10.5px; color:var(--gray); margin-top:7px; }
+  #screenReport .orbit-blob-label{ font-family:'Newsreader',serif; font-style:italic; font-weight:500; position:absolute; z-index:5; pointer-events:none; text-align:center; }
+
+  #screenReport .direction-list{ display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+  #screenReport .direction-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:20px 22px; cursor:pointer; }
+  #screenReport .direction-eyebrow{ font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 8px; }
+  #screenReport .direction-name-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  #screenReport .direction-name{ font-family:'Newsreader',serif; font-size:18px; font-weight:600; margin:0; color:var(--charcoal); }
+  #screenReport .expand-icon{ font-size:14px; color:var(--gray); transition:transform 0.25s ease; flex-shrink:0; }
+  #screenReport .direction-card.open .expand-icon{ transform:rotate(45deg); }
+  #screenReport .direction-summary{ font-size:13.5px; line-height:1.6; color:var(--charcoal-soft); margin:9px 0 0; }
+  #screenReport .direction-expand{ max-height:0; overflow:hidden; transition:max-height 0.35s ease; }
+  #screenReport .direction-card.open .direction-expand{ max-height:240px; }
+  #screenReport .direction-expand-inner{ padding-top:13px; margin-top:13px; border-top:1px solid var(--line); }
+  #screenReport .direction-body{ font-size:13.5px; line-height:1.6; color:var(--charcoal-soft); margin:0 0 10px; }
+  #screenReport .direction-body b{ color:var(--charcoal); font-weight:600; }
+  #screenReport .direction-source{ font-size:11.5px; color:var(--gray); }
+
+  #screenReport footer{ border-top:1px solid var(--line); margin-top:50px; padding:28px 0 0; text-align:center; }
+  #screenReport .footer-brand{ font-family:'Newsreader',serif; font-weight:600; font-size:14px; }
+  #screenReport .footer-sub{ font-size:11.5px; color:var(--gray); margin-top:6px; }
+</style>
+
+<div class="cheat-banner">Cheat view — every branch shown populated at once. In the real product, each branch unlocks only after its own questions are answered.</div>
+
+<div class="rpage">
+
+  <div class="intro">
+    <p class="intro-eyebrow">Your report</p>
+    <h1>Everything found so far.</h1>
+    <p class="sub">All six areas, shown together for reference — dummy data throughout.</p>
+  </div>
+
+  <!-- WHO YOU ARE — animated blob cluster -->
+  <p class="branch-eyebrow">Who you are</p>
+  <div class="cluster-stage-wrap">
+    <svg viewBox="0 0 500 270" width="100%" height="270" id="clusterSvg" style="overflow:visible;"></svg>
+  </div>
+  <h2 class="branch-h" id="traitTitle">Deliberate</h2>
+  <p class="branch-tagline" id="traitTagline">One of 5 traits discovered</p>
+  <p class="branch-quote" id="traitQuote"></p>
+  <p class="quote-source" style="font-size:12px; color:var(--gray); margin:0 0 24px; text-align:center;">From your Ring 1 assessment</p>
+  <div class="evidence-block" style="margin:0 0 22px; text-align:center;">
+    <p class="evidence-label" style="font-size:13px; font-weight:600; margin:0 0 8px; display:flex; align-items:center; justify-content:center; gap:8px;"><span class="dot" id="traitDot" style="width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Where this shows up</p>
+    <p class="body" id="traitEvidence" style="font-size:14.5px; line-height:1.7; color:var(--charcoal-soft); max-width:420px; margin:0 auto;"></p>
+  </div>
+  <div class="descriptor-row" id="traitDescriptorRow" style="display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin:0 0 26px;"></div>
+  <div class="hook-row" style="display:flex; gap:12px; max-width:500px; margin:0 auto 8px;">
+    <div class="hook-card" style="flex:1; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Go deeper</p>
+      <p class="hook-text" id="traitGoDeeper" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0 0 14px; text-align:left; width:100%;"></p>
+      <button class="hook-cta" id="traitGoDeeperBtn" style="display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); color:var(--cream); font-size:12.5px; font-weight:500; padding:9px 14px; border-radius:7px; border:none; cursor:pointer;"></button>
+    </div>
+    <div class="hook-card" style="flex:1; background:var(--cream-deep); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Worth trying</p>
+      <p class="hook-text" id="traitAction" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0; text-align:left; width:100%;"></p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <p class="section-marker">Who you are → Your environment</p>
+    <p class="section-line">That's what's true on your own. The next part is about what's true around you.</p>
+  </div>
+
+  <!-- WHERE YOU THRIVE — animated orbit -->
+  <p class="branch-eyebrow">Your environment</p>
+  <div class="orbit-wrap" id="orbitWrap"></div>
+  <h2 class="branch-h" id="envTitle">Autonomous</h2>
+  <p class="branch-tagline" id="envTagline">One of 5 conditions discovered</p>
+  <p class="branch-quote" id="envQuote"></p>
+  <p class="quote-source" style="font-size:12px; color:var(--gray); margin:0 0 24px; text-align:center;">From your Ring 1 assessment</p>
+  <div class="evidence-block" style="margin:0 0 22px; text-align:center;">
+    <p class="evidence-label" style="font-size:13px; font-weight:600; margin:0 0 8px; display:flex; align-items:center; justify-content:center; gap:8px;"><span class="dot" id="envDot" style="width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Where this shows up</p>
+    <p class="body" id="envEvidence" style="font-size:14.5px; line-height:1.7; color:var(--charcoal-soft); max-width:420px; margin:0 auto;"></p>
+  </div>
+  <div class="descriptor-row" id="envDescriptorRow" style="display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin:0 0 26px;"></div>
+  <div class="hook-row" style="display:flex; gap:12px; max-width:500px; margin:0 auto 8px;">
+    <div class="hook-card" style="flex:1; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Go deeper</p>
+      <p class="hook-text" id="envGoDeeper" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0 0 14px; text-align:left; width:100%;"></p>
+      <button class="hook-cta" id="envGoDeeperBtn" style="display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); color:var(--cream); font-size:12.5px; font-weight:500; padding:9px 14px; border-radius:7px; border:none; cursor:pointer;"></button>
+    </div>
+    <div class="hook-card" style="flex:1; background:var(--cream-deep); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Worth trying</p>
+      <p class="hook-text" id="envAction" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0; text-align:left; width:100%;"></p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <p class="section-marker">Your environment → Your relationships</p>
+    <p class="section-line">Conditions are one thing. This part is about what happens when someone else is in the room.</p>
+  </div>
+
+  <!-- HOW I CONNECT — precision circles, distance -->
+  <p class="branch-eyebrow">Your relationships</p>
+  <h2 class="branch-h">Steady, until tested</h2>
+  <p class="branch-tagline">Distance — a pattern that only exists between two</p>
+  <div class="hero-stage" id="connectStage"></div>
+  <p class="quote-source" style="font-size:12px; color:var(--gray); margin:8px 0 24px; text-align:center;">From your How I connect branch</p>
+  <div class="evidence-block" style="margin:0 0 26px; text-align:center;">
+    <p class="evidence-label" style="font-size:13px; font-weight:600; margin:0 0 8px; display:flex; align-items:center; justify-content:center; gap:8px;"><span class="dot" style="width:6px;height:6px;border-radius:50%;display:inline-block; background:hsl(330,55%,50%);"></span>Where this shows up</p>
+    <p class="body" style="font-size:14.5px; line-height:1.7; color:var(--charcoal-soft); max-width:420px; margin:0 auto;">On your own, Deliberate looks rock solid — you'll wait as long as it takes. <b>Add another person waiting on your answer</b>, and the picture shifts: you still take your time, but you're more aware of the cost of that time to them than you let on. The steadiness is real. It's just not unconditional.</p>
+  </div>
+  <div class="descriptor-row" style="display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin:0 0 26px;">
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(330,40%,75%); color:var(--charcoal-soft); background:var(--white);">Holds steady under low stakes</span>
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(330,40%,75%); color:var(--charcoal-soft); background:var(--white);">Senses urgency in others</span>
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(330,40%,75%); color:var(--charcoal-soft); background:var(--white);">Slow to show the shift</span>
+  </div>
+  <div class="hook-row" style="display:flex; gap:12px; max-width:500px; margin:0 auto 8px;">
+    <div class="hook-card" style="flex:1; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Go deeper</p>
+      <p class="hook-text" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0 0 14px; text-align:left; width:100%;">This relational shift shows up most with people you're closest to. <b>What's next</b> would show whether that pattern points toward roles built around steadiness for others.</p>
+      <button class="hook-cta" style="display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); color:var(--cream); font-size:12.5px; font-weight:500; padding:9px 14px; border-radius:7px; border:none; cursor:pointer;">Explore what's next →</button>
+    </div>
+    <div class="hook-card" style="flex:1; background:var(--cream-deep); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Worth trying</p>
+      <p class="hook-text" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0; text-align:left; width:100%;">Next time you're waiting on someone before deciding, name the deadline out loud to them — even a rough one. It costs you little and tells them where things actually stand.</p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <p class="section-marker">Your relationships → Your energy</p>
+    <p class="section-line">Relationships are one input. This part is about what actually fuels you day to day.</p>
+  </div>
+
+  <!-- ENERGY AND DRIVE — animated blobs, click-to-swap detail -->
+  <p class="branch-eyebrow">Your energy</p>
+  <h2 class="branch-h" id="energyTitle">Fuels vs. drains</h2>
+  <p class="branch-tagline">SDT — autonomy, competence, relatedness</p>
+  <div class="hero-stage" id="energyStage" style="height:230px;"></div>
+
+  <div class="detail-wrap" style="text-align:center; margin-top:8px;">
+    <p class="pull-quote" id="energyQuote" style="font-family:'Newsreader',serif; font-style:italic; font-size:18px; line-height:1.55; max-width:420px; margin:0 auto 6px; color:var(--charcoal-soft);"></p>
+    <p class="quote-source" style="font-size:12px; color:var(--gray); margin:0 0 22px;">From your Energy and drive branch</p>
+    <div class="evidence-block" style="margin:0 0 22px;">
+      <p class="evidence-label" style="font-size:13px; font-weight:600; margin:0 0 8px; display:flex; align-items:center; justify-content:center; gap:8px;"><span class="dot" id="energyDot" style="width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Where this shows up</p>
+      <p class="body" id="energyEvidence" style="font-size:14.5px; line-height:1.7; color:var(--charcoal-soft); max-width:420px; margin:0 auto;"></p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <p class="section-marker">Your energy → Your working style</p>
+    <p class="section-line">What fuels you is one layer. This part is about your actual working style.</p>
+  </div>
+
+  <!-- HOW I WORK — precision circles, anchored pairs, clickable for per-pair detail -->
+  <p class="branch-eyebrow">Your working style</p>
+  <h2 class="branch-h">Anchored pairs</h2>
+  <p class="branch-tagline">Conscientiousness &amp; agreeableness facets</p>
+  <div class="hero-stage" id="workStage">
+    <svg viewBox="0 0 400 190" width="100%" height="190" style="position:relative; z-index:2;">
+      <text x="40" y="33" font-size="11" fill="var(--charcoal-soft)">Structured</text>
+      <text x="360" y="33" text-anchor="end" font-size="11" fill="var(--gray)">Flexible</text>
+      <line x1="40" y1="48" x2="360" y2="48" stroke="var(--line)" stroke-width="1"/>
+      <line x1="200" y1="40" x2="200" y2="56" stroke="var(--gray-light)" stroke-width="1"/>
+      <circle id="workDotStructured" cx="140" cy="48" r="13" fill="hsl(200,55%,88%)" stroke="hsl(200,55%,42%)" stroke-width="1.5" style="cursor:pointer;"/>
+      <text x="40" y="93" font-size="11" fill="var(--gray)">Independent</text>
+      <text x="360" y="93" text-anchor="end" font-size="11" fill="var(--charcoal-soft)">Collaborative</text>
+      <line x1="40" y1="108" x2="360" y2="108" stroke="var(--line)" stroke-width="1"/>
+      <line x1="200" y1="100" x2="200" y2="116" stroke="var(--gray-light)" stroke-width="1"/>
+      <circle id="workDotCollab" cx="275" cy="108" r="15" fill="hsl(280,45%,88%)" stroke="hsl(280,45%,46%)" stroke-width="1.5" style="cursor:pointer;"/>
+      <text x="40" y="153" font-size="11" fill="var(--charcoal-soft)">Direct</text>
+      <text x="360" y="153" text-anchor="end" font-size="11" fill="var(--gray)">Diplomatic</text>
+      <line x1="40" y1="168" x2="360" y2="168" stroke="var(--line)" stroke-width="1"/>
+      <line x1="200" y1="160" x2="200" y2="176" stroke="var(--gray-light)" stroke-width="1"/>
+      <circle id="workDotDirect" cx="160" cy="168" r="11" fill="hsl(40,55%,88%)" stroke="hsl(40,55%,44%)" stroke-width="1.5" style="cursor:pointer;"/>
+    </svg>
+  </div>
+  <p class="quote-source" style="font-size:12px; color:var(--gray); margin:8px 0 24px; text-align:center;">From your How I work branch</p>
+  <div class="evidence-block" style="margin:0 0 18px; text-align:center;">
+    <p class="evidence-label" style="font-size:13px; font-weight:600; margin:0 0 8px; display:flex; align-items:center; justify-content:center; gap:8px;"><span class="dot" style="width:6px;height:6px;border-radius:50%;display:inline-block; background:hsl(200,55%,45%);"></span>Where this shows up</p>
+    <p class="body" style="font-size:14.5px; line-height:1.7; color:var(--charcoal-soft); max-width:420px; margin:0 auto;">You lean structured, but not rigidly — closer to "I want a plan, and I want room to deviate from it" than "I need every step mapped." <b>The independent-collaborative pull is the most extreme of the three</b>, which tracks with what Where you thrive already showed about needing low interruption to do your best work.</p>
+  </div>
+  <p style="font-size:12px; color:var(--gray); text-align:center; margin:0 0 14px;">Tap a point above for more on that specific pair</p>
+  <div class="evidence-block" id="workPairDetail" style="margin:0 0 22px; text-align:center; min-height:24px;">
+    <p class="body" id="workPairText" style="font-size:14px; line-height:1.65; color:var(--charcoal-soft); max-width:420px; margin:0 auto;"></p>
+  </div>
+  <div class="descriptor-row" style="display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin:0 0 26px;">
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(200,40%,75%); color:var(--charcoal-soft); background:var(--white);">Plans loosely, not rigidly</span>
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(280,35%,78%); color:var(--charcoal-soft); background:var(--white);">Strongly independent</span>
+    <span style="font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid hsl(40,40%,75%); color:var(--charcoal-soft); background:var(--white);">Leans direct over diplomatic</span>
+  </div>
+  <div class="hook-row" style="display:flex; gap:12px; max-width:500px; margin:0 auto 8px;">
+    <div class="hook-card" style="flex:1; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Go deeper</p>
+      <p class="hook-text" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0 0 14px; text-align:left; width:100%;">A strong independence pull combined with directness can read very differently depending on the room. <b>How I connect</b> shows how that lands with people who don't know you well yet.</p>
+      <button class="hook-cta" style="display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); color:var(--cream); font-size:12.5px; font-weight:500; padding:9px 14px; border-radius:7px; border:none; cursor:pointer;">Explore how I connect →</button>
+    </div>
+    <div class="hook-card" style="flex:1; background:var(--cream-deep); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:flex-start;">
+      <p class="hook-eyebrow" style="font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--gray); font-weight:700; margin:0 0 10px;">Worth trying</p>
+      <p class="hook-text" style="font-size:13.5px; line-height:1.6; color:var(--charcoal); margin:0; text-align:left; width:100%;">Before your next group decision, decide in advance which one or two points you'll hold firm on — and let the rest flex.</p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <p class="section-marker">Your working style → Your direction</p>
+    <p class="section-line">Everything so far describes where you are. This part looks at where it could lead.</p>
+  </div>
+
+  <!-- WHAT'S NEXT — plain list, no shapes -->
+  <p class="branch-eyebrow">Your direction</p>
+  <h2 class="branch-h">A few directions worth considering</h2>
+  <p class="branch-tagline">These aren't predictions — places your answers seem to point</p>
+  <div class="direction-list" id="directionList"></div>
+
+  <footer>
+    <p class="footer-brand">known</p>
+    <p class="footer-sub">A living report — it grows as you keep exploring.</p>
+  </footer>
+
+</div>
+
+<div class="flow-nav">
+  <button class="flow-nav-btn active" data-screen="screenOnboarding">1. Onboarding</button>
+  <button class="flow-nav-btn" data-screen="screenQuestion">2. Question screen</button>
+  <button class="flow-nav-btn" data-screen="screenPattern">3. Pattern detected</button>
+  <button class="flow-nav-btn" data-screen="screenReport">4. Full report (all branches, cheat view)</button>
+</div>
+
+<script>
+// ===== transition system =====
+const overlay = document.getElementById('transitionOverlay');
+
+function goToScreen(id, transition){
+  if(transition === 'onboarding-to-question'){
+    transitionOnboardingToQuestion(id);
+  } else if(transition === 'question-to-pattern'){
+    transitionQuestionToPattern(id);
+  } else if(transition === 'pattern-to-report'){
+    transitionPatternToReport(id);
+  } else {
+    _switchScreen(id);
+  }
+}
+
+function _switchScreen(id){
+  document.querySelectorAll('.flow-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.screen===id));
+  document.querySelectorAll('.flow-screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  window.scrollTo(0,0);
+}
+
+// --- Transition 1: Onboarding → Question ---
+// Content slides up and fades, question arrives from below
+function transitionOnboardingToQuestion(targetId){
+  const stage = document.querySelector('#screenOnboarding .stage');
+  stage.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+  stage.style.opacity = '0';
+  stage.style.transform = 'translateY(-18px)';
+  setTimeout(()=>{
+    _switchScreen(targetId);
+    const qStage = document.querySelector('#screenQuestion .q-stage');
+    qStage.style.opacity = '0';
+    qStage.style.transform = 'translateY(20px)';
+    qStage.style.transition = 'none';
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        qStage.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+        qStage.style.opacity = '1';
+        qStage.style.transform = 'translateY(0)';
+      });
+    });
+    // reset onboarding for next time
+    setTimeout(()=>{ stage.style.transition='none'; stage.style.opacity='1'; stage.style.transform='translateY(0)'; }, 100);
+  }, 320);
+}
+
+// --- Transition 2: Question → Pattern detected ---
+// Answer pulse → fade to cream (beat of nothing) → screen switches → blob fades in
+function transitionQuestionToPattern(targetId){
+  // pulse the selected dot
+  const selected = document.querySelector('#pointsA .scale-point.selected') ||
+                   document.querySelector('#optionsB .scale-option.selected');
+  if(selected){
+    selected.style.transition = 'transform 0.15s ease';
+    selected.style.transform = 'scale(1.35)';
+    setTimeout(()=>{ selected.style.transform = 'scale(1)'; }, 160);
+  }
+
+  // fade the whole question content out
+  const qStage = document.querySelector('#screenQuestion .q-stage');
+  setTimeout(()=>{
+    qStage.style.transition = 'opacity 0.35s ease';
+    qStage.style.opacity = '0';
+  }, 200);
+
+  // cream overlay fades in (the "beat of nothing")
+  setTimeout(()=>{
+    overlay.classList.add('fade-in');
+  }, 500);
+
+  // switch screen while hidden
+  setTimeout(()=>{
+    _switchScreen(targetId);
+    // reset question for next visit
+    qStage.style.transition = 'none';
+    qStage.style.opacity = '1';
+    // init blob but keep it hidden under overlay
+    setupPatternBlob();
+    patternStartTime = null; // reset so animation starts fresh
+  }, 900);
+
+  // hold the cream beat (~600ms of nothing), then fade overlay away revealing the blob mid-emerge
+  setTimeout(()=>{
+    overlay.classList.remove('fade-in');
+    overlay.classList.add('fade-out');
+    setTimeout(()=>{ overlay.classList.remove('fade-out'); }, 400);
+  }, 1500);
+}
+
+// --- Transition 3: Pattern detected → Report ---
+// Blob travels from center of screen to its position in the report cluster, report fades in around it
+function transitionPatternToReport(targetId){
+  if(!patternBlobData){ _switchScreen(targetId); setTimeout(initReportScreen,30); return; }
+
+  const hue = userCuratedHue(USER_SEED, 0);
+  const traitWord = document.getElementById('patternBlobWord').textContent;
+
+  // capture start position from pattern screen
+  const blobStage = document.getElementById('patternBlobStage');
+  const rect = blobStage.getBoundingClientRect();
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+  const startRadius = 78;
+
+  // build travel overlay blob
+  const travelSvg = document.getElementById('blobTravelSvg');
+  travelSvg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns,'defs');
+  defs.innerHTML = `
+    <filter id="travelBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+    <radialGradient id="travelGrad" cx="45%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="hsl(${hue},80%,62%)" stop-opacity="1"/>
+      <stop offset="45%" stop-color="hsl(${hue},78%,60%)" stop-opacity="0.88"/>
+      <stop offset="75%" stop-color="hsl(${hue},70%,68%)" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="hsl(${hue},60%,80%)" stop-opacity="0"/>
+    </radialGradient>`;
+  travelSvg.appendChild(defs);
+  const travelPath = document.createElementNS(ns,'path');
+  travelPath.setAttribute('fill','url(#travelGrad)');
+  travelPath.setAttribute('filter','url(#travelBlur)');
+  travelSvg.appendChild(travelPath);
+
+  // travelling trait word
+  const travelWord = document.createElement('div');
+  travelWord.style.cssText = `
+    position:fixed; pointer-events:none; z-index:2000;
+    font-family:'Newsreader',serif; font-style:italic; font-weight:600; font-size:30px;
+    color:hsl(${hue},45%,24%);
+    transform:translate(-50%,-50%);
+    white-space:nowrap;
+    left:${startX}px; top:${startY}px;
+  `;
+  travelWord.textContent = traitWord;
+  document.body.appendChild(travelWord);
+
+  // show overlay, fade pattern chrome out (but NOT the blob — overlay takes over)
+  const travelOverlay = document.getElementById('blobTravelOverlay');
+  travelOverlay.classList.add('active');
+  const pStage = document.querySelector('#screenPattern .pstage');
+  pStage.style.transition = 'opacity 0.25s ease';
+  pStage.style.opacity = '0';
+
+  // Phase 1: switch screen + init report immediately (hidden under overlay)
+  // report fades in from opacity 0 while travel is still happening
+  const reportScreen = document.getElementById('screenReport');
+  reportScreen.style.opacity = '0';
+  reportScreen.style.transition = 'none';
+
+  setTimeout(()=>{
+    _switchScreen(targetId);
+    window.scrollTo(0,0);
+    initReportScreen();
+
+    // measure real cluster center now that report DOM is live
+    // cluster SVG is centered in its wrapper, active blob is at cx=250,cy=130 in a 500-wide viewBox
+    const clusterWrap = document.querySelector('.cluster-stage-wrap');
+    let targetX = window.innerWidth * 0.5;
+    let targetY = 260;
+    if(clusterWrap){
+      const cr = clusterWrap.getBoundingClientRect();
+      const svgW = cr.width;
+      // active blob sits at viewBox x=250/500, y=130/270
+      targetX = cr.left + svgW * (250/500);
+      targetY = cr.top  + cr.height * (130/270);
+    }
+    const endRadius = 76 + reportTraits[0].weight * 14; // matches setupCluster active radius
+
+    // start travel animation
+    const travelDuration = 750;
+    const travelStart = performance.now();
+
+    // start fading report in halfway through the travel so it arrives together
+    setTimeout(()=>{
+      reportScreen.style.transition = 'opacity 0.5s ease';
+      reportScreen.style.opacity = '1';
+    }, travelDuration * 0.45);
+
+    function travelTick(now){
+      const elapsed = now - travelStart;
+      const progress = Math.min(elapsed / travelDuration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const cx = startX + (targetX - startX) * ease;
+      const cy = startY + (targetY - startY) * ease;
+      const radius = startRadius + (endRadius - startRadius) * ease;
+      const t = elapsed / 1000;
+
+      travelPath.setAttribute('d', generateAnimatedBlobPath(cx, cy, radius, patternBlobData.profile, 0.3, t));
+      travelWord.style.left = cx + 'px';
+      travelWord.style.top  = cy + 'px';
+
+      if(progress < 1){
+        requestAnimationFrame(travelTick);
+      } else {
+        // travel complete — crossfade overlay out, report already fading in
+        travelOverlay.style.transition = 'opacity 0.3s ease';
+        travelOverlay.style.opacity = '0';
+        travelWord.style.transition = 'opacity 0.3s ease';
+        travelWord.style.opacity = '0';
+        setTimeout(()=>{
+          travelOverlay.classList.remove('active');
+          travelOverlay.style.transition = '';
+          travelOverlay.style.opacity = '';
+          travelWord.remove();
+          pStage.style.transition = 'none';
+          pStage.style.opacity = '1';
+        }, 320);
+      }
+    }
+    requestAnimationFrame(travelTick);
+  }, 280); // 280ms: just enough for pattern chrome to fade and first rAF to paint report
+}
+
+// ===== flow navigation (nav bar — direct jumps, no transitions) =====
+document.querySelectorAll('.flow-nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.dataset.screen;
+    _switchScreen(id);
+    window.scrollTo(0,0);
+    if(id === 'screenReport') setTimeout(initReportScreen, 30);
+    if(id === 'screenPattern') setTimeout(setupPatternBlob, 30);
+  });
+});
+
+// ===== screen 1: onboarding =====
+document.getElementById('onboardingStart').addEventListener('click', ()=> goToScreen('screenQuestion','onboarding-to-question'));
+
+// ===== screen 2: question screen =====
+const qRules = {
+  panelA: "Default: use the generic agree/disagree scale for any question where intensity alone captures the answer.",
+  panelB: "Exception: use distinct custom options only when the real responses are qualitatively different behaviors, not just stronger or weaker versions of one statement.",
+  panelOpen: "Exception: open free-text fires only at a contradiction point — max twice across all of Ring 1."
+};
+document.querySelectorAll('#screenQuestion .dev-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#screenQuestion .dev-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#screenQuestion .state-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById(btn.dataset.panel).classList.add('active');
+    document.getElementById('ruleText').textContent = qRules[btn.dataset.panel];
+  });
+});
+document.querySelectorAll('#pointsA .scale-point').forEach(pt=>{
+  pt.addEventListener('click', ()=>{
+    document.querySelectorAll('#pointsA .scale-point').forEach(p=>p.classList.remove('selected'));
+    pt.classList.add('selected');
+    document.getElementById('continueA').classList.add('enabled');
+  });
+});
+document.querySelectorAll('#optionsB .scale-option').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('#optionsB .scale-option').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    document.getElementById('continueB').classList.add('enabled');
+  });
+});
+document.getElementById('openTextarea').addEventListener('input', (e)=>{
+  document.getElementById('continueOpen').classList.toggle('enabled', e.target.value.trim().length > 8);
+});
+['continueA','continueB','continueOpen'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', ()=>{ goToScreen('screenPattern','question-to-pattern'); });
+});
+
+// ===== screen 3: pattern detected =====
+document.getElementById('patternContinue').addEventListener('click', ()=> showAuthModal('more of your profile'));
+document.getElementById('patternReport').addEventListener('click', ()=>{ goToScreen('screenReport','pattern-to-report'); });
+
+// ===== pattern-detected blob (uses curated palette + animation system defined below) =====
+let patternBlobData = null;
+let patternStartTime = null;
+function setupPatternBlob(){
+  const svg = document.getElementById('patternBlobSvg');
+  if(!svg || svg.dataset.built) return;
+  svg.dataset.built = '1';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns,'defs');
+  svg.appendChild(defs);
+
+  const filter = document.createElementNS(ns,'filter');
+  filter.setAttribute('id','patternBlur'); filter.setAttribute('x','-50%'); filter.setAttribute('y','-50%');
+  filter.setAttribute('width','200%'); filter.setAttribute('height','200%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="9"/>`;
+  defs.appendChild(filter);
+
+  const hue = userCuratedHue(USER_SEED, 0);
+  const gradId = 'patternGrad';
+  const grad = document.createElementNS(ns,'radialGradient');
+  grad.setAttribute('id',gradId); grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+  grad.innerHTML = `
+    <stop offset="0%" stop-color="hsl(${hue}, 80%, 62%)" stop-opacity="1"/>
+    <stop offset="45%" stop-color="hsl(${hue}, 78%, 60%)" stop-opacity="0.88"/>
+    <stop offset="75%" stop-color="hsl(${hue}, 70%, 68%)" stop-opacity="0.4"/>
+    <stop offset="100%" stop-color="hsl(${hue}, 60%, 80%)" stop-opacity="0"/>`;
+  defs.appendChild(grad);
+
+  const profile = buildPointMotionProfile(hashSeed('Deliberate-shape'), 9);
+  const pathEl = document.createElementNS(ns,'path');
+  pathEl.setAttribute('fill', `url(#${gradId})`);
+  pathEl.setAttribute('filter', 'url(#patternBlur)');
+  svg.appendChild(pathEl);
+
+  document.getElementById('patternBlobWord').style.color = `hsl(${hue}, 45%, 24%)`;
+
+  patternBlobData = { pathEl, profile, cx:110, cy:110, baseRadius:78 };
+  requestAnimationFrame(patternBlobTick);
+}
+function patternBlobTick(timestamp){
+  if(patternStartTime === null) patternStartTime = timestamp;
+  const t = (timestamp - patternStartTime)/1000;
+  if(patternBlobData){
+    const path = generateAnimatedBlobPath(patternBlobData.cx, patternBlobData.cy, patternBlobData.baseRadius, patternBlobData.profile, 0.3, t);
+    patternBlobData.pathEl.setAttribute('d', path);
+  }
+  requestAnimationFrame(patternBlobTick);
+}
+
+// ===== screen 4: full report — animated blob cluster + orbit + directions list =====
+function hashSeed(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))%9973; } return h; }
+function seededRandom(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const curatedHues = [
+  { name:'Coral', hue: 8 }, { name:'Amber', hue: 35 }, { name:'Moss', hue: 145 },
+  { name:'Teal', hue: 175 }, { name:'Sky', hue: 205 }, { name:'Periwinkle', hue: 235 },
+  { name:'Plum', hue: 290 }, { name:'Rose', hue: 335 }
+];
+function userCuratedHue(seedStr, offset){
+  const base = hashSeed(seedStr + offset);
+  const bucket = base % curatedHues.length;
+  const jitter = (hashSeed(seedStr + offset + 'jitter') % 21) - 10;
+  return (curatedHues[bucket].hue + jitter + 360) % 360;
+}
+function buildPointMotionProfile(seed, points){
+  const rand = seededRandom(seed);
+  const profile = [];
+  for(let i=0;i<points;i++){ profile.push({ phase: rand()*Math.PI*2, freq: 0.4+rand()*0.5, ampScale: 0.7+rand()*0.6 }); }
+  return profile;
+}
+function generateAnimatedBlobPath(cx, cy, baseRadius, profile, irregularity, t){
+  const points = profile.length;
+  const angleStep = (Math.PI*2)/points;
+  const pts = [];
+  for(let i=0;i<points;i++){
+    const angle = i*angleStep;
+    const p = profile[i];
+    const wobble = Math.sin(t*p.freq+p.phase)*irregularity*p.ampScale;
+    const r = baseRadius*(1+wobble);
+    pts.push({x: cx+Math.cos(angle)*r, y: cy+Math.sin(angle)*r});
+  }
+  function catmullToBezier(p0,p1,p2,p3){
+    const c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6};
+    const c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
+    return {c1,c2,end:p2};
+  }
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} `;
+  for(let i=0;i<points;i++){
+    const p0=pts[(i-1+points)%points], p1=pts[i], p2=pts[(i+1)%points], p3=pts[(i+2)%points];
+    const seg = catmullToBezier(p0,p1,p2,p3);
+    d += `C ${seg.c1.x.toFixed(1)} ${seg.c1.y.toFixed(1)}, ${seg.c2.x.toFixed(1)} ${seg.c2.y.toFixed(1)}, ${seg.end.x.toFixed(1)} ${seg.end.y.toFixed(1)} `;
+  }
+  d += 'Z';
+  return d;
+}
+
+const USER_SEED = "u_played-2826-deliberate-autonomous";
+const reportTraits = [
+  { word:"Deliberate", weight:1.0,
+    quote:"You don't rush toward conclusions. Your responses showed a pattern of holding space before committing.",
+    evidence:"When a decision has no hard deadline, this is the part of you that takes over. Three job offers, no obvious winner, and a deadline you could push — you'll sit with it longer than almost anyone around you would tolerate. <b>That's not stalling.</b> It's how you arrive somewhere you can actually stand behind.",
+    descriptors:["Slow to commit","High threshold","Durable once decided"],
+    action:"Next time a decision like that is open, write down what you're actually doing during the pause — what you're weighing, not just that you're undecided.",
+    goDeeper:"Deliberate looks steady on your own — but it can shift under social pressure. <b>How I connect</b> shows you which version is true when someone else is waiting on you.",
+    goDeeperBranch:"Explore how I connect →" },
+  { word:"Autonomous", weight:0.8,
+    quote:"You do your best work when no one is checking in. Self-directed time defined every productive week you described.",
+    evidence:"Put you on a team with hourly check-ins and the work quality drops, not because you can't handle oversight, but because narrating progress takes the same energy you'd spend making it. <b>Give you the goal and the deadline</b>, and disappear — that's when you're fastest.",
+    descriptors:["Low interruption","Self-directed","Trusted with ambiguity"],
+    action:"Track your energy at three random points each day for a week. Note what you were doing, who you were with, and whether you'd choose to keep going or stop.",
+    goDeeper:"Autonomy at work is one thing — but it pairs with how you handle <b>energy and drive</b> more broadly.",
+    goDeeperBranch:"Explore energy and drive →" },
+  { word:"Reflective", weight:0.6,
+    quote:"You process out loud to yourself before you process with anyone else.",
+    evidence:"By the time you bring an idea to someone else, you've already argued both sides of it alone. <b>That's not indecision</b> — it's quality control.",
+    descriptors:["Internal processor","Slow to share","High self-awareness"],
+    action:"Next time you catch yourself rehearsing a conversation in your head, write down the version you're rehearsing.",
+    goDeeper:"Reflective processing changes shape depending on who's in the room. <b>How I connect</b> would show you whether this holds with people you trust.",
+    goDeeperBranch:"Explore how I connect →" },
+  { word:"Durable", weight:0.5,
+    quote:"Once you've actually decided, you don't relitigate it.",
+    evidence:"Other people circle back to old decisions when new information shows up. You mostly don't. <b>This is a strength under pressure</b>, and a blind spot when the original information was wrong.",
+    descriptors:["Commitment-stable","Low second-guessing","Resistant to noise"],
+    action:"Pick one recent decision you haven't revisited. Spend five minutes checking whether the reasons still hold.",
+    goDeeper:"Durability under your own scrutiny is one thing. <b>What's next</b> would show how this plays out with other people's timelines.",
+    goDeeperBranch:"Explore what's next →" },
+  { word:"Selective", weight:0.45,
+    quote:"You'd rather have three relationships you trust completely than ten you're managing.",
+    evidence:"New people get a long observation period before you let them past the surface. <b>This isn't coldness</b> — you've calibrated exactly how much energy real trust costs.",
+    descriptors:["High trust threshold","Few, deep ties","Slow to open up"],
+    action:"Name one relationship stuck at the surface you'd like to deepen. Take one small step this week.",
+    goDeeper:"Selectiveness in relationships often mirrors how you choose where to spend effort generally. <b>Energy and drive</b> would show you whether that holds at work too.",
+    goDeeperBranch:"Explore energy and drive →" }
+];
+const reportEnvConditions = [
+  { word:"Autonomous", weight:0.9,
+    quote:"You do your best work when no one is checking in.",
+    evidence:"Put you on a team with hourly check-ins and the work quality drops. <b>Give you the goal and the deadline</b>, and disappear — that's when you're fastest.",
+    descriptors:["Low interruption","Self-directed","Trusted with ambiguity"],
+    action:"Track your energy at three random points each day for a week.",
+    goDeeper:"Autonomy at work pairs with how you handle <b>energy and drive</b> more broadly.",
+    goDeeperBranch:"Explore energy and drive →" },
+  { word:"Low interruption", weight:0.7,
+    quote:"Your best thinking happens in long, uninterrupted stretches.",
+    evidence:"A day chopped into 20-minute meetings produces less than a single open afternoon. <b>Context-switching costs you more</b> than it costs most people.",
+    descriptors:["Deep work blocks","Few context switches","Slow to re-enter focus"],
+    action:"Block one 90-minute stretch this week with no meetings, no messages.",
+    goDeeper:"Interruption cost shows up most in <b>how I work</b>.",
+    goDeeperBranch:"Explore how I work →" },
+  { word:"Deep focus", weight:0.6,
+    quote:"You don't drift between tasks. Once you're in, you're in.",
+    evidence:"Most people can pause and resume a task within minutes. <b>You lose the thread entirely</b> — the real cost is the twenty minutes it takes to get back.",
+    descriptors:["Single-tasking","High immersion","Slow context recovery"],
+    action:"Before your next deep work session, silence every notification source, not just your phone.",
+    goDeeper:"Deep focus and low interruption tolerance usually travel together. <b>How I work</b> would map the rest.",
+    goDeeperBranch:"Explore how I work →" },
+  { word:"Intellectually engaged", weight:0.55,
+    quote:"Boredom costs you more than difficulty does.",
+    evidence:"Give you something genuinely difficult and you'll stay with it for hours. <b>Give you something easy but repetitive</b> and your attention leaves within minutes.",
+    descriptors:["Novelty-seeking","Low tolerance for repetition","Energized by complexity"],
+    action:"Notice the next task that bores you — ask if there's a harder, more interesting version underneath it.",
+    goDeeper:"This pairs closely with what motivates you day to day. <b>Energy and drive</b> shows the fuller picture.",
+    goDeeperBranch:"Explore energy and drive →" },
+  { word:"Trusted peers", weight:0.45,
+    quote:"You thrive around people who've earned the right to challenge you.",
+    evidence:"A room of polite agreement makes you restless. <b>What you actually want is friction</b> from people whose judgment you respect.",
+    descriptors:["Values challenge over comfort","Small trusted circle","Low tolerance for empty consensus"],
+    action:"Bring your current hardest problem to the one person whose pushback you actually trust.",
+    goDeeper:"Who you trust enough to hear this from is a question about connection. <b>How I connect</b> goes deeper.",
+    goDeeperBranch:"Explore how I connect →" }
+];
+
+let reportTraitIdx = 0, reportEnvIdx = 0;
+let clusterBlobData = [], orbitBlobData = [];
+let reportAnimStarted = false;
+let reportStartTime = null;
+
+function setupCluster(){
+  const svg = document.getElementById('clusterSvg');
+  if(!svg) return;
+  svg.innerHTML = '';
+  document.querySelectorAll('.blob-cluster-label').forEach(l=>l.remove());
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+  svg.appendChild(defs);
+
+  const cxBase = 250, cyBase = 130;
+  const offsets = [{dx:0,dy:0},{dx:-110,dy:-55},{dx:105,dy:-60},{dx:-115,dy:60},{dx:110,dy:65}];
+  const order = reportTraits.map((_,i)=>i).sort((a,b)=>(a===reportTraitIdx?1:0)-(b===reportTraitIdx?1:0));
+
+  const filter = document.createElementNS(ns, 'filter');
+  filter.setAttribute('id', 'clusterBlur');
+  filter.setAttribute('x','-50%'); filter.setAttribute('y','-50%');
+  filter.setAttribute('width','200%'); filter.setAttribute('height','200%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="11"/>`;
+  defs.appendChild(filter);
+
+  clusterBlobData = [];
+  order.forEach((i)=>{
+    const t = reportTraits[i];
+    const isActive = i===reportTraitIdx;
+    const hue = userCuratedHue(USER_SEED, i*5);
+    const off = isActive ? {dx:0,dy:0} : offsets[(i+(i>reportTraitIdx?0:1))%offsets.length];
+    const cx = cxBase+off.dx, cy = cyBase+off.dy;
+    const radius = isActive ? (76+t.weight*14) : (38+t.weight*16);
+    const seed = hashSeed(t.word+"-shape");
+    const profile = buildPointMotionProfile(seed, 9);
+
+    const gradId = `repClusterGrad-${i}`;
+    const grad = document.createElementNS(ns, 'radialGradient');
+    grad.setAttribute('id', gradId);
+    grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+    if(isActive){
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 80%, 62%)" stop-opacity="1"/>
+        <stop offset="45%" stop-color="hsl(${hue}, 78%, 60%)" stop-opacity="0.88"/>
+        <stop offset="75%" stop-color="hsl(${hue}, 70%, 68%)" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 60%, 80%)" stop-opacity="0"/>`;
+    } else {
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 60%, 76%)" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 55%, 85%)" stop-opacity="0"/>`;
+    }
+    defs.appendChild(grad);
+
+    const pathEl = document.createElementNS(ns, 'path');
+    pathEl.setAttribute('fill', `url(#${gradId})`);
+    pathEl.setAttribute('filter', 'url(#clusterBlur)');
+    pathEl.style.cursor = 'pointer';
+    pathEl.addEventListener('click', ()=>{ reportTraitIdx=i; setupCluster(); });
+    svg.appendChild(pathEl);
+
+    const label = document.createElement('div');
+    label.className = 'blob-cluster-label';
+    label.style.transform = 'translate(-50%,-50%)';
+    label.style.fontSize = isActive ? '30px' : (11+t.weight*3)+'px';
+    label.style.fontWeight = isActive ? '600' : '500';
+    label.style.fontStyle = 'italic';
+    label.style.color = isActive ? `hsl(${hue}, 45%, 24%)` : 'var(--charcoal-soft)';
+    label.textContent = t.word;
+    document.querySelector('.cluster-stage-wrap').appendChild(label);
+
+    clusterBlobData.push({ pathEl, label, profile, cx, cy, baseRadius:radius });
+  });
+
+  fillTraitDetail();
+}
+
+function fillTraitDetail(){
+  const t = reportTraits[reportTraitIdx];
+  const hue = userCuratedHue(USER_SEED, reportTraitIdx*5);
+  document.getElementById('traitTitle').textContent = t.word;
+  document.getElementById('traitTagline').textContent = `One of ${reportTraits.length} traits discovered`;
+  const q = document.getElementById('traitQuote');
+  q.textContent = `"${t.quote}"`;
+  q.style.color = `hsl(${hue}, 45%, 26%)`;
+  document.getElementById('traitEvidence').innerHTML = t.evidence;
+  document.getElementById('traitDot').style.background = `hsl(${hue}, 58%, 42%)`;
+  document.getElementById('traitGoDeeper').innerHTML = t.goDeeper;
+  document.getElementById('traitGoDeeperBtn').textContent = t.goDeeperBranch;
+  document.getElementById('traitAction').textContent = t.action;
+  const row = document.getElementById('traitDescriptorRow');
+  row.innerHTML = '';
+  t.descriptors.forEach(d=>{
+    const span = document.createElement('span');
+    span.style.cssText = 'font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid var(--line); color:var(--charcoal-soft); background:var(--white);';
+    span.style.borderColor = `hsl(${hue}, 50%, 70%)`;
+    span.textContent = d;
+    row.appendChild(span);
+  });
+}
+
+function setupOrbit(){
+  const wrap = document.getElementById('orbitWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const cx = 250, cy = 125, radius = 92;
+
+  const ring = document.createElement('div');
+  ring.className = 'orbit-ring';
+  ring.style.width = (radius*2)+'px'; ring.style.height = (radius*2)+'px';
+  wrap.appendChild(ring);
+
+  const centerGroup = document.createElement('div');
+  centerGroup.className = 'orbit-center-group';
+  centerGroup.innerHTML = `<div class="orbit-center-dot"></div><span class="orbit-center-label">You</span>`;
+  wrap.appendChild(centerGroup);
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svgEl = document.createElementNS(ns, 'svg');
+  svgEl.setAttribute('viewBox', '0 0 500 260');
+  svgEl.setAttribute('width', '100%'); svgEl.setAttribute('height', '260');
+  svgEl.style.position = 'absolute'; svgEl.style.left = '0'; svgEl.style.top = '0'; svgEl.style.overflow = 'visible';
+  wrap.appendChild(svgEl);
+
+  const defs = document.createElementNS(ns, 'defs');
+  svgEl.appendChild(defs);
+  const filter = document.createElementNS(ns, 'filter');
+  filter.setAttribute('id', 'orbitBlur2');
+  filter.setAttribute('x','-50%'); filter.setAttribute('y','-50%');
+  filter.setAttribute('width','200%'); filter.setAttribute('height','200%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="9"/>`;
+  defs.appendChild(filter);
+
+  orbitBlobData = [];
+  reportEnvConditions.forEach((t,i)=>{
+    const angle = (i/reportEnvConditions.length)*Math.PI*2 - Math.PI/2;
+    const isActive = i===reportEnvIdx;
+    const nodeRadius = isActive ? (44+t.weight*10) : (26+t.weight*10);
+    const nx = cx + Math.cos(angle)*radius;
+    const ny = cy + Math.sin(angle)*radius;
+    const hue = userCuratedHue(USER_SEED, i*7);
+    const seed = hashSeed(t.word+"-shape");
+    const profile = buildPointMotionProfile(seed, 8);
+
+    const gradId = `repOrbitGrad-${i}`;
+    const grad = document.createElementNS(ns, 'radialGradient');
+    grad.setAttribute('id', gradId);
+    grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+    if(isActive){
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 78%, 60%)" stop-opacity="1"/>
+        <stop offset="50%" stop-color="hsl(${hue}, 75%, 60%)" stop-opacity="0.85"/>
+        <stop offset="80%" stop-color="hsl(${hue}, 65%, 70%)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 55%, 82%)" stop-opacity="0"/>`;
+    } else {
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 55%, 78%)" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 50%, 86%)" stop-opacity="0"/>`;
+    }
+    defs.appendChild(grad);
+
+    const pathEl = document.createElementNS(ns, 'path');
+    pathEl.setAttribute('fill', `url(#${gradId})`);
+    pathEl.setAttribute('filter', 'url(#orbitBlur2)');
+    pathEl.style.cursor = 'pointer';
+    pathEl.addEventListener('click', ()=>{ reportEnvIdx=i; setupOrbit(); });
+    svgEl.appendChild(pathEl);
+
+    const label = document.createElement('div');
+    label.className = 'orbit-blob-label';
+    label.style.transform = 'translate(-50%,-50%)';
+    label.style.fontSize = isActive ? '14px' : '10.5px';
+    label.style.color = isActive ? `hsl(${hue}, 50%, 26%)` : 'var(--charcoal-soft)';
+    label.textContent = t.word;
+    wrap.appendChild(label);
+
+    orbitBlobData.push({ pathEl, label, profile, cx:nx, cy:ny, baseRadius:nodeRadius });
+  });
+
+  fillEnvDetail();
+}
+
+function fillEnvDetail(){
+  const t = reportEnvConditions[reportEnvIdx];
+  const hue = userCuratedHue(USER_SEED, reportEnvIdx*7);
+  document.getElementById('envTitle').textContent = t.word;
+  document.getElementById('envTagline').textContent = `One of ${reportEnvConditions.length} conditions discovered`;
+  const q = document.getElementById('envQuote');
+  q.textContent = `"${t.quote}"`;
+  q.style.color = `hsl(${hue}, 45%, 26%)`;
+  document.getElementById('envEvidence').innerHTML = t.evidence;
+  document.getElementById('envDot').style.background = `hsl(${hue}, 58%, 42%)`;
+  document.getElementById('envGoDeeper').innerHTML = t.goDeeper;
+  document.getElementById('envGoDeeperBtn').textContent = t.goDeeperBranch;
+  document.getElementById('envAction').textContent = t.action;
+  const row = document.getElementById('envDescriptorRow');
+  row.innerHTML = '';
+  t.descriptors.forEach(d=>{
+    const span = document.createElement('span');
+    span.style.cssText = 'font-size:12.5px; padding:5px 12px; border-radius:14px; border:1px solid var(--line); color:var(--charcoal-soft); background:var(--white);';
+    span.style.borderColor = `hsl(${hue}, 50%, 70%)`;
+    span.textContent = d;
+    row.appendChild(span);
+  });
+}
+
+function reportTick(timestamp){
+  if(reportStartTime === null) reportStartTime = timestamp;
+  const t = (timestamp - reportStartTime)/1000;
+  clusterBlobData.forEach(b=>{
+    const path = generateAnimatedBlobPath(b.cx, b.cy, b.baseRadius, b.profile, 0.3, t);
+    b.pathEl.setAttribute('d', path);
+    b.label.style.left = `${(b.cx/500*100)}%`;
+    b.label.style.top = `${(b.cy/270*100)}%`;
+  });
+  orbitBlobData.forEach(b=>{
+    const path = generateAnimatedBlobPath(b.cx, b.cy, b.baseRadius, b.profile, 0.28, t);
+    b.pathEl.setAttribute('d', path);
+    b.label.style.left = `${(b.cx/500*100)}%`;
+    b.label.style.top = `${(b.cy/260*100)}%`;
+  });
+  energyBlobData.forEach(b=>{
+    const path = generateAnimatedBlobPath(b.cx, b.cy, b.baseRadius, b.profile, 0.3, t);
+    b.pathEl.setAttribute('d', path);
+    b.label.style.left = `${(b.cx/b.viewW*100)}%`;
+    b.label.style.top = `${(b.cy/b.viewH*100)}%`;
+  });
+  requestAnimationFrame(reportTick);
+}
+
+const reportDirections = [
+  { word: "Make something with your hands", tag: "Closest match",
+    summary: "A strong pull toward tangible progress — work you can point to, not just describe.",
+    body: "Your answers showed a strong pull toward tangible progress — work you can point to, not just describe. <b>That's not about a specific craft</b>, it's about needing to see the result of effort directly, rather than through a layer of management or abstraction." },
+  { word: "Be the one others rely on", tag: "Worth exploring",
+    summary: "Steadiness under pressure — the calm point others orient around.",
+    body: "Several answers pointed to steadiness under pressure — being the calm point others orient around when things get uncertain. <b>This isn't the same as leading</b>; it's closer to being trusted with the hard moment, not necessarily the whole plan." },
+  { word: "Go deep on one thing, alone", tag: "Worth exploring",
+    summary: "A high tolerance for long, uninterrupted focus on one hard problem.",
+    body: "Your tolerance for long, uninterrupted focus on a single hard problem came up clearly — and so did a low appetite for switching between many shallow things. <b>This points toward depth over breadth</b>, regardless of the specific field." }
+];
+function setupDirectionsList(){
+  const list = document.getElementById('directionList');
+  if(!list || list.children.length) return; // build once
+  reportDirections.forEach((d) => {
+    const card = document.createElement('div');
+    card.className = 'direction-card';
+    card.innerHTML = `
+      <p class="direction-eyebrow">${d.tag}</p>
+      <div class="direction-name-row"><h3 class="direction-name">${d.word}</h3><span class="expand-icon">+</span></div>
+      <p class="direction-summary">${d.summary}</p>
+      <div class="direction-expand"><div class="direction-expand-inner">
+        <p class="direction-body">${d.body}</p>
+        <p class="direction-source">From your Ring 1 &amp; Holland Code signals</p>
+      </div></div>`;
+    card.addEventListener('click', ()=>{ card.classList.toggle('open'); });
+    list.appendChild(card);
+  });
+}
+
+// ===== ambient glow for the three precision branches (Option 3 treatment) =====
+let ambientBlobs = [];
+
+function setupConnectAmbient(){
+  const stage = document.getElementById('connectStage');
+  if(!stage || stage.dataset.ambientBuilt) return;
+  stage.dataset.ambientBuilt = '1';
+  stage.innerHTML = '';
+
+  const otherHue = userCuratedHue(USER_SEED, 'connect-other');
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 400 210'); svg.setAttribute('width','100%'); svg.setAttribute('height','210');
+  svg.style.overflow='visible'; svg.style.position='relative'; svg.style.zIndex='2';
+  stage.appendChild(svg);
+  const defs = document.createElementNS(ns,'defs'); svg.appendChild(defs);
+
+  const filter = document.createElementNS(ns,'filter');
+  filter.setAttribute('id','connectAmbientBlur'); filter.setAttribute('x','-100%'); filter.setAttribute('y','-100%');
+  filter.setAttribute('width','300%'); filter.setAttribute('height','300%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="16"/>`;
+  defs.appendChild(filter);
+
+  const youGlowGrad = document.createElementNS(ns,'radialGradient');
+  youGlowGrad.setAttribute('id','connectYouGlow');
+  youGlowGrad.innerHTML = `<stop offset="0%" stop-color="hsl(30,35%,45%)" stop-opacity="0.75"/><stop offset="55%" stop-color="hsl(30,30%,50%)" stop-opacity="0.4"/><stop offset="100%" stop-color="hsl(30,25%,55%)" stop-opacity="0"/>`;
+  defs.appendChild(youGlowGrad);
+  const youGlowProfile = buildPointMotionProfile(hashSeed('you-ambient'), 7);
+  const youGlowPath = document.createElementNS(ns,'path');
+  youGlowPath.setAttribute('fill','url(#connectYouGlow)'); youGlowPath.setAttribute('filter','url(#connectAmbientBlur)');
+  youGlowPath.style.zIndex='1'; svg.insertBefore(youGlowPath, svg.firstChild.nextSibling);
+
+  const otherGlowGrad = document.createElementNS(ns,'radialGradient');
+  otherGlowGrad.setAttribute('id','connectOtherGlow');
+  otherGlowGrad.innerHTML = `<stop offset="0%" stop-color="hsl(${otherHue},78%,62%)" stop-opacity="0.8"/><stop offset="55%" stop-color="hsl(${otherHue},70%,68%)" stop-opacity="0.45"/><stop offset="100%" stop-color="hsl(${otherHue},60%,75%)" stop-opacity="0"/>`;
+  defs.appendChild(otherGlowGrad);
+  const otherGlowProfile = buildPointMotionProfile(hashSeed('other-ambient'), 7);
+  const otherGlowPath = document.createElementNS(ns,'path');
+  otherGlowPath.setAttribute('fill','url(#connectOtherGlow)'); otherGlowPath.setAttribute('filter','url(#connectAmbientBlur)');
+  svg.insertBefore(otherGlowPath, svg.firstChild.nextSibling);
+
+  ambientBlobs.push(
+    { pathEl: youGlowPath, profile: youGlowProfile, cx:130, cy:115, baseRadius:62, viewW:400, viewH:210 },
+    { pathEl: otherGlowPath, profile: otherGlowProfile, cx:270, cy:115, baseRadius:62, viewW:400, viewH:210 }
+  );
+
+  // crisp diagram on top, fully static
+  const line = document.createElementNS(ns,'line');
+  line.setAttribute('x1','135'); line.setAttribute('y1','115'); line.setAttribute('x2','265'); line.setAttribute('y2','115');
+  line.setAttribute('stroke','hsl(330,40%,70%)'); line.setAttribute('stroke-width','1.5'); line.setAttribute('stroke-dasharray','3,5');
+  svg.appendChild(line);
+
+  const you = document.createElementNS(ns,'circle');
+  you.setAttribute('cx','130'); you.setAttribute('cy','115'); you.setAttribute('r','28'); you.setAttribute('fill','var(--charcoal)');
+  svg.appendChild(you);
+  const youTxt = document.createElementNS(ns,'text');
+  youTxt.setAttribute('x','130'); youTxt.setAttribute('y','120'); youTxt.setAttribute('text-anchor','middle');
+  youTxt.setAttribute('font-size','12'); youTxt.setAttribute('fill','var(--cream)'); youTxt.textContent='You';
+  svg.appendChild(youTxt);
+
+  const other = document.createElementNS(ns,'circle');
+  other.setAttribute('cx','270'); other.setAttribute('cy','115'); other.setAttribute('r','32');
+  other.setAttribute('fill',`hsl(${otherHue},50%,90%)`); other.setAttribute('stroke',`hsl(${otherHue},55%,55%)`);
+  other.setAttribute('stroke-width','1.5'); other.setAttribute('stroke-dasharray','2,3');
+  svg.appendChild(other);
+  const otherTxt1 = document.createElementNS(ns,'text');
+  otherTxt1.setAttribute('x','270'); otherTxt1.setAttribute('y','113'); otherTxt1.setAttribute('text-anchor','middle');
+  otherTxt1.setAttribute('font-size','10.5'); otherTxt1.setAttribute('fill',`hsl(${otherHue},55%,30%)`); otherTxt1.textContent='Someone';
+  svg.appendChild(otherTxt1);
+  const otherTxt2 = document.createElementNS(ns,'text');
+  otherTxt2.setAttribute('x','270'); otherTxt2.setAttribute('y','128'); otherTxt2.setAttribute('text-anchor','middle');
+  otherTxt2.setAttribute('font-size','10.5'); otherTxt2.setAttribute('fill',`hsl(${otherHue},55%,30%)`); otherTxt2.textContent='close';
+  svg.appendChild(otherTxt2);
+
+  const tagTxt = document.createElementNS(ns,'text');
+  tagTxt.setAttribute('x','200'); tagTxt.setAttribute('y','60'); tagTxt.setAttribute('text-anchor','middle');
+  tagTxt.setAttribute('class','lbl'); tagTxt.setAttribute('font-size','14'); tagTxt.setAttribute('fill',`hsl(${otherHue},55%,40%)`);
+  tagTxt.textContent='Steady, until tested';
+  svg.appendChild(tagTxt);
+}
+
+// ===== Energy and drive — animated blobs, click-to-swap detail (mirrors orbit pattern) =====
+const energyItems = [
+  { word:"Owning the approach", side:"fuel", weight:0.9,
+    quote:"Give you the goal and the deadline, and disappear — that's when you're fastest.",
+    evidence:"Put you on a team with hourly check-ins and the work quality drops, not because you can't handle oversight, but because narrating progress takes the same energy you'd spend making it. <b>Autonomy over how, not just what,</b> is what actually fuels you here." },
+  { word:"Visible progress", side:"fuel", weight:0.6,
+    quote:"Knowing something moved forward today matters more to you than how much moved.",
+    evidence:"A week where you can point to three finished things feels completely different from a week of equally hard work that produced nothing visible yet. <b>Progress you can see</b> is doing real motivational work, not just satisfaction after the fact." },
+  { word:"Being micromanaged", side:"drain", weight:0.75,
+    quote:"Constant check-ins don't make you feel supported — they make you feel like the goal moved from finishing the work to proving you're working.",
+    evidence:"It's not oversight itself that drains you, it's oversight applied to the <b>how</b> rather than the <b>what</b>. The same person checking in on outcomes barely registers; checking in on method costs you real energy." },
+  { word:"Working alone", side:"drain", weight:0.55,
+    quote:"Too much isolation starts to cost you, even though you also need real focus time.",
+    evidence:"There's a tension here worth naming: you need uninterrupted stretches to do your best work, but <b>total isolation for too long</b> quietly drains the same tank that autonomy fills. The dose matters as much as the direction." }
+];
+let energyActiveIdx = 0;
+let energyBlobData = [];
+
+function setupEnergyBlobs(){
+  const stage = document.getElementById('energyStage');
+  if(!stage) return;
+  stage.innerHTML = '';
+  stage.style.position = 'relative';
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 400 230'); svg.setAttribute('width','100%'); svg.setAttribute('height','230');
+  svg.style.overflow = 'visible';
+  stage.appendChild(svg);
+  const defs = document.createElementNS(ns,'defs'); svg.appendChild(defs);
+
+  const filter = document.createElementNS(ns,'filter');
+  filter.setAttribute('id','energyBlur'); filter.setAttribute('x','-50%'); filter.setAttribute('y','-50%');
+  filter.setAttribute('width','200%'); filter.setAttribute('height','200%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="9"/>`;
+  defs.appendChild(filter);
+
+  // dividing line + labels stay crisp, not part of any blob
+  const line = document.createElementNS(ns,'line');
+  line.setAttribute('x1','200'); line.setAttribute('y1','20'); line.setAttribute('x2','200'); line.setAttribute('y2','210');
+  line.setAttribute('stroke','var(--line)'); line.setAttribute('stroke-width','1');
+  svg.appendChild(line);
+  const fuelTxt = document.createElementNS(ns,'text');
+  fuelTxt.setAttribute('x','110'); fuelTxt.setAttribute('y','22'); fuelTxt.setAttribute('text-anchor','middle');
+  fuelTxt.setAttribute('font-size','10.5'); fuelTxt.setAttribute('letter-spacing','0.5'); fuelTxt.setAttribute('fill','var(--gray)');
+  fuelTxt.textContent='FUELS YOU'; svg.appendChild(fuelTxt);
+  const drainTxt = document.createElementNS(ns,'text');
+  drainTxt.setAttribute('x','290'); drainTxt.setAttribute('y','22'); drainTxt.setAttribute('text-anchor','middle');
+  drainTxt.setAttribute('font-size','10.5'); drainTxt.setAttribute('letter-spacing','0.5'); drainTxt.setAttribute('fill','var(--gray)');
+  drainTxt.textContent='DRAINS YOU'; svg.appendChild(drainTxt);
+
+  const positions = [
+    {x:100, y:80}, {x:128, y:155}, {x:292, y:75}, {x:300, y:155}
+  ];
+
+  energyBlobData = [];
+  document.querySelectorAll('.energy-label').forEach(l=>l.remove());
+
+  energyItems.forEach((item, i)=>{
+    const isActive = i === energyActiveIdx;
+    const pos = positions[i];
+    const hue = userCuratedHue(USER_SEED, 'energy'+i);
+    const radius = isActive ? (40 + item.weight*12) : (26 + item.weight*12);
+    const seed = hashSeed(item.word+"-shape");
+    const profile = buildPointMotionProfile(seed, 8);
+
+    const gradId = `energyGrad-${i}`;
+    const grad = document.createElementNS(ns,'radialGradient');
+    grad.setAttribute('id', gradId);
+    grad.setAttribute('cx','45%'); grad.setAttribute('cy','40%'); grad.setAttribute('r','70%');
+    if(isActive){
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 78%, 60%)" stop-opacity="1"/>
+        <stop offset="50%" stop-color="hsl(${hue}, 75%, 60%)" stop-opacity="0.85"/>
+        <stop offset="80%" stop-color="hsl(${hue}, 65%, 70%)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 55%, 82%)" stop-opacity="0"/>`;
+    } else {
+      grad.innerHTML = `
+        <stop offset="0%" stop-color="hsl(${hue}, 55%, 78%)" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="hsl(${hue}, 50%, 86%)" stop-opacity="0"/>`;
+    }
+    defs.appendChild(grad);
+
+    const pathEl = document.createElementNS(ns,'path');
+    pathEl.setAttribute('fill', `url(#${gradId})`);
+    pathEl.setAttribute('filter', 'url(#energyBlur)');
+    pathEl.style.cursor = 'pointer';
+    pathEl.addEventListener('click', ()=>{ energyActiveIdx = i; setupEnergyBlobs(); fillEnergyDetail(); });
+    svg.appendChild(pathEl);
+
+    const label = document.createElement('div');
+    label.className = 'energy-label';
+    label.style.position = 'absolute';
+    label.style.transform = 'translate(-50%,-50%)';
+    label.style.fontFamily = "'Newsreader', serif";
+    label.style.fontStyle = 'italic';
+    label.style.fontWeight = '500';
+    label.style.fontSize = isActive ? '13px' : '10px';
+    label.style.color = isActive ? `hsl(${hue}, 50%, 26%)` : 'var(--charcoal-soft)';
+    label.style.textAlign = 'center';
+    label.style.pointerEvents = 'none';
+    label.style.width = '90px';
+    label.textContent = item.word;
+    stage.appendChild(label);
+
+    energyBlobData.push({ pathEl, label, profile, cx:pos.x, cy:pos.y, baseRadius:radius, viewW:400, viewH:230 });
+  });
+
+  fillEnergyDetail();
+}
+
+function fillEnergyDetail(){
+  const item = energyItems[energyActiveIdx];
+  const hue = userCuratedHue(USER_SEED, 'energy'+energyActiveIdx);
+  document.getElementById('energyTitle').textContent = item.word;
+  const q = document.getElementById('energyQuote');
+  q.textContent = `"${item.quote}"`;
+  q.style.color = `hsl(${hue}, 45%, 26%)`;
+  document.getElementById('energyEvidence').innerHTML = item.evidence;
+  document.getElementById('energyDot').style.background = `hsl(${hue}, 58%, 42%)`;
+}
+
+function setupFieldAmbient(stageId, hueSeed, filterIdSuffix){
+  const stage = document.getElementById(stageId);
+  if(!stage || stage.dataset.ambientBuilt) return;
+  stage.dataset.ambientBuilt = '1';
+
+  const hue = userCuratedHue(USER_SEED, hueSeed);
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 400 210'); svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+  svg.style.position='absolute'; svg.style.left='0'; svg.style.top='0'; svg.style.overflow='visible'; svg.style.zIndex='1';
+  stage.style.position = 'relative';
+  stage.insertBefore(svg, stage.firstChild);
+
+  const defs = document.createElementNS(ns,'defs'); svg.appendChild(defs);
+  const filter = document.createElementNS(ns,'filter');
+  filter.setAttribute('id','fieldBlur'+filterIdSuffix); filter.setAttribute('x','-100%'); filter.setAttribute('y','-100%');
+  filter.setAttribute('width','300%'); filter.setAttribute('height','300%');
+  filter.innerHTML = `<feGaussianBlur stdDeviation="26"/>`;
+  defs.appendChild(filter);
+
+  const grad = document.createElementNS(ns,'radialGradient');
+  grad.setAttribute('id','fieldGrad'+filterIdSuffix);
+  grad.innerHTML = `<stop offset="0%" stop-color="hsl(${hue},55%,70%)" stop-opacity="0.5"/><stop offset="100%" stop-color="hsl(${hue},50%,80%)" stop-opacity="0"/>`;
+  defs.appendChild(grad);
+
+  const profile = buildPointMotionProfile(hashSeed(stageId+'-field'), 7);
+  const pathEl = document.createElementNS(ns,'path');
+  pathEl.setAttribute('fill','url(#fieldGrad'+filterIdSuffix+')'); pathEl.setAttribute('filter','url(#fieldBlur'+filterIdSuffix+')');
+  svg.appendChild(pathEl);
+
+  ambientBlobs.push({ pathEl, profile, cx:200, cy:105, baseRadius:130, viewW:400, viewH:210 });
+}
+
+function ambientTick(timestamp){
+  if(reportStartTime === null){
+    requestAnimationFrame(ambientTick);
+    return;
+  }
+  const t = (timestamp - reportStartTime)/1000;
+  ambientBlobs.forEach(b=>{
+    const path = generateAnimatedBlobPath(b.cx, b.cy, b.baseRadius, b.profile, 0.3, t);
+    b.pathEl.setAttribute('d', path);
+  });
+  requestAnimationFrame(ambientTick);
+}
+
+function initReportScreen(){
+  setupCluster();
+  setupOrbit();
+  setupConnectAmbient();
+  setupEnergyBlobs();
+  setupWorkPairs();
+  setupDirectionsList();
+  if(!reportAnimStarted){
+    reportAnimStarted = true;
+    requestAnimationFrame(reportTick);
+    requestAnimationFrame(ambientTick);
+  }
+}
+
+const workPairDetails = {
+  structured: "Your structured/flexible position sits closer to center than the other two — you want a plan, but you'll trade it for a better option without much friction. This is the one most likely to flex depending on the stakes.",
+  collab: "This is your strongest pull of the three. You don't avoid collaboration, but left alone you'll often choose it over working solo — sounding out an idea with someone else is part of how you think, not just how you execute.",
+  direct: "You lean direct, but moderately — closer to 'say the real thing, just pick the moment' than 'say it exactly as it occurs to you.' How that lands depends a lot on who's hearing it, which is part of what How I connect maps."
+};
+function setupWorkPairs(){
+  const ids = { workDotStructured:'structured', workDotCollab:'collab', workDotDirect:'direct' };
+  Object.keys(ids).forEach(domId=>{
+    const el = document.getElementById(domId);
+    if(!el || el.dataset.wired) return;
+    el.dataset.wired = '1';
+    el.addEventListener('click', ()=>{
+      document.getElementById('workPairText').textContent = workPairDetails[ids[domId]];
+    });
+  });
+}
+// ===== auth modal =====
+const authBackdrop = document.getElementById('authModalBackdrop');
+const authModal = document.getElementById('authModal');
+
+const branchDisplayNames = {
+  'Your environment':    'Your environment',
+  'Your relationships':  'Your relationships',
+  'Your energy':         'Your energy',
+  'Your working style':  'Your working style',
+  'Your direction':      'Your direction',
+};
+
+function showAuthModal(branchName){
+  const headline = document.getElementById('authModalHeadline');
+  const sub = document.getElementById('authModalSub');
+
+  if(branchName === 'more of your profile'){
+    headline.textContent = `Save your progress to keep going`;
+    sub.textContent = `You've answered 28 questions. Leave your email and we'll make sure none of it disappears.`;
+  } else {
+    headline.textContent = `Save your progress to explore ${branchName}`;
+    sub.textContent = `You've answered 28 questions. Leave your email and we'll make sure none of it disappears.`;
+  }
+
+  authBackdrop.style.display = 'flex';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      authModal.style.opacity = '1';
+      authModal.style.transform = 'translateY(0)';
+    });
+  });
+
+  // focus email input
+  setTimeout(()=> document.getElementById('authEmailInput').focus(), 320);
+}
+
+function hideAuthModal(){
+  authModal.style.opacity = '0';
+  authModal.style.transform = 'translateY(12px)';
+  setTimeout(()=>{ authBackdrop.style.display = 'none'; }, 300);
+}
+
+// dismiss on backdrop click
+authBackdrop.addEventListener('click', e=>{
+  if(e.target === authBackdrop) hideAuthModal();
+});
+
+// skip
+document.getElementById('authModalSkip').addEventListener('click', hideAuthModal);
+
+// CTA — in real product this would submit; here just dismiss
+document.getElementById('authModalCta').addEventListener('click', ()=>{
+  const email = document.getElementById('authEmailInput').value.trim();
+  if(!email || !email.includes('@')) {
+    document.getElementById('authEmailInput').style.borderColor = 'hsl(8,60%,55%)';
+    setTimeout(()=>{ document.getElementById('authEmailInput').style.borderColor = 'var(--line)'; }, 1200);
+    return;
+  }
+  hideAuthModal();
+});
+
+// wire all hook-cta buttons in the report to show the modal
+// each button's text contains the branch name it points to
+function wireReportHookCtAs(){
+  const ctaMap = [
+    { btnText: 'Find your conditions',    branch: 'Your environment' },
+    { btnText: 'Explore how you connect', branch: 'Your relationships' },
+    { btnText: 'Map your energy',         branch: 'Your energy' },
+    { btnText: 'See how you work',        branch: 'Your working style' },
+    { btnText: 'See where this points',   branch: 'Your direction' },
+    { btnText: "Explore what's next",     branch: 'Your direction' },
+    { btnText: 'Explore how I connect',   branch: 'Your relationships' },
+  ];
+
+  document.querySelectorAll('#screenReport .hook-cta').forEach(btn=>{
+    if(btn.dataset.authWired) return;
+    btn.dataset.authWired = '1';
+    const match = ctaMap.find(m => btn.textContent.includes(m.btnText));
+    const branch = match ? match.branch : 'this branch';
+    btn.addEventListener('click', e=>{
+      e.preventDefault();
+      showAuthModal(branch);
+    });
+  });
+
+  // also wire the envGoDeeperBtn which is set dynamically
+  const envBtn = document.getElementById('envGoDeeperBtn');
+  if(envBtn && !envBtn.dataset.authWired){
+    envBtn.dataset.authWired = '1';
+    envBtn.addEventListener('click', e=>{
+      e.preventDefault();
+      showAuthModal('Your environment');
+    });
+  }
+}
+
+// run after report initialises
+const _origInitReport = initReportScreen;
+initReportScreen = function(){
+  _origInitReport();
+  setTimeout(wireReportHookCtAs, 100);
+};
+
+</script>
+</body>
+</html>
