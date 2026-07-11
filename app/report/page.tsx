@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
+import { suggestNextBranch } from '@/lib/known/branchSuggestion'
+import type { Branch, BranchSuggestion } from '@/lib/known/branchSuggestion'
 
 // ── Local types ────────────────────────────────────────────────────────────────
 
@@ -638,7 +640,7 @@ function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
   )
 }
 
-function BranchSuggestionCard() {
+function BranchSuggestionCard({ branchLabel, href, reason }: { branchLabel: string; href: string; reason: string }) {
   return (
     <div style={{
       padding: 2,
@@ -650,18 +652,18 @@ function BranchSuggestionCard() {
     }}>
       <div style={{ background: 'white', borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
         <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', color: gray, fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
-          Your environment
+          {branchLabel}
         </p>
         <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: charcoal, margin: 0, lineHeight: 1.3 }}>
           There might be something here
         </p>
         <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, marginTop: 8 }}>
-          Based on what we found so far, your environment might be worth exploring.
+          {reason}
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <Link href="/assessment/environment">
+          <Link href={href}>
             <button style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
-              Start Your environment →
+              Start {branchLabel} →
             </button>
           </Link>
         </div>
@@ -705,6 +707,24 @@ function StickyBar({ leftText, rightLabel, rightHref }: { leftText: string; righ
   )
 }
 
+// ── Branch routing ───────────────────────────────────────────────────────────
+
+const BRANCH_DISPLAY_NAMES: Record<Branch, string> = {
+  environment:   'Your environment',
+  relationships: 'How I connect',
+  energy:        'Your energy',
+  working_style: 'Your working style',
+  direction:     'Your direction',
+}
+
+const BRANCH_ROUTES: Record<Branch, string> = {
+  environment:   '/assessment/environment',
+  relationships: '/assessment/relationships',
+  energy:        '/assessment/energy',
+  working_style: '/assessment/working-style',
+  direction:     '/assessment/direction',
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ReportPage() {
@@ -715,6 +735,7 @@ export default function ReportPage() {
   const [envEntry, setEnvEntry] = useState<PatternContentEntry | null>(null)
   const [activeEnvIdx, setActiveEnvIdx] = useState(0)
   const [relEntry, setRelEntry] = useState<PatternContentEntry | null>(null)
+  const [ring1Entries, setRing1Entries] = useState<PatternContentEntry[]>([])
 
   const [entryCream, setEntryCream] = useState(0)
 
@@ -746,6 +767,7 @@ export default function ReportPage() {
     const ring1Pcs = pcArray.filter(e => e.branch !== 'environment' && e.branch !== 'relationships')
     setEnvEntry(envPc)
     setRelEntry(relPc)
+    setRing1Entries(ring1Pcs)
 
     let facetNames: string[] = []
     if (ring1Pcs.length > 0) {
@@ -781,24 +803,31 @@ export default function ReportPage() {
 
   const suggestRelationships = !!relEntry || ((envEntry?.dimensionScores?.autonomy ?? 0) > 3.5)
 
-  const nextBranchLabel = !envEntry && isUnlocked
-    ? 'Your environment'
-    : suggestRelationships && !relEntry
-    ? 'How I connect'
-    : undefined
-  const nextBranchHref = !envEntry && isUnlocked
-    ? '/assessment/environment'
-    : suggestRelationships && !relEntry
-    ? '/assessment/relationships'
-    : undefined
+  const completedBranches: Branch[] = [
+    ...(envEntry ? ['environment' as Branch] : []),
+    ...(relEntry ? ['relationships' as Branch] : []),
+  ]
+  const ring1ForEngine = ring1Entries.map(e => ({
+    facet: e.facet,
+    traitWord: e.traitWord,
+    scoreDirection: e.scoreDirection,
+    branch: 'ring1' as const,
+    content: e.content,
+  }))
+  const suggestion: BranchSuggestion | null = isUnlocked
+    ? suggestNextBranch(ring1ForEngine, completedBranches)
+    : null
+
+  const nextBranchLabel = suggestion ? BRANCH_DISPLAY_NAMES[suggestion.branch] : undefined
+  const nextBranchHref  = suggestion ? BRANCH_ROUTES[suggestion.branch]        : undefined
 
   const stickyBar: { leftText: string; rightLabel: string; rightHref: string } | null =
-    !isUnlocked || (ring1Complete && !nextBranchLabel)
+    !isUnlocked || suggestion === null
       ? null
       : ring1Complete
-      ? { leftText: 'Ready to go deeper.', rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
-      : nextBranchLabel
-      ? { leftText: "There's more to find.", rightLabel: `Start ${nextBranchLabel} →`, rightHref: nextBranchHref! }
+      ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
+      : suggestion.isTargeted
+      ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
       : { leftText: "There's more underneath this.", rightLabel: 'Continue Ring 1 →', rightHref: '/assessment' }
 
   return (
@@ -861,7 +890,13 @@ export default function ReportPage() {
                     <WhatsnextDivider />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {ring1Complete ? <Ring1CompleteCard /> : <ContinueRing1Card totalAnswered={totalAnswered} />}
-                      {!envEntry && <BranchSuggestionCard />}
+                      {suggestion && nextBranchLabel && nextBranchHref && (
+                        <BranchSuggestionCard
+                          branchLabel={nextBranchLabel}
+                          href={nextBranchHref}
+                          reason={suggestion.reason}
+                        />
+                      )}
                     </div>
                   </>
                 )}
