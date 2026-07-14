@@ -688,6 +688,41 @@ export default function AssessmentPage() {
     triggerReveal('Friendliness', traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
   }
 
+  // Dev: inject all 120 answers and jump directly to /report (skips pattern screen)
+  function handleDevFullSession() {
+    const answers = new Map<number, number>()
+    for (const q of RING1_QUESTIONS) answers.set(q.id, 3)
+
+    const bumpHigh = (facet: string) => {
+      for (const q of (FACET_QUESTIONS.get(facet) ?? []))
+        answers.set(q.id, q.reverseScored ? 2 : 4)
+    }
+    const bumpLow = (facet: string) => {
+      for (const q of (FACET_QUESTIONS.get(facet) ?? []))
+        answers.set(q.id, q.reverseScored ? 4 : 2)
+    }
+
+    bumpHigh('Cautiousness')
+    bumpHigh('Self-Efficacy')
+    bumpHigh('Friendliness')
+    bumpLow('Anxiety')
+    bumpHigh('Intellect')
+
+    const responses = Array.from(answers.entries()).map(([questionId, value]) => ({
+      questionId, value, answeredAt: new Date().toISOString(),
+    }))
+
+    const existing = loadSession()
+    saveSession({
+      questionOrder: RING1_QUESTIONS.map(q => q.id),
+      responses,
+      revealedFacets: ['Cautiousness', 'Self-Efficacy', 'Friendliness'],
+      patternContents: existing.patternContents,
+    })
+
+    router.push('/report')
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const currentQuestionId = questionOrder[currentIndex]
@@ -771,6 +806,9 @@ export default function AssessmentPage() {
 
       {process.env.NODE_ENV === 'development' && !viewingPattern && !allDone && (
         <div className="fixed bottom-4 right-4 flex flex-col items-end gap-2">
+          <button onClick={handleDevFullSession} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: full session → report
+          </button>
           <button onClick={handleDevSkip} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
             Dev: skip to pattern
           </button>

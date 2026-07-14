@@ -4,9 +4,12 @@ import Link from 'next/link'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
+import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
 import { suggestNextBranch } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion } from '@/lib/known/branchSuggestion'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
+import EnergyFieldVisual from '@/components/known/EnergyFieldVisual'
+import type { EnergyFieldItem } from '@/components/known/EnergyFieldVisual'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 
@@ -708,6 +711,7 @@ export default function ReportPage() {
   const [envEntry, setEnvEntry] = useState<PatternContentEntry | null>(null)
   const [activeEnvIdx, setActiveEnvIdx] = useState(0)
   const [relEntry, setRelEntry] = useState<PatternContentEntry | null>(null)
+  const [energyEntry, setEnergyEntry] = useState<PatternContentEntry | null>(null)
   const [ring1Entries, setRing1Entries] = useState<PatternContentEntry[]>([])
 
   const [entryCream, setEntryCream] = useState(0)
@@ -735,11 +739,13 @@ export default function ReportPage() {
     setRing1Complete(total >= 120)
 
     const pcArray = Array.isArray(session.patternContents) ? session.patternContents : []
-    const envPc = pcArray.find(e => e.branch === 'environment') ?? null
-    const relPc = pcArray.find(e => e.branch === 'relationships') ?? null
-    const ring1Pcs = pcArray.filter(e => e.branch !== 'environment' && e.branch !== 'relationships')
+    const envPc    = pcArray.find(e => e.branch === 'environment')    ?? null
+    const relPc    = pcArray.find(e => e.branch === 'relationships')   ?? null
+    const energyPc = pcArray.find(e => e.branch === 'energy')          ?? null
+    const ring1Pcs = pcArray.filter(e => !['environment', 'relationships', 'energy'].includes(e.branch ?? ''))
     setEnvEntry(envPc)
     setRelEntry(relPc)
+    setEnergyEntry(energyPc)
     setRing1Entries(ring1Pcs)
 
     let facetNames: string[] = []
@@ -766,6 +772,46 @@ export default function ReportPage() {
     setFacets(initial)
   }, [])
 
+  // Generate content for any ring-1 facets that arrived with null content
+  // (dev-shortcut path, or user left assessment before AI finished).
+  const contentFetchRef = useRef(new Set<string>())
+  useEffect(() => {
+    const needsContent = facets.filter(f => f.content === null && !contentFetchRef.current.has(f.facet))
+    if (needsContent.length === 0) return
+
+    const raw = localStorage.getItem('known_session')
+    if (!raw) return
+    let session: StoredSession
+    try { session = JSON.parse(raw) } catch { return }
+
+    const responses = Array.isArray(session.responses) ? session.responses : []
+    const answeredMap = new Map<number, number>(responses.map((r) => [r.questionId, r.value]))
+    const assessmentId = localStorage.getItem('known_pending_session_id')
+
+    for (const entry of needsContent) {
+      contentFetchRef.current.add(entry.facet)
+      const score = computeFacetScore(entry.facet, answeredMap) ?? 3.0
+      const dir: 'high' | 'mid' | 'low' = score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low'
+
+      generatePatternCopy(entry.facet, entry.traitWord, dir, assessmentId)
+        .then((content) => {
+          setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, content } : f))
+          // Persist so future page loads don't regenerate
+          const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')
+          const pcs = Array.isArray(s.patternContents) ? s.patternContents : []
+          const newEntry: PatternContentEntry = { facet: entry.facet, traitWord: entry.traitWord, scoreDirection: dir, content }
+          localStorage.setItem('known_session', JSON.stringify({
+            ...s,
+            patternContents: [
+              ...pcs.filter((e) => !(e.facet === entry.facet && !e.branch)),
+              newEntry,
+            ],
+          }))
+        })
+        .catch(() => {})
+    }
+  }, [facets])
+
   const isUnlocked = facets.length > 0
   const safeIdx = Math.min(activeIdx, Math.max(0, facets.length - 1))
   const activeFacet = facets[safeIdx] ?? null
@@ -774,11 +820,10 @@ export default function ReportPage() {
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
 
-  const suggestRelationships = !!relEntry || !!envEntry
-
   const completedBranches: Branch[] = [
-    ...(envEntry ? ['environment' as Branch] : []),
-    ...(relEntry ? ['relationships' as Branch] : []),
+    ...(envEntry    ? ['environment'   as Branch] : []),
+    ...(relEntry    ? ['relationships' as Branch] : []),
+    ...(energyEntry ? ['energy'        as Branch] : []),
   ]
   const ring1ForEngine = ring1Entries.map(e => ({
     facet: e.facet,
@@ -790,6 +835,10 @@ export default function ReportPage() {
   const suggestion: BranchSuggestion | null = isUnlocked
     ? suggestNextBranch(ring1ForEngine, completedBranches)
     : null
+
+  const suggestEnvironment   = !!envEntry
+  const suggestRelationships = !!relEntry
+  const suggestEnergy        = !!energyEntry
 
   const nextBranchLabel = suggestion ? BRANCH_DISPLAY_NAMES[suggestion.branch] : undefined
   const nextBranchHref  = suggestion ? BRANCH_ROUTES[suggestion.branch]        : undefined
@@ -880,7 +929,7 @@ export default function ReportPage() {
           </section>
 
           {/* ── Branch 2: Where you thrive ────────────────── */}
-          {isUnlocked && (() => {
+          {isUnlocked && suggestEnvironment && (() => {
             const envHue = envEntry
               ? userCuratedHue(`env-pattern-${envEntry.traitWord.toLowerCase().replace(/\s+/g, '-')}`, 0)
               : 8
@@ -978,6 +1027,56 @@ export default function ReportPage() {
                   </>
                 ) : (
                   <LockedCard branchName="Your relationships" href="/assessment/relationships" />
+                )}
+
+                {suggestEnergy && (
+                  <SectionDivider
+                    marker="How I connect → Your energy"
+                    body="How you show up in relationships is shaped, in part, by what fuels you — and what doesn't."
+                  />
+                )}
+              </section>
+            )
+          })()}
+
+          {/* ── Branch 4: Your energy ─────────────────────── */}
+          {isUnlocked && suggestEnergy && (() => {
+            const fuels  = energyEntry?.strongConditions?.filter(c => c.label === 'fuel')  ?? []
+            const drains = energyEntry?.strongConditions?.filter(c => c.label === 'drain') ?? []
+            // Order matches EnergyFieldVisual's fixed layout: top fuel, second fuel, top drain, second drain.
+            const fieldItems: EnergyFieldItem[] = [
+              { label: fuels[0]?.traitWord  ?? '', side: 'fuel',  score: fuels[0]?.score  ?? 3, quote: fuels[0]?.quote  ?? '', evidence: fuels[0]?.evidence  ?? '' },
+              { label: fuels[1]?.traitWord  ?? '', side: 'fuel',  score: fuels[1]?.score  ?? 3, quote: fuels[1]?.quote  ?? '', evidence: fuels[1]?.evidence  ?? '' },
+              { label: drains[0]?.traitWord ?? '', side: 'drain', score: drains[0]?.score ?? 3, quote: drains[0]?.quote ?? '', evidence: drains[0]?.evidence ?? '' },
+              { label: drains[1]?.traitWord ?? '', side: 'drain', score: drains[1]?.score ?? 3, quote: drains[1]?.quote ?? '', evidence: drains[1]?.evidence ?? '' },
+            ]
+            return (
+              <section style={{ textAlign: 'center' }}>
+                <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+                  Your energy
+                </p>
+
+                {energyEntry ? (
+                  energyEntry.content ? (
+                    <>
+                      <div style={{ marginTop: 8 }}>
+                        <EnergyFieldVisual items={fieldItems} />
+                      </div>
+                      <div style={{ marginTop: 28 }}>
+                        <UnlockedContent
+                          traitWord={energyEntry.traitWord}
+                          content={energyEntry.content}
+                          hue={145}
+                          subtitle="Your energy pattern"
+                          source="From your energy branch"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <PatternLoadingState traitWord={energyEntry.traitWord} isLoading={true} />
+                  )
+                ) : (
+                  <LockedCard branchName="Your energy" href="/assessment/energy" />
                 )}
               </section>
             )

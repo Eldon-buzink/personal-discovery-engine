@@ -58,6 +58,17 @@ const FACET_BEHAVIORAL_CONTEXT: Record<string, string> = {
   Cautiousness:          'How much this person deliberates before acting — their tendency to think carefully before committing',
 }
 
+// Behavioral descriptions of what each energy category actually means day-to-day.
+// Used to ground the model before it writes copy — no SDT theory, just behavior.
+const ENERGY_CATEGORY_CONTEXT: Record<string, string> = {
+  'Having a say':         'Choosing their own approach, setting their own direction, making real decisions rather than executing someone else\'s plan.',
+  'Feeling boxed in':     'Being told exactly how to do something, having no input into decisions that affect them, working within tight constraints they didn\'t choose.',
+  'Making real progress': 'Getting better at things that matter, solving hard problems, seeing work move forward in ways that are visible and meaningful.',
+  'Feeling stuck':        'Not being able to make progress, hitting walls repeatedly, feeling blocked without a clear path forward.',
+  'Real connection':      'Time with people they feel genuinely close to, real conversations rather than surface-level ones, feeling understood rather than just heard.',
+  'Feeling unseen':       'Being around people without real connection, social interactions that go nowhere, isolation or not mattering to the people around them.',
+}
+
 const RELATIONSHIPS_QUADRANT_CONTEXT: Record<string, string> = {
   Open:        'Low on both anxiety and avoidance. Comfortable letting people in, depends on others without distress, and rarely worries about whether relationships are secure. Closeness feels natural rather than threatening.',
   Independent: 'Low anxiety but high avoidance. Not preoccupied with relationships, and prefers more emotional and physical distance — even in close ones. Self-reliant by orientation, not by necessity. Comfortable alone.',
@@ -84,6 +95,41 @@ function buildUserPrompt(
   branch?: string,
   strongConditions?: { label: string; traitWord: string; score: number }[]
 ): string {
+  if (branch === 'energy') {
+    // Expected order: fuel[0] (top fuel), fuel[1] (2nd fuel), drain[0] (top drain), drain[1] (2nd drain)
+    const fuels  = strongConditions?.filter(c => c.label === 'fuel')  ?? []
+    const drains = strongConditions?.filter(c => c.label === 'drain') ?? []
+    const describe = (c: { traitWord: string; score: number }) =>
+      `- ${c.traitWord} (score ${c.score.toFixed(2)} of 5): ${ENERGY_CATEGORY_CONTEXT[c.traitWord] ?? c.traitWord}`
+    const fuelLines  = fuels.map(describe).join('\n')
+    const drainLines = drains.map(describe).join('\n')
+
+    return `This person's top two energy sources, ranked, are:
+${fuelLines}
+
+Their top two energy costs, ranked, are:
+${drainLines}
+
+This is NOT a personality trait — it describes the specific conditions that genuinely fill this person up versus the ones that quietly deplete them. The pattern is about context and environment, not character.
+
+Do NOT use the words "autonomy", "competence", "relatedness", "self-determination", "SDT", "intrinsic", "extrinsic", or any academic psychology terminology. Describe what actually happens — behavior, situations, feelings — not theory.
+
+Write the following copy and return as JSON only, no markdown:
+{
+  "trait_quote": "A 1-2 sentence observation about how this person actually experiences energy in their day — what fills them up, what costs them, and what that gap feels like. First person, present tense. Make it specific and behavioral — something the reader would immediately recognise as true about themselves. Do not name the category labels directly (avoid 'Having a say', 'Real connection' etc.) — describe the felt experience instead.",
+  "where_it_shows_up": "2-3 sentences naming a concrete, specific real-world situation where this energy pattern becomes most visible — a type of day, a particular kind of meeting or interaction, a recurring moment of friction or flow. Behavioral and specific, not abstract.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this energy pattern looks like in action"],
+  "go_deeper": "2 sentences. First: name what this pattern costs — the friction or blind spot it creates when conditions don't match. Second: point toward something worth noticing or exploring further — not a prescriptive fix, just something to pay attention to.",
+  "worth_trying": "1-2 sentences. A specific, low-stakes experiment for this week — something concrete to notice or adjust in an actual day, tied directly to what their pattern reveals.",
+  "items": [
+    { "quote": "1 sentence, first person, present tense, specific to the TOP fuel only (${fuels[0]?.traitWord ?? ''}) — not a restatement of the label.", "evidence": "2-3 sentences on the concrete, specific situation where this particular fuel shows up day to day." },
+    { "quote": "1 sentence, first person, present tense, specific to the SECOND fuel only (${fuels[1]?.traitWord ?? ''}).", "evidence": "2-3 sentences on where this second fuel shows up. Note how it relates to the top fuel — e.g. whether the two pulls are close in strength and tend to travel together, or the second is more situational." },
+    { "quote": "1 sentence, first person, present tense, specific to the TOP drain only (${drains[0]?.traitWord ?? ''}).", "evidence": "2-3 sentences on the concrete, specific situation where this particular drain shows up day to day." },
+    { "quote": "1 sentence, first person, present tense, specific to the SECOND drain only (${drains[1]?.traitWord ?? ''}).", "evidence": "2-3 sentences on where this second drain shows up. Note how it relates to the top drain — e.g. whether they compound each other or show up in different situations." }
+  ] — exactly 4 objects, in this exact order: top fuel, second fuel, top drain, second drain. Each quote/evidence must be about ONLY that one condition, not a restatement of the overall trait_quote.
+}`
+  }
+
   if (branch === 'relationships') {
     const quadrantContext = RELATIONSHIPS_QUADRANT_CONTEXT[traitWord] ?? `The ${traitWord} attachment pattern`
 
@@ -151,14 +197,28 @@ Write the following copy and return as JSON only, no markdown:
 }`
 }
 
-function fallbackContent(facetName: string, traitWord: string): PatternContent {
-  return {
+function fallbackContent(
+  facetName: string,
+  traitWord: string,
+  branch?: string,
+  strongConditions?: { label: string; traitWord: string; score: number }[]
+): PatternContent {
+  const base: PatternContent = {
     trait_quote: `You showed a clear signal in the ${facetName} dimension of your personality. This pattern shapes more of your daily life than you might expect.`,
     where_it_shows_up: `It tends to surface when decisions require sustained attention or deliberate pacing. Most visible in how you handle competing demands on your time and energy.`,
     tags: [traitWord, facetName, 'Signal found'],
     go_deeper: `Every trait carries a shadow: the same quality that serves you in some contexts can work against you in others. There's more nuance underneath this pattern worth exploring.`,
     worth_trying: `This week, notice one moment where this pattern shows up in a decision you're making. Just observe it — no need to change anything yet.`,
   }
+
+  if (branch === 'energy' && strongConditions?.length === 4) {
+    base.items = strongConditions.map((c) => ({
+      quote: `${c.traitWord} showed up as a clear signal in how you answered.`,
+      evidence: `This is one of the more consistent patterns in your responses — worth noticing where it shows up in an actual day.`,
+    }))
+  }
+
+  return base
 }
 
 export async function generatePatternCopy(
@@ -178,7 +238,7 @@ export async function generatePatternCopy(
 
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 1536,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildUserPrompt(facetName, traitWord, scoreDirection, branch, strongConditions) }],
     })
@@ -189,29 +249,27 @@ export async function generatePatternCopy(
     console.log('[generatePatternCopy] success:', content)
   } catch (err) {
     console.error('[generatePatternCopy] generation failed:', err)
-    content = fallbackContent(facetName, traitWord)
+    content = fallbackContent(facetName, traitWord, branch, strongConditions)
   }
 
-  // Persist to Supabase (non-critical — swallow failures)
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    await supabase.from('report_content').insert({
-      assessment_id: assessmentId ?? null,
-      facet: facetName,
-      trait_word: traitWord,
-      score_direction: scoreDirection,
-      trait_quote: content.trait_quote,
-      where_it_shows_up: content.where_it_shows_up,
-      tags: content.tags,
-      go_deeper: content.go_deeper,
-      worth_trying: content.worth_trying,
-    })
-  } catch (dbErr) {
-    console.error('[generatePatternCopy] db insert failed:', dbErr)
-  }
+  // Persist to Supabase — fire-and-forget. Content is already final at this point;
+  // the UI doesn't need to wait on this write, and failures here are non-critical
+  // (already just logged, never surfaced to the user).
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  supabase.from('report_content').insert({
+    assessment_id: assessmentId ?? null,
+    facet: facetName,
+    trait_word: traitWord,
+    score_direction: scoreDirection,
+    trait_quote: content.trait_quote,
+    where_it_shows_up: content.where_it_shows_up,
+    tags: content.tags,
+    go_deeper: content.go_deeper,
+    worth_trying: content.worth_trying,
+  }).then(undefined, (dbErr) => console.error('[generatePatternCopy] db insert failed:', dbErr))
 
   return content
 }

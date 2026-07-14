@@ -4,6 +4,10 @@ export interface PatternContent {
   tags: string[]
   go_deeper: string
   worth_trying: string
+  // Energy branch only: per-item quote+evidence, positionally matched to the
+  // strongConditions passed into generatePatternCopy (order: fuel[0], fuel[1],
+  // drain[0], drain[1]). Absent for every other branch/facet.
+  items?: Array<{ quote: string; evidence: string }>
 }
 
 export interface PatternContentEntry {
@@ -13,7 +17,7 @@ export interface PatternContentEntry {
   content: PatternContent
   branch?: string
   dimensionScores?: Record<string, number>
-  strongConditions?: Array<{ label: string; traitWord: string; score: number }>
+  strongConditions?: Array<{ label: string; traitWord: string; score: number; quote?: string; evidence?: string }>
 }
 
 export interface CompletedFacetRecord {

@@ -611,7 +611,7 @@ export default function LandingPage() {
                 Personal discovery engine
               </p>
               <h1 style={{ fontFamily:serif, fontSize:'clamp(42px,5.5vw,68px)', fontWeight:300, lineHeight:1.08, letterSpacing:'-0.03em', color:charcoal, marginBottom:28 }}>
-                See the pattern<br /><em>behind how you work</em>
+                You know something&apos;s off.<br /><em>You don&apos;t know what.</em>
               </h1>
               <p style={{ fontSize:17, lineHeight:1.65, color:c80, maxWidth:420, marginBottom:40, fontWeight:300 }}>
                 A 15-minute assessment that surfaces what&apos;s actually driving you — your traits, your loops, your energy. Not a type. A picture. Free, no account needed.
@@ -658,7 +658,7 @@ export default function LandingPage() {
           <FactsBlobs />
           <div className="facts-inner" style={{ maxWidth:1100, margin:'0 auto', position:'relative', zIndex:2 }}>
             <p style={{ fontFamily:serif, fontSize:'clamp(22px,2.5vw,32px)', fontWeight:300, color:cream, maxWidth:560, lineHeight:1.35, letterSpacing:'-0.015em', marginBottom:56 }}>
-              Most people spend years stuck in the same decision loops.<br />
+              Most people never look. Comfort is easier than answer.<br />
               <em style={{ fontStyle:'italic', fontWeight:300, color:'rgba(245,242,235,0.65)' }}>The pattern is always traceable.</em>
             </p>
             <div className="facts-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:48, position:'relative', zIndex:2 }}>
@@ -681,7 +681,7 @@ export default function LandingPage() {
         <section style={{ padding:'120px 48px', maxWidth:1200, margin:'0 auto' }}>
           <p style={{ fontSize:11, fontWeight:500, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:20 }}>What you get</p>
           <h2 style={{ fontFamily:serif, fontSize:'clamp(32px,4vw,52px)', fontWeight:300, letterSpacing:'-0.03em', lineHeight:1.1, color:charcoal, marginBottom:64, maxWidth:560 }}>
-            Six dimensions.<br /><em>One clear picture.</em>
+            Not just who you are.<br /><em>What to do about it.</em>
           </h2>
 
           {/* Row 1 */}
@@ -699,20 +699,20 @@ export default function LandingPage() {
             {/* Right column */}
             <div className="lp-bento-r1-right">
               {/* Orbit card */}
-              <div style={{ background:cream, border:`1.5px solid ${c12}`, borderRadius:20, padding:40, flex:1, minHeight:220, position:'relative' }}>
+              <div style={{ background:cream, border:`1.5px solid ${c12}`, borderRadius:20, padding:40, flex:1, minHeight:220, position:'relative', display:'flex', flexDirection:'column' }}>
                 <p style={{ fontSize:10, fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:12 }}>Where you thrive</p>
                 <p style={{ fontFamily:serif, fontSize:26, fontWeight:400, letterSpacing:'-0.02em', lineHeight:1.2, marginBottom:0 }}>Your ideal environment</p>
                 <OrbitVisual />
-                <p style={{ fontSize:14, lineHeight:1.6, color:c80, fontWeight:300, marginTop:16 }}>The settings, structures, and contexts where you naturally do your best work.</p>
+                <p style={{ fontSize:14, lineHeight:1.6, color:c80, fontWeight:300, marginTop:'auto', paddingTop:16 }}>The settings, structures, and contexts where you naturally do your best work.</p>
               </div>
               {/* Connect card */}
-              <div style={{ background:warmMid, borderRadius:20, padding:40, flex:1, minHeight:220, position:'relative' }}>
+              <div style={{ background:warmMid, borderRadius:20, padding:40, flex:1, minHeight:220, position:'relative', display:'flex', flexDirection:'column' }}>
                 <p style={{ fontSize:10, fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:12 }}>How you connect</p>
                 <p style={{ fontFamily:serif, fontSize:26, fontWeight:400, letterSpacing:'-0.02em', lineHeight:1.2, marginBottom:0 }}>Relationship patterns</p>
-                <div style={{ position:'relative', height:90, marginTop:16 }}>
+                <div style={{ position:'relative', height:90, marginTop:16, flexShrink:0 }}>
                   <ConnectVisual />
                 </div>
-                <p style={{ fontSize:14, lineHeight:1.6, color:c80, fontWeight:300, marginTop:14 }}>How you show up in relationships — what energises you, what drains you, how others experience you.</p>
+                <p style={{ fontSize:14, lineHeight:1.6, color:c80, fontWeight:300, marginTop:'auto', paddingTop:16 }}>How you show up in relationships — what energises you, what drains you, how others experience you.</p>
               </div>
             </div>
           </div>
