@@ -262,6 +262,7 @@ export default function EnvironmentPage() {
               scoreDirection: r.scoreDirection, content: c, branch: 'environment',
               dimensionScores: r.dimensionScores,
               strongConditions: r.strongConditions,
+              completedAt: new Date().toISOString(),
             }
             saveSession({ patternContents: [...pcs, newEntry] })
           })
@@ -305,6 +306,10 @@ export default function EnvironmentPage() {
         <PatternScreen
           result={result!}
           content={content}
+          hasRemainingDimensions={
+            (Object.keys(DIM_QUESTION_IDS) as Dimension[])
+              .some((dim) => !DIM_QUESTION_IDS[dim].every((id) => answers.has(id)))
+          }
           onKeepGoing={() => { setCurrentQ(0); setScreen('questions') }}
           onGoToReport={() => router.push('/report')}
         />
@@ -366,11 +371,13 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
 function PatternScreen({
   result,
   content,
+  hasRemainingDimensions,
   onKeepGoing,
   onGoToReport,
 }: {
   result: ScoredResult
   content: PatternContent | null
+  hasRemainingDimensions: boolean
   onKeepGoing: () => void
   onGoToReport: () => void
 }) {
@@ -430,32 +437,41 @@ function PatternScreen({
       )}
 
       {!isLoading && (
+        // "Keep going" only shows if a dimension genuinely has unanswered questions —
+        // checked directly (hasRemainingDimensions), not assumed from branch type. Under
+        // the current linear 15-question flow this is always false (the pattern screen
+        // only appears once all 3 dimensions are fully answered), so only "Go to your
+        // report" renders in practice — but the check stays real in case that changes.
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 380, ...f(1800) }}>
-          <button
-            onClick={onKeepGoing}
-            style={{
-              width: '100%', padding: '16px 20px', borderRadius: 10, fontFamily: sans,
-              fontSize: 14.5, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
-              display: 'flex', flexDirection: 'column', gap: 3,
-              background: charcoal, color: cream, border: 'none',
-            }}
-          >
-            <span>Keep going</span>
-            <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(247,244,237,0.6)' }}>
-              A few more questions round this out
-            </span>
-          </button>
+          {hasRemainingDimensions && (
+            <button
+              onClick={onKeepGoing}
+              style={{
+                width: '100%', padding: '16px 20px', borderRadius: 10, fontFamily: sans,
+                fontSize: 14.5, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+                display: 'flex', flexDirection: 'column', gap: 3,
+                background: charcoal, color: cream, border: 'none',
+              }}
+            >
+              <span>Keep going</span>
+              <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(247,244,237,0.6)' }}>
+                A few more questions round this out
+              </span>
+            </button>
+          )}
           <button
             onClick={onGoToReport}
             style={{
               width: '100%', padding: '16px 20px', borderRadius: 10, fontFamily: sans,
               fontSize: 14.5, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
               display: 'flex', flexDirection: 'column', gap: 3,
-              background: white, color: charcoal, border: `1px solid ${line}`,
+              background: hasRemainingDimensions ? white : charcoal,
+              color: hasRemainingDimensions ? charcoal : cream,
+              border: hasRemainingDimensions ? `1px solid ${line}` : 'none',
             }}
           >
             <span>Go to your report</span>
-            <span style={{ fontSize: 12, fontWeight: 400, color: gray }}>
+            <span style={{ fontSize: 12, fontWeight: 400, color: hasRemainingDimensions ? gray : 'rgba(247,244,237,0.6)' }}>
               Your environment section is now ready to view
             </span>
           </button>

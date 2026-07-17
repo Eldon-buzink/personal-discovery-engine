@@ -1,15 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
-import { suggestNextBranch } from '@/lib/known/branchSuggestion'
-import type { Branch, BranchSuggestion } from '@/lib/known/branchSuggestion'
+import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
+import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
+import { getIsPaid, isRevealCapped } from '@/lib/known/paywall'
+import { createClient } from '@/lib/supabase/client'
+import PaywallModal from '@/components/known/PaywallModal'
+import AnimatedBlob from '@/components/known/AnimatedBlob'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
 import EnergyFieldVisual from '@/components/known/EnergyFieldVisual'
 import type { EnergyFieldItem } from '@/components/known/EnergyFieldVisual'
+import WorkingStyleVisual from '@/components/known/WorkingStyleVisual'
+import type { WorkingStyleAxisItem } from '@/components/known/WorkingStyleVisual'
+import DirectionAccordion from '@/components/known/DirectionAccordion'
+import type { DirectionAccordionItem } from '@/components/known/DirectionAccordion'
+import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 
@@ -141,12 +151,17 @@ function TagPill({ label, hue = 8 }: { label: string; hue?: number }) {
 
 // ── Interactive blob cluster ───────────────────────────────────────────────────
 
+// Satellite offsets must clear the active blob (radius 82) plus their own
+// radius (58) — the old magnitudes put satellite centers only ~87-96 units
+// from the active center against a combined radius of 140, so every
+// satellite blob (and its label) sat crammed inside the active blob's edge.
+// These are sized so active-to-satellite distance clears ~160-170 units.
 const CLUSTER_OFFSETS = [
-  { dx:   0, dy:   0 },
-  { dx: -80, dy: -40 },
-  { dx:  75, dy: -45 },
-  { dx: -85, dy:  45 },
-  { dx:  80, dy:  50 },
+  { dx:    0, dy:   0 },
+  { dx: -155, dy: -60 },
+  { dx:  150, dy: -60 },
+  { dx: -160, dy:  65 },
+  { dx:  155, dy:  65 },
 ]
 
 function InteractiveCluster({
@@ -166,7 +181,12 @@ function InteractiveCluster({
 
   const renderItems = useMemo(() => {
     const cxBase = 250, cyBase = 130
-    const count = Math.min(facets.length, 5)
+    // No render-time cap here anymore — the real enforcement moved to
+    // triggerReveal (assessment/page.tsx), before the Haiku call. For a free/
+    // unpaid user `facets` can never exceed REVEAL_CAP now (generation stops
+    // there), so this naturally reflects that; for a paid user it correctly
+    // shows however many traits they actually have, uncapped.
+    const count = facets.length
     const order = Array.from({ length: count }, (_, i) => i)
       .sort((a, b) => (a === activeIdx ? 1 : 0) - (b === activeIdx ? 1 : 0))
     return order.map((i) => {
@@ -437,59 +457,69 @@ function UnlockedContent({
   traitWord, content, hue,
   subtitle = 'Your first pattern',
   source = 'From your assessment',
+  hideQuote = false,
 }: {
   traitWord: string
   content: PatternContent
   hue: number
   subtitle?: string
   source?: string
+  // Skips title/subtitle/trait_quote/"Where this shows up"+where_it_shows_up — for
+  // branches (currently: Energy) where that narrative is already shown per-item
+  // elsewhere on the page, so trait_quote/where_it_shows_up would be a duplicate.
+  // tags/go_deeper/worth_trying aren't duplicated anywhere, so they still render.
+  hideQuote?: boolean
 }) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <h2 style={{
-        fontFamily: serif,
-        fontSize: 25,
-        fontWeight: 600,
-        color: charcoal,
-        margin: '0 0 6px',
-        textAlign: 'center',
-      }}>
-        {traitWord}
-      </h2>
+      {!hideQuote && (
+        <>
+          <h2 style={{
+            fontFamily: serif,
+            fontSize: 25,
+            fontWeight: 600,
+            color: charcoal,
+            margin: '0 0 6px',
+            textAlign: 'center',
+          }}>
+            {traitWord}
+          </h2>
 
-      <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
-        {subtitle}
-      </p>
+          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
+            {subtitle}
+          </p>
 
-      <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
-        <p style={{
-          fontFamily: serif,
-          fontStyle: 'italic',
-          fontSize: 17,
-          lineHeight: 1.5,
-          color: charcoalSoft,
-          textAlign: 'center',
-        }}>
-          {content.trait_quote}
-        </p>
-      </div>
+          <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
+            <p style={{
+              fontFamily: serif,
+              fontStyle: 'italic',
+              fontSize: 17,
+              lineHeight: 1.5,
+              color: charcoalSoft,
+              textAlign: 'center',
+            }}>
+              {content.trait_quote}
+            </p>
+          </div>
 
-      <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
-        {source}
-      </p>
+          <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
+            {source}
+          </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-        <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
-          Where this shows up
-        </p>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
+            <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+              Where this shows up
+            </p>
+          </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', marginBottom: 16 }}>
-        <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
-          {content.where_it_shows_up}
-        </p>
-      </div>
+          <div style={{ maxWidth: 420, margin: '0 auto', marginBottom: 16 }}>
+            <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
+              {content.where_it_shows_up}
+            </p>
+          </div>
+        </>
+      )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 26px' }}>
         {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
@@ -539,18 +569,41 @@ function PatternLoadingState({ traitWord, isLoading }: { traitWord: string; isLo
   )
 }
 
-// ── Locked card ───────────────────────────────────────────────────────────────
+// ── Empty report state ───────────────────────────────────────────────────────
+// Shown pre-first-reveal (zero interaction, or partial Ring 1 progress that
+// hasn't produced a completed facet yet — `isUnlocked` doesn't distinguish the
+// two, see report/page.tsx isUnlocked derivation). Deliberately not LockedCard:
+// no dashed border, no padlock — there's nothing "locked" yet, just nothing there.
+// Blobs use a fixed seed, not a user-derived one — there's no real data to seed from.
 
-function LockedCard({ branchName, href = '/assessment' }: { branchName: string; href?: string }) {
+const EMPTY_STATE_SEED = 'known-empty-report'
+
+function EmptyReportState() {
   return (
-    <div style={{ background: cream, border: `1.5px dashed ${line}`, borderRadius: 14, padding: '32px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: 20, marginBottom: 12 }}>🔒</p>
-      <p style={{ fontFamily: sans, fontSize: 13, color: charcoalSoft, marginBottom: 20 }}>
-        Complete <strong style={{ color: charcoal }}>{branchName}</strong> to unlock this section
+    <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 2 }}>
+        <AnimatedBlob seed={EMPTY_STATE_SEED} hueOffset={0} size={104} baseRadius={37} />
+        <AnimatedBlob seed={EMPTY_STATE_SEED} hueOffset={1} size={148} baseRadius={52} />
+        <AnimatedBlob seed={EMPTY_STATE_SEED} hueOffset={2} size={104} baseRadius={37} />
+      </div>
+
+      <h2 style={{
+        fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: 23,
+        color: charcoal, lineHeight: 1.35, margin: '20px 0 10px',
+      }}>
+        This is where your patterns will live.
+      </h2>
+
+      <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, maxWidth: 340, margin: '0 auto 26px' }}>
+        Nothing&apos;s surfaced yet — it only takes a handful of honest answers to see the first one.
       </p>
-      <Link href={href}>
-        <button style={{ background: charcoal, color: cream, borderRadius: 10, padding: '12px 24px', fontSize: 13.5, fontFamily: sans, fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-          Start {branchName}
+
+      <Link href="/assessment">
+        <button style={{
+          background: charcoal, color: cream, borderRadius: 9999, border: 'none',
+          padding: '14px 28px', fontFamily: sans, fontSize: 14.5, fontWeight: 500, cursor: 'pointer',
+        }}>
+          Start the assessment
         </button>
       </Link>
     </div>
@@ -596,7 +649,7 @@ function Ring1CompleteCard() {
   )
 }
 
-function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
+function ContinueRing1Card({ totalAnswered, onContinue }: { totalAnswered: number; onContinue: () => void }) {
   return (
     <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
       <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
@@ -606,17 +659,38 @@ function ContinueRing1Card({ totalAnswered }: { totalAnswered: number }) {
         {"You've answered"} {totalAnswered} of 120 questions. More patterns may still surface.
       </p>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-        <Link href="/assessment">
-          <button style={{ background: 'white', color: charcoal, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', fontFamily: sans }}>
-            Continue →
-          </button>
-        </Link>
+        <button onClick={onContinue} style={{ background: 'white', color: charcoal, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', fontFamily: sans }}>
+          Continue →
+        </button>
       </div>
     </div>
   )
 }
 
-function BranchSuggestionCard({ branchLabel, href, reason }: { branchLabel: string; href: string; reason: string }) {
+// One card, always — not one design for a single suggestion and a different
+// layout for multiple. With multiple qualifying branches, the hero copy stays
+// scoped to the top-ranked one only; the rest get named in a trailing
+// reference line, not their own copy block.
+function BranchSuggestionCard({
+  branchLabel,
+  reason,
+  extraBranchLabels,
+  isPaid,
+  onSelect,
+}: {
+  branchLabel: string
+  reason: string
+  extraBranchLabels?: string[]
+  isPaid: boolean
+  onSelect: () => void
+}) {
+  const hasExtra = !!extraBranchLabels && extraBranchLabels.length > 0
+  const ctaLabel = isPaid
+    ? `Start ${branchLabel} →`
+    : hasExtra
+    ? `Unlock ${branchLabel} and ${extraBranchLabels!.length} more →`
+    : `Unlock ${branchLabel} →`
+
   return (
     <div style={{
       padding: 2,
@@ -636,12 +710,15 @@ function BranchSuggestionCard({ branchLabel, href, reason }: { branchLabel: stri
         <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, marginTop: 8 }}>
           {reason}
         </p>
+        {hasExtra && (
+          <p style={{ fontFamily: sans, fontSize: 12, color: gray, marginTop: 10 }}>
+            {isPaid ? 'Also available' : 'Also unlocks'}: {extraBranchLabels!.join(', ')}.
+          </p>
+        )}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <Link href={href}>
-            <button style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
-              Start {branchLabel} →
-            </button>
-          </Link>
+          <button onClick={onSelect} style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
+            {ctaLabel}
+          </button>
         </div>
       </div>
     </div>
@@ -650,7 +727,7 @@ function BranchSuggestionCard({ branchLabel, href, reason }: { branchLabel: stri
 
 // ── Sticky bottom bar ─────────────────────────────────────────────────────────
 
-function StickyBar({ leftText, rightLabel, rightHref }: { leftText: string; rightLabel: string; rightHref: string }) {
+function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; rightLabel: string; onSelect: () => void }) {
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
@@ -661,24 +738,26 @@ function StickyBar({ leftText, rightLabel, rightHref }: { leftText: string; righ
       <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: charcoalSoft, margin: 0 }}>
         {leftText}
       </p>
-      <Link href={rightHref} style={{ textDecoration: 'none' }}>
-        <div style={{
+      <div
+        onClick={onSelect}
+        style={{
           padding: 2,
           borderRadius: 100,
           background: 'linear-gradient(135deg, hsl(175,65%,55%), hsl(205,65%,60%), hsl(235,60%,65%), hsl(290,55%,60%), hsl(8,65%,60%), hsl(35,70%,58%))',
           backgroundSize: '300% 300%',
           animation: 'gradientRotate 4s ease infinite',
           boxShadow: '0 0 20px 2px hsla(175,65%,55%,0.25), 0 0 40px 4px hsla(205,65%,60%,0.15)',
+          cursor: 'pointer',
+        }}
+      >
+        <button style={{
+          fontFamily: sans, fontSize: 13, fontWeight: 500, color: charcoal,
+          padding: '10px 20px', border: 'none', borderRadius: 100,
+          background: cream, cursor: 'pointer',
         }}>
-          <button style={{
-            fontFamily: sans, fontSize: 13, fontWeight: 500, color: charcoal,
-            padding: '10px 20px', border: 'none', borderRadius: 100,
-            background: cream, cursor: 'pointer',
-          }}>
-            {rightLabel}
-          </button>
-        </div>
-      </Link>
+          {rightLabel}
+        </button>
+      </div>
     </div>
   )
 }
@@ -701,17 +780,91 @@ const BRANCH_ROUTES: Record<Branch, string> = {
   direction:     '/assessment/direction',
 }
 
+// ── Section ordering ─────────────────────────────────────────────────────────
+// Environment/Relationships/Energy sections render in completedAt order, not a
+// fixed sequence — Ring 1 ("Who you are") is always first regardless, since it's
+// foundational rather than one of the optional branches.
+
+type OptionalBranchKey = 'environment' | 'relationships' | 'energy' | 'working_style' | 'direction'
+type SectionKey = 'ring1' | OptionalBranchKey
+
+const SECTION_LABEL: Record<SectionKey, string> = {
+  ring1:         'Who you are',
+  environment:   'Where you thrive',
+  relationships: 'How I connect',
+  energy:        'Your energy',
+  working_style: 'How I work',
+  direction:     'Where this might lead',
+}
+
+// Every transition a user could actually hit. Ring 1 is always first, so ring1→X
+// covers every possible "first completed branch"; the remaining 20 cover every
+// ordered pair among the 5 optional branches — with 5 optional branches, at most
+// 4 such transitions can ever occur in one report, so this is exhaustive.
+const TRANSITION_BODY: Record<string, string> = {
+  'ring1→environment':         "That's what's true on your own. The next part is about what's true around you.",
+  'ring1→relationships':       "That's what's true on your own. This part is about what happens when someone else is in the room.",
+  'ring1→energy':              "That's what's true on your own. This part is about what actually fuels you day to day.",
+  'ring1→working_style':       "That's what's true on your own. This part is about how you actually work, not how you'd describe it.",
+  'ring1→direction':           "That's what's true on your own. This part is about where those patterns might actually lead.",
+  'environment→relationships': 'Conditions are one thing. This part is about what happens when someone else is in the room.',
+  'environment→energy':        'Conditions are one thing. This part is about what actually fuels you day to day.',
+  'environment→working_style': "Conditions are one thing. This part is about how you actually work, not how you'd describe it.",
+  'environment→direction':     'Conditions are one thing. This part is about where those patterns might actually lead.',
+  'relationships→environment': "That's what happens with people. This part is about what's true around you when no one else is in the room.",
+  'relationships→energy':      "How you show up in relationships is shaped, in part, by what fuels you — and what doesn't.",
+  'relationships→working_style': "That's what happens with people. This part is about how you actually work, not how you'd describe it.",
+  'relationships→direction':   "That's what happens with people. This part is about where those patterns might actually lead.",
+  'energy→environment':        'What fuels you is one layer. This part is about the conditions that bring out your best work.',
+  'energy→relationships':      'What fuels you is one layer. This part is about what happens when someone else is in the room.',
+  'energy→working_style':      "What fuels you is one layer. This part is about how you actually work, not how you'd describe it.",
+  'energy→direction':          'What fuels you is one layer. This part is about where those patterns might actually lead.',
+  'working_style→environment': "That's how you operate day to day. This part is about what's true around you when no one else is in the room.",
+  'working_style→relationships': "That's how you operate day to day. This part is about what happens when someone else is in the room.",
+  'working_style→energy':      "That's how you operate day to day. This part is about what actually fuels you day to day.",
+  'working_style→direction':   "That's how you operate day to day. This part is about where those patterns might actually lead.",
+  'direction→environment':     'Those are directions worth considering. This part is about what\'s true around you when no one else is in the room.',
+  'direction→relationships':   'Those are directions worth considering. This part is about what happens when someone else is in the room.',
+  'direction→energy':          'Those are directions worth considering. This part is about what actually fuels you day to day.',
+  'direction→working_style':   "Those are directions worth considering. This part is about how you actually work, not how you'd describe it.",
+}
+
+function SectionTransition({ from, to }: { from: SectionKey; to: SectionKey }) {
+  return (
+    <SectionDivider
+      marker={`${SECTION_LABEL[from]} → ${SECTION_LABEL[to]}`}
+      body={TRANSITION_BODY[`${from}→${to}`] ?? ''}
+    />
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ReportPage() {
+  const router = useRouter()
   const [facets, setFacets] = useState<FacetEntry[]>([])
   const [totalAnswered, setTotalAnswered] = useState(0)
   const [ring1Complete, setRing1Complete] = useState(false)
   const [activeIdx, setActiveIdx] = useState(0)
+
+  // Paywall — see lib/known/paywall.ts for the "isPaid is a placeholder" note.
+  const [isPaid, setIsPaidState] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [paywallOpen, setPaywallOpen] = useState(false)
+
+  useEffect(() => {
+    setIsPaidState(getIsPaid())
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session)
+    })
+  }, [])
   const [envEntry, setEnvEntry] = useState<PatternContentEntry | null>(null)
   const [activeEnvIdx, setActiveEnvIdx] = useState(0)
   const [relEntry, setRelEntry] = useState<PatternContentEntry | null>(null)
   const [energyEntry, setEnergyEntry] = useState<PatternContentEntry | null>(null)
+  const [wsEntry, setWsEntry] = useState<PatternContentEntry | null>(null)
+  const [dirEntry, setDirEntry] = useState<PatternContentEntry | null>(null)
   const [ring1Entries, setRing1Entries] = useState<PatternContentEntry[]>([])
 
   const [entryCream, setEntryCream] = useState(0)
@@ -742,10 +895,14 @@ export default function ReportPage() {
     const envPc    = pcArray.find(e => e.branch === 'environment')    ?? null
     const relPc    = pcArray.find(e => e.branch === 'relationships')   ?? null
     const energyPc = pcArray.find(e => e.branch === 'energy')          ?? null
-    const ring1Pcs = pcArray.filter(e => !['environment', 'relationships', 'energy'].includes(e.branch ?? ''))
+    const wsPc     = pcArray.find(e => e.branch === 'working_style')   ?? null
+    const dirPc    = pcArray.find(e => e.branch === 'direction')       ?? null
+    const ring1Pcs = pcArray.filter(e => !['environment', 'relationships', 'energy', 'working_style', 'direction'].includes(e.branch ?? ''))
     setEnvEntry(envPc)
     setRelEntry(relPc)
     setEnergyEntry(energyPc)
+    setWsEntry(wsPc)
+    setDirEntry(dirPc)
     setRing1Entries(ring1Pcs)
 
     let facetNames: string[] = []
@@ -824,6 +981,8 @@ export default function ReportPage() {
     ...(envEntry    ? ['environment'   as Branch] : []),
     ...(relEntry    ? ['relationships' as Branch] : []),
     ...(energyEntry ? ['energy'        as Branch] : []),
+    ...(wsEntry     ? ['working_style' as Branch] : []),
+    ...(dirEntry    ? ['direction'     as Branch] : []),
   ]
   const ring1ForEngine = ring1Entries.map(e => ({
     facet: e.facet,
@@ -836,21 +995,238 @@ export default function ReportPage() {
     ? suggestNextBranch(ring1ForEngine, completedBranches)
     : null
 
-  const suggestEnvironment   = !!envEntry
-  const suggestRelationships = !!relEntry
-  const suggestEnergy        = !!energyEntry
+  // All uncompleted branches clearing the confidence bar, ranked — not just the
+  // single top pick. Falls back to the single `suggestion` above when nothing
+  // qualifies yet (early on, with too little Ring 1 signal), so there's still
+  // always something to point at rather than nothing.
+  const qualifyingBranches: QualifyingBranch[] = isUnlocked
+    ? suggestQualifyingBranches(ring1ForEngine, completedBranches)
+    : []
+
+  const isLocked = isRevealCapped(ring1Entries.length, isPaid)
+
+  // Any branch-start or continue-Ring-1 CTA on this page routes through here.
+  // Below the lock, it's a normal navigation; at/past it, PaywallModal opens —
+  // it decides internally whether to show its login step first.
+  function handleGatedNav(href: string) {
+    if (!isLocked) {
+      router.push(href)
+      return
+    }
+    setPaywallOpen(true)
+  }
+
+  // Optional branches, ordered by when the user actually completed them — not a
+  // fixed Environment→Relationships→Energy sequence. Missing completedAt (shouldn't
+  // happen for new entries, but guards old/dev-shortcut data) sorts first rather
+  // than crashing.
+  const orderedOptionalBranches: { key: OptionalBranchKey; entry: PatternContentEntry }[] = [
+    ...(envEntry    ? [{ key: 'environment'   as const, entry: envEntry }]    : []),
+    ...(relEntry    ? [{ key: 'relationships' as const, entry: relEntry }]    : []),
+    ...(energyEntry ? [{ key: 'energy'        as const, entry: energyEntry }] : []),
+    ...(wsEntry     ? [{ key: 'working_style' as const, entry: wsEntry }]     : []),
+    ...(dirEntry    ? [{ key: 'direction'     as const, entry: dirEntry }]    : []),
+  ].sort((a, b) => (a.entry.completedAt ?? '').localeCompare(b.entry.completedAt ?? ''))
+
+  const sections: SectionKey[] = ['ring1', ...orderedOptionalBranches.map(b => b.key)]
 
   const nextBranchLabel = suggestion ? BRANCH_DISPLAY_NAMES[suggestion.branch] : undefined
   const nextBranchHref  = suggestion ? BRANCH_ROUTES[suggestion.branch]        : undefined
 
-  const stickyBar: { leftText: string; rightLabel: string; rightHref: string } | null =
+  const stickyBar: { leftText: string; rightLabel: string; onSelect: () => void } | null =
     !isUnlocked || suggestion === null
       ? null
       : ring1Complete
-      ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
+      ? { leftText: suggestion.reason, rightLabel: `${isPaid ? 'Start' : 'Unlock'} ${nextBranchLabel!} →`, onSelect: () => handleGatedNav(nextBranchHref!) }
       : suggestion.isTargeted
-      ? { leftText: suggestion.reason, rightLabel: `Start ${nextBranchLabel!} →`, rightHref: nextBranchHref! }
-      : { leftText: "There's more underneath this.", rightLabel: 'Keep discovering →', rightHref: '/assessment' }
+      ? { leftText: suggestion.reason, rightLabel: `${isPaid ? 'Start' : 'Unlock'} ${nextBranchLabel!} →`, onSelect: () => handleGatedNav(nextBranchHref!) }
+      : { leftText: "There's more underneath this.", rightLabel: 'Keep discovering →', onSelect: () => handleGatedNav('/assessment') }
+
+  // ── Optional-branch section content ──────────────────────────────────────────
+  // Each is only ever called for a branch that's actually in orderedOptionalBranches
+  // (i.e. already completed), so there's no "locked" fallback to render here.
+
+  function renderEnvironmentSection() {
+    if (!envEntry) return null
+    const envHue = userCuratedHue(`env-pattern-${envEntry.traitWord.toLowerCase().replace(/\s+/g, '-')}`, 0)
+    // Derive orbit conditions from stored strongConditions; fall back to single-item
+    // for older entries that don't have strongConditions stored
+    const envConditions: OrbitCondition[] = envEntry.strongConditions?.map(sc => ({
+      traitWord: sc.traitWord,
+      hue: userCuratedHue(`env-pattern-${sc.traitWord.toLowerCase().replace(/\s+/g, '-')}`, 0),
+    })) ?? [{ traitWord: envEntry.traitWord, hue: envHue }]
+
+    return (
+      <section style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+          Where you thrive
+        </p>
+        <OrbitCluster
+          conditions={envConditions}
+          primaryTraitWord={envEntry.traitWord}
+          primaryHue={envHue}
+          activeIdx={activeEnvIdx}
+          onSelect={setActiveEnvIdx}
+        />
+        <div style={{ marginTop: 20 }}>
+          {envEntry.content ? (
+            <UnlockedContent
+              traitWord={envEntry.traitWord}
+              content={envEntry.content}
+              hue={envHue}
+              subtitle="Your environment pattern"
+              source="From your environment branch"
+            />
+          ) : (
+            <PatternLoadingState traitWord={envEntry.traitWord} isLoading={true} />
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  function renderRelationshipsSection() {
+    if (!relEntry) return null
+    const relHue = userCuratedHue(`rel-pattern-${relEntry.traitWord.toLowerCase()}`, 0)
+
+    return (
+      <section style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+          How I connect
+        </p>
+        <div style={{ width: '100%', maxWidth: 400, margin: '8px auto 0' }}>
+          <RelationshipsVisual
+            traitWord={relEntry.traitWord}
+            partnerDistance={relEntry.dimensionScores?.partnerDistance ?? 0.5}
+            hue={relHue}
+          />
+        </div>
+        <div style={{ marginTop: 20 }}>
+          {relEntry.content ? (
+            <UnlockedContent
+              traitWord={relEntry.traitWord}
+              content={relEntry.content}
+              hue={relHue}
+              subtitle="Your relationships pattern"
+              source="From your relationships branch"
+            />
+          ) : (
+            <PatternLoadingState traitWord={relEntry.traitWord} isLoading={true} />
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  function renderEnergySection() {
+    if (!energyEntry) return null
+    const fuels  = energyEntry.strongConditions?.filter(c => c.label === 'fuel')  ?? []
+    const drains = energyEntry.strongConditions?.filter(c => c.label === 'drain') ?? []
+    // Order matches EnergyFieldVisual's fixed layout: top fuel, second fuel, top drain, second drain.
+    const fieldItems: EnergyFieldItem[] = [
+      { label: fuels[0]?.traitWord  ?? '', side: 'fuel',  score: fuels[0]?.score  ?? 3, quote: fuels[0]?.quote  ?? '', evidence: fuels[0]?.evidence  ?? '' },
+      { label: fuels[1]?.traitWord  ?? '', side: 'fuel',  score: fuels[1]?.score  ?? 3, quote: fuels[1]?.quote  ?? '', evidence: fuels[1]?.evidence  ?? '' },
+      { label: drains[0]?.traitWord ?? '', side: 'drain', score: drains[0]?.score ?? 3, quote: drains[0]?.quote ?? '', evidence: drains[0]?.evidence ?? '' },
+      { label: drains[1]?.traitWord ?? '', side: 'drain', score: drains[1]?.score ?? 3, quote: drains[1]?.quote ?? '', evidence: drains[1]?.evidence ?? '' },
+    ]
+
+    return (
+      <section style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+          Your energy
+        </p>
+        {energyEntry.content ? (
+          <>
+            <div style={{ marginTop: 8 }}>
+              <EnergyFieldVisual items={fieldItems} />
+            </div>
+            <div style={{ marginTop: 28 }}>
+              <UnlockedContent
+                traitWord={energyEntry.traitWord}
+                content={energyEntry.content}
+                hue={145}
+                subtitle="Your energy pattern"
+                source="From your energy branch"
+                hideQuote
+              />
+            </div>
+          </>
+        ) : (
+          <PatternLoadingState traitWord={energyEntry.traitWord} isLoading={true} />
+        )}
+      </section>
+    )
+  }
+
+  function renderWorkingStyleSection() {
+    if (!wsEntry) return null
+    const axisItems: WorkingStyleAxisItem[] = (wsEntry.strongConditions ?? []).map((c) => ({
+      axis:     c.label as WorkingStyleAxis,
+      position: c.score,
+      quote:    c.quote    ?? '',
+      evidence: c.evidence ?? '',
+    }))
+
+    return (
+      <section style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+          How I work
+        </p>
+        {wsEntry.content ? (
+          <>
+            <div style={{ marginTop: 8 }}>
+              <WorkingStyleVisual items={axisItems} />
+            </div>
+            <div style={{ marginTop: 28 }}>
+              <UnlockedContent
+                traitWord={wsEntry.traitWord}
+                content={wsEntry.content}
+                hue={235}
+                subtitle="Your working style pattern"
+                source="From your working style branch"
+                hideQuote
+              />
+            </div>
+          </>
+        ) : (
+          <PatternLoadingState traitWord={wsEntry.traitWord} isLoading={true} />
+        )}
+      </section>
+    )
+  }
+
+  function renderDirectionSection() {
+    if (!dirEntry) return null
+    const items: DirectionAccordionItem[] = (dirEntry.strongConditions ?? []).map((c, i) => ({
+      tier:    i === 0 ? 'Closest match' : 'Worth exploring',
+      word:    c.word ?? c.traitWord,
+      summary: c.quote ?? '',
+      body:    c.evidence ?? '',
+    }))
+
+    return (
+      <section style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+          Where this might lead
+        </p>
+        {dirEntry.content ? (
+          <div style={{ marginTop: 20 }}>
+            <DirectionAccordion items={items} />
+          </div>
+        ) : (
+          <PatternLoadingState traitWord={dirEntry.traitWord} isLoading={true} />
+        )}
+      </section>
+    )
+  }
+
+  const SECTION_RENDERERS: Record<OptionalBranchKey, () => JSX.Element | null> = {
+    environment:   renderEnvironmentSection,
+    relationships: renderRelationshipsSection,
+    energy:        renderEnergySection,
+    working_style: renderWorkingStyleSection,
+    direction:     renderDirectionSection,
+  }
 
   return (
     <>
@@ -882,10 +1258,10 @@ export default function ReportPage() {
             </p>
           </div>
 
-          {/* ── Branch 1: Who you are ──────────────────────── */}
+          {/* ── Branch 1: Who you are (always first) ─────────── */}
           <section style={{ textAlign: 'center' }}>
             <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
-              Who you are
+              {isUnlocked ? 'Who you are' : 'Your report'}
             </p>
 
             {isUnlocked ? (
@@ -906,181 +1282,52 @@ export default function ReportPage() {
                     />
                   )}
                 </div>
-
-                {hasContent && (
-                  <>
-                    <WhatsnextDivider />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {ring1Complete ? <Ring1CompleteCard /> : <ContinueRing1Card totalAnswered={totalAnswered} />}
-                      {suggestion && nextBranchLabel && nextBranchHref && (suggestion.isTargeted || ring1Complete) && (
-                        <BranchSuggestionCard
-                          branchLabel={nextBranchLabel}
-                          href={nextBranchHref}
-                          reason={suggestion.reason}
-                        />
-                      )}
-                    </div>
-                  </>
-                )}
               </>
             ) : (
-              <LockedCard branchName="the assessment" />
+              <EmptyReportState />
             )}
           </section>
 
-          {/* ── Branch 2: Where you thrive ────────────────── */}
-          {isUnlocked && suggestEnvironment && (() => {
-            const envHue = envEntry
-              ? userCuratedHue(`env-pattern-${envEntry.traitWord.toLowerCase().replace(/\s+/g, '-')}`, 0)
-              : 8
-            // Derive orbit conditions from stored strongConditions; fall back to single-item
-            // for older entries that don't have strongConditions stored
-            const envConditions: OrbitCondition[] = envEntry
-              ? (envEntry.strongConditions?.map(sc => ({
-                  traitWord: sc.traitWord,
-                  hue: userCuratedHue(`env-pattern-${sc.traitWord.toLowerCase().replace(/\s+/g, '-')}`, 0),
-                })) ?? [{ traitWord: envEntry.traitWord, hue: envHue }])
-              : []
-            return (
-              <>
-                <SectionDivider
-                  marker="Who you are → Where you thrive"
-                  body={"That's what's true on your own. The next part is about what's true around you."}
-                />
+          {/* ── Optional branches, in the order the user actually completed them ── */}
+          {isUnlocked && orderedOptionalBranches.map((b, i) => (
+            <Fragment key={b.key}>
+              <SectionTransition from={sections[i]} to={sections[i + 1]} />
+              {SECTION_RENDERERS[b.key]()}
+            </Fragment>
+          ))}
 
-                <section style={{ textAlign: 'center' }}>
-                  <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
-                    Where you thrive
-                  </p>
-
-                  {envEntry ? (
-                    <>
-                      <OrbitCluster
-                        conditions={envConditions}
-                        primaryTraitWord={envEntry.traitWord}
-                        primaryHue={envHue}
-                        activeIdx={activeEnvIdx}
-                        onSelect={setActiveEnvIdx}
-                      />
-                      <div style={{ marginTop: 20 }}>
-                        {envEntry.content ? (
-                          <UnlockedContent
-                            traitWord={envEntry.traitWord}
-                            content={envEntry.content}
-                            hue={envHue}
-                            subtitle="Your environment pattern"
-                            source="From your environment branch"
-                          />
-                        ) : (
-                          <PatternLoadingState traitWord={envEntry.traitWord} isLoading={true} />
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <LockedCard branchName="Your environment" href="/assessment/environment" />
-                  )}
-                </section>
-
-                {suggestRelationships && (
-                  <SectionDivider
-                    marker="Where you thrive → How I connect"
-                    body="Conditions are one thing. This part is about what happens when someone else is in the room."
-                  />
-                )}
-              </>
-            )
-          })()}
-
-          {/* ── Branch 3: How I connect ───────────────────── */}
-          {isUnlocked && suggestRelationships && (() => {
-            const relHue = relEntry
-              ? userCuratedHue(`rel-pattern-${relEntry.traitWord.toLowerCase()}`, 0)
-              : 8
-            return (
-              <section style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
-                  How I connect
-                </p>
-
-                {relEntry ? (
-                  <>
-                    <div style={{ width: '100%', maxWidth: 400, margin: '8px auto 0' }}>
-                      <RelationshipsVisual
-                        traitWord={relEntry.traitWord}
-                        partnerDistance={relEntry.dimensionScores?.partnerDistance ?? 0.5}
-                        hue={relHue}
-                      />
-                    </div>
-                    <div style={{ marginTop: 20 }}>
-                      {relEntry.content ? (
-                        <UnlockedContent
-                          traitWord={relEntry.traitWord}
-                          content={relEntry.content}
-                          hue={relHue}
-                          subtitle="Your relationships pattern"
-                          source="From your relationships branch"
-                        />
-                      ) : (
-                        <PatternLoadingState traitWord={relEntry.traitWord} isLoading={true} />
-                      )}
-                    </div>
-                  </>
+          {/* ── What's next: trails whichever section was completed most recently ── */}
+          {hasContent && (
+            <>
+              <WhatsnextDivider />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {ring1Complete ? (
+                  <Ring1CompleteCard />
                 ) : (
-                  <LockedCard branchName="Your relationships" href="/assessment/relationships" />
+                  <ContinueRing1Card totalAnswered={totalAnswered} onContinue={() => handleGatedNav('/assessment')} />
                 )}
 
-                {suggestEnergy && (
-                  <SectionDivider
-                    marker="How I connect → Your energy"
-                    body="How you show up in relationships is shaped, in part, by what fuels you — and what doesn't."
+                {qualifyingBranches.length > 0 ? (
+                  <BranchSuggestionCard
+                    branchLabel={BRANCH_DISPLAY_NAMES[qualifyingBranches[0].branch]}
+                    reason={qualifyingBranches[0].reason}
+                    extraBranchLabels={qualifyingBranches.slice(1).map((b) => BRANCH_DISPLAY_NAMES[b.branch])}
+                    isPaid={isPaid}
+                    onSelect={() => handleGatedNav(BRANCH_ROUTES[qualifyingBranches[0].branch])}
                   />
-                )}
-              </section>
-            )
-          })()}
-
-          {/* ── Branch 4: Your energy ─────────────────────── */}
-          {isUnlocked && suggestEnergy && (() => {
-            const fuels  = energyEntry?.strongConditions?.filter(c => c.label === 'fuel')  ?? []
-            const drains = energyEntry?.strongConditions?.filter(c => c.label === 'drain') ?? []
-            // Order matches EnergyFieldVisual's fixed layout: top fuel, second fuel, top drain, second drain.
-            const fieldItems: EnergyFieldItem[] = [
-              { label: fuels[0]?.traitWord  ?? '', side: 'fuel',  score: fuels[0]?.score  ?? 3, quote: fuels[0]?.quote  ?? '', evidence: fuels[0]?.evidence  ?? '' },
-              { label: fuels[1]?.traitWord  ?? '', side: 'fuel',  score: fuels[1]?.score  ?? 3, quote: fuels[1]?.quote  ?? '', evidence: fuels[1]?.evidence  ?? '' },
-              { label: drains[0]?.traitWord ?? '', side: 'drain', score: drains[0]?.score ?? 3, quote: drains[0]?.quote ?? '', evidence: drains[0]?.evidence ?? '' },
-              { label: drains[1]?.traitWord ?? '', side: 'drain', score: drains[1]?.score ?? 3, quote: drains[1]?.quote ?? '', evidence: drains[1]?.evidence ?? '' },
-            ]
-            return (
-              <section style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
-                  Your energy
-                </p>
-
-                {energyEntry ? (
-                  energyEntry.content ? (
-                    <>
-                      <div style={{ marginTop: 8 }}>
-                        <EnergyFieldVisual items={fieldItems} />
-                      </div>
-                      <div style={{ marginTop: 28 }}>
-                        <UnlockedContent
-                          traitWord={energyEntry.traitWord}
-                          content={energyEntry.content}
-                          hue={145}
-                          subtitle="Your energy pattern"
-                          source="From your energy branch"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <PatternLoadingState traitWord={energyEntry.traitWord} isLoading={true} />
+                ) : (
+                  suggestion && nextBranchLabel && nextBranchHref && (suggestion.isTargeted || ring1Complete) && (
+                    <BranchSuggestionCard
+                      branchLabel={nextBranchLabel}
+                      onSelect={() => handleGatedNav(nextBranchHref)}
+                      reason={suggestion.reason}
+                      isPaid={isPaid}
+                    />
                   )
-                ) : (
-                  <LockedCard branchName="Your energy" href="/assessment/energy" />
                 )}
-              </section>
-            )
-          })()}
+              </div>
+            </>
+          )}
 
           {/* ── Report footer note ─────────────────────── */}
           <div style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
@@ -1092,6 +1339,13 @@ export default function ReportPage() {
         </div>
       </div>
       <SiteFooter />
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        isAuthenticated={isAuthenticated}
+        traitCount={ring1Entries.length}
+      />
 
     </>
   )

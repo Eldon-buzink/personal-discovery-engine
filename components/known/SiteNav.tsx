@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import PaywallModal from './PaywallModal'
 
 // ── Design tokens (match landing page) ────────────────────────────────────────
 const cream    = '#F5F2EB'
@@ -18,29 +20,34 @@ export const NAV_H = 56   // exported so pages can offset their paddingTop
 
 type CtaState = 'start' | 'continue' | 'unlock' | 'report'
 
-function readCtaState(): CtaState {
+function readSessionInfo(): { ctaState: CtaState; traitCount: number } {
   try {
     const raw = localStorage.getItem('known_session')
-    if (!raw) return 'start'
+    if (!raw) return { ctaState: 'start', traitCount: 0 }
     const s = JSON.parse(raw) as Record<string, unknown>
+    const patternContents = Array.isArray(s.patternContents) ? (s.patternContents as Array<{ branch?: string }>) : []
     const hasResponses = Array.isArray(s.responses) && (s.responses as unknown[]).length > 0
-    const hasPatterns  = Array.isArray(s.patternContents) && (s.patternContents as unknown[]).length > 0
-    const hasBranches  = Array.isArray(s.patternContents) && (s.patternContents as Array<{ branch?: string }>).some(
-      e => e.branch && e.branch !== 'ring1'
-    )
-    if (!hasResponses) return 'start'
-    if (!hasPatterns)  return 'continue'
-    if (!hasBranches)  return 'unlock'
-    return 'report'
+    const hasPatterns  = patternContents.length > 0
+    const hasBranches  = patternContents.some(e => e.branch && e.branch !== 'ring1')
+    const traitCount   = patternContents.filter(e => !e.branch || e.branch === 'ring1').length
+
+    let ctaState: CtaState = 'report'
+    if (!hasResponses) ctaState = 'start'
+    else if (!hasPatterns) ctaState = 'continue'
+    else if (!hasBranches) ctaState = 'unlock'
+
+    return { ctaState, traitCount }
   } catch {
-    return 'start'
+    return { ctaState: 'start', traitCount: 0 }
   }
 }
 
-const CTA_MAP: Record<CtaState, { label: string; href: string }> = {
+// 'unlock' has no href — it opens PaywallModal instead of navigating (was a
+// direct Link to /pricing, bypassing every other unlock entry point's gating).
+const CTA_MAP: Record<CtaState, { label: string; href: string | null }> = {
   start:    { label: 'Start the assessment',   href: '/onboarding' },
   continue: { label: 'Continue →',             href: '/assessment' },
-  unlock:   { label: 'Unlock your branches',   href: '/pricing'    },
+  unlock:   { label: 'Unlock your branches',   href: null          },
   report:   { label: 'View your report',        href: '/report'     },
 }
 
@@ -54,10 +61,19 @@ const NAV_LINKS = [
 export default function SiteNav() {
   const pathname = usePathname()
   const [ctaState, setCtaState] = useState<CtaState>('start')
+  const [traitCount, setTraitCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [paywallOpen, setPaywallOpen] = useState(false)
 
   useEffect(() => {
-    setCtaState(readCtaState())
+    const info = readSessionInfo()
+    setCtaState(info.ctaState)
+    setTraitCount(info.traitCount)
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session)
+    })
   }, [pathname])
 
   // Close mobile menu on route change
@@ -117,15 +133,28 @@ export default function SiteNav() {
         {/* Desktop CTA + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="sn-cta-wrap">
-            <Link href={cta.href} style={{ textDecoration: 'none' }}>
-              <button style={{
-                background: charcoal, color: cream, border: 'none', borderRadius: 100,
-                padding: '9px 20px', fontFamily: sans, fontSize: 13.5, fontWeight: 500,
-                cursor: 'pointer', letterSpacing: '0.01em', whiteSpace: 'nowrap',
-              }}>
+            {cta.href ? (
+              <Link href={cta.href} style={{ textDecoration: 'none' }}>
+                <button style={{
+                  background: charcoal, color: cream, border: 'none', borderRadius: 100,
+                  padding: '9px 20px', fontFamily: sans, fontSize: 13.5, fontWeight: 500,
+                  cursor: 'pointer', letterSpacing: '0.01em', whiteSpace: 'nowrap',
+                }}>
+                  {cta.label}
+                </button>
+              </Link>
+            ) : (
+              <button
+                onClick={() => setPaywallOpen(true)}
+                style={{
+                  background: charcoal, color: cream, border: 'none', borderRadius: 100,
+                  padding: '9px 20px', fontFamily: sans, fontSize: 13.5, fontWeight: 500,
+                  cursor: 'pointer', letterSpacing: '0.01em', whiteSpace: 'nowrap',
+                }}
+              >
                 {cta.label}
               </button>
-            </Link>
+            )}
           </div>
 
           <button
@@ -174,18 +203,38 @@ export default function SiteNav() {
             </Link>
           ))}
           <div style={{ paddingTop: 20 }}>
-            <Link href={cta.href} onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none' }}>
-              <button style={{
-                width: '100%', background: charcoal, color: cream,
-                border: 'none', borderRadius: 100,
-                padding: '14px 20px', fontFamily: sans, fontSize: 15, fontWeight: 500, cursor: 'pointer',
-              }}>
+            {cta.href ? (
+              <Link href={cta.href} onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none' }}>
+                <button style={{
+                  width: '100%', background: charcoal, color: cream,
+                  border: 'none', borderRadius: 100,
+                  padding: '14px 20px', fontFamily: sans, fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                }}>
+                  {cta.label}
+                </button>
+              </Link>
+            ) : (
+              <button
+                onClick={() => { setMenuOpen(false); setPaywallOpen(true) }}
+                style={{
+                  width: '100%', background: charcoal, color: cream,
+                  border: 'none', borderRadius: 100,
+                  padding: '14px 20px', fontFamily: sans, fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                }}
+              >
                 {cta.label}
               </button>
-            </Link>
+            )}
           </div>
         </div>
       )}
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        isAuthenticated={isAuthenticated}
+        traitCount={traitCount}
+      />
     </>
   )
 }

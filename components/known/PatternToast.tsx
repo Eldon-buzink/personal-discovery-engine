@@ -8,11 +8,14 @@ const DISMISS_MS = 6000
 
 interface PatternToastProps {
   record: CompletedFacetRecord
+  revealedCount: number
+  revealCap: number
+  isPaid: boolean
   onDismiss: () => void
   onSeeIt: () => void
 }
 
-export default function PatternToast({ record, onDismiss, onSeeIt }: PatternToastProps) {
+export default function PatternToast({ record, revealedCount, revealCap, isPaid, onDismiss, onSeeIt }: PatternToastProps) {
   const [progress, setProgress] = useState(100)
   const [dragY, setDragY] = useState(0)
   const onDismissRef = useRef(onDismiss)
@@ -88,10 +91,12 @@ export default function PatternToast({ record, onDismiss, onSeeIt }: PatternToas
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Main row */}
+      {/* Main row — the whole toast opens the pattern detail now, not just
+          "See it →". Tap-to-dismiss is gone; swipe-to-dismiss (below) and the
+          auto-dismiss countdown are the only ways this closes without acting on it. */}
       <div
         style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
-        onClick={onDismiss}
+        onClick={onSeeIt}
       >
         {/* Blob */}
         <div style={{ flexShrink: 0, width: 48, height: 48 }}>
@@ -122,7 +127,7 @@ export default function PatternToast({ record, onDismiss, onSeeIt }: PatternToas
             color: '#8C8A83',
             marginTop: 2,
           }}>
-            Another pattern detected
+            {isPaid ? `${revealedCount} traits discovered` : `${revealedCount} of ${revealCap} traits discovered`}
           </p>
         </div>
 

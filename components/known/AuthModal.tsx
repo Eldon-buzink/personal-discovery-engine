@@ -5,11 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 
 type ModalView = 'email' | 'confirm'
 
+// This modal is scoped to exactly one trigger now: the pre-cap "keep going"
+// prompt after the first Ring 1 reveal (save-progress framing only). Every
+// post-cap/unlock entry point goes through PaywallModal instead — see that
+// component for why these stayed as two distinct modals rather than one
+// growing a third context here.
 export interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
   questionCount: number
-  context: 'keep-going' | 'report'
   onSuccess: () => void
 }
 
@@ -17,7 +21,6 @@ export default function AuthModal({
   isOpen,
   onClose,
   questionCount,
-  context,
   onSuccess,
 }: AuthModalProps) {
   const [view, setView] = useState<ModalView>('email')
@@ -25,13 +28,15 @@ export default function AuthModal({
   const [submittedEmail, setSubmittedEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [inputError, setInputError] = useState(false)
+  // No server-side account lookup — this just flips the copy so a returning
+  // user isn't told to "create an account." The actual submit action
+  // (signInWithOtp) is identical either way; magic-link auth doesn't need to
+  // know signup vs. login intent.
+  const [isReturning, setIsReturning] = useState(false)
 
   if (!isOpen) return null
 
-  const headline =
-    context === 'keep-going'
-      ? 'Save your progress to keep going'
-      : 'Save your progress to see what we found'
+  const headline = isReturning ? 'Sign in to keep going' : 'Save your progress to keep going'
 
   function flashError() {
     setInputError(true)
@@ -112,7 +117,7 @@ export default function AuthModal({
               className="font-sans font-semibold uppercase text-muted text-center"
               style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}
             >
-              Save your progress
+              {isReturning ? 'Welcome back' : 'Save your progress'}
             </p>
 
             <p
@@ -126,8 +131,9 @@ export default function AuthModal({
               className="font-sans text-charcoal-soft text-center"
               style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}
             >
-              You&apos;ve answered {questionCount} questions. Leave your email and we&apos;ll
-              make sure none of it disappears.
+              {isReturning
+                ? "Enter your email and we'll send you a link to get back in."
+                : `You've answered ${questionCount} questions. Leave your email and we'll make sure none of it disappears.`}
             </p>
 
             <input
@@ -155,15 +161,23 @@ export default function AuthModal({
               className="w-full font-sans font-medium text-cream bg-charcoal"
               style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
             >
-              {isLoading ? 'Saving…' : 'Save and continue'}
+              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in link' : 'Save and continue'}
             </button>
 
             <p
               className="font-sans text-muted text-center"
-              style={{ fontSize: 12, marginBottom: 20 }}
+              style={{ fontSize: 12, marginBottom: 16 }}
             >
-              No password needed yet. We&apos;ll send a link.
+              No password needed. We&apos;ll send a link.
             </p>
+
+            <button
+              onClick={() => setIsReturning((v) => !v)}
+              className="font-sans text-muted underline text-center w-full"
+              style={{ fontSize: 12.5, marginBottom: 16 }}
+            >
+              {isReturning ? 'New here? Create an account instead' : 'Already have an account? Sign in'}
+            </button>
 
             <div className="w-full h-px bg-line" style={{ marginBottom: 16 }} />
 
@@ -190,7 +204,7 @@ export default function AuthModal({
             >
               We sent a link to{' '}
               <span className="font-medium text-charcoal">{submittedEmail}</span>. Click it
-              to save your progress and keep going.
+              {isReturning ? ' to sign back in.' : ' to save your progress and keep going.'}
             </p>
 
             <button

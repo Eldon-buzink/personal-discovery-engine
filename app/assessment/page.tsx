@@ -6,11 +6,14 @@ import type { CSSProperties } from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
+import PaywallModal from '@/components/known/PaywallModal'
 import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { REVEAL_CAP, getIsPaid, setIsPaid, isRevealCapped } from '@/lib/known/paywall'
+import { createClient } from '@/lib/supabase/client'
 import type { CompletedFacetRecord, PatternContent, PatternContentEntry } from '@/lib/known/types'
 
 // ── Session types ─────────────────────────────────────────────────────────────
@@ -215,11 +218,13 @@ function FindingPatternLoader() {
 function PatternDetectedScreen({
   record,
   isFirst,
+  revealedCount,
   onKeepGoing,
   onReport,
 }: {
   record: CompletedFacetRecord
   isFirst: boolean
+  revealedCount: number
   onKeepGoing: () => void
   onReport: () => void
 }) {
@@ -240,6 +245,13 @@ function PatternDetectedScreen({
           style={{ ...f(0), letterSpacing: '0.04em' }}
         >
           {answeredCount} responses · pattern identified
+        </p>
+
+        <p
+          className="font-sans text-[11.5px] text-muted mb-2"
+          style={{ ...f(100), letterSpacing: '0.02em' }}
+        >
+          {revealedCount} of {REVEAL_CAP} traits discovered
         </p>
 
         <p
@@ -352,10 +364,12 @@ function PatternDetectedScreen({
 
 function PatternOverlay({
   record,
+  revealedCount,
   onClose,
   onReport,
 }: {
   record: CompletedFacetRecord
+  revealedCount: number
   onClose: () => void
   onReport: () => void
 }) {
@@ -375,9 +389,71 @@ function PatternOverlay({
         <PatternDetectedScreen
           record={record}
           isFirst={false}
+          revealedCount={revealedCount}
           onKeepGoing={onClose}
           onReport={onReport}
         />
+      </div>
+    </div>
+  )
+}
+
+function LockScreen({
+  revealedCount,
+  onUnlock,
+  onViewReport,
+}: {
+  revealedCount: number
+  onUnlock: () => void
+  onViewReport: () => void
+}) {
+  const f = (delay: number, duration = 0.6): CSSProperties => ({
+    animation: `fadeIn ${duration}s ease both`,
+    animationDelay: `${delay}ms`,
+  })
+
+  return (
+    <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex flex-col items-center w-full max-w-[380px]">
+        <p
+          className="font-sans text-[11.5px] text-muted mb-2"
+          style={{ ...f(0), letterSpacing: '0.02em' }}
+        >
+          {revealedCount} of {REVEAL_CAP} traits discovered
+        </p>
+
+        <p
+          className="font-serif text-charcoal text-center"
+          style={{ ...f(150), fontSize: 22, lineHeight: 1.35, margin: '8px 0 14px' }}
+        >
+          That&apos;s the free preview — five real patterns, five real signals.
+        </p>
+
+        <p
+          className="font-sans text-charcoal-soft text-center"
+          style={{ ...f(300), fontSize: 13.5, lineHeight: 1.6, marginBottom: 32 }}
+        >
+          Your report is ready to view with what&apos;s here. Unlocking gets you the rest of
+          Ring 1, plus every branch — where you thrive, how you connect, what fuels you, and more.
+        </p>
+
+        <div className="flex flex-col gap-3 w-full" style={f(450)}>
+          <button
+            onClick={onUnlock}
+            className="w-full rounded-[10px] py-4 px-5 text-center"
+            style={{ background: '#262420' }}
+          >
+            <span className="font-sans text-[15px] font-medium text-cream">Unlock full access</span>
+          </button>
+
+          <button
+            onClick={onViewReport}
+            className="w-full rounded-[10px] py-4 px-5 text-center border border-line"
+            style={{ background: '#ffffff' }}
+          >
+            <span className="font-sans text-[15px] font-medium text-charcoal">View your report</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -405,7 +481,23 @@ export default function AssessmentPage() {
   // Overlay when user taps "See it →" on a toast
   const [overlayFacet, setOverlayFacet] = useState<string | null>(null)
 
-  const [modalOpen, setModalOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false) // AuthModal — pre-cap "keep going" only
+
+  // Paywall — see lib/known/paywall.ts. isPaid is a placeholder (localStorage,
+  // no real payment backend exists yet); isAuthenticated is checked for real via
+  // Supabase on mount and passed into PaywallModal, which decides internally
+  // whether to show its login step or go straight to payment.
+  const [isPaid, setIsPaidState] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [paywallOpen, setPaywallOpen] = useState(false)
+
+  useEffect(() => {
+    setIsPaidState(getIsPaid())
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session)
+    })
+  }, [])
 
   // ── Transition state ───────────────────────────────────────────────────────
   const [questionOpacity, setQuestionOpacity] = useState(1)
@@ -502,6 +594,11 @@ export default function AssessmentPage() {
       return [...prev, record]
     })
 
+    // Free tier caps at REVEAL_CAP traits, enforced here (before generation),
+    // not just at render — a paid user has no cap.
+    const withinCap = getIsPaid() || newRevealedFacets.length <= REVEAL_CAP
+    const reachesCap = !getIsPaid() && newRevealedFacets.length === REVEAL_CAP
+
     if (isFirst) {
       const patternRecord: PatternRecord = { facet, traitWord, answeredAt: new Date().toISOString() }
       saveSession({ ...session, patternShown: patternRecord, revealedFacets: newRevealedFacets })
@@ -513,8 +610,14 @@ export default function AssessmentPage() {
       setTimeout(() => { setCreamDuration('0.6s'); setCreamOpacity(0) }, 1700)
     } else {
       saveSession({ ...session, revealedFacets: newRevealedFacets })
-      setToastQueue((prev) => [...prev, record])
+      // The cap-reaching reveal skips the toast — the lock screen takes over
+      // immediately instead (derived from completedFacets.length at render time).
+      if (!reachesCap) {
+        setToastQueue((prev) => [...prev, record])
+      }
     }
+
+    if (!withinCap) return // past the free cap — no Haiku call, no stored content
 
     // Use cached content if already generated; otherwise call API
     const cachedContent = loadSession().patternContents?.find((e) => e.facet === facet)?.content ?? null
@@ -587,6 +690,13 @@ export default function AssessmentPage() {
 
   function handleKeepGoing() {
     setViewingPattern(false)
+    // Early, skippable "save your progress" prompt — matches
+    // reference/known-full-flow-transitions.html's patternContinue trigger.
+    // Only worth showing if there's not already an account to save to.
+    // AuthModal is scoped to exactly this one trigger now.
+    if (!isAuthenticated) {
+      setModalOpen(true)
+    }
   }
 
   function handleReport() {
@@ -597,6 +707,12 @@ export default function AssessmentPage() {
       sessionStorage.setItem('known_from', 'pattern')
       router.push('/report')
     })
+  }
+
+  // Every post-cap unlock action opens the same PaywallModal — it decides
+  // internally (from isAuthenticated) whether to show its login step first.
+  function handleUnlockClick() {
+    setPaywallOpen(true)
   }
 
   // Dev shortcut: pre-fill C6 Cautiousness items to reliably produce "Deliberate"
@@ -688,6 +804,52 @@ export default function AssessmentPage() {
     triggerReveal('Friendliness', traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
   }
 
+  // Dev: reveal one named facet on top of whatever's already revealed, using
+  // the actual FACET_QUESTIONS data instead of hardcoded IDs like Pattern2/3
+  // (kept those two as-is; this is the generic version for facets 4 and 5).
+  function handleDevRevealFacet(facet: string, highDirection: boolean) {
+    const session = loadSession()
+    const existingRevealed = session.revealedFacets ?? []
+    if (existingRevealed.includes(facet)) return
+
+    let responses = [...session.responses]
+    const newMap = new Map(answeredMap)
+    for (const q of FACET_QUESTIONS.get(facet) ?? []) {
+      const val = highDirection ? (q.reverseScored ? 2 : 4) : (q.reverseScored ? 4 : 2)
+      responses = responses.filter((r) => r.questionId !== q.id)
+      responses.push({ questionId: q.id, value: val, answeredAt: new Date().toISOString() })
+      newMap.set(q.id, val)
+    }
+
+    const updatedSession: KnownSession = { ...session, responses }
+    const score = computeFacetScore(facet, newMap)!
+    const traitWord = getTraitWord(facet, score)
+    const dir = scoreDirection(score)
+    const newRevealedFacets = [...existingRevealed, facet]
+
+    setAnsweredMap(newMap)
+    setCurrentIndex(findFirstUnanswered(questionOrder, new Set(newMap.keys()), 0))
+    triggerReveal(facet, traitWord, dir, newMap.size, updatedSession, newRevealedFacets)
+  }
+
+  // Dev: add Anxiety as a 4th pattern (additive — does not reset session)
+  function handleDevPattern4() {
+    handleDevRevealFacet('Anxiety', false) // low Anxiety, same convention as handleDevFullSession
+  }
+
+  // Dev: add Intellect as a 5th pattern — this is the one that reaches REVEAL_CAP
+  // and should trigger the lock screen instead of a toast.
+  function handleDevPattern5() {
+    handleDevRevealFacet('Intellect', true)
+  }
+
+  // Dev: flip the placeholder paid flag to see the unlocked (uncapped) behavior.
+  function handleDevTogglePaid() {
+    const next = !isPaid
+    setIsPaid(next)
+    setIsPaidState(next)
+  }
+
   // Dev: inject all 120 answers and jump directly to /report (skips pattern screen)
   function handleDevFullSession() {
     const answers = new Map<number, number>()
@@ -729,6 +891,7 @@ export default function AssessmentPage() {
   const currentQuestion = currentQuestionId ? QUESTION_BY_ID.get(currentQuestionId) : undefined
   const allDone = currentIndex >= TOTAL
   const firstPattern = completedFacets[0] ?? null
+  const isLocked = isRevealCapped(completedFacets.length, isPaid)
 
   // Overlay record (live — updates when AI content arrives)
   const overlayRecord = overlayFacet
@@ -755,17 +918,40 @@ export default function AssessmentPage() {
           <PatternDetectedScreen
             record={firstPattern}
             isFirst={true}
+            revealedCount={firstPattern.hueOffset + 1}
             onKeepGoing={handleKeepGoing}
             onReport={handleReport}
           />
+        ) : isLocked ? (
+          // Takes precedence over allDone too — most users will hit the 5-trait
+          // cap well before question 120, so reaching "done" while still unpaid
+          // should still show the lock/tease state, not a normal completion screen.
+          <LockScreen
+            revealedCount={completedFacets.length}
+            onUnlock={handleUnlockClick}
+            onViewReport={handleReport}
+          />
         ) : allDone ? (
-          <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 gap-6">
-            <p className="font-serif text-[22px] text-charcoal text-center leading-[1.45]">
-              That&apos;s everything.
-            </p>
-            <p className="font-sans text-[13px] text-muted text-center">
-              You&apos;ve answered all 120 questions.
-            </p>
+          <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 py-12">
+            <div className="flex flex-col items-center w-full max-w-[380px]">
+              <p className="font-sans text-[11.5px] text-muted text-center mb-3" style={{ letterSpacing: '0.02em' }}>
+                {completedFacets.length} {completedFacets.length === 1 ? 'trait' : 'traits'} discovered
+              </p>
+              <p className="font-serif text-[24px] text-charcoal text-center leading-[1.4] mb-3">
+                That&apos;s everything.
+              </p>
+              <p className="font-sans text-[13.5px] text-muted text-center leading-[1.6] mb-8">
+                You&apos;ve answered all 120 questions. Your full pattern is mapped —
+                see everything it found.
+              </p>
+              <button
+                onClick={handleReport}
+                className="w-full rounded-[10px] py-4 px-5 text-center"
+                style={{ background: '#262420' }}
+              >
+                <span className="font-sans text-[15px] font-medium text-cream">View your report →</span>
+              </button>
+            </div>
           </div>
         ) : currentQuestion ? (
           <div style={{ opacity: questionOpacity, transition: 'opacity 0.35s ease' }}>
@@ -787,6 +973,9 @@ export default function AssessmentPage() {
       {activeToast && (
         <PatternToast
           record={activeToast}
+          revealedCount={activeToast.hueOffset + 1}
+          revealCap={REVEAL_CAP}
+          isPaid={isPaid}
           onDismiss={() => setActiveToast(null)}
           onSeeIt={() => {
             setOverlayFacet(activeToast.facet)
@@ -799,6 +988,7 @@ export default function AssessmentPage() {
       {overlayRecord && (
         <PatternOverlay
           record={overlayRecord}
+          revealedCount={overlayRecord.hueOffset + 1}
           onClose={() => setOverlayFacet(null)}
           onReport={handleReport}
         />
@@ -818,6 +1008,15 @@ export default function AssessmentPage() {
           <button onClick={handleDevPattern3} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
             Dev: add 3rd pattern
           </button>
+          <button onClick={handleDevPattern4} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: add 4th pattern
+          </button>
+          <button onClick={handleDevPattern5} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: add 5th pattern (triggers lock)
+          </button>
+          <button onClick={handleDevTogglePaid} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
+            Dev: {isPaid ? 'unset' : 'set'} paid ({isPaid ? 'paid' : 'free'})
+          </button>
         </div>
       )}
 
@@ -825,8 +1024,14 @@ export default function AssessmentPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         questionCount={answeredMap.size}
-        context="keep-going"
         onSuccess={() => {}}
+      />
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        isAuthenticated={isAuthenticated}
+        traitCount={completedFacets.length}
       />
     </>
   )

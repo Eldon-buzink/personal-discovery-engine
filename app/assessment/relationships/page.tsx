@@ -235,6 +235,7 @@ export default function RelationshipsPage() {
                 avoidance:       r.avoidanceScore,
                 partnerDistance: r.partnerDistance,
               },
+              completedAt: new Date().toISOString(),
             }
             saveSession({ patternContents: [...pcs, newEntry] })
           })
@@ -292,6 +293,7 @@ export default function RelationshipsPage() {
           content:         c,
           branch:          'relationships',
           dimensionScores: { anxiety: r.anxietyScore, avoidance: r.avoidanceScore, partnerDistance: r.partnerDistance },
+          completedAt: new Date().toISOString(),
         }
         saveSession({ patternContents: [...pcs, newEntry] })
       })

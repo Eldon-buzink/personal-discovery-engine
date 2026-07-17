@@ -244,6 +244,7 @@ export default function EnergyPage() {
             relatedness_drain: r.categoryScores.relatedness_drain,
           },
           strongConditions: mergedConditions,
+          completedAt: new Date().toISOString(),
         }
         saveSession({ patternContents: [...pcs, newEntry] })
       })

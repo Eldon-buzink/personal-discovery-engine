@@ -134,17 +134,10 @@ const FALLBACK_REASONS = [
   "Nothing's jumped out yet, but this one's worth exploring next.",
 ];
 
-/**
- * Suggests the next branch for the user to explore, or null if all
- * branches are already completed.
- */
-export function suggestNextBranch(
+function computeBranchScores(
   patternContents: PatternContent[],
-  completedBranches: Branch[]
-): BranchSuggestion | null {
-  const remaining = DEFAULT_ORDER.filter((b) => !completedBranches.includes(b));
-  if (remaining.length === 0) return null;
-
+  remaining: Branch[]
+): Record<Branch, { total: number; facets: string[] }> {
   // Only Ring 1 facets feed the weight table (branch === 'ring1').
   const resolvedRing1Facets = patternContents.filter((p) => p.branch === "ring1");
 
@@ -166,6 +159,22 @@ export function suggestNextBranch(
       scores[branch].facets.push(pattern.facet);
     }
   }
+
+  return scores;
+}
+
+/**
+ * Suggests the next branch for the user to explore, or null if all
+ * branches are already completed.
+ */
+export function suggestNextBranch(
+  patternContents: PatternContent[],
+  completedBranches: Branch[]
+): BranchSuggestion | null {
+  const remaining = DEFAULT_ORDER.filter((b) => !completedBranches.includes(b));
+  if (remaining.length === 0) return null;
+
+  const scores = computeBranchScores(patternContents, remaining);
 
   const ranked = remaining
     .map((branch) => ({ branch, ...scores[branch] }))
@@ -194,6 +203,45 @@ export function suggestNextBranch(
     isTargeted: false,
     reason: pickFallbackReason(fallbackBranch),
   };
+}
+
+export interface QualifyingBranch {
+  branch: Branch;
+  reason: string;
+  contributingFacets: string[];
+  score: number;
+}
+
+/**
+ * Returns every uncompleted branch that clears the same per-branch confidence
+ * bar suggestNextBranch uses for its top pick (total > 0, at least
+ * MIN_CONTRIBUTING_FACETS pulling toward it) — ranked, not just the winner.
+ * MIN_MARGIN (rank-1-vs-rank-2 separation) intentionally does NOT apply here:
+ * that knob exists to pick a single confident winner, which isn't a meaningful
+ * concept when the point is to list every branch with real signal. Returns an
+ * empty array if nothing clears the bar yet — callers should fall back to
+ * suggestNextBranch's fallback reasoning in that case, not treat "no
+ * qualifying branches" as "no suggestion at all."
+ */
+export function suggestQualifyingBranches(
+  patternContents: PatternContent[],
+  completedBranches: Branch[]
+): QualifyingBranch[] {
+  const remaining = DEFAULT_ORDER.filter((b) => !completedBranches.includes(b));
+  if (remaining.length === 0) return [];
+
+  const scores = computeBranchScores(patternContents, remaining);
+
+  return remaining
+    .map((branch) => ({ branch, ...scores[branch] }))
+    .filter((b) => b.total > 0 && b.facets.length >= MIN_CONTRIBUTING_FACETS)
+    .sort((a, b) => b.total - a.total)
+    .map((b) => ({
+      branch: b.branch,
+      contributingFacets: b.facets,
+      score: b.total,
+      reason: buildTargetedReason(b.branch, b.facets),
+    }));
 }
 
 function buildTargetedReason(branch: Branch, facets: string[]): string {
