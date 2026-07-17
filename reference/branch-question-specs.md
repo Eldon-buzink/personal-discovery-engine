@@ -122,4 +122,41 @@ Source of truth for branch question sets, dimension tagging, and reverse-scoring
 
 ## Your Direction
 
-*Not yet specified. Framework: Holland Codes (RIASEC), adapted. 15 items. To be drafted and confirmed following the same process as above before building.*
+**Framework:** Holland Codes (RIASEC), adapted
+**Items:** 24 (4 per type — drafted at this density from the start, following the reliability lesson learned from Working Style and Energy, rather than shipping the original 15-item spec and reworking later)
+**Types:** Realistic, Investigative, Artistic, Social, Enterprising, Conventional
+**Scale:** 1–5, "Strongly disagree" to "Strongly agree"
+**Output:** Full ranking of all 6 types (highest score first). See `lib/known/directionScoring.ts`. Scoring intentionally does NOT truncate to "top 3" internally — that cutoff is a UI decision, not a scoring decision, per the lesson learned from Energy's top-1/top-2 rework.
+
+No reverse-scoring — items are single-direction interest statements ("I like X"), same approach as Energy, not a bipolar scale like Relationships or Working Style.
+
+| # | Question | Type |
+|---|---|---|
+| 1 | I'd rather build or fix something with my hands than talk about how to build or fix it. | realistic |
+| 2 | I like tasks where I can see a physical result at the end. | realistic |
+| 3 | I'm drawn to work that involves tools, machines, or physical materials. | realistic |
+| 4 | I enjoy figuring out how something works by taking it apart. | realistic |
+| 5 | I like digging into a problem until I really understand why it happens. | investigative |
+| 6 | I'm drawn to questions that don't have an obvious answer yet. | investigative |
+| 7 | I enjoy research — reading, testing, comparing — more than most people I know. | investigative |
+| 8 | Understanding the "why" behind something matters more to me than just knowing what to do. | investigative |
+| 9 | I need creative freedom in my work, not just a set of instructions to follow. | artistic |
+| 10 | I'm happiest when I'm making something that didn't exist before. | artistic |
+| 11 | I get more out of an unconventional idea than a proven, safe one. | artistic |
+| 12 | Self-expression is something I actively look for in what I do. | artistic |
+| 13 | Helping someone grow or improve is genuinely satisfying to me. | social |
+| 14 | I naturally gravitate toward the person in the room who needs support. | social |
+| 15 | I'd rather teach someone a skill than just do the task myself. | social |
+| 16 | Conversations about people's lives interest me more than conversations about systems or things. | social |
+| 17 | I like convincing people to see things my way. | enterprising |
+| 18 | Taking the lead on a project feels natural to me. | enterprising |
+| 19 | I'm energized by pitching an idea and getting others on board. | enterprising |
+| 20 | I enjoy the competitive side of getting a deal or opportunity to work out. | enterprising |
+| 21 | I like creating order out of a messy set of information. | conventional |
+| 22 | Keeping accurate records and details straight is something I'm good at and enjoy. | conventional |
+| 23 | I feel satisfaction from a well-organized system running smoothly. | conventional |
+| 24 | I'd rather follow a clear, proven process than improvise one. | conventional |
+
+**Type labels:** draft placeholders in `directionScoring.ts` ("Making things work", "Figuring things out", etc.) — confirm against `known-branch-flows.html` and `known-full-flow.html`'s "YOUR DIRECTION" sections before shipping, same verification process used for every prior branch's labels.
+
+**Open design question:** how the pattern-detected reveal and report display work for a 6-category ranking ("top 3 of 6") hasn't been resolved yet — doesn't map cleanly onto any reveal pattern used so far (Relationships' quadrant, Energy's top-1-then-full-ranking, Working Style's 3 independent axes). Needs verification against the real reference files before building, same process used for every prior branch.

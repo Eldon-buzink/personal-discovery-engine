@@ -69,6 +69,37 @@ const ENERGY_CATEGORY_CONTEXT: Record<string, string> = {
   'Feeling unseen':       'Being around people without real connection, social interactions that go nowhere, isolation or not mattering to the people around them.',
 }
 
+// Behavioral meaning of both poles of each Working Style axis. Used to ground the
+// model on what each end of the spectrum actually looks like day to day.
+const WORKING_STYLE_AXIS_CONTEXT: Record<string, { left: string; right: string; leftMeans: string; rightMeans: string }> = {
+  structure: {
+    left: 'Structured', right: 'Flexible',
+    leftMeans: 'Wants a clear plan before starting, prefers knowing what to expect, finds unplanned changes disruptive.',
+    rightMeans: 'Prefers to figure things out as they go, does their best work with room to improvise, finds rigid plans constraining.',
+  },
+  independence: {
+    left: 'Independent', right: 'Collaborative',
+    leftMeans: 'Does their best thinking alone, prefers to own a piece of work fully rather than share it, gets more done working independently.',
+    rightMeans: 'Thinks better out loud with others, prefers bouncing ideas around, gets to better answers by working through problems with someone else.',
+  },
+  directness: {
+    left: 'Direct', right: 'Diplomatic',
+    leftMeans: 'Says the honest, blunt thing rather than softening it, will give straight feedback even if it stings.',
+    rightMeans: 'Chooses words carefully, reads the room before speaking, holds back a critical opinion if the timing feels wrong.',
+  },
+}
+
+// Behavioral meaning of each RIASEC type. Used to ground the model before it
+// writes copy — no Holland Codes theory or category names, just behavior.
+const DIRECTION_TYPE_CONTEXT: Record<string, string> = {
+  realistic:     "Prefers tangible, hands-on work — building, fixing, or making things they can see and touch the results of, rather than abstract or purely intellectual work.",
+  investigative: "Drawn to analysis and figuring out why something works — research, problem-solving, and understanding underlying causes rather than just symptoms.",
+  artistic:      "Needs creative freedom and originality — making something that didn't exist before, resistant to rigid templates or rules.",
+  social:        "Motivated by helping people grow — teaching, coaching, or supporting others, finding more meaning in that than in personal credit or higher pay.",
+  enterprising:  "Energized by initiating and driving outcomes — persuading people, taking risks on new ventures, leading rather than executing someone else's plan.",
+  conventional:  "Thrives with clear systems and order — bringing structure to something messy, getting details exactly right, organizing for others even when it's not their job.",
+}
+
 const RELATIONSHIPS_QUADRANT_CONTEXT: Record<string, string> = {
   Open:        'Low on both anxiety and avoidance. Comfortable letting people in, depends on others without distress, and rarely worries about whether relationships are secure. Closeness feels natural rather than threatening.',
   Independent: 'Low anxiety but high avoidance. Not preoccupied with relationships, and prefers more emotional and physical distance — even in close ones. Self-reliant by orientation, not by necessity. Comfortable alone.',
@@ -127,6 +158,69 @@ Write the following copy and return as JSON only, no markdown:
     { "quote": "1 sentence, first person, present tense, specific to the TOP drain only (${drains[0]?.traitWord ?? ''}).", "evidence": "2-3 sentences on the concrete, specific situation where this particular drain shows up day to day." },
     { "quote": "1 sentence, first person, present tense, specific to the SECOND drain only (${drains[1]?.traitWord ?? ''}).", "evidence": "2-3 sentences on where this second drain shows up. Note how it relates to the top drain — e.g. whether they compound each other or show up in different situations." }
   ] — exactly 4 objects, in this exact order: top fuel, second fuel, top drain, second drain. Each quote/evidence must be about ONLY that one condition, not a restatement of the overall trait_quote.
+}`
+  }
+
+  if (branch === 'working_style') {
+    // Expected order: structure, independence, directness — matches WorkingStyleVisual's fixed layout.
+    const axisLines = (strongConditions ?? []).map((c) => {
+      const ctx = WORKING_STYLE_AXIS_CONTEXT[c.label]
+      if (!ctx) return `- ${c.label}: leans "${c.traitWord}"`
+      return `- ${c.label} axis (position ${c.score.toFixed(2)} of 1, where 0 = fully ${ctx.left}, 1 = fully ${ctx.right}): leans "${c.traitWord}". ${ctx.left} means: ${ctx.leftMeans} ${ctx.right} means: ${ctx.rightMeans}`
+    }).join('\n')
+
+    return `This person's working style spans three independent axes:
+${axisLines}
+
+Each axis is a spectrum, not a category — most people aren't at the extreme end of any of them. The position tells you how strongly they lean.
+
+This is NOT a personality trait in the Big Five sense — it's a description of how they actually operate day to day: how much structure they want, whether they think better alone or with others, and how directly they communicate.
+
+Do not reference any other assessment section or branch (no mentioning relationships, environment, or energy) — describe this person's working style entirely on its own terms.
+
+Write the following copy and return as JSON only, no markdown:
+{
+  "trait_quote": "A 1-2 sentence observation about this person's overall working style, touching on the most distinctive of the three axes. First person, present tense. Specific and behavioral — something the reader would immediately recognize as true about themselves.",
+  "where_it_shows_up": "2-3 sentences naming a concrete, specific work situation where this combination of axes becomes most visible — a type of meeting, a project kickoff, a moment of friction with a collaborator. Behavioral and specific, not abstract.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this working style looks like in practice"],
+  "go_deeper": "2 sentences. First: name what this combination costs — the friction or blind spot it creates. Second: point toward something worth noticing or exploring further.",
+  "worth_trying": "1-2 sentences. A specific, low-stakes experiment for this week tied directly to their pattern.",
+  "items": [
+    { "quote": "1 sentence, first person, present tense, specific to the STRUCTURE axis only — describes how they actually experience wanting a plan vs. improvising, not a restatement of the label.", "evidence": "2-3 sentences on the concrete, specific situation where this shows up day to day." },
+    { "quote": "1 sentence, first person, present tense, specific to the INDEPENDENCE axis only.", "evidence": "2-3 sentences on where this shows up day to day." },
+    { "quote": "1 sentence, first person, present tense, specific to the DIRECTNESS axis only.", "evidence": "2-3 sentences on where this shows up day to day." }
+  ] — exactly 3 objects, in this exact order: structure, independence, directness. Each quote/evidence must be about ONLY that one axis, not a restatement of the overall trait_quote.
+}`
+  }
+
+  if (branch === 'direction') {
+    // Expected order matches selectShownDirections(): index 0 is always the closest
+    // match (rank 1); any remaining entries (1-2 more) are close contenders.
+    const count = strongConditions?.length ?? 0
+    const lines = (strongConditions ?? []).map((c, i) => {
+      const ctx = DIRECTION_TYPE_CONTEXT[c.label] ?? c.label
+      const tier = i === 0 ? 'Closest match' : 'Worth exploring'
+      return `- ${c.traitWord} (${tier}, score ${c.score.toFixed(2)} of 5): ${ctx}`
+    }).join('\n')
+
+    return `This person's interests point to ${count === 1 ? 'one clear direction' : `${count} real directions`}:
+${lines}
+
+These are NOT career titles or job recommendations — they're patterns of work that fit how this person is built, not a prescription for what job to take.
+
+Do NOT use the words "Holland", "RIASEC", "realistic", "investigative", "artistic", "social", "enterprising", "conventional", or any category name — describe what actually fits, in plain behavioral language.
+
+Write the following copy and return as JSON only, no markdown:
+{
+  "trait_quote": "A 1-2 sentence observation about the overall pull toward ${count === 1 ? 'this direction' : 'these directions'}. First person, present tense. Specific and behavioral — something the reader would immediately recognize as true about themselves.",
+  "where_it_shows_up": "2-3 sentences naming a concrete, specific situation — a type of project, a moment choosing between two paths — where this pull becomes most visible.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this direction looks like in practice"],
+  "go_deeper": "2 sentences. First: name the tension or cost of this pull — what it can mean settling for, or overlooking. Second: point toward something worth noticing or exploring further.",
+  "worth_trying": "1-2 sentences. A specific, low-stakes experiment for this week tied directly to this pattern.",
+  "teaserWord": "ONE evocative single word — not a phrase, not a category name — that works as an archetype for the TOP-ranked direction only (${strongConditions?.[0]?.traitWord ?? ''}). Style example: 'Builder', 'Analyst', 'Connector', 'Strategist'. Must be exactly one word.",
+  "items": [
+    { "word": "A short action-phrase, 4-8 words (style example: 'Make something with your hands'), describing what this specific direction actually looks like in practice.", "quote": "1 sentence, first person, present tense — a short collapsed-state summary of why this direction fits.", "evidence": "2-3 sentences for the expanded state — the fuller case for this one direction. Specific to it only, not a restatement of the overall trait_quote." }
+  ] — exactly ${count} object${count === 1 ? '' : 's'}, one per direction listed above, in the SAME ORDER (closest match first). Each item's word/quote/evidence must be specific to only that one direction.
 }`
   }
 
@@ -211,11 +305,20 @@ function fallbackContent(
     worth_trying: `This week, notice one moment where this pattern shows up in a decision you're making. Just observe it — no need to change anything yet.`,
   }
 
-  if (branch === 'energy' && strongConditions?.length === 4) {
-    base.items = strongConditions.map((c) => ({
+  if (
+    (branch === 'energy' && strongConditions?.length === 4) ||
+    (branch === 'working_style' && strongConditions?.length === 3) ||
+    (branch === 'direction' && strongConditions && strongConditions.length >= 1 && strongConditions.length <= 3)
+  ) {
+    base.items = strongConditions!.map((c) => ({
+      ...(branch === 'direction' ? { word: c.traitWord } : {}),
       quote: `${c.traitWord} showed up as a clear signal in how you answered.`,
       evidence: `This is one of the more consistent patterns in your responses — worth noticing where it shows up in an actual day.`,
     }))
+  }
+
+  if (branch === 'direction') {
+    base.teaserWord = traitWord
   }
 
   return base
