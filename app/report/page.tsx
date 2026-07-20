@@ -8,9 +8,9 @@ import type { PatternContent, PatternContentEntry } from '@/lib/known/types'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
-import { getIsPaid, isRevealCapped } from '@/lib/known/paywall'
+import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
-import PaywallModal from '@/components/known/PaywallModal'
+import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
 import EnergyFieldVisual from '@/components/known/EnergyFieldVisual'
@@ -152,17 +152,43 @@ function TagPill({ label, hue = 8 }: { label: string; hue?: number }) {
 // ── Interactive blob cluster ───────────────────────────────────────────────────
 
 // Satellite offsets must clear the active blob (radius 82) plus their own
-// radius (58) — the old magnitudes put satellite centers only ~87-96 units
-// from the active center against a combined radius of 140, so every
-// satellite blob (and its label) sat crammed inside the active blob's edge.
-// These are sized so active-to-satellite distance clears ~160-170 units.
+// radius (58), i.e. stay above ~140 units from the active center — below
+// that, satellites crowd into the active blob's edge and labels become
+// illegible. dy is left as originally tuned (same-side top/bottom satellite
+// spacing was already close to its own minimum); only dx was pulled in, for
+// a visibly tighter cluster with ~148-158 unit active-to-satellite distance
+// (previously ~160-170).
 const CLUSTER_OFFSETS = [
   { dx:    0, dy:   0 },
-  { dx: -155, dy: -60 },
-  { dx:  150, dy: -60 },
-  { dx: -160, dy:  65 },
-  { dx:  155, dy:  65 },
+  { dx: -140, dy: -60 },
+  { dx:  135, dy: -60 },
+  { dx: -144, dy:  65 },
+  { dx:  140, dy:  65 },
 ]
+
+// CLUSTER_OFFSETS only has 5 fixed slots (1 center + 4 satellites), sized
+// and hand-placed for exactly that count. A paid user who keeps going past
+// the free 5-trait cap can reveal more than that, and the old modulo-based
+// slot assignment silently wrapped around and reused a slot — concretely, a
+// 6th trait landed on the exact same {dx:0,dy:0} slot as the active center,
+// rendering its label on top of the center label (looked like text
+// "ghosting" — confirmed by reproducing it with 6 real traits). For counts
+// beyond CLUSTER_OFFSETS.length, satellites go on a ring instead, evenly
+// spaced so there's always a unique position per trait, sized so neither
+// the active-to-satellite nor the satellite-to-satellite distance ever
+// drops below the clearances the 5-slot layout was already tuned for.
+function ringRadiusFor(satelliteCount: number): number {
+  const minActiveClearance = 148 // matches CLUSTER_OFFSETS' own (tightened) active-to-satellite spacing
+  const minAdjacentChord = 130   // satellite radius 58 + 58 + margin
+  if (satelliteCount <= 1) return minActiveClearance
+  return Math.max(minActiveClearance, minAdjacentChord / (2 * Math.sin(Math.PI / satelliteCount)))
+}
+
+function ringSatelliteOffset(rank: number, satelliteCount: number): { dx: number; dy: number } {
+  const radius = ringRadiusFor(satelliteCount)
+  const angle = (rank / satelliteCount) * Math.PI * 2 - Math.PI / 2
+  return { dx: Math.cos(angle) * radius, dy: Math.sin(angle) * radius }
+}
 
 function InteractiveCluster({
   facets,
@@ -179,8 +205,23 @@ function InteractiveCluster({
   const startRef = useRef<number | null>(null)
   const pathRefs = useRef<(SVGPathElement | null)[]>([])
 
+  const cxBase = 250
+
+  // The 5-slot layout's fixed 130/270 box only ever needed to fit dy up to
+  // ±65. The ring layout's vertical reach grows with satellite count, and
+  // without the box growing to match, the SVG's own layout height stays at
+  // the old 270 while content visually overflows it (via overflow:visible)
+  // — which doesn't clip, but does mean sibling elements below (the pill
+  // row) don't get pushed down, so the overflowing labels visually collide
+  // with them instead. Growing cyBase/viewH together keeps the box exactly
+  // as tall as whatever's actually being drawn.
+  const { cyBase, viewH } = useMemo(() => {
+    if (facets.length <= CLUSTER_OFFSETS.length) return { cyBase: 130, viewH: 270 }
+    const halfExtent = ringRadiusFor(facets.length - 1) + 58 /* satellite blob radius */ + 24 /* label clearance */
+    return { cyBase: halfExtent, viewH: halfExtent * 2 }
+  }, [facets.length])
+
   const renderItems = useMemo(() => {
-    const cxBase = 250, cyBase = 130
     // No render-time cap here anymore — the real enforcement moved to
     // triggerReveal (assessment/page.tsx), before the Haiku call. For a free/
     // unpaid user `facets` can never exceed REVEAL_CAP now (generation stops
@@ -195,14 +236,16 @@ function InteractiveCluster({
       const hue = userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset)
       const off = isActive
         ? CLUSTER_OFFSETS[0]
-        : CLUSTER_OFFSETS[(i + (i > activeIdx ? 0 : 1)) % CLUSTER_OFFSETS.length]
+        : count <= CLUSTER_OFFSETS.length
+        ? CLUSTER_OFFSETS[(i + (i > activeIdx ? 0 : 1)) % CLUSTER_OFFSETS.length]
+        : ringSatelliteOffset(i < activeIdx ? i : i - 1, count - 1)
       const cx = cxBase + off.dx
       const cy = cyBase + off.dy
       const radius = isActive ? 82 : 58
       const profile = buildPointMotionProfile(hashSeed(f.traitWord + '-shape'), 9)
       return { facetIdx: i, isActive, hue, cx, cy, radius, profile, word: f.traitWord }
     })
-  }, [facets, activeIdx])
+  }, [facets, activeIdx, cxBase, cyBase])
 
   useEffect(() => {
     let raf: number
@@ -224,9 +267,9 @@ function InteractiveCluster({
   return (
     <div style={{ position: 'relative' }}>
       <svg
-        viewBox="0 0 500 270"
+        viewBox={`0 0 500 ${viewH}`}
         width="100%"
-        height={270}
+        height={viewH}
         style={{ overflow: 'visible', display: 'block' }}
       >
         <defs>
@@ -269,7 +312,7 @@ function InteractiveCluster({
           style={{
             position: 'absolute',
             left: `${(b.cx / 500) * 100}%`,
-            top: `${(b.cy / 270) * 100}%`,
+            top: `${(b.cy / viewH) * 100}%`,
             transform: 'translate(-50%,-50%)',
             fontFamily: serif,
             fontStyle: 'italic',
@@ -847,16 +890,30 @@ export default function ReportPage() {
   const [ring1Complete, setRing1Complete] = useState(false)
   const [activeIdx, setActiveIdx] = useState(0)
 
-  // Paywall — see lib/known/paywall.ts for the "isPaid is a placeholder" note.
+  // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
+  // (public.users, written only by the Stripe webhook).
   const [isPaid, setIsPaidState] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
 
   useEffect(() => {
-    setIsPaidState(getIsPaid())
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session)
+      const uid = session?.user.id ?? null
+      setUserId(uid)
+      fetchIsPaid(uid).then(setIsPaidState)
+
+      // Just came back from PaywallModal's login-step magic link specifically
+      // to pay — reopen straight into checkout instead of making them click
+      // "Unlock" again from scratch.
+      if (session && localStorage.getItem(POST_AUTH_REOPEN_KEY) === '1') {
+        localStorage.removeItem(POST_AUTH_REOPEN_KEY)
+        setPaywallInitialView('checkout')
+        setPaywallOpen(true)
+      }
     })
   }, [])
   const [envEntry, setEnvEntry] = useState<PatternContentEntry | null>(null)
@@ -1344,7 +1401,17 @@ export default function ReportPage() {
         isOpen={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         isAuthenticated={isAuthenticated}
+        userId={userId}
         traitCount={ring1Entries.length}
+        initialView={paywallInitialView}
+        onAuthenticated={(uid) => {
+          setIsAuthenticated(true)
+          setUserId(uid)
+        }}
+        onPaymentConfirmed={() => {
+          fetchIsPaid(userId).then(setIsPaidState)
+          setPaywallOpen(false)
+        }}
       />
 
     </>
