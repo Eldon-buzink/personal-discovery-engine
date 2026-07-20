@@ -6,13 +6,13 @@ import type { CSSProperties } from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
-import PaywallModal from '@/components/known/PaywallModal'
+import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
-import { REVEAL_CAP, getIsPaid, setIsPaid, isRevealCapped } from '@/lib/known/paywall'
+import { REVEAL_CAP, fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
 import type { CompletedFacetRecord, PatternContent, PatternContentEntry } from '@/lib/known/types'
 
@@ -483,19 +483,33 @@ export default function AssessmentPage() {
 
   const [modalOpen, setModalOpen] = useState(false) // AuthModal — pre-cap "keep going" only
 
-  // Paywall — see lib/known/paywall.ts. isPaid is a placeholder (localStorage,
-  // no real payment backend exists yet); isAuthenticated is checked for real via
-  // Supabase on mount and passed into PaywallModal, which decides internally
-  // whether to show its login step or go straight to payment.
+  // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
+  // (public.users, written only by the Stripe webhook); isAuthenticated is
+  // checked for real via Supabase on mount and passed into PaywallModal,
+  // which decides internally whether to show its login step or go straight
+  // to payment.
   const [isPaid, setIsPaidState] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
 
   useEffect(() => {
-    setIsPaidState(getIsPaid())
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session)
+      const uid = session?.user.id ?? null
+      setUserId(uid)
+      fetchIsPaid(uid).then(setIsPaidState)
+
+      // Just came back from PaywallModal's login-step magic link specifically
+      // to pay — reopen straight into checkout instead of making them click
+      // "Unlock" again from scratch.
+      if (session && localStorage.getItem(POST_AUTH_REOPEN_KEY) === '1') {
+        localStorage.removeItem(POST_AUTH_REOPEN_KEY)
+        setPaywallInitialView('checkout')
+        setPaywallOpen(true)
+      }
     })
   }, [])
 
@@ -595,9 +609,12 @@ export default function AssessmentPage() {
     })
 
     // Free tier caps at REVEAL_CAP traits, enforced here (before generation),
-    // not just at render — a paid user has no cap.
-    const withinCap = getIsPaid() || newRevealedFacets.length <= REVEAL_CAP
-    const reachesCap = !getIsPaid() && newRevealedFacets.length === REVEAL_CAP
+    // not just at render — a paid user has no cap. Reads the isPaid state
+    // captured when triggerReveal was defined this render, which is fine —
+    // it can only go stale mid-render if payment completes in the same tick
+    // a reveal fires, which doesn't happen (checkout is a modal, separate flow).
+    const withinCap = isPaid || newRevealedFacets.length <= REVEAL_CAP
+    const reachesCap = !isPaid && newRevealedFacets.length === REVEAL_CAP
 
     if (isFirst) {
       const patternRecord: PatternRecord = { facet, traitWord, answeredAt: new Date().toISOString() }
@@ -843,13 +860,6 @@ export default function AssessmentPage() {
     handleDevRevealFacet('Intellect', true)
   }
 
-  // Dev: flip the placeholder paid flag to see the unlocked (uncapped) behavior.
-  function handleDevTogglePaid() {
-    const next = !isPaid
-    setIsPaid(next)
-    setIsPaidState(next)
-  }
-
   // Dev: inject all 120 answers and jump directly to /report (skips pattern screen)
   function handleDevFullSession() {
     const answers = new Map<number, number>()
@@ -1014,9 +1024,6 @@ export default function AssessmentPage() {
           <button onClick={handleDevPattern5} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
             Dev: add 5th pattern (triggers lock)
           </button>
-          <button onClick={handleDevTogglePaid} className="font-sans text-[11px] text-muted/60 hover:text-muted underline">
-            Dev: {isPaid ? 'unset' : 'set'} paid ({isPaid ? 'paid' : 'free'})
-          </button>
         </div>
       )}
 
@@ -1031,7 +1038,17 @@ export default function AssessmentPage() {
         isOpen={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         isAuthenticated={isAuthenticated}
+        userId={userId}
         traitCount={completedFacets.length}
+        initialView={paywallInitialView}
+        onAuthenticated={(uid) => {
+          setIsAuthenticated(true)
+          setUserId(uid)
+        }}
+        onPaymentConfirmed={() => {
+          fetchIsPaid(userId).then(setIsPaidState)
+          setPaywallOpen(false)
+        }}
       />
     </>
   )

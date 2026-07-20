@@ -43,7 +43,13 @@ export default function ClaimPage() {
         }
       }
 
-      router.push('/assessment')
+      // Send the user back to wherever they actually were (assessment or
+      // report) rather than always /assessment — PaywallModal's login step
+      // sets this right before signInWithOtp; the AuthModal flow doesn't set
+      // it, so this falls back to the original /assessment behavior for that
+      // trigger.
+      const returnPath = localStorage.getItem('known_post_auth_path') || '/assessment'
+      router.push(returnPath)
     }
 
     claim()

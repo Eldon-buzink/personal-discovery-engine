@@ -64,6 +64,7 @@ export default function SiteNav() {
   const [traitCount, setTraitCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export default function SiteNav() {
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session)
+      setUserId(session?.user.id ?? null)
     })
   }, [pathname])
 
@@ -233,7 +235,13 @@ export default function SiteNav() {
         isOpen={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         isAuthenticated={isAuthenticated}
+        userId={userId}
         traitCount={traitCount}
+        onAuthenticated={(uid) => {
+          setIsAuthenticated(true)
+          setUserId(uid)
+        }}
+        onPaymentConfirmed={() => setPaywallOpen(false)}
       />
     </>
   )
