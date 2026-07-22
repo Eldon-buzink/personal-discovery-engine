@@ -614,7 +614,7 @@ export default function LandingPage() {
                 You know something&apos;s off.<br /><em>You don&apos;t know what.</em>
               </h1>
               <p style={{ fontSize:17, lineHeight:1.65, color:c80, maxWidth:420, marginBottom:40, fontWeight:300 }}>
-                A 15-minute assessment that surfaces what&apos;s actually driving you — your traits, your loops, your energy. Not a type. A picture. Free, no account needed.
+                A 15-minute assessment that surfaces what&apos;s actually driving you — your traits, your loops, your energy. Not a type. A picture. Your first 5 patterns are free, no account needed.
               </p>
               {welcomeBack ? (
                 <div>
@@ -645,7 +645,7 @@ export default function LandingPage() {
                   <Link href="/onboarding">
                     <button style={btnPrimary}>Discover yourself →</button>
                   </Link>
-                  <span style={{ fontSize:13, color:c40, fontWeight:400 }}>No account needed &nbsp;·&nbsp; Takes 12–15 min</span>
+                  <span style={{ fontSize:13, color:c40, fontWeight:400 }}>No account for your first 5 patterns &nbsp;·&nbsp; Takes 12–15 min</span>
                 </div>
               )}
             </div>
@@ -725,9 +725,9 @@ export default function LandingPage() {
               <p style={{ fontSize:14, lineHeight:1.6, color:c80, fontWeight:300 }}>Specific activities, environments, and interactions that restore rather than deplete you.</p>
             </div>
             <div style={{ background:charcoal, borderRadius:20, padding:40 }}>
-              <span style={{ display:'inline-block', background:'rgba(245,242,235,0.15)', border:'1px solid rgba(245,242,235,0.2)', color:'rgba(245,242,235,0.8)', fontSize:11, fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', padding:'4px 10px', borderRadius:100, marginBottom:16 }}>Free forever</span>
-              <p style={{ fontFamily:serif, fontSize:26, fontWeight:400, letterSpacing:'-0.02em', lineHeight:1.2, color:cream, marginBottom:10 }}>No consultant.<br />No credit card.</p>
-              <p style={{ fontSize:14, lineHeight:1.6, color:'rgba(245,242,235,0.65)', fontWeight:300 }}>The kind of insight that used to cost thousands in coaching sessions. Now free, private, and instant.</p>
+              <span style={{ display:'inline-block', background:'rgba(245,242,235,0.15)', border:'1px solid rgba(245,242,235,0.2)', color:'rgba(245,242,235,0.8)', fontSize:11, fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', padding:'4px 10px', borderRadius:100, marginBottom:16 }}>Free to start</span>
+              <p style={{ fontFamily:serif, fontSize:26, fontWeight:400, letterSpacing:'-0.02em', lineHeight:1.2, color:cream, marginBottom:10 }}>No consultant.<br />No credit card to begin.</p>
+              <p style={{ fontSize:14, lineHeight:1.6, color:'rgba(245,242,235,0.65)', fontWeight:300 }}>The kind of insight that used to cost thousands in coaching sessions. Your first 5 patterns are free, private, and instant — unlock the full picture later for a one-time payment.</p>
             </div>
             <div style={{ background:warmMid, borderRadius:20, padding:40 }}>
               <p style={{ fontSize:10, fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:12 }}>Actionable insights</p>
@@ -748,7 +748,7 @@ export default function LandingPage() {
                   <div style={{ width:10, height:10, borderRadius:'50%', background:'#D4924A' }} />
                   <div style={{ width:10, height:10, borderRadius:'50%', background:'#7A9E6E' }} />
                   <div style={{ flex:1, background:'rgba(28,28,26,0.06)', borderRadius:6, padding:'5px 12px', marginLeft:8 }}>
-                    <span style={{ fontSize:12, color:c40 }}>known.so/report</span>
+                    <span style={{ fontSize:12, color:c40 }}>getbearing.me/report</span>
                   </div>
                 </div>
                 <div style={{ padding:'24px 28px 28px' }}>
@@ -775,7 +775,7 @@ export default function LandingPage() {
                   &ldquo;Not a type. Not a score. Everything about you, in one place.&rdquo;
                 </p>
                 <p style={{ fontSize:15, lineHeight:1.65, color:c80, fontWeight:300 }}>
-                  Your Known report shows all six dimensions together — so you can see not just who you are, but how the parts connect.
+                  Your Bearing report shows all six dimensions together — so you can see not just who you are, but how the parts connect.
                 </p>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                   {['Deliberately autonomous', 'Deep-focus worker', 'Systems thinker', 'Selectively social'].map(pill => (
@@ -832,7 +832,7 @@ export default function LandingPage() {
               We don&apos;t make you wait.<br /><em>We show you as we find it.</em>
             </h2>
             <p style={{ fontSize:16, lineHeight:1.7, color:c80, fontWeight:300, maxWidth:540, marginBottom:60 }}>
-              Most assessments drag you through 80 questions before telling you anything. Known surfaces results as they emerge — so you can see if we&apos;re onto something before you commit to the full picture.
+              Most assessments drag you through 80 questions before telling you anything. Bearing surfaces results as they emerge — so you can see if we&apos;re onto something before you commit to the full picture.
             </p>
             <div className="lp-reveal-grid">
               {[
@@ -856,13 +856,13 @@ export default function LandingPage() {
             <CtaHalos />
             <div style={{ position:'relative', zIndex:2, maxWidth:560, margin:'0 auto' }}>
               <p style={{ fontSize:11, fontWeight:500, letterSpacing:'0.12em', textTransform:'uppercase', color:c40, marginBottom:20 }}>
-                Free · Private · 15 minutes
+                Free preview · Private · 15 minutes
               </p>
               <h2 style={{ fontFamily:serif, fontSize:'clamp(36px,4.5vw,58px)', fontWeight:300, letterSpacing:'-0.03em', lineHeight:1.1, color:charcoal, marginBottom:20 }}>
                 You already sense<br /><em>there&apos;s more to know.</em>
               </h2>
               <p style={{ fontSize:16, lineHeight:1.65, color:c80, marginBottom:40, fontWeight:300 }}>
-                Most people spend years trying to understand themselves. Known gives you that map in 15 minutes — grounded in research, not guesswork.
+                Most people spend years trying to understand themselves. Bearing gives you that map in 15 minutes — grounded in research, not guesswork.
               </p>
               <div style={{ display:'flex', gap:14, alignItems:'center', justifyContent:'center', flexWrap:'wrap' }}>
                 <Link href="/onboarding">
@@ -872,7 +872,7 @@ export default function LandingPage() {
                   See an example report
                 </Link>
               </div>
-              <p style={{ fontSize:13, color:c40, marginTop:16 }}>No account &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; No consultant</p>
+              <p style={{ fontSize:13, color:c40, marginTop:16 }}>No account for your first 5 &nbsp;·&nbsp; No credit card to start</p>
             </div>
           </div>
         </section>

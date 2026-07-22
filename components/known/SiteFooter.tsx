@@ -98,11 +98,11 @@ export default function SiteFooter() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <BlobMark />
           <span style={{ fontFamily: serif, fontSize: 17, fontWeight: 300, color: cream70, letterSpacing: '-0.02em' }}>
-            Known
+            Bearing
           </span>
         </div>
         <p style={{ fontFamily: sans, fontSize: 12, color: cream40, margin: 0 }}>
-          © {new Date().getFullYear()} Known. All rights reserved.
+          © {new Date().getFullYear()} Bearing. All rights reserved.
         </p>
       </div>
 

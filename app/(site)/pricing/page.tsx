@@ -99,7 +99,7 @@ export default function PricingPage() {
           textAlign: 'center', maxWidth: 480, margin: '0 auto 72px',
           color: charcoalSoft, fontSize: 16, lineHeight: 1.6,
         }}>
-          Known is free to begin, no account required. When you want the full picture, one payment unlocks everything else — for good.
+          Bearing is free to begin, no account required. When you want the full picture, one payment unlocks everything else — for good.
         </p>
 
         {/* Cards */}

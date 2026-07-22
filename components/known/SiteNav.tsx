@@ -115,7 +115,7 @@ export default function SiteNav() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: serif, fontSize: 20, fontWeight: 400, letterSpacing: '-0.02em', color: charcoal }}>
-            Known
+            Bearing
           </span>
         </Link>
 

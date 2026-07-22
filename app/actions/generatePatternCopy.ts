@@ -114,8 +114,8 @@ const SCORE_DIRECTION_DESCRIPTIONS: Record<'high' | 'mid' | 'low', (facet: strin
 }
 
 const SYSTEM_PROMPT =
-  'You are writing copy for Known, a personality discovery product. ' +
-  'Known surfaces real psychological patterns using IPIP-NEO-120 data. ' +
+  'You are writing copy for Bearing, a personality discovery product. ' +
+  'Bearing surfaces real psychological patterns using IPIP-NEO-120 data. ' +
   'The tone is warm, direct, and precise — never clinical, never flattering, never vague. ' +
   "Write as if you're a sharp friend who actually understands psychology, not a therapist or a fortune cookie."
 
