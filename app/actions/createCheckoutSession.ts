@@ -42,6 +42,7 @@ export async function createCheckoutSession(userId: string): Promise<CheckoutSes
     customer_email: customerEmail,
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     metadata: { userId },
+    allow_promotion_codes: true,
   })
 
   if (!session.client_secret) {

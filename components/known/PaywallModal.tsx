@@ -145,7 +145,8 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       for (let i = 0; i < 4; i++) {
         try {
           const status = await getCheckoutSessionStatus(sessionId)
-          if (status === 'paid') break
+          // 'no_payment_required' is what a 100%-off promotion code produces.
+          if (status === 'paid' || status === 'no_payment_required') break
         } catch (err) {
           console.error('[PaywallModal] getCheckoutSessionStatus error:', err)
         }

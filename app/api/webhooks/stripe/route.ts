@@ -41,7 +41,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing userId in session metadata' }, { status: 400 })
     }
 
-    if (session.payment_status !== 'paid') {
+    // 'paid' is the normal case; 'no_payment_required' is what a 100%-off
+    // promotion code produces (total due is 0, so Stripe never even asks for
+    // a card) — both are legitimate, Stripe-computed completions of this
+    // checkout, not something a client could spoof. 'unpaid' is the only
+    // real rejection case.
+    if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
       console.warn('[stripe webhook] session completed but payment_status is', session.payment_status, '— not marking paid. session:', session.id)
       return NextResponse.json({ received: true })
     }
