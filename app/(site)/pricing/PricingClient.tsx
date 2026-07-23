@@ -1,9 +1,28 @@
 'use client'
 
 // Converted from reference/known-pricing_1.html — copy and layout preserved exactly.
-// ⚠ Unlock CTA: no checkout route exists yet. Wire href once Stripe/checkout is set up.
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
+
+// Same computation SiteNav uses for its own "Unlock" CTA — this page has no
+// assessment context of its own, so trait count (used only for PaywallModal's
+// "You've found N patterns" copy) comes from whatever's in the anonymous
+// session, defaulting to 0 for a visitor who hasn't started yet.
+function getTraitCount(): number {
+  try {
+    const raw = localStorage.getItem('known_session')
+    if (!raw) return 0
+    const s = JSON.parse(raw) as Record<string, unknown>
+    const patternContents = Array.isArray(s.patternContents) ? (s.patternContents as Array<{ branch?: string }>) : []
+    return patternContents.filter(e => !e.branch || e.branch === 'ring1').length
+  } catch {
+    return 0
+  }
+}
 
 const cream        = '#F7F4ED'
 const charcoal     = '#262420'
@@ -76,6 +95,42 @@ function PaidBlob() {
 }
 
 export default function PricingClient() {
+  const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [paywallOpen, setPaywallOpen] = useState(false)
+  const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
+  // Same resume-from-redirect handling as report/assessment — this page's own
+  // "Unlock the full picture" CTA can start an iDEAL/Bancontact checkout, and
+  // return_url is built from window.location.pathname at that time, so a
+  // customer redirected back for bank auth lands back on /pricing with
+  // ?session_id=. Not added to SiteNav's separate PaywallModal instance,
+  // which is mounted globally and would otherwise double-handle the same
+  // param on every page (established precedent from the report/assessment work).
+  const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session)
+      const uid = session?.user.id ?? null
+      setUserId(uid)
+
+      if (session && localStorage.getItem(POST_AUTH_REOPEN_KEY) === '1') {
+        localStorage.removeItem(POST_AUTH_REOPEN_KEY)
+        setPaywallInitialView('checkout')
+        setPaywallOpen(true)
+      }
+
+      const sessionId = new URLSearchParams(window.location.search).get('session_id')
+      if (sessionId) {
+        window.history.replaceState(null, '', window.location.pathname)
+        setResumeSessionId(sessionId)
+        setPaywallOpen(true)
+      }
+    })
+  }, [])
+
   return (
     <div style={{ background: cream, color: charcoal, fontFamily: sans }}>
       <style>{pricingCSS}</style>
@@ -181,20 +236,23 @@ export default function PricingClient() {
                 </li>
               ))}
             </ul>
-            {/* ⚠ Wire href to Stripe checkout session once implemented */}
-            <a href="#checkout" className="pr-cta" style={{
-              display: 'block', textAlign: 'center', padding: '13px 20px', borderRadius: 10,
+            <button onClick={() => setPaywallOpen(true)} className="pr-cta" style={{
+              display: 'block', width: '100%', textAlign: 'center', padding: '13px 20px', borderRadius: 10,
               fontSize: 14.5, fontWeight: 500, textDecoration: 'none', transition: 'opacity 0.15s ease',
-              background: cream, color: charcoal,
+              background: cream, color: charcoal, border: 'none', cursor: 'pointer', fontFamily: sans,
             }}>
               Unlock the full picture →
-            </a>
+            </button>
           </div>
 
         </div>
 
-        {/* Reassurance strip */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginTop: 56, flexWrap: 'wrap' }}>
+        {/* Reassurance strip — columnGap/rowGap split, not a single gap: 40.
+            One flat gap value was tuned for the single-row desktop layout;
+            once flexWrap puts two items per row on mobile, that same 40px
+            also became the vertical gap BETWEEN rows, reading as an odd,
+            oversized break in an otherwise tight list. */}
+        <div style={{ display: 'flex', justifyContent: 'center', columnGap: 40, rowGap: 16, marginTop: 56, flexWrap: 'wrap' }}>
           {[
             'One payment, ever',
             'No subscription',
@@ -209,6 +267,25 @@ export default function PricingClient() {
         </div>
 
       </div>
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => { setPaywallOpen(false); setResumeSessionId(null) }}
+        isAuthenticated={isAuthenticated}
+        userId={userId}
+        traitCount={getTraitCount()}
+        initialView={paywallInitialView}
+        resumeSessionId={resumeSessionId}
+        onAuthenticated={(uid) => {
+          setIsAuthenticated(true)
+          setUserId(uid)
+        }}
+        onPaymentConfirmed={() => {
+          setPaywallOpen(false)
+          setResumeSessionId(null)
+          router.push('/report')
+        }}
+      />
     </div>
   )
 }
