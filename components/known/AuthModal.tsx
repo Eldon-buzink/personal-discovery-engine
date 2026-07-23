@@ -191,6 +191,15 @@ export default function AuthModal({
           </>
         ) : (
           <>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%', background: '#3D6B5C',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px', animation: 'blobReveal 0.35s ease both',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <p
               className="font-serif font-medium text-charcoal text-center"
               style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 14 }}
