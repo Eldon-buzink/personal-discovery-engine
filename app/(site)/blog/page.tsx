@@ -1,3 +1,11 @@
+import { buildMetadata } from '@/lib/seo'
+
+export const metadata = buildMetadata({
+  path: '/blog',
+  title: 'Blog — Bearing',
+  description: "New writing is coming. We're thinking carefully about what's worth putting into words.",
+})
+
 const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'
 const c40      = 'rgba(28,28,26,0.4)'

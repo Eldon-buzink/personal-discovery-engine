@@ -1,7 +1,14 @@
 // No form pattern exists in the codebase — contact is a mailto CTA per spec.
 // Add a proper form here once a form pattern is established.
 
+import { buildMetadata } from '@/lib/seo'
 import Link from 'next/link'
+
+export const metadata = buildMetadata({
+  path: '/contact',
+  title: 'Contact — Bearing',
+  description: "Questions, feedback, or something else — get in touch and we'll get back to you.",
+})
 
 const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'
@@ -24,7 +31,7 @@ export default function ContactPage() {
           Questions, feedback, or something else — we read everything and respond to most things.
         </p>
         <Link
-          href="mailto:hello@known.so"
+          href="mailto:support@bearing.me"
           style={{
             display: 'inline-block',
             background: charcoal, color: cream,
@@ -34,7 +41,7 @@ export default function ContactPage() {
             letterSpacing: '0.01em',
           }}
         >
-          hello@known.so
+          support@bearing.me
         </Link>
         <p style={{ fontSize: 12, color: c40, marginTop: 16 }}>
           We typically respond within a day or two.

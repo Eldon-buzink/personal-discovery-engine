@@ -2,6 +2,17 @@
 // The user flagged this should not have invented company narrative copy.
 // Add real copy once provided.
 
+import { buildMetadata } from '@/lib/seo'
+
+// Deliberately minimal — the page itself has no real narrative yet (see stub
+// note above), so the description just states what the page is rather than
+// inventing company story to fill it out. Revisit once real About copy exists.
+export const metadata = buildMetadata({
+  path: '/about',
+  title: 'About — Bearing',
+  description: 'About Bearing.',
+})
+
 const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'
 const c40      = 'rgba(28,28,26,0.4)'
