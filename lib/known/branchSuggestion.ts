@@ -16,7 +16,7 @@
  * separate UI element — same card, same placement, this just decides
  * which branch it points to and what the one-liner says.
  *
- * Two tones, matching the rest of Known's copy voice (direct, warm, no
+ * Two tones, matching the rest of Bearing's copy voice (direct, warm, no
  * hype):
  *   - Targeted: "Your Cooperation and Orderliness came through strongly —
  *     worth seeing how that shows up in how you work."
