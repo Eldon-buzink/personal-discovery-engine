@@ -34,11 +34,16 @@ import { fetchIsPaid } from '@/lib/known/paywall'
  * return) — it's irrelevant once the code path is reactivated.
  *
  * Payment status is never set from anything that happens in this component.
- * On EmbeddedCheckout's onComplete, two things happen in sequence:
+ * confirmPayment() runs the same logic regardless of how a session gets to
+ * it (see below), in sequence:
  *   1. A fast, read-only direct check against Stripe's own session status
  *      (getCheckoutSessionStatus) — near-instant since it doesn't depend on
  *      our webhook infra, used only to show a confident "confirmed" state
- *      quickly rather than an ambiguous "processing" one.
+ *      quickly rather than an ambiguous "processing" one. An explicit
+ *      'unpaid' result here (not "unknown" — a real network/API error while
+ *      checking is treated as unknown, not failure) shows a "didn't go
+ *      through" state instead of proceeding, so a declined/cancelled
+ *      redirect-based payment doesn't sit in "confirming" forever.
  *   2. A background poll of the Supabase-backed is_paid flag, which the
  *      Stripe webhook (app/api/webhooks/stripe/route.ts) is the only thing
  *      that ever actually writes — that's still the real gate; step 1 never
@@ -48,12 +53,29 @@ import { fetchIsPaid } from '@/lib/known/paywall'
  * If a tab closes mid-checkout, the webhook still fires from Stripe's side
  * and the user shows up paid next time they load the app — this component
  * just isn't around to see it happen.
+ *
+ * ── TWO WAYS INTO confirmPayment() ──────────────────────────────────────────
+ * payment_method_types is left unset on the Checkout Session (server side),
+ * so Stripe can surface iDEAL/Bancontact alongside cards. Those fundamentally
+ * require leaving the page to authenticate with the customer's bank — cards
+ * still never redirect (redirect_on_completion: 'if_required' only redirects
+ * when a method actually needs it). That means there are now two distinct
+ * entry points into the same confirmPayment() logic:
+ *   - Card (no redirect): EmbeddedCheckout's onComplete fires in-modal ->
+ *     handleCheckoutComplete() -> confirmPayment(sessionIdRef.current).
+ *   - iDEAL/Bancontact (redirect required): the customer leaves entirely,
+ *     authenticates with their bank, and Stripe redirects them back to
+ *     return_url with ?session_id={CHECKOUT_SESSION_ID}. The parent page
+ *     reads that on mount, reopens this modal, and passes it as
+ *     resumeSessionId — the effect below detects that and jumps straight to
+ *     confirmPayment(resumeSessionId), skipping the checkout form entirely
+ *     since the payment attempt already happened elsewhere.
  */
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 type PaywallView = 'payment' | 'login' | 'confirm' | 'otp' | 'checkout'
-type PaymentState = 'idle' | 'confirming' | 'confirmed' | 'delayed'
+type PaymentState = 'idle' | 'confirming' | 'confirmed' | 'delayed' | 'failed'
 
 export interface PaywallModalProps {
   isOpen: boolean
@@ -74,6 +96,13 @@ export interface PaywallModalProps {
   // came back from the login-step magic link specifically to pay, so they
   // land on the card form instead of the pricing view they already saw.
   initialView?: 'payment' | 'checkout'
+  // Set when the parent detects a Stripe redirect-return (?session_id= in
+  // the URL) — a customer coming back from authenticating an iDEAL/
+  // Bancontact payment with their bank, not from the checkout form itself.
+  // When present, skips EmbeddedCheckout entirely and jumps straight to
+  // confirmPayment(resumeSessionId), since the payment attempt already
+  // happened elsewhere. See file header, "TWO WAYS INTO confirmPayment()".
+  resumeSessionId?: string | null
 }
 
 // Set right before signInWithOtp in the login step, read by /auth/claim to
@@ -90,7 +119,7 @@ const USP_ITEMS = [
   'One payment. Yours for as long as you want it.',
 ]
 
-export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId, traitCount, onAuthenticated, onPaymentConfirmed, initialView }: PaywallModalProps) {
+export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId, traitCount, onAuthenticated, onPaymentConfirmed, initialView, resumeSessionId }: PaywallModalProps) {
   const traitWord = traitCount === 1 ? 'pattern' : 'patterns'
   const [view, setView] = useState<PaywallView>('payment')
   const [email, setEmail] = useState('')
@@ -115,14 +144,27 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
   // Defaults to the payment view — the paywall content is the point of this
   // modal, not a gate in front of it — unless the parent says to resume
-  // straight into checkout (see initialView doc comment above).
+  // straight into checkout (see initialView doc comment above), or a
+  // redirect-return session id is present, in which case checkout skips
+  // straight past the form into confirmation (see resumeSessionId doc
+  // comment above).
   useEffect(() => {
     if (isOpen) {
-      setView(initialView ?? 'payment')
-      setPaymentState('idle')
       setOtpCode('')
+      if (resumeSessionId) {
+        setView('checkout')
+        confirmPayment(resumeSessionId)
+      } else {
+        setView(initialView ?? 'payment')
+        setPaymentState('idle')
+      }
     }
-  }, [isOpen, initialView])
+    // confirmPayment intentionally excluded — it closes over effectiveUserId/
+    // onPaymentConfirmed, which don't change in ways that should re-trigger
+    // this resume; re-running it on every render of those would restart the
+    // confirm/poll cycle mid-flight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialView, resumeSessionId])
 
   // Set by fetchClientSecret when it creates the Checkout Session, read by
   // handleCheckoutComplete for the fast direct-Stripe status check. A ref,
@@ -132,19 +174,30 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
   const fetchClientSecret = useCallback(async () => {
     if (!effectiveUserId) throw new Error('createCheckoutSession called with no userId')
-    const { clientSecret, sessionId } = await createCheckoutSession(effectiveUserId)
+    // {CHECKOUT_SESSION_ID} is a Stripe-substituted placeholder, filled in
+    // with the real session id on redirect-back — not a template literal
+    // interpolation. Existing query params are dropped rather than
+    // preserved, so there's no ambiguity about which session_id wins if the
+    // page was already loaded with an unrelated one.
+    const returnUrl = `${window.location.origin}${window.location.pathname}?session_id={CHECKOUT_SESSION_ID}`
+    const { clientSecret, sessionId } = await createCheckoutSession(effectiveUserId, returnUrl)
     sessionIdRef.current = sessionId
     return clientSecret
   }, [effectiveUserId])
 
-  async function handleCheckoutComplete() {
+  // Shared by both entry points — see file header, "TWO WAYS INTO
+  // confirmPayment()". sessionId is passed explicitly rather than always
+  // read from sessionIdRef so the resume-from-redirect path (which never
+  // calls fetchClientSecret in this modal instance) can use it too.
+  async function confirmPayment(sessionId: string | null) {
     setPaymentState('confirming')
 
-    const sessionId = sessionIdRef.current
+    let finalStatus: string | null = null
     if (sessionId) {
       for (let i = 0; i < 4; i++) {
         try {
           const status = await getCheckoutSessionStatus(sessionId)
+          finalStatus = status
           // 'no_payment_required' is what a 100%-off promotion code produces.
           if (status === 'paid' || status === 'no_payment_required') break
         } catch (err) {
@@ -153,6 +206,19 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
         await new Promise((resolve) => setTimeout(resolve, 400))
       }
     }
+
+    // Only an explicit 'unpaid' result counts as failure — a status check
+    // that errored every attempt (finalStatus still null) is unknown, not
+    // failed, and falls through to the optimistic confirmed/poll path below
+    // same as before. This mainly matters for the redirect-return path:
+    // Stripe sends the customer back to return_url on a declined/cancelled
+    // bank auth too, not just success, so this is what keeps that case from
+    // sitting in "confirming" (or worse, a false "confirmed") forever.
+    if (finalStatus === 'unpaid') {
+      setPaymentState('failed')
+      return
+    }
+
     setPaymentState('confirmed')
 
     // Real gate — see file header. Generous window: this poll routinely
@@ -173,6 +239,10 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       setTimeout(poll, 1500)
     }
     poll()
+  }
+
+  function handleCheckoutComplete() {
+    confirmPayment(sessionIdRef.current)
   }
 
   const checkoutOptions = useMemo(
@@ -392,6 +462,15 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
         {view === 'confirm' && (
           <>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%', background: '#3D6B5C',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px', animation: 'blobReveal 0.35s ease both',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 14 }}>
               Check your email
             </p>
@@ -521,6 +600,26 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
                 <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
                   Your payment went through, but unlocking your report is taking longer than expected. Give it a moment and refresh the page — if it still hasn&apos;t unlocked, get in touch and we&apos;ll sort it out.
                 </p>
+                <button onClick={onClose} className="font-sans text-muted underline text-center w-full" style={{ fontSize: 12.5 }}>
+                  Close
+                </button>
+              </>
+            )}
+            {paymentState === 'failed' && (
+              <>
+                <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 19, lineHeight: 1.3, marginTop: 24, marginBottom: 14 }}>
+                  Payment didn&apos;t go through
+                </p>
+                <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+                  Your bank didn&apos;t complete the payment. Nothing was charged — you can try again whenever you&apos;re ready.
+                </p>
+                <button
+                  onClick={() => { setPaymentState('idle'); setView('payment') }}
+                  className="w-full font-sans font-medium text-cream bg-charcoal"
+                  style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
+                >
+                  Try again
+                </button>
                 <button onClick={onClose} className="font-sans text-muted underline text-center w-full" style={{ fontSize: 12.5 }}>
                   Close
                 </button>

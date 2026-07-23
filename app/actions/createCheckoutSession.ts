@@ -20,7 +20,20 @@ export interface CheckoutSessionResult {
 // userId rides in metadata so the webhook — the only place that ever marks
 // someone paid — can tie checkout.session.completed back to a Supabase row
 // without relying on the client session at webhook time.
-export async function createCheckoutSession(userId: string): Promise<CheckoutSessionResult> {
+//
+// payment_method_types is deliberately omitted (not set to ['card']) so
+// Stripe resolves eligible methods automatically from the Dashboard's
+// payment method settings + the customer's currency/locale — e.g. iDEAL,
+// Bancontact, cards, wallets. (automatic_payment_methods is a PaymentIntent
+// param, not a valid Checkout Session one — confirmed against the live API,
+// not assumed.) That means redirect_on_completion can no longer be 'never':
+// iDEAL/Bancontact fundamentally require leaving the page to authenticate
+// with the customer's bank, which 'never' doesn't support (Stripe silently
+// falls back to card-only under 'never', regardless of what's enabled in
+// the Dashboard — verified directly). 'if_required' keeps card payments
+// exactly as before (never redirects) and only sends a redirect-requiring
+// method's customer away, back to returnUrl on completion.
+export async function createCheckoutSession(userId: string, returnUrl: string): Promise<CheckoutSessionResult> {
   // Prefill the email so Stripe's own form doesn't ask for it a second time
   // right after the user already gave it during sign-in. Looked up
   // server-side (not trusted from the client) since this is the same email
@@ -29,16 +42,11 @@ export async function createCheckoutSession(userId: string): Promise<CheckoutSes
   const { data: userData } = await admin.auth.admin.getUserById(userId)
   const customerEmail = userData?.user?.email
 
-  // redirect_on_completion: 'never' means Stripe guarantees the browser is
-  // never navigated away — the API actively rejects return_url in that case
-  // (it'd be dead code), unlike the SDK's type comment which implies it's
-  // required unconditionally. Restricting to card-only payment methods is
-  // what makes 'never' safe: no supported method here ever needs a redirect.
   const session = await stripe.checkout.sessions.create({
     ui_mode: 'embedded_page',
     mode: 'payment',
-    payment_method_types: ['card'],
-    redirect_on_completion: 'never',
+    redirect_on_completion: 'if_required',
+    return_url: returnUrl,
     customer_email: customerEmail,
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     metadata: { userId },

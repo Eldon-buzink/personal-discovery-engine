@@ -493,6 +493,12 @@ export default function AssessmentPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
   const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
+  // Set from ?session_id= when the page loads back from a Stripe redirect
+  // (iDEAL/Bancontact bank auth) — see PaywallModal's resumeSessionId doc
+  // comment. Checked in the same effect/tick as userId below, not a separate
+  // mount effect, so PaywallModal never receives resumeSessionId ahead of
+  // the userId it needs for its confirm/poll cycle.
+  const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -508,6 +514,16 @@ export default function AssessmentPage() {
       if (session && localStorage.getItem(POST_AUTH_REOPEN_KEY) === '1') {
         localStorage.removeItem(POST_AUTH_REOPEN_KEY)
         setPaywallInitialView('checkout')
+        setPaywallOpen(true)
+      }
+
+      // Just came back from authenticating an iDEAL/Bancontact payment with
+      // their bank. Cleaned from the URL immediately so a refresh doesn't
+      // re-trigger it.
+      const sessionId = new URLSearchParams(window.location.search).get('session_id')
+      if (sessionId) {
+        window.history.replaceState(null, '', window.location.pathname)
+        setResumeSessionId(sessionId)
         setPaywallOpen(true)
       }
     })
@@ -1036,11 +1052,12 @@ export default function AssessmentPage() {
 
       <PaywallModal
         isOpen={paywallOpen}
-        onClose={() => setPaywallOpen(false)}
+        onClose={() => { setPaywallOpen(false); setResumeSessionId(null) }}
         isAuthenticated={isAuthenticated}
         userId={userId}
         traitCount={completedFacets.length}
         initialView={paywallInitialView}
+        resumeSessionId={resumeSessionId}
         onAuthenticated={(uid) => {
           setIsAuthenticated(true)
           setUserId(uid)
@@ -1048,6 +1065,7 @@ export default function AssessmentPage() {
         onPaymentConfirmed={() => {
           fetchIsPaid(userId).then(setIsPaidState)
           setPaywallOpen(false)
+          setResumeSessionId(null)
         }}
       />
     </>

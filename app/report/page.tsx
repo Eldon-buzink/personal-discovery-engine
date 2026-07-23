@@ -54,6 +54,26 @@ const line = '#E5E1D5'
 const sans = 'var(--font-inter), system-ui, sans-serif'
 const serif = 'var(--font-newsreader), serif'
 
+// ── Responsive CSS ────────────────────────────────────────────────────────────
+// "Go deeper"/"Worth trying" side-by-side on narrow screens squeezes each
+// card too narrow to read comfortably; the sticky bar's fixed height doesn't
+// leave room for leftText to wrap on narrow screens, so the button gets
+// pushed out of the bar. Both stack vertically below 560px.
+const reportCSS = `
+  .report-cards-row{display:flex;gap:12px;}
+  .report-sticky-bar{
+    position:fixed;bottom:0;left:0;right:0;min-height:64px;background:${cream};
+    border-top:1px solid ${line};z-index:100;display:flex;align-items:center;
+    justify-content:space-between;padding:14px 28px;gap:16px;
+  }
+  @media(max-width:560px){
+    .report-cards-row{flex-direction:column;}
+    .report-sticky-bar{flex-direction:column;align-items:flex-start;padding:16px 20px;gap:10px;}
+    .report-sticky-bar .rsb-cta{width:100%;}
+    .report-sticky-bar .rsb-cta button{width:100%;}
+  }
+`
+
 // ── Hue helpers ───────────────────────────────────────────────────────────────
 
 const curatedHues = [
@@ -204,8 +224,31 @@ function InteractiveCluster({
 
   const startRef = useRef<number | null>(null)
   const pathRefs = useRef<(SVGPathElement | null)[]>([])
+  const wrapRef = useRef<HTMLDivElement>(null)
 
   const cxBase = 250
+
+  // Label font-size is a fixed px value (below), but the SVG next to it
+  // scales via viewBox — width="100%" against a fixed "0 0 500 …" viewBox
+  // means blob geometry automatically shrinks on a narrow viewport while
+  // label text didn't, so on mobile the (unscaled) labels ate up a growing
+  // share of the (shrinking) space between blobs. Only matters once there
+  // are enough traits that spacing is already tight — the ≤5-slot layout
+  // stays comfortable at any width the product ships at, and this is
+  // deliberately left untouched there rather than shrinking text that
+  // doesn't need it. containerWidth defaults to 500 (scale 1) until
+  // measured, so there's no first-paint flash at the wrong size.
+  const [containerWidth, setContainerWidth] = useState(500)
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width
+      if (w) setContainerWidth(w)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   // The 5-slot layout's fixed 130/270 box only ever needed to fit dy up to
   // ±65. The ring layout's vertical reach grows with satellite count, and
@@ -247,6 +290,14 @@ function InteractiveCluster({
     })
   }, [facets, activeIdx, cxBase, cyBase])
 
+  const isRingLayout = facets.length > CLUSTER_OFFSETS.length
+  // Capped at 1, not just containerWidth/500 — the ≤5-slot layout's fixed
+  // 22px/12px sizes were tuned against the report column's normal desktop
+  // width (~500-520px, i.e. scale ≈1 already), so this should only ever
+  // shrink text on a narrower-than-desktop viewport, never grow it past the
+  // originally tuned size on a wider one.
+  const labelScale = isRingLayout ? Math.min(1, containerWidth / 500) : 1
+
   useEffect(() => {
     let raf: number
     function tick(now: number) {
@@ -265,7 +316,7 @@ function InteractiveCluster({
   }, [renderItems])
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={wrapRef} style={{ position: 'relative' }}>
       <svg
         viewBox={`0 0 500 ${viewH}`}
         width="100%"
@@ -317,7 +368,7 @@ function InteractiveCluster({
             fontFamily: serif,
             fontStyle: 'italic',
             fontWeight: 500,
-            fontSize: b.isActive ? 22 : 12,
+            fontSize: (b.isActive ? 22 : 12) * labelScale,
             color: b.isActive ? `hsl(${b.hue},45%,24%)` : charcoalSoft,
             zIndex: 5,
             pointerEvents: 'none',
@@ -568,27 +619,27 @@ function UnlockedContent({
         {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
       </div>
 
-      <div style={{ display: 'flex', gap: 12, maxWidth: 500, margin: '0 auto 8px' }}>
+      <div className="report-cards-row" style={{ maxWidth: 500, margin: '0 auto 8px' }}>
         <div style={{
           flex: 1, background: 'white', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+          display: 'flex', flexDirection: 'column', textAlign: 'left',
         }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
             Go deeper
           </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: '0 0 14px' }}>
+          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: '0 0 14px', textAlign: 'left' }}>
             {content.go_deeper}
           </p>
         </div>
 
         <div style={{
           flex: 1, background: '#F3F1EB', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+          display: 'flex', flexDirection: 'column', textAlign: 'left',
         }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
             Worth trying
           </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: 0 }}>
+          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: 0, textAlign: 'left' }}>
             {content.worth_trying}
           </p>
         </div>
@@ -772,18 +823,15 @@ function BranchSuggestionCard({
 
 function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; rightLabel: string; onSelect: () => void }) {
   return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      height: 64, background: cream, borderTop: `1px solid ${line}`,
-      zIndex: 100, display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '0 28px',
-    }}>
-      <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: charcoalSoft, margin: 0 }}>
+    <div className="report-sticky-bar">
+      <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: charcoalSoft, margin: 0, flex: 1, minWidth: 0 }}>
         {leftText}
       </p>
       <div
+        className="rsb-cta"
         onClick={onSelect}
         style={{
+          flexShrink: 0,
           padding: 2,
           borderRadius: 100,
           background: 'linear-gradient(135deg, hsl(175,65%,55%), hsl(205,65%,60%), hsl(235,60%,65%), hsl(290,55%,60%), hsl(8,65%,60%), hsl(35,70%,58%))',
@@ -897,6 +945,12 @@ export default function ReportPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
   const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
+  // Set from ?session_id= when the page loads back from a Stripe redirect
+  // (iDEAL/Bancontact bank auth) — see PaywallModal's resumeSessionId doc
+  // comment. Checked in the same effect/tick as userId below, not a separate
+  // mount effect, so PaywallModal never receives resumeSessionId ahead of
+  // the userId it needs for its confirm/poll cycle.
+  const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -912,6 +966,16 @@ export default function ReportPage() {
       if (session && localStorage.getItem(POST_AUTH_REOPEN_KEY) === '1') {
         localStorage.removeItem(POST_AUTH_REOPEN_KEY)
         setPaywallInitialView('checkout')
+        setPaywallOpen(true)
+      }
+
+      // Just came back from authenticating an iDEAL/Bancontact payment with
+      // their bank. Cleaned from the URL immediately so a refresh doesn't
+      // re-trigger it.
+      const sessionId = new URLSearchParams(window.location.search).get('session_id')
+      if (sessionId) {
+        window.history.replaceState(null, '', window.location.pathname)
+        setResumeSessionId(sessionId)
         setPaywallOpen(true)
       }
     })
@@ -1066,6 +1130,9 @@ export default function ReportPage() {
   // Below the lock, it's a normal navigation; at/past it, PaywallModal opens —
   // it decides internally whether to show its login step first.
   function handleGatedNav(href: string) {
+    // TEMPORARY — diagnosing a production report of the sticky bar bypassing
+    // the paywall for an authenticated, unpaid user. Remove once resolved.
+    console.log('[handleGatedNav] href:', href, 'isLocked:', isLocked, 'isPaid:', isPaid, 'isAuthenticated:', isAuthenticated, 'userId:', userId, 'ring1Entries.length:', ring1Entries.length)
     if (!isLocked) {
       router.push(href)
       return
@@ -1296,6 +1363,7 @@ export default function ReportPage() {
         transition: entryCream === 1 ? 'none' : 'opacity 0.6s ease',
       }} />
 
+      <style>{reportCSS}</style>
       <SiteNav />
       {stickyBar && <StickyBar {...stickyBar} />}
 
@@ -1399,11 +1467,12 @@ export default function ReportPage() {
 
       <PaywallModal
         isOpen={paywallOpen}
-        onClose={() => setPaywallOpen(false)}
+        onClose={() => { setPaywallOpen(false); setResumeSessionId(null) }}
         isAuthenticated={isAuthenticated}
         userId={userId}
         traitCount={ring1Entries.length}
         initialView={paywallInitialView}
+        resumeSessionId={resumeSessionId}
         onAuthenticated={(uid) => {
           setIsAuthenticated(true)
           setUserId(uid)
@@ -1411,6 +1480,7 @@ export default function ReportPage() {
         onPaymentConfirmed={() => {
           fetchIsPaid(userId).then(setIsPaidState)
           setPaywallOpen(false)
+          setResumeSessionId(null)
         }}
       />
 
