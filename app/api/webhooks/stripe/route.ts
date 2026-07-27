@@ -1,12 +1,9 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getStripeClient } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-06-24.dahlia',
-})
 
 // This route is the ONLY place is_paid ever gets written; nothing else has a
 // write policy on public.users (see
@@ -14,9 +11,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // not derived from the redirect/return_url — a closed tab or dropped
 // connection means that path never fires, but Stripe retries this webhook
 // until it gets a 2xx, so it's the only trustworthy signal.
-const supabaseAdmin = createAdminClient()
+//
+// createAdminClient() is called inside the handler, not at module top level —
+// same reasoning as getStripeClient() (see lib/stripe.ts): Supabase's
+// createClient() also validates its arguments eagerly and throws
+// synchronously on a missing/malformed URL or key, which would otherwise
+// crash the whole production build during Next's "Collecting page data"
+// step, not just fail this one route at request time.
 
 export async function POST(request: NextRequest) {
+  const supabaseAdmin = createAdminClient()
   const rawBody = await request.text()
   const signature = request.headers.get('stripe-signature')
 
@@ -26,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = getStripeClient().webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err) {
     console.error('[stripe webhook] signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })

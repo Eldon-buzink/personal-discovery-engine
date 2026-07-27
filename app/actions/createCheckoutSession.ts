@@ -1,14 +1,7 @@
 'use server'
 
-import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-
-// Pinned explicitly — the Stripe account's dashboard-configured default API
-// version is much older (2020-08-27) and predates Embedded Checkout, so this
-// must be set per-client rather than left to the account default.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-06-24.dahlia',
-})
+import { getStripeClient } from '@/lib/stripe'
 
 export interface CheckoutSessionResult {
   clientSecret: string
@@ -42,7 +35,7 @@ export async function createCheckoutSession(userId: string, returnUrl: string): 
   const { data: userData } = await admin.auth.admin.getUserById(userId)
   const customerEmail = userData?.user?.email
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripeClient().checkout.sessions.create({
     ui_mode: 'embedded_page',
     mode: 'payment',
     redirect_on_completion: 'if_required',

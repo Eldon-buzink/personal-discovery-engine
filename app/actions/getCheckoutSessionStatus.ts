@@ -1,10 +1,7 @@
 'use server'
 
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-06-24.dahlia',
-})
+import type Stripe from 'stripe'
+import { getStripeClient } from '@/lib/stripe'
 
 // Read-only — does NOT write is_paid anywhere. The webhook remains the only
 // place entitlement is ever granted; this exists purely so the modal can
@@ -13,6 +10,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Supabase write), which is what PaywallModal was polling before and what
 // made the "this could take a while" state so easy to hit locally.
 export async function getCheckoutSessionStatus(sessionId: string): Promise<Stripe.Checkout.Session.PaymentStatus> {
-  const session = await stripe.checkout.sessions.retrieve(sessionId)
+  const session = await getStripeClient().checkout.sessions.retrieve(sessionId)
   return session.payment_status
 }
