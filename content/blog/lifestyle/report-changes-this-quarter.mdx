@@ -1,0 +1,30 @@
+---
+title: "What actually changed in Bearing's report this quarter"
+dek: "A rebrand, a payment method most European visitors couldn't use before, and a handful of things that were broken on mobile without us noticing right away."
+category: "lifestyle"
+subcategory: "product-update"
+updatedAt: "2026-07-27"
+accentColor: "teal"
+published: false
+relatedSlugs: ["how-we-picked-30-facets"]
+---
+
+Most product-update posts round up features. This one's mostly about things that were quietly broken and got fixed, because that was most of what actually happened this quarter — and it's more useful to say that plainly than to dress up bug fixes as features.
+
+## The rebrand
+
+Known became Bearing. Not a cosmetic rename — the domain changed, the sign-in emails changed senders, and every page of copy got a pass to make sure nothing still said the old name. This kind of change is invisible when it's done right and confusing when it's done halfway, so most of the actual engineering effort went into making sure nothing halfway happened: no stray mentions of the old name in an email template, no broken redirect from a magic link pointing at the wrong domain.
+
+## Payment methods that weren't there before
+
+The checkout only accepted cards until this quarter. That's a real gap for a product with meaningful traffic from the Netherlands and Belgium, where iDEAL and Bancontact are how a lot of people actually pay online — a card-only checkout was quietly asking a chunk of visitors to use a payment method they don't default to. Both are live now, alongside cards, through the same embedded checkout.
+
+The harder part wasn't turning the payment methods on — it was handling what happens after. A card payment completes without ever leaving the page. iDEAL and Bancontact both require leaving the page entirely to authenticate with your bank, then getting redirected back — which meant building a second path through the same confirmation flow, including a clear "this didn't go through" state for a declined or abandoned bank authentication, so that path doesn't just hang indefinitely the way it would have if we'd only handled the happy path.
+
+## Mobile
+
+A handful of things were quietly broken at narrow viewport widths — a hero visual sized for desktop that overflowed the screen on a phone, a three-column stats row that clipped its third column off-screen with no way to scroll to it, a pricing-page CTA button that was a dead link. None of these were visible unless you were specifically testing on a small screen, which is exactly how they shipped unnoticed in the first place. All fixed now, along with a general pass making sure nothing else in the same category was hiding.
+
+## The through-line
+
+None of this is a new feature in the sense of "here's a thing you couldn't do before." It's mostly "here's a thing that should have worked and now actually does." That's a less exciting update to write, but it's a more honest description of where a growing product tends to actually need attention — not new capability, but making sure the capability that's already there doesn't quietly fail for a meaningful slice of the people trying to use it.
