@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Known — Blog Post Mockup v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --cream:#F7F4ED;
+    --charcoal:#262420;
+    --charcoal-soft:#5A5750;
+    --line:#E4DFD3;
+    --coral:hsl(8,72%,58%);
+    --coral-soft:hsl(8,72%,93%);
+    --periwinkle:hsl(235,45%,65%);
+    --rose:hsl(335,55%,62%);
+    --card-dark:hsl(30,10%,24%);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--cream); color:var(--charcoal); font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;}
+
+  /* Single shared container — header and body both live in this, so their
+     left edges are guaranteed identical instead of two separately-centered wrappers. */
+  .wrap{max-width:1080px; margin:0 auto; padding:0 32px;}
+
+  nav{display:flex; align-items:center; justify-content:space-between; padding:28px 32px; max-width:1080px; margin:0 auto;}
+  .logo{font-family:'Newsreader', serif; font-weight:600; font-size:22px;}
+  .navlinks{display:flex; gap:36px; font-size:14px; color:var(--charcoal-soft);}
+  .navlinks a{color:inherit; text-decoration:none;}
+  .cta-btn{background:var(--charcoal); color:var(--cream); border:none; padding:10px 20px; border-radius:100px; font-size:14px; font-weight:600; cursor:pointer;}
+
+  .breadcrumb-row{padding:24px 0 0;}
+  .breadcrumb{font-size:13px; color:var(--charcoal-soft); display:flex; gap:8px; align-items:center;}
+  .breadcrumb a{color:inherit; text-decoration:none;}
+  .breadcrumb .sep{opacity:0.5;}
+
+  /* HERO CARD — same glow-card language as the landing page's final CTA,
+     used here as the post header instead of a decorative blob image. */
+  .hero-card{
+    position:relative; overflow:hidden; isolation:isolate;
+    background:#FBF8F1; border:1px solid var(--line); border-radius:24px;
+    padding:52px 56px; margin:24px 0 48px;
+  }
+  .hero-card .glow{position:absolute; border-radius:50%; filter:blur(70px); opacity:0.4; z-index:0;}
+  .hero-card .content{position:relative; z-index:1; max-width:640px;}
+  .post-tag{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:12px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--coral); background:var(--coral-soft); padding:6px 14px; border-radius:100px;
+    margin-bottom:22px;
+  }
+  h1.post-title{
+    font-family:'Newsreader', serif; font-weight:500; font-size:40px; line-height:1.18;
+    letter-spacing:-0.01em; color:var(--charcoal); margin-bottom:18px;
+  }
+  .post-dek{font-size:17px; color:var(--charcoal-soft); line-height:1.6; margin-bottom:24px;}
+  .post-meta{display:flex; align-items:center; gap:14px; font-size:13px; color:var(--charcoal-soft);}
+  .post-meta .divider{width:3px; height:3px; border-radius:50%; background:var(--charcoal-soft);}
+
+  /* BODY — lives in the same .wrap, so the grid's left column starts at
+     the exact same x-position as the hero card and breadcrumb above it. */
+  .layout{display:grid; grid-template-columns:680px 260px; gap:64px; padding-bottom:80px; justify-content:space-between;}
+
+  .prose{font-size:17px; line-height:1.75; color:var(--charcoal);}
+  .prose p{margin-bottom:22px;}
+  .prose h2{font-family:'Newsreader', serif; font-weight:500; font-size:26px; letter-spacing:-0.005em; margin:40px 0 16px;}
+  .prose h3{font-family:'Newsreader', serif; font-weight:500; font-size:20px; margin:30px 0 12px;}
+  .pullquote{
+    font-family:'Newsreader', serif; font-style:italic; font-size:24px; line-height:1.45;
+    color:var(--charcoal); border-left:2px solid var(--coral); padding:4px 0 4px 26px;
+    margin:34px 0; max-width:540px;
+  }
+  .faq-box{background:#FFFEFB; border:1px solid var(--line); border-radius:16px; padding:26px 28px; margin:30px 0;}
+  .faq-box .q{font-weight:600; font-size:15.5px; margin-bottom:8px;}
+  .faq-box .a{font-size:14.5px; color:var(--charcoal-soft); line-height:1.6;}
+  .faq-box .q:not(:first-child){margin-top:20px;}
+
+  /* Mid-article CTA — same glow-card component reused, smaller and centered
+     as a genuine break in the reading flow rather than a page header. */
+  .glow-cta{position:relative; overflow:hidden; isolation:isolate; background:var(--card-dark); border-radius:24px; padding:48px 40px; margin:44px 0; text-align:center;}
+  .glow-cta .glow{position:absolute; border-radius:50%; filter:blur(75px); opacity:0.65; z-index:0;}
+  .glow-cta .content{position:relative; z-index:1; max-width:400px; margin:0 auto;}
+  .glow-cta .tag{font-size:11.5px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#D9D4C7; margin-bottom:16px;}
+  .glow-cta h4{font-family:'Newsreader', serif; font-weight:500; font-style:italic; font-size:24px; line-height:1.3; color:var(--cream); margin-bottom:12px;}
+  .glow-cta p{font-size:14px; color:#E4E0D6; line-height:1.6; margin-bottom:22px;}
+  .glow-cta button{background:var(--cream); color:var(--charcoal); border:none; padding:13px 26px; border-radius:100px; font-weight:600; font-size:14.5px; cursor:pointer;}
+  .glow-cta .microcopy{font-size:12px; color:#C4BFB2; margin-top:14px;}
+
+  /* SIDEBAR */
+  .sidebar{padding-top:4px;}
+  .sidebar-block{margin-bottom:38px;}
+  .sidebar-label{font-size:12px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--charcoal-soft); margin-bottom:16px;}
+  .toc-item{display:block; font-size:13.5px; color:var(--charcoal-soft); text-decoration:none; padding:7px 0; border-left:2px solid var(--line); padding-left:14px;}
+  .toc-item.active{color:var(--charcoal); font-weight:600; border-left-color:var(--coral);}
+  .related-item{display:flex; gap:12px; align-items:flex-start; text-decoration:none; color:inherit; padding:12px 0;}
+  .related-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:6px;}
+  .related-title{font-size:13.5px; font-weight:600; line-height:1.4; margin-bottom:2px;}
+  .related-meta{font-size:11.5px; color:var(--charcoal-soft);}
+  .assess-card{border:1px solid var(--line); border-radius:16px; padding:22px; background:#FFFEFB;}
+  .assess-card p{font-size:13px; color:var(--charcoal-soft); line-height:1.55; margin-bottom:14px;}
+  .assess-card button{width:100%; background:var(--charcoal); color:var(--cream); border:none; padding:11px; border-radius:100px; font-weight:600; font-size:13.5px; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">known</div>
+  <div class="navlinks"><a href="#">Assessment</a><a href="#">Resources</a><a href="#">About</a></div>
+  <button class="cta-btn">Take the assessment</button>
+</nav>
+
+<div class="wrap">
+
+  <div class="breadcrumb-row">
+    <div class="breadcrumb"><a href="#">Resources</a><span class="sep">/</span><a href="#">Traits</a><span class="sep">/</span><span>Deliberation</span></div>
+  </div>
+
+  <div class="hero-card">
+    <div class="glow" style="width:240px; height:240px; background:var(--periwinkle); top:-70px; left:-60px;"></div>
+    <div class="glow" style="width:220px; height:220px; background:var(--rose); bottom:-80px; right:-40px;"></div>
+    <div class="content">
+      <div class="post-tag">Traits · Conscientiousness</div>
+      <h1 class="post-title">Deliberation: why some people never rush a decision</h1>
+      <p class="post-dek">The facet behind careful, unhurried choices — how it shows up day to day, and where it tips into overthinking.</p>
+      <div class="post-meta">
+        <span>5 min read</span><span class="divider"></span>
+        <span>Reviewed against IPIP-NEO-120</span><span class="divider"></span>
+        <span>Updated Jul 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <div class="prose">
+      <p>Deliberation is one of six facets that make up Conscientiousness in the Big Five model — and it's the one most often mistaken for indecision. It isn't. Deliberation measures how carefully you think something through before acting, not whether you're capable of acting quickly when you need to.</p>
+
+      <h2 id="what-it-measures">What it actually measures</h2>
+      <p>People high in Deliberation weigh consequences before committing. They're the ones re-reading the email before sending it, checking a decision against a second and third scenario, resistant to being rushed into a choice they haven't thought through.</p>
+      <p>People low in Deliberation act on instinct. They decide fast, adjust as they go, and treat overthinking as its own kind of risk — the risk of missing the moment.</p>
+
+      <blockquote class="pullquote">Neither end of this trait is the "better" one. Deliberation is a trade between speed and certainty — and different situations reward different trades.</blockquote>
+
+      <h2 id="high-vs-low">High vs. low Deliberation, day to day</h2>
+      <p>At work, high-Deliberation people tend to produce fewer errors but take longer to ship. Low-Deliberation people move faster and iterate in public — sometimes at the cost of avoidable mistakes. In relationships, high Deliberation can look like caution before commitment; low Deliberation can look like spontaneity that occasionally outruns follow-through.</p>
+
+      <h3>Where it becomes a problem</h3>
+      <p>Deliberation tips into a liability when it stops being about the decision and starts being about avoiding the discomfort of deciding at all. That's the line between careful and stuck — and it's a distinction your score alone can't make. Context does.</p>
+
+      <div class="faq-box">
+        <div class="q">Is high Deliberation the same as being indecisive?</div>
+        <div class="a">No. Indecision is an inability to choose. High Deliberation is a preference to think before choosing — the choice still gets made.</div>
+        <div class="q">Can your Deliberation score change over time?</div>
+        <div class="a">Facet scores can shift gradually with life stage and role, but they're relatively stable traits — meaningful change tends to happen over years, not weeks.</div>
+      </div>
+
+      <h2 id="your-score">What to do with your score</h2>
+      <p>Your Deliberation score means more next to your other Conscientiousness facets — Self-Discipline and Cautiousness especially. Known's report shows all six together, so you can see whether careful thinking is a pattern across your personality or specific to certain kinds of decisions.</p>
+
+      <div class="glow-cta">
+        <div class="glow" style="width:200px; height:200px; background:var(--periwinkle); top:-60px; left:-40px;"></div>
+        <div class="glow" style="width:180px; height:180px; background:var(--rose); bottom:-60px; right:-30px;"></div>
+        <div class="content">
+          <div class="tag">Free · Private · 15 minutes</div>
+          <h4>See where you actually land.</h4>
+          <p>Your full trait profile across all five domains — including how Deliberation sits alongside your other 29 facets.</p>
+          <button>Start your report — it's free</button>
+          <div class="microcopy">No account to start · No credit card</div>
+        </div>
+      </div>
+
+      <p>Deliberation is one of thirty facets Known measures across the five domains. Explore the others below, or head to the Working Style branch to see how this trait plays out specifically in how you approach tasks and deadlines.</p>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-block">
+        <div class="sidebar-label">On this page</div>
+        <a class="toc-item active" href="#what-it-measures">What it actually measures</a>
+        <a class="toc-item" href="#high-vs-low">High vs. low, day to day</a>
+        <a class="toc-item" href="#your-score">What to do with your score</a>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="sidebar-label">Related facets</div>
+        <a class="related-item" href="#"><span class="related-dot" style="background:hsl(35,75%,55%);"></span><div><div class="related-title">Self-Discipline: finishing what you start</div><div class="related-meta">Conscientiousness</div></div></a>
+        <a class="related-item" href="#"><span class="related-dot" style="background:hsl(175,35%,42%);"></span><div><div class="related-title">Cautiousness vs. impulsiveness</div><div class="related-meta">Conscientiousness</div></div></a>
+        <a class="related-item" href="#"><span class="related-dot" style="background:hsl(205,55%,55%);"></span><div><div class="related-title">Signs you're in the wrong role for how you work</div><div class="related-meta">Working Style branch</div></div></a>
+      </div>
+
+      <div class="sidebar-block assess-card">
+        <p>Get your full trait profile across all five domains, free — see where Deliberation sits alongside your other 29 facets.</p>
+        <button>Take the free assessment</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

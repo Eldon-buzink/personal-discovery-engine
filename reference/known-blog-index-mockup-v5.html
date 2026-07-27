@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Known — Blog Index Mockup v5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --cream:#F7F4ED;
+    --charcoal:#262420;
+    --charcoal-soft:#5A5750;
+    --line:#E4DFD3;
+    --card:#FFFEFB;
+    --coral:hsl(8,72%,58%);
+    --amber:hsl(35,75%,55%);
+    --moss:hsl(145,30%,45%);
+    --teal:hsl(175,35%,42%);
+    --sky:hsl(205,55%,55%);
+    --periwinkle:hsl(235,45%,65%);
+    --plum:hsl(290,30%,50%);
+    --rose:hsl(335,55%,62%);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--cream); color:var(--charcoal); font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 32px;}
+
+  nav{display:flex; align-items:center; justify-content:space-between; padding:28px 32px; max-width:1080px; margin:0 auto;}
+  .logo{font-family:'Newsreader', serif; font-weight:600; font-size:22px; letter-spacing:-0.01em;}
+  .navlinks{display:flex; gap:36px; font-size:14px; color:var(--charcoal-soft);}
+  .navlinks a{color:inherit; text-decoration:none;}
+  .navlinks a.active{color:var(--charcoal); font-weight:600;}
+  .cta-btn{background:var(--charcoal); color:var(--cream); border:none; padding:10px 20px; border-radius:100px; font-size:14px; font-weight:600; cursor:pointer;}
+
+  .page-head{padding:44px 0 32px;}
+  .eyebrow{font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--charcoal-soft); font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:10px;}
+  .eyebrow-blob{width:8px; height:8px; border-radius:60% 40% 55% 45%/45% 55% 40% 60%; background:var(--coral);}
+  h1.hero-title{font-family:'Newsreader', serif; font-weight:500; font-style:italic; font-size:40px; line-height:1.15; letter-spacing:-0.01em; max-width:600px;}
+
+  .section-label-row{display:flex; align-items:baseline; justify-content:space-between; padding:0 0 18px;}
+  .section-title{font-size:13px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--charcoal-soft); display:flex; align-items:center; gap:8px;}
+
+  /* BENTO: lifestyle / timely articles */
+  .bento{display:grid; grid-template-columns:1.4fr 1fr; grid-template-rows:1fr 1fr; gap:16px; padding-bottom:32px;}
+  .bento-card{position:relative; overflow:hidden; isolation:isolate; background:var(--charcoal); color:var(--cream); border-radius:20px; padding:26px; display:flex; flex-direction:column; justify-content:flex-end;}
+  .bento-card .glow{position:absolute; border-radius:50%; filter:blur(70px); opacity:0.55; z-index:0;}
+  .bento-card .content{position:relative; z-index:1;}
+  .bento-card .kicker{font-size:11.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:#C9C5BA; margin-bottom:10px;}
+  .bento-card h2, .bento-card h3{font-family:'Newsreader', serif; font-weight:500; line-height:1.28; margin-bottom:8px;}
+  .card-large{grid-row:1 / 3; grid-column:1; min-height:100%;}
+  .card-large h2{font-size:26px;}
+  .card-large p{font-size:13.5px; color:#C9C5BA; line-height:1.55; max-width:340px;}
+  .card-small{grid-column:2;}
+  .card-small h3{font-size:18px;}
+  .card-small p{font-size:12.5px; color:#C9C5BA; line-height:1.5; max-width:280px;}
+  .card-small .kicker{font-size:11px;}
+
+  /* MORE ARTICLES — richer rows with thumbnail + description */
+  .more-list{padding-bottom:6px;}
+  .more-row{
+    display:flex; align-items:center; gap:18px; padding:18px 4px; border-bottom:1px solid var(--line);
+    text-decoration:none; color:inherit;
+  }
+  .more-thumb{
+    width:64px; height:64px; border-radius:14px; flex-shrink:0; position:relative; overflow:hidden;
+  }
+  .more-thumb .shape{position:absolute; width:44px; height:40px; top:12px; left:10px; border-radius:55% 45% 60% 40%/45% 55% 45% 55%;}
+  .more-text{flex:1; min-width:0;}
+  .more-cat{font-size:11.5px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase; margin-bottom:4px;}
+  .more-title{font-family:'Newsreader', serif; font-weight:500; font-size:17px; letter-spacing:-0.003em; margin-bottom:5px;}
+  .more-desc{font-size:13px; color:var(--charcoal-soft); line-height:1.5; max-width:560px;}
+  .more-time{font-size:12px; color:var(--charcoal-soft); white-space:nowrap; align-self:flex-start; margin-top:2px;}
+  .expand-row{display:none;}
+  .expand-row.shown{display:flex;}
+  .expand-btn{
+    display:flex; align-items:center; gap:8px; background:none; border:1px solid var(--line);
+    color:var(--charcoal); font-family:'Inter'; font-size:13.5px; font-weight:600; padding:10px 18px;
+    border-radius:100px; cursor:pointer; margin:20px auto 64px;
+  }
+  .expand-btn:hover{background:var(--card);}
+  .expand-btn .chev{transition:transform .2s ease;}
+  .expand-btn.open .chev{transform:rotate(180deg);}
+
+  /* ── STRUCTURE: clearly separated section ── */
+  .structure-section{
+    background:var(--card); border:1px solid var(--line); border-radius:28px;
+    padding:44px 48px 48px; margin-bottom:56px;
+  }
+  .structure-head{max-width:560px; margin-bottom:32px;}
+  .structure-head h2{font-family:'Newsreader', serif; font-weight:500; font-size:26px; letter-spacing:-0.005em; margin-bottom:10px;}
+  .structure-head p{font-size:14.5px; color:var(--charcoal-soft); line-height:1.6;}
+
+  .tabs{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding-bottom:32px;}
+  .tab{
+    text-align:left; padding:16px 18px; border-radius:16px; border:1px solid var(--line);
+    background:var(--cream); cursor:pointer; transition:background .15s ease, border-color .15s ease;
+  }
+  .tab-top{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .tab .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .tab-name{font-size:14px; font-weight:600; color:var(--charcoal);}
+  .tab-count{font-size:11px; font-weight:600; color:var(--charcoal-soft); margin-left:auto; border:1px solid var(--line); padding:2px 8px; border-radius:100px;}
+  .tab-desc{font-size:12px; color:var(--charcoal-soft); line-height:1.4;}
+  .tab.active{background:var(--charcoal); border-color:var(--charcoal);}
+  .tab.active .tab-name{color:var(--cream);}
+  .tab.active .tab-desc{color:#C9C5BA;}
+  .tab.active .tab-count{color:#C9C5BA; border-color:rgba(255,255,255,0.2);}
+
+  .directory{display:none; grid-template-columns:1fr 1fr; gap:0 32px;}
+  .directory.active{display:grid;}
+  .directory.single{grid-template-columns:1fr;}
+  .dir-row{display:flex; align-items:baseline; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;}
+  .dir-row.dir-hidden{display:none;}
+  .dir-dot{width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:6px;}
+  .dir-text{flex:1; min-width:0;}
+  .dir-title{font-family:'Newsreader', serif; font-weight:500; font-size:16px; letter-spacing:-0.003em;}
+  .dir-sub{font-size:12px; color:var(--charcoal-soft); margin-top:2px;}
+  .dir-time{font-size:12px; color:var(--charcoal-soft); white-space:nowrap; flex-shrink:0;}
+  .dir-row.wide .dir-title{font-size:16.5px;}
+  .dir-row.wide .dir-sub{margin-top:4px; max-width:640px; line-height:1.5;}
+  .dir-expand-btn{
+    grid-column:1/3; display:flex; align-items:center; gap:8px; background:none; border:1px solid var(--line);
+    color:var(--charcoal); font-family:'Inter'; font-size:13px; font-weight:600; padding:9px 16px;
+    border-radius:100px; cursor:pointer; margin:18px auto 0; width:fit-content;
+  }
+  .dir-expand-btn:hover{background:var(--cream);}
+  .dir-expand-btn .chev{transition:transform .2s ease;}
+  .dir-expand-btn.open .chev{transform:rotate(180deg);}
+
+  /* ASSESSMENT CTA */
+  .strip{position:relative; overflow:hidden; isolation:isolate; background:var(--charcoal); color:var(--cream); border-radius:24px; padding:48px 52px; margin-bottom:64px; display:flex; align-items:center; justify-content:space-between; gap:32px;}
+  .strip .glow{position:absolute; border-radius:50%; filter:blur(85px); opacity:0.5; z-index:0;}
+  .strip-content{position:relative; z-index:1; max-width:480px;}
+  .strip-tag{font-size:11.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--rose); margin-bottom:10px;}
+  .strip h4{font-family:'Newsreader', serif; font-weight:500; font-size:24px; margin-bottom:10px; line-height:1.25;}
+  .strip p{font-size:14px; color:#C9C5BA; line-height:1.55;}
+  .strip-cta-wrap{position:relative; z-index:1; text-align:right; flex-shrink:0;}
+  .strip-cta{background:var(--cream); color:var(--charcoal); border:none; padding:12px 22px; border-radius:100px; font-weight:600; font-size:14px; white-space:nowrap; cursor:pointer;}
+  .strip-note{font-size:11.5px; color:#9C978C; margin-top:10px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">known</div>
+  <div class="navlinks"><a href="#">Assessment</a><a href="#" class="active">Resources</a><a href="#">About</a></div>
+  <button class="cta-btn">Take the assessment</button>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-head">
+    <div class="eyebrow"><span class="eyebrow-blob"></span>Resources</div>
+    <h1 class="hero-title">Understand yourself, one trait at a time.</h1>
+  </div>
+
+  <div class="section-label-row">
+    <div class="section-title"><span class="eyebrow-blob" style="background:var(--periwinkle);"></span>From the blog</div>
+  </div>
+  <div class="bento">
+    <div class="bento-card card-large">
+      <div class="glow" style="width:220px; height:220px; background:var(--periwinkle); top:-60px; left:-60px;"></div>
+      <div class="glow" style="width:200px; height:200px; background:var(--rose); bottom:-70px; right:-50px;"></div>
+      <div class="content">
+        <div class="kicker">New research · This week</div>
+        <h2>A 2026 replication study just confirmed something we built Known around</h2>
+        <p>What a new cross-cultural Big Five replication means for how stable your trait scores really are.</p>
+      </div>
+    </div>
+    <div class="bento-card card-small">
+      <div class="glow" style="width:150px; height:150px; background:var(--amber); top:-40px; right:-40px;"></div>
+      <div class="content">
+        <div class="kicker">Reflection</div>
+        <h3>Why "just be yourself" is bad advice</h3>
+        <p>The advice assumes you already know who that is.</p>
+      </div>
+    </div>
+    <div class="bento-card card-small">
+      <div class="glow" style="width:150px; height:150px; background:var(--teal); bottom:-40px; left:-30px;"></div>
+      <div class="content">
+        <div class="kicker">Product update</div>
+        <h3>What changed in Known's report this quarter</h3>
+        <p>A quieter report, sharper pattern detection.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MORE ARTICLES: thumbnail + description for more visual weight and context -->
+  <div class="more-list">
+    <a class="more-row" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(8,72%,88%), hsl(8,72%,78%));"><div class="shape" style="background:hsl(8,72%,58%); opacity:0.85;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--coral);">Reflection</div>
+        <div class="more-title">The problem with taking a test once and never again</div>
+        <div class="more-desc">Personality isn't static, and treating a single result as permanent misses most of what it can tell you.</div>
+      </div>
+      <span class="more-time">4 min</span>
+    </a>
+    <a class="more-row" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(205,55%,90%), hsl(205,55%,80%));"><div class="shape" style="background:hsl(205,55%,55%); opacity:0.85; border-radius:40% 60% 45% 55%/55% 45% 60% 40%;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--sky);">Reflection</div>
+        <div class="more-title">What people get wrong about "knowing yourself"</div>
+        <div class="more-desc">It's usually treated as a single insight rather than an ongoing, checkable process.</div>
+      </div>
+      <span class="more-time">5 min</span>
+    </a>
+    <a class="more-row" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(145,30%,90%), hsl(145,30%,80%));"><div class="shape" style="background:hsl(145,30%,45%); opacity:0.85; border-radius:50% 50% 40% 60%/60% 40% 60% 40%;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--moss);">Product update</div>
+        <div class="more-title">Inside the build: how we picked our 30 facets</div>
+        <div class="more-desc">Why we used the IPIP-NEO item pool instead of writing our own questions from scratch.</div>
+      </div>
+      <span class="more-time">6 min</span>
+    </a>
+
+    <a class="more-row expand-row" id="extra-1" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(290,30%,90%), hsl(290,30%,80%));"><div class="shape" style="background:hsl(290,30%,50%); opacity:0.85;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--plum);">Reflection</div>
+        <div class="more-title">Why self-knowledge feels different at 25 vs. 45</div>
+        <div class="more-desc">Trait stability increases with age — but what you do with the same score can change completely.</div>
+      </div>
+      <span class="more-time">5 min</span>
+    </a>
+    <a class="more-row expand-row" id="extra-2" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(335,55%,90%), hsl(335,55%,82%));"><div class="shape" style="background:hsl(335,55%,62%); opacity:0.85; border-radius:60% 40% 50% 50%/45% 55% 45% 55%;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--rose);">The Science</div>
+        <div class="more-title">A short history of the personality test</div>
+        <div class="more-desc">From Woodworth's WWI screening form to today's continuous trait models.</div>
+      </div>
+      <span class="more-time">7 min</span>
+    </a>
+    <a class="more-row expand-row" id="extra-3" href="#">
+      <div class="more-thumb" style="background:linear-gradient(160deg, hsl(35,75%,90%), hsl(35,75%,80%));"><div class="shape" style="background:hsl(35,75%,55%); opacity:0.85; border-radius:45% 55% 55% 45%/50% 50% 50% 50%;"></div></div>
+      <div class="more-text">
+        <div class="more-cat" style="color:var(--amber);">Product update</div>
+        <div class="more-title">What we changed after our first 500 users</div>
+        <div class="more-desc">The three things people misunderstood about their report, and how we fixed the copy.</div>
+      </div>
+      <span class="more-time">4 min</span>
+    </a>
+  </div>
+  <button class="expand-btn" id="expandBtn" onclick="toggleExpand()">
+    <span id="expandLabel">Show 3 more</span>
+    <span class="chev">▾</span>
+  </button>
+
+  <!-- STRUCTURE: visually separated card, tabs with descriptions, expandable lists -->
+  <div class="structure-section">
+    <div class="structure-head">
+      <h2>Browse by topic</h2>
+      <p>Every explainer Known has published, organized the way the assessment itself is — by trait, by framework, and by the branch it feeds into.</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="traits" onclick="switchTab('traits')">
+        <div class="tab-top"><span class="dot" style="background:var(--coral);"></span><span class="tab-name">Traits</span><span class="tab-count">30</span></div>
+        <div class="tab-desc">One explainer per IPIP-NEO facet, across all five domains.</div>
+      </div>
+      <div class="tab" data-tab="frameworks" onclick="switchTab('frameworks')">
+        <div class="tab-top"><span class="dot" style="background:var(--sky);"></span><span class="tab-name">Frameworks</span><span class="tab-count">7</span></div>
+        <div class="tab-desc">The models behind Known: Big Five, SDT, ECR-R, RIASEC.</div>
+      </div>
+      <div class="tab" data-tab="relationships" onclick="switchTab('relationships')">
+        <div class="tab-top"><span class="dot" style="background:var(--moss);"></span><span class="tab-name">Relationships</span><span class="tab-count">12</span></div>
+        <div class="tab-desc">Attachment and connection, from the Relationships branch.</div>
+      </div>
+      <div class="tab" data-tab="work" onclick="switchTab('work')">
+        <div class="tab-top"><span class="dot" style="background:var(--amber);"></span><span class="tab-name">Work &amp; Direction</span><span class="tab-count">9</span></div>
+        <div class="tab-desc">Working style and career fit, from Holland Codes.</div>
+      </div>
+    </div>
+
+    <!-- TRAITS: 6 shown, rest revealed on expand -->
+    <div class="directory active" id="dir-traits">
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--coral);"></span><div class="dir-text"><div class="dir-title">Deliberation: why some never rush a decision</div><div class="dir-sub">Conscientiousness</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--sky);"></span><div class="dir-text"><div class="dir-title">Assertiveness vs. aggression</div><div class="dir-sub">Extraversion</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--rose);"></span><div class="dir-text"><div class="dir-title">What low trust actually protects you from</div><div class="dir-sub">Agreeableness</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--amber);"></span><div class="dir-text"><div class="dir-title">Self-Discipline: finishing what you start</div><div class="dir-sub">Conscientiousness</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--teal);"></span><div class="dir-text"><div class="dir-title">Cautiousness vs. impulsiveness</div><div class="dir-sub">Conscientiousness</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--periwinkle);"></span><div class="dir-text"><div class="dir-title">Anxiety: the facet, not the disorder</div><div class="dir-sub">Neuroticism</div></div><span class="dir-time">6 min</span></a>
+
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--plum);"></span><div class="dir-text"><div class="dir-title">Imagination and where it splits from fantasy</div><div class="dir-sub">Openness</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--moss);"></span><div class="dir-text"><div class="dir-title">Warmth vs. sociability — they're not the same</div><div class="dir-sub">Extraversion</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--coral);"></span><div class="dir-text"><div class="dir-title">Altruism: what it costs you when it's high</div><div class="dir-sub">Agreeableness</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--sky);"></span><div class="dir-text"><div class="dir-title">Excitement-seeking, explained</div><div class="dir-sub">Extraversion</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--rose);"></span><div class="dir-text"><div class="dir-title">Vulnerability under stress: what it predicts</div><div class="dir-sub">Neuroticism</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--amber);"></span><div class="dir-text"><div class="dir-title">Order: the facet behind needing structure</div><div class="dir-sub">Conscientiousness</div></div><span class="dir-time">4 min</span></a>
+
+      <button class="dir-expand-btn" onclick="toggleDir(this)"><span class="label">Show all 30 traits</span><span class="chev">▾</span></button>
+    </div>
+
+    <!-- FRAMEWORKS: only 7, still collapsible past 4 for consistency -->
+    <div class="directory" id="dir-frameworks">
+      <a class="dir-row wide" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--periwinkle);"></span><div class="dir-text"><div class="dir-title">Attachment styles, explained without the jargon</div><div class="dir-sub">What ECR-R actually measures — anxious and avoidant are axes, not labels.</div></div><span class="dir-time">7 min</span></a>
+      <a class="dir-row wide" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--moss);"></span><div class="dir-text"><div class="dir-title">Self-Determination Theory and why motivation runs out</div><div class="dir-sub">Autonomy, competence, relatedness — the three things that sustain energy.</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row wide" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--amber);"></span><div class="dir-text"><div class="dir-title">Holland Codes: matching who you are to what you do</div><div class="dir-sub">The RIASEC model, and why career fit is a fit between traits and tasks.</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row wide" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--coral);"></span><div class="dir-text"><div class="dir-title">Why we didn't give you a four-letter type</div><div class="dir-sub">Known's methodology, and what continuous scores show that archetypes hide.</div></div><span class="dir-time">8 min</span></a>
+      <a class="dir-row wide dir-hidden" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--sky);"></span><div class="dir-text"><div class="dir-title">Big Five vs. MBTI: why one replicates and the other doesn't</div><div class="dir-sub">The evidence gap between continuous traits and typological tests.</div></div><span class="dir-time">8 min</span></a>
+      <a class="dir-row wide dir-hidden" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--plum);"></span><div class="dir-text"><div class="dir-title">What Self-Determination Theory says about burnout</div><div class="dir-sub">Why autonomy, not workload alone, predicts who burns out first.</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row wide dir-hidden" href="#" style="grid-column:1/3;"><span class="dir-dot" style="background:var(--rose);"></span><div class="dir-text"><div class="dir-title">RIASEC in practice: reading a two-letter code</div><div class="dir-sub">What "Realistic-Investigative" actually tells you about fit.</div></div><span class="dir-time">5 min</span></a>
+      <button class="dir-expand-btn" onclick="toggleDir(this)"><span class="label">Show all 7 frameworks</span><span class="chev">▾</span></button>
+    </div>
+
+    <div class="directory" id="dir-relationships">
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--moss);"></span><div class="dir-text"><div class="dir-title">Anxious vs. avoidant attachment, in plain terms</div><div class="dir-sub">Relationships</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--rose);"></span><div class="dir-text"><div class="dir-title">Why your attachment style shows up more under stress</div><div class="dir-sub">Relationships</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--sky);"></span><div class="dir-text"><div class="dir-title">Secure attachment isn't a personality type</div><div class="dir-sub">Relationships</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--amber);"></span><div class="dir-text"><div class="dir-title">What "earned security" actually means</div><div class="dir-sub">Relationships</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--coral);"></span><div class="dir-text"><div class="dir-title">Disorganized attachment, without the drama</div><div class="dir-sub">Relationships</div></div><span class="dir-time">7 min</span></a>
+      <button class="dir-expand-btn" onclick="toggleDir(this)"><span class="label">Show all 12</span><span class="chev">▾</span></button>
+    </div>
+
+    <div class="directory" id="dir-work">
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--amber);"></span><div class="dir-text"><div class="dir-title">Signs you're in the wrong role for how you work</div><div class="dir-sub">Working Style</div></div><span class="dir-time">5 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--teal);"></span><div class="dir-text"><div class="dir-title">Realistic vs. Investigative: the RIASEC types explained</div><div class="dir-sub">Direction</div></div><span class="dir-time">6 min</span></a>
+      <a class="dir-row" href="#"><span class="dir-dot" style="background:var(--coral);"></span><div class="dir-text"><div class="dir-title">Why career tests keep telling you the same thing</div><div class="dir-sub">Direction</div></div><span class="dir-time">4 min</span></a>
+      <a class="dir-row dir-hidden" href="#"><span class="dir-dot" style="background:var(--moss);"></span><div class="dir-text"><div class="dir-title">Deadlines and Deliberation: a working-style mismatch</div><div class="dir-sub">Working Style</div></div><span class="dir-time">5 min</span></a>
+      <button class="dir-expand-btn" onclick="toggleDir(this)"><span class="label">Show all 9</span><span class="chev">▾</span></button>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="glow" style="width:260px; height:260px; background:var(--periwinkle); top:-90px; left:-60px;"></div>
+    <div class="glow" style="width:220px; height:220px; background:var(--rose); bottom:-80px; right:10%;"></div>
+    <div class="strip-content">
+      <div class="strip-tag">Free · Private · 15 minutes</div>
+      <h4>See where you actually land.</h4>
+      <p>Stop reading about traits in the abstract — get your own scores across all five domains, grounded in the same research these articles come from.</p>
+    </div>
+    <div class="strip-cta-wrap">
+      <button class="strip-cta">Start your assessment</button>
+      <div class="strip-note">No account to start · No credit card</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.directory').forEach(d => d.classList.toggle('active', d.id === 'dir-' + name));
+  }
+  function toggleExpand(){
+    const btn = document.getElementById('expandBtn');
+    const label = document.getElementById('expandLabel');
+    const rows = document.querySelectorAll('.expand-row');
+    const isOpen = btn.classList.toggle('open');
+    rows.forEach(r => r.classList.toggle('shown', isOpen));
+    label.textContent = isOpen ? 'Show less' : 'Show 3 more';
+  }
+  function toggleDir(btn){
+    const directory = btn.closest('.directory');
+    const hidden = directory.querySelectorAll('.dir-hidden');
+    const label = btn.querySelector('.label');
+    if(!btn.dataset.original) btn.dataset.original = label.textContent;
+    const isOpen = btn.classList.toggle('open');
+    hidden.forEach(r => r.style.display = isOpen ? 'flex' : 'none');
+    label.textContent = isOpen ? 'Show less' : btn.dataset.original;
+  }
+</script>
+
+</body>
+</html>
