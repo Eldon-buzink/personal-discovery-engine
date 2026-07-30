@@ -20,7 +20,7 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export const USER_SEED = 'u_played-2826-deliberate-autonomous'
 
@@ -103,11 +103,17 @@ export function blobGradientStops(hue: number, active: boolean): GradientStop[] 
 // ─── Shared animation clock ─────────────────────────────────────────────────
 // One requestAnimationFrame loop for every blob on the page, not one per
 // component — matches the mockup's single masterTick driving allBlobTasks.
+// This used to be duplicated (a second, independent copy lived in
+// LandingPageClient.tsx for ConnectVisual alone) — consolidated to this one
+// instance so the whole page only ever runs a single RAF loop, and exported
+// so non-hook consumers (ConnectVisual builds its SVG via raw DOM calls in a
+// useEffect, not through useBlobAnimation's JSX/ref pattern) can subscribe
+// directly.
 const _tasks: Array<(t: number) => void> = []
 let _raf: number | null = null
 let _t0: number | null = null
 
-function registerBlobTask(fn: (t: number) => void): () => void {
+export function registerBlobTask(fn: (t: number) => void): () => void {
   _tasks.push(fn)
   if (_raf === null && typeof requestAnimationFrame !== 'undefined') {
     const tick = (ts: number) => {
@@ -126,6 +132,38 @@ function registerBlobTask(fn: (t: number) => void): () => void {
 
 // Idiomatic-React entry point: components pass a per-frame callback and get
 // automatic subscribe/unsubscribe tied to their own lifecycle.
-export function useBlobAnimation(fn: (t: number) => void, deps: React.DependencyList) {
-  useEffect(() => registerBlobTask(fn), deps) // eslint-disable-line react-hooks/exhaustive-deps
+//
+// visibilityRef is optional so existing call sites keep working unchanged,
+// but every current caller passes one: without it, an off-screen blob still
+// recomputes its full Catmull-Rom path and writes a new `d` attribute 60
+// times a second for as long as it's mounted, which is real main-thread work
+// on a page with 9+ blobs across sections a user has already scrolled past.
+// Gating on IntersectionObserver instead of scroll position keeps this cheap
+// (no scroll-handler math) and correct under resize/zoom. rootMargin extends
+// the "visible" zone by 200px so a blob already animating at its natural
+// phase is what scrolls into view, instead of snapping in mid-frame.
+export function useBlobAnimation(
+  fn: (t: number) => void,
+  deps: React.DependencyList,
+  visibilityRef?: React.RefObject<Element>,
+) {
+  const isVisibleRef = useRef(true)
+
+  useEffect(() => {
+    const el = visibilityRef?.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    isVisibleRef.current = false
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting },
+      { rootMargin: '200px 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibilityRef?.current])
+
+  useEffect(() => registerBlobTask(t => {
+    if (isVisibleRef.current) fn(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), deps)
 }

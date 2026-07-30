@@ -7,11 +7,12 @@ import type { Metadata } from 'next'
 // (image, card type, etc.), not just title/description, or it silently loses
 // og:image and falls back to a plain "summary" Twitter card. This is that
 // shared shape, built once so it can't drift between routes.
-export function buildMetadata(opts: { path: string; title: string; description: string; type?: 'website' | 'article' }): Metadata {
-  const { path, title, description, type = 'website' } = opts
+export function buildMetadata(opts: { path: string; title: string; description: string; type?: 'website' | 'article'; noindex?: boolean }): Metadata {
+  const { path, title, description, type = 'website', noindex = false } = opts
   return {
     title,
     description,
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title,
       description,

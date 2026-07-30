@@ -163,7 +163,10 @@ export default function SiteNav() {
             className="sn-hamburger"
             onClick={() => setMenuOpen(v => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: charcoal }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: charcoal,
+              width: 44, height: 44, boxSizing: 'border-box', alignItems: 'center', justifyContent: 'center',
+            }}
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               {menuOpen ? (

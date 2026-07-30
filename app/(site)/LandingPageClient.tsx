@@ -12,6 +12,7 @@ import {
   generateAnimatedBlobPath as sharedGenerateAnimatedBlobPath,
   blobGradientStops,
   useBlobAnimation,
+  registerBlobTask,
 } from '@/lib/blobs'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -35,30 +36,10 @@ const mkCoral        = '#F0A98A'
 const mkPeriwinkle   = '#AEBBE8'
 const mkRose         = '#E9AFC0'
 
-// ─── Blob engine (still used by ConnectVisual only — see comment there) ──────
+// ─── Blob engine (ConnectVisual builds its SVG via raw DOM calls, not JSX —
+// see comment there — so it subscribes to the shared lib/blobs.ts clock via
+// registerBlobTask directly instead of the useBlobAnimation hook) ────────────
 const NS = 'http://www.w3.org/2000/svg'
-
-// ─── Master RAF (module-level singleton) ──────────────────────────────────────
-const _tasks: Array<(t: number) => void> = []
-let _raf: number | null = null
-let _t0: number | null = null
-
-function registerBlobTask(fn: (t: number) => void): () => void {
-  _tasks.push(fn)
-  if (_raf === null && typeof requestAnimationFrame !== 'undefined') {
-    const tick = (ts: number) => {
-      if (_t0 === null) _t0 = ts
-      const t = (ts - _t0) / 1000
-      _tasks.forEach(f => f(t))
-      _raf = requestAnimationFrame(tick)
-    }
-    _raf = requestAnimationFrame(tick)
-  }
-  return () => {
-    const i = _tasks.indexOf(fn)
-    if (i >= 0) _tasks.splice(i, 1)
-  }
-}
 
 // ─── Responsive CSS ───────────────────────────────────────────────────────────
 // Class names and breakpoints below are transcribed directly from
@@ -87,6 +68,7 @@ const landingCSS = `
   .gap-inner{max-width:760px;margin:0 auto;display:flex;align-items:flex-start;justify-content:center;}
   .gap-point{text-align:center;flex:0 0 auto;width:200px;position:relative;padding-top:20px;}
   .gap-blob{position:absolute;width:150px;height:150px;border-radius:50%;filter:blur(38px);opacity:0.55;top:0;left:50%;transform:translateX(-50%);z-index:0;}
+  .gap-label{display:none;}
   .gap-num{font-size:40px;font-weight:500;font-style:italic;position:relative;z-index:1;}
   .gap-point.start .gap-num{color:${mkCharcoalSoft};}
   .gap-point.end .gap-num{color:${mkCharcoal};}
@@ -101,7 +83,7 @@ const landingCSS = `
   .bento{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;max-width:1120px;margin:0 auto 22px;}
   .bento-card{background:${mkCard};border:1px solid ${mkLine};border-radius:24px;padding:34px;overflow:visible;}
   .bento-card h3{font-family:'Newsreader',serif;font-size:24px;font-weight:500;margin:0 0 8px;line-height:1.2;}
-  .bento-card p{font-size:14px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .bento-card p{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   .bento-col{display:flex;flex-direction:column;gap:22px;}
   .bento-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1120px;margin:0 auto;}
   .bento-card.dark{background:${mkCharcoal};color:${mkCream};}
@@ -175,7 +157,16 @@ const landingCSS = `
     .compare{grid-template-columns:1fr;}
     .hero h1{font-size:38px;}
     .hero-blob-wrap{margin-top:20px;}
-    .gap-inner{flex-direction:column;gap:36px;align-items:center;}
+    .gap-card{max-width:480px;margin:0 auto;background:${mkCream};border:1px solid ${mkLine};border-radius:20px;padding:26px 8px 22px;}
+    .gap-inner{flex-direction:row;gap:0;align-items:stretch;}
+    .gap-point{width:auto;flex:1 1 0;padding-top:0;}
+    .gap-point.start{border-right:1px solid ${mkLine};padding-right:14px;}
+    .gap-point.end{padding-left:14px;}
+    .gap-blob{display:none;}
+    .gap-label{display:block;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:${mkCharcoalSoft};opacity:0.65;margin-bottom:8px;}
+    .gap-num{font-size:30px;}
+    .gap-cap{font-size:12px;max-width:none;}
+    .gap-point.end .gap-cap{display:none;}
     .gap-track-wrap{display:none;}
     .final-card{padding:56px 28px;}
   }
@@ -222,6 +213,7 @@ const HERO_TRAITS = [
 
 function HeroBlobs() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
+  const wrapRef = useRef<HTMLDivElement>(null)
   const items = useMemo(() => HERO_TRAITS.map(tr => ({
     ...tr,
     hue: sharedUserCuratedHue(SHARED_USER_SEED, tr.hueOff),
@@ -232,10 +224,10 @@ function HeroBlobs() {
     items.forEach(b => {
       pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t))
     })
-  }, [items])
+  }, [items], wrapRef)
 
   return (
-    <div className="hero-blob-wrap">
+    <div className="hero-blob-wrap" ref={wrapRef}>
       <svg viewBox={`0 0 ${HERO_VW} ${HERO_VH}`} width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', left: 0, top: 0 }}>
         <defs>
           <filter id="hero-blob-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -296,6 +288,7 @@ const BENTO_CLUSTER_TRAITS = [
 
 function BentoCluster() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
+  const wrapRef = useRef<HTMLDivElement>(null)
   const items = useMemo(() => BENTO_CLUSTER_TRAITS.map(tr => ({
     ...tr,
     hue: sharedUserCuratedHue(SHARED_USER_SEED, tr.hueOff),
@@ -304,10 +297,10 @@ function BentoCluster() {
 
   useBlobAnimation(t => {
     items.forEach(b => pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t)))
-  }, [items])
+  }, [items], wrapRef)
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
       <svg viewBox={`0 0 ${BENTO_CLUSTER_VW} ${BENTO_CLUSTER_VH}`} width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', left: 0, top: 0 }}>
         <defs>
           <filter id="bento-cluster-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -366,6 +359,7 @@ const ORBIT_ENV = [
 function OrbitVisual() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const youPathRef = useRef<SVGPathElement | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
   const envItems = useMemo(() => ORBIT_ENV.map(e => {
     const hue = sharedUserCuratedHue(SHARED_USER_SEED, e.hueOff)
     const profile = sharedBuildPointMotionProfile(sharedHashSeed(e.word + '-env'), 8)
@@ -379,10 +373,10 @@ function OrbitVisual() {
   useBlobAnimation(t => {
     envItems.forEach(b => pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, t)))
     youPathRef.current?.setAttribute('d', sharedGenerateAnimatedBlobPath(ORBIT_CX, ORBIT_CY, 20, youProfile, 0.25, t))
-  }, [envItems, youProfile])
+  }, [envItems, youProfile], wrapRef)
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
       <svg viewBox={`0 0 ${ORBIT_VW} ${ORBIT_VH}`} width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', left: 0, top: 0 }}>
         <defs>
           <filter id="bento-orbit-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -454,15 +448,16 @@ function OrbitVisual() {
 // refs pattern as the other blob components above.
 function DemoBlob() {
   const pathRef = useRef<SVGPathElement | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
   const hue = useMemo(() => sharedUserCuratedHue(SHARED_USER_SEED, 0), [])
   const profile = useMemo(() => sharedBuildPointMotionProfile(sharedHashSeed('Deliberate-shape'), 9), [])
 
   useBlobAnimation(t => {
     pathRef.current?.setAttribute('d', sharedGenerateAnimatedBlobPath(110, 110, 78, profile, 0.3, t))
-  }, [profile])
+  }, [profile], wrapRef)
 
   return (
-    <div style={{ width: 190, height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '16px auto 22px', position: 'relative' }}>
+    <div ref={wrapRef} style={{ width: 190, height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '16px auto 22px', position: 'relative' }}>
       {/* Fires once on reveal in the real assessment flow; the landing page
           has no reveal moment to key off, so it loops (matches the mockup's
           own note on this same tradeoff). Reuses the app's existing global
@@ -504,6 +499,15 @@ function ConnectVisual() {
   const ref = useRef<SVGSVGElement>(null)
   useEffect(() => {
     const svg = ref.current; if (!svg) return
+    // Strict Mode double-invokes effects in dev (mount → cleanup → mount),
+    // and this effect builds its whole visual with raw appendChild calls —
+    // without clearing first, the second invocation left stale duplicate
+    // circles/text sitting in the SVG (only the second copy ever got a live
+    // rAF task after the first's cleanup unregistered it, so the leftover
+    // set was invisible in production but broke anything that queried the
+    // SVG's children, e.g. re-verifying this animation after the RAF
+    // consolidation below).
+    while (svg.firstChild) svg.removeChild(svg.firstChild)
     const VW = 380, VH = 110, r = 38
     const youX = VW * 0.30, themX = VW * 0.66, cy = VH * 0.52
     const hue = 340
@@ -530,12 +534,32 @@ function ConnectVisual() {
     youT.textContent = 'You'; svg.appendChild(youT)
     const themT = document.createElementNS(NS, 'text') as SVGTextElement
     themT.setAttribute('x', String(themX)); themT.setAttribute('y', String(cy)); themT.setAttribute('text-anchor', 'middle')
-    themT.setAttribute('font-family', 'Inter,sans-serif'); themT.setAttribute('font-size', '10'); themT.setAttribute('fill', `hsl(${hue},50%,38%)`)
-    themT.innerHTML = `<tspan x="${themX}" dy="-6">Someone</tspan><tspan x="${themX}" dy="13">close</tspan>`; svg.appendChild(themT)
+    themT.setAttribute('font-family', 'Inter,sans-serif'); themT.setAttribute('font-size', '12'); themT.setAttribute('fill', `hsl(${hue},50%,38%)`)
+    // dy gap widened from the old 10px-font pairing (-6/13) to -7/16 to keep the
+    // two lines from crowding at the larger 12px size — verified no overlap or
+    // clipping against the r=38 circle at 375px/390px viewports.
+    themT.innerHTML = `<tspan x="${themX}" dy="-7">Someone</tspan><tspan x="${themX}" dy="16">close</tspan>`; svg.appendChild(themT)
+    // Visibility-gated like every other blob component (see lib/blobs.ts's
+    // useBlobAnimation doc comment) — ConnectVisual can't use that hook
+    // directly since this whole visual is built with raw DOM calls inside a
+    // single mount-time effect, not JSX, so the same IntersectionObserver
+    // pattern is inlined here instead.
+    let isVisible = true
+    let observer: IntersectionObserver | null = null
+    if (typeof IntersectionObserver !== 'undefined') {
+      isVisible = false
+      observer = new IntersectionObserver(
+        ([entry]) => { isVisible = entry.isIntersecting },
+        { rootMargin: '200px 0px' },
+      )
+      observer.observe(svg)
+    }
+
     const unreg = registerBlobTask(t => {
+      if (!isVisible) return
       glowC.setAttribute('r', String(r * 1.9 * (1 + Math.sin(t * 1.2) * 0.08)))
     })
-    return () => { unreg() }
+    return () => { unreg(); observer?.disconnect() }
   }, [])
   return <svg ref={ref} viewBox="0 0 380 110" width="100%" height="100%" style={{ overflow:'visible' }} />
 }
@@ -622,7 +646,6 @@ export default function LandingPageClient() {
         <section className="hero">
           <div className="hero-inner">
             <div>
-              <div className="mk-eyebrow">Personal discovery engine</div>
               <h1>You know something&apos;s off.<br /><em>You don&apos;t know what.</em></h1>
               <p>A 15-minute assessment that surfaces what&apos;s actually driving you. Your first 5 patterns are free — no account needed.</p>
               {welcomeBack ? (
@@ -683,21 +706,25 @@ export default function LandingPageClient() {
             mockup's .gap-blob (plain div + filter:blur, not the organic
             blob-path shapes used elsewhere on this page). */}
         <section className="gap-section">
-          <div className="gap-inner">
-            <div className="gap-point start">
-              <div className="gap-blob" style={{ background: mkCoral }} />
-              <div className="gap-num" style={{ fontFamily: serif }}>12 yrs</div>
-              <div className="gap-cap">average time to real clarity on a stuck pattern</div>
-              <span className="gap-src">WHO Mental Health Atlas, 2022</span>
-            </div>
-            <div className="gap-track-wrap">
-              <div className="gap-track-label">most people never close this gap</div>
-              <div className="gap-track" />
-            </div>
-            <div className="gap-point end">
-              <div className="gap-blob" style={{ background: mkTeal }} />
-              <div className="gap-num" style={{ fontFamily: serif, color: mkCharcoal }}>15 min</div>
-              <div className="gap-cap">with Bearing</div>
+          <div className="gap-card">
+            <div className="gap-inner">
+              <div className="gap-point start">
+                <div className="gap-blob" style={{ background: mkCoral }} />
+                <span className="gap-label">Old way</span>
+                <div className="gap-num" style={{ fontFamily: serif }}>12 yrs</div>
+                <div className="gap-cap">average time to real clarity on a stuck pattern</div>
+                <span className="gap-src">WHO Mental Health Atlas, 2022</span>
+              </div>
+              <div className="gap-track-wrap">
+                <div className="gap-track-label">most people never close this gap</div>
+                <div className="gap-track" />
+              </div>
+              <div className="gap-point end">
+                <div className="gap-blob" style={{ background: mkTeal }} />
+                <span className="gap-label">With Bearing</span>
+                <div className="gap-num" style={{ fontFamily: serif, color: mkCharcoal }}>15 min</div>
+                <div className="gap-cap">with Bearing</div>
+              </div>
             </div>
           </div>
         </section>
@@ -872,7 +899,7 @@ export default function LandingPageClient() {
                 <Link href="/onboarding">
                   <button className="mk-btn">Start your report — it&apos;s free</button>
                 </Link>
-                <Link href="/onboarding" className="final-link">
+                <Link href="/report/sample" className="final-link">
                   See an example report
                 </Link>
               </div>
