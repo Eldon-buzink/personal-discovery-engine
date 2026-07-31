@@ -107,10 +107,11 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
         const hasMore = posts.length > initialCount
 
         return (
-          <div key={cat} style={{ display: 'grid', gridTemplateColumns: wide ? '1fr' : '1fr 1fr', gap: '0 32px' }}>
+          <div key={cat} className="topic-dir-grid" style={{ display: 'grid', gridTemplateColumns: wide ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0 32px' }}>
             {visiblePosts.map(post => <DirRow key={post.slug} post={post} wide={wide} />)}
             {hasMore && (
               <button
+                className="topic-show-more"
                 onClick={() => setExpandedTabs(prev => ({ ...prev, [cat]: !prev[cat] }))}
                 style={{
                   gridColumn: wide ? '1' : '1 / 3', display: 'flex', alignItems: 'center', gap: 8, background: 'none',
@@ -129,6 +130,12 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
       <style>{`
         @media (max-width: 860px) {
           .topic-tabs { grid-template-columns: 1fr 1fr !important; }
+          .topic-dir-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          /* Without this, the button's inline gridColumn:'1 / 3' (sized for
+             the 2-column desktop grid) forces CSS Grid to auto-generate a
+             phantom second column here even after topic-dir-grid collapses
+             to one — harmless today (renders at 0 width) but fragile. */
+          .topic-show-more { grid-column: 1 !important; }
         }
         @media (max-width: 560px) {
           .topic-tabs { grid-template-columns: 1fr !important; }

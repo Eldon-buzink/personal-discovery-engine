@@ -51,7 +51,7 @@ export default function OnboardingClient() {
         transform: exiting ? 'translateY(-18px)' : 'none',
       }}
     >
-      <div className="max-w-[480px] mx-auto flex flex-col gap-10">
+      <div className="max-w-[480px] mx-auto flex flex-col gap-10 pb-28 sm:pb-0">
 
         {/* 1. Wordmark */}
         <div style={fade(0)} className="text-center">
@@ -102,21 +102,46 @@ export default function OnboardingClient() {
           </div>
         </div>
 
-        {/* 5. CTA */}
-        <div style={fade(1200)} className="flex flex-col items-center gap-3 pb-4">
-          <button
-            onClick={handleStart}
-            className="w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90 cursor-pointer"
-            style={{ fontFamily: 'var(--font-newsreader), serif' }}
-          >
-            Start
-          </button>
-          <p className="font-sans text-[13px] text-muted">
-            Takes most people 12–15 minutes, in one go or several
-          </p>
+        {/* 5. CTA — the content above (mirror line, differentiation block,
+            3 trust rows) routinely runs taller than a phone viewport, so
+            this sat below the fold with no visible affordance to scroll for
+            it. Fixed to the bottom on mobile only (sm: and up reverts to
+            the normal in-flow placement, where it already fits on typical
+            desktop viewport heights); the pb-28 on the content column above
+            reserves clearance so the fixed bar doesn't cover the last
+            trust row. */}
+        <div
+          className="onboarding-cta-bar fixed bottom-0 left-0 right-0 bg-cream border-t border-line z-50 sm:static sm:border-t-0 sm:bg-transparent"
+        >
+          <div className="max-w-[480px] mx-auto flex flex-col items-center gap-3 px-6 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] sm:px-0 sm:pt-0 sm:pb-4">
+            <button
+              onClick={handleStart}
+              className="w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90 cursor-pointer"
+              style={{ fontFamily: 'var(--font-newsreader), serif' }}
+            >
+              Start
+            </button>
+            <p className="font-sans text-[13px] text-muted">
+              Takes most people 12–15 minutes, in one go or several
+            </p>
+          </div>
         </div>
 
       </div>
+
+      {/* The CTA bar's staggered 1200ms fade-in matches the rest of the
+          page's top-to-bottom reveal choreography, which made sense while
+          it sat in-flow at the bottom of the content. Now that it's fixed
+          chrome on mobile, that same delay meant it rendered translucent
+          for ~1.8s after load — trust-row text visibly bleeding through
+          the button bar. Disabled below 640px so it's opaque immediately;
+          desktop keeps the original staggered reveal. */}
+      <style>{`
+        .onboarding-cta-bar { animation: fadeIn 0.6s ease 1200ms both; }
+        @media (max-width: 640px) {
+          .onboarding-cta-bar { animation: none; opacity: 1; transform: none; }
+        }
+      `}</style>
     </main>
   )
 }

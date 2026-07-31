@@ -171,7 +171,11 @@ const landingCSS = `
     .final-card{padding:56px 28px;}
   }
   @media(max-width:640px){
-    .hero{padding:56px 20px 40px;}
+    /* Top padding was 56px — exactly NAV_H (the fixed nav's own height),
+       so the headline had zero breathing room below the nav, not just a
+       tight gap. Matches desktop's 88px instead, which already has a
+       proven-good ~32px gap above the nav. */
+    .hero{padding:88px 20px 40px;}
     .hero p{max-width:100%;}
     .gap-section{padding:48px 20px 60px;}
     .bento-section{padding:28px 0 60px;}

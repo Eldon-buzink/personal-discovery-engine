@@ -41,6 +41,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Supabase auth session check (SiteNav) runs on every page, including
+            the landing page — this is the only third-party origin actually
+            in use site-wide. Not adding a Stripe preconnect here: Stripe
+            currently loads eagerly on every page too (see PaywallModal's
+            module-level loadStripe() call), but that's a bug flagged
+            separately, not a resource this layout should treat as expected. */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+      </head>
       <body className={`${newsreader.variable} ${inter.variable} font-sans antialiased`}>
         {children}
       </body>

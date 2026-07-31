@@ -1,7 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
+// '/pure' entry, not the package root — the root '@stripe/stripe-js' entry
+// point has its own top-level side effect (a `Promise.resolve().then(() =>
+// getStripePromise())` inside the package itself) that injects the
+// stripe.js <script> tag the instant the module is evaluated, regardless of
+// whether loadStripe() is ever called. That fired merely by importing this
+// file — which SiteNav does on every page — so making our own call to
+// loadStripe() lazy (below) wasn't sufficient by itself; the import had to
+// change too. '/pure' has an identical loadStripe() API without that
+// auto-preload behavior.
+import { loadStripe } from '@stripe/stripe-js/pure'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
@@ -72,7 +81,22 @@ import { fetchIsPaid } from '@/lib/known/paywall'
  *     since the payment attempt already happened elsewhere.
  */
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Lazy, not a module-scope `loadStripe()` call — this module is imported by
+// SiteNav, which renders on every page including the landing page, so an
+// eager call here meant the full Stripe SDK plus its fraud/fingerprinting
+// cascade (~850KB across a dozen requests: stripe.js, shared.js, the
+// embedded-checkout controller, m.stripe.network/m.stripe.com beacons) was
+// loading on every single page view regardless of whether this modal ever
+// opened. Deferred to first actual use — the checkout view below, the only
+// place stripePromise is read — and cached so repeat opens within the same
+// session reuse the same Stripe instance instead of reloading the SDK.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null
+function getStripePromise() {
+  if (!_stripePromise) {
+    _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+  }
+  return _stripePromise
+}
 
 type PaywallView = 'payment' | 'login' | 'confirm' | 'otp' | 'checkout'
 type PaymentState = 'idle' | 'confirming' | 'confirmed' | 'delayed' | 'failed'
@@ -545,7 +569,7 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
                   ← Back
                 </button>
                 {effectiveUserId ? (
-                  <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
+                  <EmbeddedCheckoutProvider stripe={getStripePromise()} options={checkoutOptions}>
                     <EmbeddedCheckout />
                   </EmbeddedCheckoutProvider>
                 ) : (
