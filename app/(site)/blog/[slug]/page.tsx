@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: `${post.frontmatter.title} — Bearing`,
     description: post.frontmatter.dek,
     type: 'article',
+    image: `/blog/${post.slug}/image`,
   })
 }
 

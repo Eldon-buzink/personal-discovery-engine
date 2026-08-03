@@ -8,14 +8,15 @@ import type { Metadata } from 'next'
 // a plain "summary" Twitter card. This is that shared shape, built once so it
 // can't drift between routes.
 //
-// Deliberately no `images` field here: every segment gets its image from the
-// opengraph-image.tsx file convention instead (app/opengraph-image.tsx as
-// the site default, app/(site)/blog/[slug]/opengraph-image.tsx per post).
-// Next auto-populates og:image and twitter:image from the nearest matching
-// file — setting `images` here would override that per-segment resolution
-// with one hardcoded image for every route again.
-export function buildMetadata(opts: { path: string; title: string; description: string; type?: 'website' | 'article'; noindex?: boolean }): Metadata {
-  const { path, title, description, type = 'website', noindex = false } = opts
+// `image` defaults to the site-wide dynamic OG image (app/api/og/route.ts).
+// Explicit, not left to the opengraph-image.tsx file convention: that
+// convention proved unreliable for any page nested inside the (site) route
+// group (confirmed directly — /about, /pricing, /blog, /contact, /privacy,
+// /terms all silently got no og:image tag at all, despite a same-level
+// opengraph-image.tsx existing). An explicit URL here is what Next actually,
+// reliably renders into <meta property="og:image">.
+export function buildMetadata(opts: { path: string; title: string; description: string; type?: 'website' | 'article'; noindex?: boolean; image?: string }): Metadata {
+  const { path, title, description, type = 'website', noindex = false, image = '/api/og' } = opts
   return {
     title,
     description,
@@ -27,11 +28,13 @@ export function buildMetadata(opts: { path: string; title: string; description: 
       url: path,
       type,
       siteName: 'Bearing',
+      images: [{ url: image, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [image],
     },
   }
 }

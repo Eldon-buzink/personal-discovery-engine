@@ -19,10 +19,6 @@ const inter = Inter({
 // metadata exports) sets its own title/description/OG data, which wins over
 // this. Only reachable by a route that doesn't define its own — currently
 // the assessment/report/auth flow, which isn't meant to be indexed or shared.
-// No `images` field here: the file-convention app/opengraph-image.tsx
-// takes priority over any config-based openGraph.images per Next's own
-// resolution order, so a hardcoded path here would just be dead code that
-// nothing serves — see lib/seo.ts's buildMetadata for the same reasoning.
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.getbearing.me"),
   title: "Bearing",
@@ -30,9 +26,11 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "Bearing",
     type: "website",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/api/og"],
   },
 };
 
@@ -46,10 +44,9 @@ export default function RootLayout({
       <head>
         {/* Supabase auth session check (SiteNav) runs on every page, including
             the landing page — this is the only third-party origin actually
-            in use site-wide. Not adding a Stripe preconnect here: Stripe
-            currently loads eagerly on every page too (see PaywallModal's
-            module-level loadStripe() call), but that's a bug flagged
-            separately, not a resource this layout should treat as expected. */}
+            in use site-wide. No Stripe preconnect: PaywallModal (and the
+            Stripe SDK it pulls in) is now dynamically imported and only
+            rendered once the paywall actually opens, not loaded eagerly. */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
       </head>
