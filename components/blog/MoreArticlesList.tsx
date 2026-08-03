@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import PostThumbnail from './PostThumbnail'
-import { accentColorCss } from '@/lib/blog/theme'
 import { blogCharcoal, blogCharcoalSoft, blogLine, blogSans, blogSerif } from './tokens'
 import type { BlogPost } from '@/lib/blog/types'
 
@@ -15,7 +14,13 @@ function MoreRow({ post }: { post: BlogPost }) {
     >
       <PostThumbnail slug={post.slug} accentColor={post.frontmatter.accentColor} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', marginBottom: 4, color: accentColorCss(post.frontmatter.accentColor), fontFamily: blogSans }}>
+        {/* Neutral text color, not accentColorCss: several of the 8 accent
+            hues fall under 4.5:1 against this background at this weight/
+            size (e.g. sky ~2.9:1, teal ~3.4:1) — same reasoning DirRow in
+            TopicBrowser.tsx already follows for its subcategory label, and
+            the accent hue is still visible via PostThumbnail right next to
+            this text, not lost entirely. */}
+        <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', marginBottom: 4, color: blogCharcoalSoft, fontFamily: blogSans }}>
           {post.frontmatter.subcategory.charAt(0).toUpperCase() + post.frontmatter.subcategory.slice(1)}
         </div>
         <div style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 17, letterSpacing: '-0.003em', marginBottom: 5, color: blogCharcoal }}>

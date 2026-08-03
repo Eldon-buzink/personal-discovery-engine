@@ -24,9 +24,9 @@ export default function AssessmentCTA() {
         <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#D9D4C7', marginBottom: 16 }}>
           Free · Private · 15 minutes
         </div>
-        <h4 style={{ fontFamily: blogSerif, fontWeight: 500, fontStyle: 'italic', fontSize: 24, lineHeight: 1.3, color: blogCream, marginBottom: 12 }}>
+        <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontStyle: 'italic', fontSize: 24, lineHeight: 1.3, color: blogCream, marginBottom: 12 }}>
           See where you actually land.
-        </h4>
+        </h3>
         <p style={{ fontSize: 14, color: '#E4E0D6', lineHeight: 1.6, marginBottom: 22 }}>
           Get your full trait profile across all five domains, free — grounded in the same research this article comes from.
         </p>

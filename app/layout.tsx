@@ -19,6 +19,10 @@ const inter = Inter({
 // metadata exports) sets its own title/description/OG data, which wins over
 // this. Only reachable by a route that doesn't define its own — currently
 // the assessment/report/auth flow, which isn't meant to be indexed or shared.
+// No `images` field here: the file-convention app/opengraph-image.tsx
+// takes priority over any config-based openGraph.images per Next's own
+// resolution order, so a hardcoded path here would just be dead code that
+// nothing serves — see lib/seo.ts's buildMetadata for the same reasoning.
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.getbearing.me"),
   title: "Bearing",
@@ -26,11 +30,9 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "Bearing",
     type: "website",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/og-image.png"],
   },
 };
 

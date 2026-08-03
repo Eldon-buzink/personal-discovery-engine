@@ -72,7 +72,7 @@ export default function BlogPage() {
             <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: blogRose, marginBottom: 10 }}>
               Free · Private · 15 minutes
             </div>
-            <h4 style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 24, marginBottom: 10, lineHeight: 1.25 }}>See where you actually land.</h4>
+            <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 24, marginBottom: 10, lineHeight: 1.25 }}>See where you actually land.</h3>
             <p style={{ fontSize: 14, color: '#C9C5BA', lineHeight: 1.55 }}>
               Stop reading about traits in the abstract — get your own scores across all five domains, grounded in the same research these articles come from.
             </p>

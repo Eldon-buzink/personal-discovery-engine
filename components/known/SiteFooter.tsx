@@ -6,7 +6,10 @@ const charcoal = '#1C1C1A'
 const sans     = 'var(--font-inter), system-ui, sans-serif'
 const serif    = 'var(--font-newsreader), Georgia, serif'
 const cream70  = 'rgba(245,242,235,0.70)'
-const cream40  = 'rgba(245,242,235,0.40)'
+// 0.40 measured at 3.54:1 against the charcoal background — under the 4.5:1
+// WCAG AA minimum for normal-weight text this size (11-12px, not "large
+// text" by the bold/18px threshold). 0.55 clears 4.5:1 with margin.
+const cream55  = 'rgba(245,242,235,0.55)'
 const cream14  = 'rgba(245,242,235,0.14)'
 
 const COLUMNS = [
@@ -40,7 +43,7 @@ function BlobMark() {
     <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
       <path
         d="M20 4 C 27 3 35 9 35.5 17 C 36 25 30 35 22 36 C 14 37 5 31 5 22 C 5 13 11 5 20 4 Z"
-        fill={cream40}
+        fill={cream55}
       />
     </svg>
   )
@@ -63,7 +66,7 @@ export default function SiteFooter() {
             <p style={{
               fontFamily: sans, fontSize: 11, fontWeight: 600,
               letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: cream40, marginBottom: 16,
+              color: cream55, marginBottom: 16,
             }}>
               {col.heading}
             </p>
@@ -101,7 +104,7 @@ export default function SiteFooter() {
             Bearing
           </span>
         </div>
-        <p style={{ fontFamily: sans, fontSize: 12, color: cream40, margin: 0 }}>
+        <p style={{ fontFamily: sans, fontSize: 12, color: cream55, margin: 0 }}>
           © {new Date().getFullYear()} Bearing. All rights reserved.
         </p>
       </div>

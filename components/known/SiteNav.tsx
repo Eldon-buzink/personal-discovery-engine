@@ -1,10 +1,19 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import PaywallModal from './PaywallModal'
+
+// SiteNav mounts on every page, including static blog/marketing pages that
+// never open the paywall — PaywallModal pulls in the Stripe Elements SDK
+// (@stripe/react-stripe-js), which a static top-level import bundled into
+// every page's JS regardless of whether the modal is ever opened. Dynamic
+// import + only rendering it once paywallOpen is true (below) means that
+// code is fetched the first time it's actually needed, not on every page
+// load. ssr:false since it's a client-only modal (Stripe Elements requires
+// the browser).
+const PaywallModal = dynamic(() => import('./PaywallModal'), { ssr: false })
 
 // ── Design tokens (match landing page) ────────────────────────────────────────
 const cream    = '#F5F2EB'
@@ -71,10 +80,16 @@ export default function SiteNav() {
     const info = readSessionInfo()
     setCtaState(info.ctaState)
     setTraitCount(info.traitCount)
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session)
-      setUserId(session?.user.id ?? null)
+    // Dynamic import, not a static one: SiteNav mounts on every page
+    // including static blog/marketing pages that never touch Supabase
+    // otherwise — a top-level import bundled the full client SDK into
+    // those pages' critical-path JS just for this one getSession() call.
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      const supabase = createClient()
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsAuthenticated(!!session)
+        setUserId(session?.user.id ?? null)
+      })
     })
   }, [pathname])
 
@@ -234,18 +249,20 @@ export default function SiteNav() {
         </div>
       )}
 
-      <PaywallModal
-        isOpen={paywallOpen}
-        onClose={() => setPaywallOpen(false)}
-        isAuthenticated={isAuthenticated}
-        userId={userId}
-        traitCount={traitCount}
-        onAuthenticated={(uid) => {
-          setIsAuthenticated(true)
-          setUserId(uid)
-        }}
-        onPaymentConfirmed={() => setPaywallOpen(false)}
-      />
+      {paywallOpen && (
+        <PaywallModal
+          isOpen={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          isAuthenticated={isAuthenticated}
+          userId={userId}
+          traitCount={traitCount}
+          onAuthenticated={(uid) => {
+            setIsAuthenticated(true)
+            setUserId(uid)
+          }}
+          onPaymentConfirmed={() => setPaywallOpen(false)}
+        />
+      )}
     </>
   )
 }
