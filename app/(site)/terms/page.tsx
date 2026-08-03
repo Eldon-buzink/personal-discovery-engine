@@ -9,6 +9,13 @@
 // page itself.
 
 import type { CSSProperties, ReactNode } from 'react'
+import { buildMetadata } from '@/lib/seo'
+
+export const metadata = buildMetadata({
+  path: '/terms',
+  title: 'Terms of Service — Bearing',
+  description: 'The terms that govern your use of Bearing.',
+})
 
 const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'

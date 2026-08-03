@@ -13,6 +13,7 @@ export function buildMetadata(opts: { path: string; title: string; description: 
     title,
     description,
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
+    alternates: { canonical: path },
     openGraph: {
       title,
       description,

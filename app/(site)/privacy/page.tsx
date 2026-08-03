@@ -8,6 +8,13 @@
 // banner on the page itself.
 
 import type { CSSProperties, ReactNode } from 'react'
+import { buildMetadata } from '@/lib/seo'
+
+export const metadata = buildMetadata({
+  path: '/privacy',
+  title: 'Privacy Policy — Bearing',
+  description: 'How Bearing collects, uses, and protects your data.',
+})
 
 const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'
