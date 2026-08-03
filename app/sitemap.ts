@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getPublishedPosts } from '@/lib/blog/content'
 
-const BASE_URL = 'https://getbearing.me'
+const BASE_URL = 'https://www.getbearing.me'
 
 // Only the marketing/content surface goes here. The assessment/report/
 // onboarding/auth flow is intentionally excluded — see the "isn't meant to

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const BASE_URL = 'https://getbearing.me'
+const BASE_URL = 'https://www.getbearing.me'
 
 // Disallow, not just noindex, for the assessment/report/onboarding/auth
 // flow: most of those pages are 'use client' components with no metadata

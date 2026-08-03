@@ -20,7 +20,7 @@ const inter = Inter({
 // this. Only reachable by a route that doesn't define its own — currently
 // the assessment/report/auth flow, which isn't meant to be indexed or shared.
 export const metadata: Metadata = {
-  metadataBase: new URL("https://getbearing.me"),
+  metadataBase: new URL("https://www.getbearing.me"),
   title: "Bearing",
   description: "A personal discovery engine — find out what's actually driving you.",
   openGraph: {

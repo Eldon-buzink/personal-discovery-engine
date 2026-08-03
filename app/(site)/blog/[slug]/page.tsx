@@ -71,7 +71,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
   // so there's no parsing needed for trait posts at all.
   const facetLabel = frontmatter.category === 'traits' ? frontmatter.facetId : undefined
 
-  const canonicalUrl = `https://getbearing.me/blog/${post.slug}`
+  const canonicalUrl = `https://www.getbearing.me/blog/${post.slug}`
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
