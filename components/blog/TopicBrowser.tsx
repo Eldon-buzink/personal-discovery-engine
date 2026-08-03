@@ -131,10 +131,14 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
         @media (max-width: 860px) {
           .topic-tabs { grid-template-columns: 1fr 1fr !important; }
           .topic-dir-grid { grid-template-columns: minmax(0, 1fr) !important; }
-          /* Without this, the button's inline gridColumn:'1 / 3' (sized for
+          /* Without this, the buttons inline gridColumn of 1 / 3 (sized for
              the 2-column desktop grid) forces CSS Grid to auto-generate a
              phantom second column here even after topic-dir-grid collapses
-             to one — harmless today (renders at 0 width) but fragile. */
+             to one — harmless today (renders at 0 width) but fragile.
+             No straight quotes or backticks in this comment, deliberately —
+             see BentoGrid.tsx: those characters inside a style-tag template
+             break hydration, since React escapes them server-side but the
+             client-side re-render does not re-escape identically. */
           .topic-show-more { grid-column: 1 !important; }
         }
         @media (max-width: 560px) {

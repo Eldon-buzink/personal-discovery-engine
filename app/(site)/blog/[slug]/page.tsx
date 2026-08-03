@@ -73,15 +73,23 @@ export default function PostPage({ params }: { params: { slug: string } }) {
 
   const canonicalUrl = `https://www.getbearing.me/blog/${post.slug}`
 
+  // frontmatter.updatedAt is a date-only string (e.g. "2026-07-27") — there's
+  // no time-of-day or timezone in the CMS source, so rather than inventing
+  // one, this pins it to UTC midnight, same as formatUpdatedAt() above
+  // already does for display. "Z" is a real, honest timezone designator for
+  // data that has no finer-grained time info, not a guess at a business zone.
+  const isoDate = `${frontmatter.updatedAt}T00:00:00Z`
+
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: frontmatter.title,
     description: frontmatter.dek,
-    datePublished: frontmatter.updatedAt,
-    dateModified: frontmatter.updatedAt,
-    author: { '@type': 'Organization', name: 'Bearing' },
-    publisher: { '@type': 'Organization', name: 'Bearing' },
+    image: `https://www.getbearing.me/blog/${post.slug}/image`,
+    datePublished: isoDate,
+    dateModified: isoDate,
+    author: { '@type': 'Organization', name: 'Bearing', url: 'https://www.getbearing.me' },
+    publisher: { '@type': 'Organization', name: 'Bearing', url: 'https://www.getbearing.me' },
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
   }
 
