@@ -31,6 +31,14 @@ export interface PostFrontmatter {
   relatedSlugs?: string[]
   faq?: FaqItem[]
   published?: boolean
+  // Gates visibility on top of `published`, for staggered-publish scheduling
+  // without a real scheduler: a post can be `published: true` with a future
+  // publishDate, and stays excluded from every listing/sitemap/URL until a
+  // build happens on or after that date. This is deploy-triggered, not
+  // time-triggered — nothing here re-runs at midnight on the date, the gate
+  // is just re-evaluated on whatever build happens to run next. ISO date
+  // string ("YYYY-MM-DD"), compared lexically against today.
+  publishDate?: string
 }
 
 export interface BlogPost {

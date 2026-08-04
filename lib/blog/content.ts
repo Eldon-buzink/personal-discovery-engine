@@ -52,13 +52,27 @@ export function getAllPosts(): BlogPost[] {
   return posts
 }
 
+// Gates on both published AND publishDate (if set) — a post can be
+// published:true with a future publishDate for staggered-schedule releases;
+// see the publishDate comment in types.ts for why this is deploy-triggered
+// rather than a real scheduler. Lexical string comparison is safe here
+// because both sides are ISO "YYYY-MM-DD".
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+function isLive(fm: PostFrontmatter): boolean {
+  if (!fm.published) return false
+  if (fm.publishDate && fm.publishDate > todayISO()) return false
+  return true
+}
+
 // Everything downstream (index page, sidebars, report links) reads through
 // this, not getAllPosts() directly — a post with published:false in
-// frontmatter (used for drafts) should never surface in a list or a "Learn
-// more" link, only be reachable if you already have the exact slug... which
-// it also isn't, since the [slug] route itself checks this (see page.tsx).
+// frontmatter (used for drafts), or a future publishDate, should never
+// surface in a list or a "Learn more" link, only be reachable if you already
+// have the exact slug... which it also isn't, since the [slug] route itself
+// checks this (see page.tsx).
 export function getPublishedPosts(): BlogPost[] {
-  return getAllPosts().filter(p => p.frontmatter.published)
+  return getAllPosts().filter(p => isLive(p.frontmatter))
 }
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
@@ -86,5 +100,5 @@ export function getRecentPostsAcrossCategories(count: number): BlogPost[] {
 
 export function getPostBySlugIfPublished(slug: string): BlogPost | undefined {
   const post = getPostBySlug(slug)
-  return post?.frontmatter.published ? post : undefined
+  return post && isLive(post.frontmatter) ? post : undefined
 }
