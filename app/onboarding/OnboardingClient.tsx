@@ -3,6 +3,26 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
+import { trackPinterestLead } from '@/app/actions/trackPinterestLead'
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
+// No user/session id exists yet this early in the funnel — generate and
+// persist one so the Pinterest lead event (and any later re-fires) has a
+// stable identifier to hash.
+const ANON_ID_KEY = 'known_anon_id'
+function getOrCreateAnonId(): string {
+  let id = localStorage.getItem(ANON_ID_KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(ANON_ID_KEY, id)
+  }
+  return id
+}
 
 function fade(delayMs: number): CSSProperties {
   return {
@@ -36,6 +56,15 @@ export default function OnboardingClient() {
 
   function handleStart() {
     setExiting(true)
+
+    // Meta Pixel: assessment-start Lead. event_id lets a future server-side
+    // Lead event (Conversions API) dedupe against this browser-side one.
+    window.fbq?.('track', 'Lead', { content_name: 'ipip_neo_120_start' }, { eventID: crypto.randomUUID() })
+
+    // Pinterest Conversions API — server-side only, PINTEREST_CONVERSIONS_TOKEN
+    // never reaches the browser. No email yet, so hash the anonymous id.
+    trackPinterestLead(getOrCreateAnonId()).catch(() => {})
+
     setTimeout(() => {
       sessionStorage.setItem('known_from', 'onboarding')
       router.push('/assessment')

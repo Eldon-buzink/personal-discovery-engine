@@ -17,6 +17,12 @@ import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
 import { fetchIsPaid } from '@/lib/known/paywall'
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
 /**
  * The single modal for every post-cap/unlock entry point (top-right nav CTA,
  * the consolidated branch suggestion card, the sticky bar, the continue-Ring-1
@@ -244,6 +250,13 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
     }
 
     setPaymentState('confirmed')
+
+    // Meta Pixel Purchase — same event_id (Stripe session id) as the
+    // server-side Conversions API call in the Stripe webhook, so Meta
+    // dedupes the browser and server copies into one event.
+    if (sessionId) {
+      window.fbq?.('track', 'Purchase', { value: 49.00, currency: 'EUR' }, { eventID: sessionId })
+    }
 
     // Real gate — see file header. Generous window: this poll routinely
     // succeeding within a couple seconds is the point of the fast check
