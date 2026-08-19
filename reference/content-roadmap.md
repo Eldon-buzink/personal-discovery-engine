@@ -109,7 +109,10 @@ Update this table as batches move through the pipeline:
 
 | Batch | Status | Drafted | Reviewed | Published (dates) |
 |---|---|---|---|---|
-| 1 | In progress | Done | Done | different-person-different-situations: 2026-08-04 (live). dating-the-same-type-of-person: 2026-08-09 (scheduled via publishDate). what-is-the-big-five-personality-test: 2026-08-14 (scheduled via publishDate). |
-| 2 | Not started | | | |
-| 3 | Not started | | | |
-| 4 | Not started | | | |
+| 1 | Done | Done | Done | different-person-different-situations: 2026-08-04 (live). dating-the-same-type-of-person: 2026-08-09 (live). what-is-the-big-five-personality-test: 2026-08-14 (live). |
+| 2 | In progress | Done | Skipped (published on request, no human read-through pass logged) | holland-code-riasec-explained: 2026-08-19 (scheduled via publishDate). big-five-vs-mbti: 2026-08-24 (scheduled via publishDate). attachment-style-quiz: 2026-08-29 (scheduled via publishDate). |
+| 3 | Drafted, awaiting review | Done | Not started | why-unhappy-successful-job, ipip-neo-120-explained, ecr-r-questionnaire-explained, self-efficacy, achievement-striving — all `published: false`, no publishDate set. |
+| 4 | Drafted, awaiting review | Done | Not started | people-pleasing-cant-say-no, cant-stick-to-a-routine, ideal-work-environment-quiz, personality-test-that-gives-you-a-plan — all `published: false`, no publishDate set. |
+| 5 | Partially drafted | Partial | Not started | gregariousness, intellect drafted as the trait-facet trickle (`published: false`). The rest of Batch 5 (revisiting the content-plan.md queue, weighting by GSC Search Generative AI Performance data) couldn't be done — `content-plan.md` doesn't exist in the repo, and Claude Code has no GSC access. Topic selection beyond the two trait posts needs a human call. |
+
+**Note on process deviations (2026-08-19):** Batches 2–5 were drafted in the same session at the user's explicit request, overriding this doc's "do not draft future batches" pacing rule — a one-time exception, not a change to the standing rule. Batch 2 was also published without the human read-through pass this doc calls for as a review-gate step; flagging here so it isn't mistaken for having happened.
