@@ -7,6 +7,11 @@ import TopicBrowser from '@/components/blog/TopicBrowser'
 import GlowCard from '@/components/blog/GlowCard'
 import { blogCharcoal, blogCharcoalSoft, blogCoral, blogPeriwinkle, blogRose, blogSans, blogSerif } from '@/components/blog/tokens'
 
+// Same reasoning as app/(site)/blog/[slug]/page.tsx: without this, the
+// index is cached until the next deploy, so a post whose publishDate just
+// passed won't appear here even though its own page is live.
+export const revalidate = 3600
+
 export const metadata = buildMetadata({
   path: '/blog',
   title: 'Blog — Bearing',

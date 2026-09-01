@@ -17,6 +17,14 @@ import { blogCharcoal, blogCharcoalSoft, blogPeriwinkle, blogRose, blogSans, blo
 // request for a slug that doesn't exist yet (e.g. right after a content
 // deploy that hasn't rebuilt this route yet) should 404 via the notFound()
 // check below, not hard-fail the whole route.
+//
+// revalidate is required, not optional, given publishDate gating: without
+// it, a page (including a 404 for a not-yet-published slug) is cached
+// until the next deploy, so a scheduled post never goes live on its own —
+// it needs a manual redeploy on the day, every time. 1 hour keeps content
+// mostly-static while still letting a passed publishDate self-resolve.
+export const revalidate = 3600
+
 export async function generateStaticParams() {
   return getPublishedPosts().map(post => ({ slug: post.slug }))
 }

@@ -3,6 +3,12 @@ import { getPublishedPosts } from '@/lib/blog/content'
 
 const BASE_URL = 'https://www.getbearing.me'
 
+// Without this, the sitemap is cached until the next deploy, so a post
+// whose publishDate passes won't be added (or one that's still gated
+// won't be removed) until someone manually redeploys — same issue as
+// app/(site)/blog/[slug]/page.tsx and app/(site)/blog/page.tsx.
+export const revalidate = 3600
+
 // Only the marketing/content surface goes here. The assessment/report/
 // onboarding/auth flow is intentionally excluded — see the "isn't meant to
 // be indexed or shared" note in app/layout.tsx — and is kept out of crawler
