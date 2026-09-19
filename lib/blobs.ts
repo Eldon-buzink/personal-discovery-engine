@@ -142,12 +142,25 @@ export function registerBlobTask(fn: (t: number) => void): () => void {
 // (no scroll-handler math) and correct under resize/zoom. rootMargin extends
 // the "visible" zone by 200px so a blob already animating at its natural
 // phase is what scrolls into view, instead of snapping in mid-frame.
+export interface UseBlobAnimationOptions {
+  // Opt-in, default false, so every existing caller (HeroBlobs, BentoCluster,
+  // OrbitVisual, DemoBlob, ConnectVisual, the report/assessment blob visuals)
+  // keeps animating exactly as before — this only changes behavior for a
+  // call site that explicitly asks for it. Added for the home-v2 skeleton
+  // page (reference/landing-redesign.md section 6); do not flip the default
+  // or add this to an existing call site without checking that page's own
+  // motion requirements first.
+  respectReducedMotion?: boolean
+}
+
 export function useBlobAnimation(
   fn: (t: number) => void,
   deps: React.DependencyList,
   visibilityRef?: React.RefObject<Element>,
+  options?: UseBlobAnimationOptions,
 ) {
   const isVisibleRef = useRef(true)
+  const respectReducedMotion = options?.respectReducedMotion ?? false
 
   useEffect(() => {
     const el = visibilityRef?.current
@@ -162,8 +175,19 @@ export function useBlobAnimation(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibilityRef?.current])
 
-  useEffect(() => registerBlobTask(t => {
-    if (isVisibleRef.current) fn(t)
+  useEffect(() => {
+    if (
+      respectReducedMotion &&
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ) {
+      // Render once, statically, at t=0 — never registers the RAF task.
+      fn(0)
+      return
+    }
+    return registerBlobTask(t => {
+      if (isVisibleRef.current) fn(t)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), deps)
+  }, [...deps, respectReducedMotion])
 }
