@@ -6,8 +6,13 @@ import path from 'node:path'
 // Captures the CURRENT "/" page before any redesign work starts, so later
 // changes (which land on a separate route, not a rewrite of this one) have
 // something concrete to compare against. Does not touch app code.
+//
+// BASE_URL (Part 0, recon pass 5): when set (see playwright.config.ts), this
+// runs against a live target instead of the local dev server and writes to
+// reference/baseline-live/ instead of reference/baseline/, so a deployed
+// snapshot never overwrites the local-working-copy baseline from Phase 2.
 
-const BASELINE_DIR = path.join(process.cwd(), 'reference', 'baseline')
+const BASELINE_DIR = path.join(process.cwd(), 'reference', process.env.BASE_URL ? 'baseline-live' : 'baseline')
 fs.mkdirSync(BASELINE_DIR, { recursive: true })
 
 function writeScrollHeight(name: string, scrollHeight: number) {
