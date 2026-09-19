@@ -6,8 +6,16 @@
 .pnp.js
 .yarn/install-state.gz
 
+# ads (Remotion) — isolated sub-project, own deps and rendered output
+ads/node_modules
+ads/out
+ads/bearing_paid_social_creatives
+
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
 
 # next.js
 /.next/
