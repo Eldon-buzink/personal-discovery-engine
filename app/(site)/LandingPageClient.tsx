@@ -172,11 +172,21 @@ const landingCSS = `
 // aspect-ratio is what the mockup actually does and handles every width,
 // not just the two breakpoints that were hand-tuned before.)
 const HERO_VW = 520, HERO_VH = 500
+// Autonomous -> Curious (Adventurousness mid) and Durable -> Warm (Friendliness
+// mid), verified against lib/known/scoring.ts TRAIT_WORDS — landing-copy-deck.md
+// resolves the two previously-invented words. Deliberate (Cautiousness mid)
+// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// Position/size/hue (cx/cy/r/hueOff) unchanged for all four; only `word`
+// changed for these two. Note: each blob's organic wobble profile is seeded
+// from its word (sharedBuildPointMotionProfile(sharedHashSeed(tr.word + ...)))
+// same as every other blob on this page, so the two renamed blobs will wobble
+// with a new (but equally organic) pattern — hue, which is seeded from hueOff
+// alone, does not change.
 const HERO_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 270, cy: 245, r: 140, active: true  },
-  { word: 'Autonomous', hueOff: 5,  cx: 392, cy: 75,  r: 80,  active: false },
+  { word: 'Curious',    hueOff: 5,  cx: 392, cy: 75,  r: 80,  active: false },
   { word: 'Reflective', hueOff: 10, cx: 105, cy: 360, r: 68,  active: false },
-  { word: 'Durable',    hueOff: 20, cx: 378, cy: 385, r: 64,  active: false },
+  { word: 'Warm',       hueOff: 20, cx: 378, cy: 385, r: 64,  active: false },
 ] as const
 
 function HeroBlobs() {
