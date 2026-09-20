@@ -765,7 +765,13 @@ export default function LandingPageClient() {
               </div>
             </div>
 
-            <div className="bento-row3">
+            {/* bento-b: full-width single card below the first row, instead
+                of .bento-row3's 3-col grid (which would leave 2/3 empty with
+                only one card). Reuses .bento-row3 and .bento-card as-is;
+                the only change is the column count, overridden inline for
+                this one throwaway variant rather than editing the shared
+                class. */}
+            <div className="bento-row3" style={{ gridTemplateColumns: '1fr' }}>
               <div className="bento-card">
                 <div className="mk-eyebrow">What gives you energy</div>
                 <h3>The fuel behind your best days</h3>
