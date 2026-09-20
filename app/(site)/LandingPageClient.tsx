@@ -614,8 +614,8 @@ export default function LandingPageClient() {
         <section className="hero">
           <div className="hero-inner">
             <div>
-              <h1>You know something&apos;s off.<br /><em>You don&apos;t know what.</em></h1>
-              <p>A 15-minute assessment that surfaces what&apos;s actually driving you. Your first 5 patterns are free — no account needed.</p>
+              <h1>Get to know<br /><em>yourself better.</em></h1>
+              <p>See the patterns behind how you think, feel and act, and go deeper on how you work, connect and recharge, so your choices fit who you are.</p>
               {welcomeBack ? (
                 <div>
                   <p style={{ fontFamily:sans, fontSize:13, color:mkCharcoalSoft, marginBottom:14 }}>
@@ -652,14 +652,26 @@ export default function LandingPageClient() {
                   </button>
                 </div>
               ) : (
-                <div className="hero-cta-row">
-                  {/* startedUnfinished: same button, same position, just the
-                      text/href swap described in the file header — not a new
-                      UI element. */}
-                  <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
-                    <button className="mk-btn">{startedUnfinished ? 'Continue your assessment →' : 'Discover yourself →'}</button>
-                  </Link>
-                  <span className="mk-microcopy">12–15 min &nbsp;·&nbsp; nothing to install</span>
+                <div>
+                  <div className="hero-cta-row">
+                    {/* startedUnfinished: same button, same position, just the
+                        text/href swap described in the file header — not a new
+                        UI element. New label per landing-copy-deck.md section 1:
+                        "Start the assessment" for the fresh state; the
+                        unfinished-progress label is kept exactly as the deck
+                        specifies (with its arrow), so the two are intentionally
+                        not styled the same way right now. */}
+                    <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
+                      <button className="mk-btn">{startedUnfinished ? 'Continue your assessment →' : 'Start the assessment'}</button>
+                    </Link>
+                  </div>
+                  {/* Moved below the CTA row per the deck's layout note
+                      ("small .mk-microcopy line under the CTA row"), not
+                      inline beside the button like the old "12-15 min ·
+                      nothing to install" text. */}
+                  <p className="mk-microcopy" style={{ marginTop: 14 }}>
+                    Rate 120 short statements. Your first 5 patterns are free, no account needed. About 15 minutes.
+                  </p>
                 </div>
               )}
             </div>
