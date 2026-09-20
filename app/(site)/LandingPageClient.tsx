@@ -695,10 +695,19 @@ export default function LandingPageClient() {
                   {/* Moved below the CTA row per the deck's layout note
                       ("small .mk-microcopy line under the CTA row"), not
                       inline beside the button like the old "12-15 min ·
-                      nothing to install" text. */}
-                  <p className="mk-microcopy" style={{ marginTop: 14 }}>
+                      nothing to install" text. A <span>, not a <p>: .hero p
+                      (font-size:17px, line 60) has higher specificity than
+                      .mk-microcopy (element+class beats a single class), so
+                      as a <p> this rendered at body size instead of the
+                      small-caption size the bento's identical .mk-microcopy
+                      note gets. A <span> here isn't targeted by .hero p at
+                      all — same fix as leaving this as a <span> the way the
+                      final CTA's own .mk-microcopy line already is. Still
+                      renders on its own line: it's the sole second child of
+                      this wrapping div, after the block-level .hero-cta-row. */}
+                  <span className="mk-microcopy" style={{ display: 'block', marginTop: 14 }}>
                     Rate 120 short statements. Your first 5 patterns are free, no account needed. About 15 minutes.
-                  </p>
+                  </span>
                 </div>
               )}
             </div>
