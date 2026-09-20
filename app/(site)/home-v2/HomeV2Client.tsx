@@ -74,11 +74,17 @@ const FAQ: { question: string; answer: string | string[] | null }[] = [
 
 const css = `
   .hv2-wrap{max-width:720px;margin:0 auto;padding:0 24px;}
-  .hv2-section{padding:56px 24px;}
+  /* Task 2: verbatim from .hero (LandingPageClient.tsx:56 — 88px 32px 70px).
+     .section-head (:51) has no padding to copy (only margin:0 auto 48px,
+     max-width:600px) — .hero's is the only existing value that actually
+     satisfies design rule 6's "70-90px vertical, 32px horizontal", so it's
+     applied to .hv2-section too, not a new invented number. Previously
+     56px/24px and 96px/24px/48px, both below that range. */
+  .hv2-section{padding:88px 32px 70px;}
   .hv2-section h2{font-family:'Newsreader',serif;font-size:28px;font-weight:500;line-height:1.25;margin:0 0 14px;text-align:center;}
   .hv2-body{font-size:15.5px;line-height:1.65;color:${mkCharcoalSoft};max-width:600px;margin:0 auto 14px;text-align:center;}
 
-  .hv2-hero{padding:96px 24px 48px;text-align:center;}
+  .hv2-hero{padding:88px 32px 70px;text-align:center;}
   .hv2-hero h1{font-family:'Newsreader',serif;font-size:42px;font-weight:500;line-height:1.15;margin:0 0 18px;}
   .hv2-hero .hv2-sub{font-size:16px;line-height:1.6;color:${mkCharcoalSoft};max-width:520px;margin:0 auto 24px;}
   .hv2-benefit-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 auto 28px;max-width:560px;}
@@ -104,6 +110,9 @@ const css = `
   .mk-card p{font-size:13.5px;line-height:1.6;color:${mkCharcoalSoft};margin:0;}
 
   .hv2-placeholder{border:1px dashed ${mkCharcoalSoft};border-radius:14px;padding:20px;text-align:center;color:${mkCharcoalSoft};font-size:13px;background:rgba(0,0,0,0.02);}
+  .hv2-tile{text-align:center;}
+  .hv2-tile h3{font-size:26px;}
+  .hv2-tile p{margin-top:4px;}
 
   /* Number tiles + How it works steps — .how-steps/.step/.step-mark copied
      verbatim from LandingPageClient.tsx:112-114 (task 7 and 8) */
@@ -113,12 +122,11 @@ const css = `
   .step h3{font-size:16px;font-weight:600;margin:0 0 8px;}
   .step p{font-size:13.5px;line-height:1.55;color:${mkCharcoalSoft};margin:0;}
 
-  /* Example pattern card — .app-card/.progress-trace/.reveal-* copied
-     verbatim from LandingPageClient.tsx:102-108 (task 5). .progress-trace is
-     copied but unused: the "28 responses" line it held is dropped, not
-     replaced. */
+  /* Example pattern card — .app-card/.reveal-* copied verbatim from
+     LandingPageClient.tsx:102,104,107-108 (task 5). .progress-trace
+     (:103, held the retired "28 responses" line) is not copied — that line
+     is dropped, not replaced, so there's nothing to render it. */
   .app-card{background:${mkCard};color:${mkCharcoal};border:1px solid ${mkLine};border-radius:22px;box-shadow:0 20px 40px -20px rgba(38,36,32,0.12);max-width:380px;margin:0 auto 24px;padding:44px 36px;text-align:center;}
-  .progress-trace{font-size:12px;color:${mkCharcoalSoft};margin-bottom:16px;}
   .reveal-eyebrow{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:${mkCharcoalSoft};font-weight:600;margin:0 0 8px;}
   .reveal-line{font-family:'Newsreader',serif;font-style:italic;font-size:14px;line-height:1.55;color:${mkCharcoal};margin:0 0 16px;}
   .reveal-sub{font-size:12px;color:${mkCharcoalSoft};margin:0;}
@@ -126,18 +134,26 @@ const css = `
   /* Static 5-dot scale (task 8) — rebuilt locally with mk* tokens per design
      rule 6 ("not tailwind.config tokens"); QuestionCard's DotScale uses
      Tailwind classes/colors and is not exported, and the assessment files
-     are not to be touched. */
-  .hv2-dotscale{display:flex;flex-direction:column;gap:8px;max-width:220px;margin:16px auto 0;}
+     are not to be touched. Size/thickness/gaps matched to
+     QuestionCard.tsx:103-141: dots w-5 h-5 = 20px (:124), connecting line
+     h-px = 1px inset left/right-[10px] i.e. half the dot width (:116),
+     row-to-labels gap-4 = 16px (:113), label text-[11px] (:136-137). Colors
+     are mk* tokens, not QuestionCard's Tailwind colors (#262420/#F7F4ED/
+     #8C8A83) — task 3 asked to match size/thickness/gaps, not recolor. */
+  .hv2-dotscale{display:flex;flex-direction:column;gap:16px;max-width:220px;margin:16px auto 0;}
   .hv2-dotscale-row{position:relative;display:flex;align-items:center;justify-content:space-between;}
-  .hv2-dotscale-line{position:absolute;left:9px;right:9px;top:50%;transform:translateY(-50%);height:1px;background:${mkLine};}
-  .hv2-dotscale-dot{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;background:${mkCream};border:2px solid ${mkCharcoalSoft};}
+  .hv2-dotscale-line{position:absolute;left:10px;right:10px;top:50%;transform:translateY(-50%);height:1px;background:${mkLine};}
+  .hv2-dotscale-dot{position:relative;z-index:1;width:20px;height:20px;border-radius:50%;background:${mkCream};border:2px solid ${mkCharcoalSoft};}
   .hv2-dotscale-labels{display:flex;justify-content:space-between;font-size:11px;color:${mkCharcoalSoft};}
 
   .hv2-mid-cta{text-align:center;padding:8px 24px 8px;}
 
   /* FAQ accordion (task 9) — technique copied from DirectionAccordion.tsx:
-     57-71 (max-height transition, rotating icon), landing mk* tokens. */
-  .hv2-faq-item{border-bottom:1px solid ${mkLine};padding:16px 0;cursor:pointer;}
+     57-71 (max-height transition, rotating icon), landing mk* tokens.
+     Padding 26px 22px matches .step's existing card padding
+     (LandingPageClient.tsx:113) — the closest existing "card" padding value
+     on the landing page, per task 3. */
+  .hv2-faq-item{border-bottom:1px solid ${mkLine};padding:26px 22px;cursor:pointer;}
   .hv2-faq-row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;}
   .hv2-faq-item h3{font-size:14.5px;font-weight:600;margin:0;color:${mkCharcoal};}
   .hv2-faq-icon{font-size:18px;color:${mkCharcoalSoft};transition:transform 0.25s ease;flex-shrink:0;}
@@ -169,6 +185,10 @@ const css = `
     }
     .hv2-sticky-bar .mk-btn{width:100%;max-width:360px;}
     body{padding-bottom:64px;}
+    /* Mobile override verbatim from .hero (LandingPageClient.tsx:151, inside
+       its own @media(max-width:640px)) — task 2. */
+    .hv2-hero{padding:88px 20px 40px;}
+    .hv2-section{padding:88px 20px 40px;}
     .hv2-hero h1{font-size:32px;}
     .how-steps{grid-template-columns:1fr;}
     .final-card{padding:56px 28px;}
@@ -306,7 +326,7 @@ export default function HomeV2Client() {
       <div style={{ background: mkCream, color: mkCharcoal, fontFamily: sans }}>
 
         {/* ── Section 1: Hero ──────────────────────────────────────────── */}
-        <section className="hv2-hero">
+        <section className="hv2-hero" data-testid="section-hero">
           <SingleHeroBlob />
           <h1>Get to know yourself better.</h1>
           <p className="hv2-sub">
@@ -333,10 +353,15 @@ export default function HomeV2Client() {
             <p className="reveal-line">[PLACEHOLDER: trait quote — awaiting approved copy]</p>
             <p className="reveal-sub">[PLACEHOLDER: supporting line — awaiting approved copy]</p>
           </div>
+          {/* AI line, verbatim from the ledger (section 3, task 4) — placed
+              under the example card, not inside it. */}
+          <p className="mk-microcopy">
+            The written explanation of each pattern is generated by AI from your results.
+          </p>
         </section>
 
         {/* ── Section 1b: Problem (task 6) ─────────────────────────────────── */}
-        <section className="hv2-section">
+        <section className="hv2-section" data-testid="section-problem">
           <div className="section-head">
             <div className="mk-eyebrow">Sound familiar?</div>
             {PROBLEM_LINES.map((line) => (
@@ -346,7 +371,7 @@ export default function HomeV2Client() {
         </section>
 
         {/* ── Section: Why it's different (sections 2+3 merged, task 7) ────── */}
-        <section className="hv2-section">
+        <section className="hv2-section" data-testid="section-why-different">
           <div className="hv2-wrap">
             <h2>Patterns, not a four-letter type.</h2>
             <p className="hv2-body">
@@ -357,18 +382,20 @@ export default function HomeV2Client() {
               Journaling and chat tools mostly reflect back what you put in. Bearing starts from
               the same 120 statements for everyone, in random order, before anything is interpreted.
             </p>
+            {/* Number tiles — three parallel facts, not steps (ledger line
+                145: "Do not number them 1, 2, 3"). No .step-mark. */}
             <div className="how-steps">
-              <div className="step">
-                <div className="step-mark">1</div>
-                <h3>120 statements</h3>
+              <div className="step hv2-tile">
+                <h3>120</h3>
+                <p>statements</p>
               </div>
-              <div className="step">
-                <div className="step-mark">2</div>
-                <h3>30 facets</h3>
+              <div className="step hv2-tile">
+                <h3>30</h3>
+                <p>facets</p>
               </div>
-              <div className="step">
-                <div className="step-mark">3</div>
-                <h3>About 15 minutes</h3>
+              <div className="step hv2-tile">
+                <h3>about 15</h3>
+                <p>minutes</p>
               </div>
             </div>
             <p className="mk-microcopy" style={{ marginTop: 24 }}>
@@ -383,7 +410,7 @@ export default function HomeV2Client() {
         </div>
 
         {/* ── Section: How it works (task 8) ───────────────────────────────── */}
-        <section id="how-it-works" className="hv2-section">
+        <section id="how-it-works" className="hv2-section" data-testid="section-how-it-works">
           <div className="hv2-wrap">
             <h2>How it works</h2>
             <div className="how-steps">
@@ -408,7 +435,7 @@ export default function HomeV2Client() {
         </section>
 
         {/* ── Section 5: FAQ and final CTA (task 9) ─────────────────────────── */}
-        <section className="hv2-section">
+        <section className="hv2-section" data-testid="section-faq">
           <div className="hv2-wrap">
             <h2>Questions</h2>
             <FaqAccordion items={FAQ} />
