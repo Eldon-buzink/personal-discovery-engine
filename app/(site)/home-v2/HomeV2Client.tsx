@@ -74,13 +74,17 @@ const FAQ: { question: string; answer: string | string[] | null }[] = [
 
 const css = `
   .hv2-wrap{max-width:720px;margin:0 auto;padding:0 24px;}
-  /* Task 2: verbatim from .hero (LandingPageClient.tsx:56 — 88px 32px 70px).
-     .section-head (:51) has no padding to copy (only margin:0 auto 48px,
-     max-width:600px) — .hero's is the only existing value that actually
-     satisfies design rule 6's "70-90px vertical, 32px horizontal", so it's
-     applied to .hv2-section too, not a new invented number. Previously
-     56px/24px and 96px/24px/48px, both below that range. */
-  .hv2-section{padding:88px 32px 70px;}
+  /* Phase 3d: measured the live page's actual inter-section rhythm via
+     bounding boxes (BASE_URL=https://getbearing.me) rather than reusing
+     .hero's number for every generic content section — .hero is uniquely
+     large (nav clearance + hero content) and applying its 88/70 to every
+     .hv2-section produced gaps between 36px and 206px, far more uneven than
+     the live page's own ~100-145px range. 20px/90px is copied verbatim from
+     two real live sections that both use exactly this value (.usp-section
+     and .demo-wrap), landing at a 110px gap when two such sections are
+     adjacent — squarely inside the live page's measured range. .hero itself
+     is unchanged (see .hv2-hero below), per this task's own instruction. */
+  .hv2-section{padding:20px 32px 90px;}
   .hv2-section h2{font-family:'Newsreader',serif;font-size:28px;font-weight:500;line-height:1.25;margin:0 0 14px;text-align:center;}
   .hv2-body{font-size:15.5px;line-height:1.65;color:${mkCharcoalSoft};max-width:600px;margin:0 auto 14px;text-align:center;}
 
@@ -185,10 +189,12 @@ const css = `
     }
     .hv2-sticky-bar .mk-btn{width:100%;max-width:360px;}
     body{padding-bottom:64px;}
-    /* Mobile override verbatim from .hero (LandingPageClient.tsx:151, inside
-       its own @media(max-width:640px)) — task 2. */
+    /* .hv2-hero: verbatim from .hero's mobile override (LandingPageClient.tsx
+       :151). .hv2-section: verbatim from .usp-section's real mobile value
+       (:154, 10px 0 60px) — same measured-rhythm reasoning as the desktop
+       rule above (Phase 3d), horizontal kept at 20px to match the hero. */
     .hv2-hero{padding:88px 20px 40px;}
-    .hv2-section{padding:88px 20px 40px;}
+    .hv2-section{padding:10px 20px 60px;}
     .hv2-hero h1{font-size:32px;}
     .how-steps{grid-template-columns:1fr;}
     .final-card{padding:56px 28px;}

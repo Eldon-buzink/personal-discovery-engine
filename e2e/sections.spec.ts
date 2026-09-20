@@ -18,6 +18,14 @@ test.describe('sections: cold visitor', () => {
     await page.goto('/home-v2', { waitUntil: 'networkidle' })
     await page.evaluate(() => document.fonts.ready)
 
+    // Phase 3d, task 4: hide fixed elements so they never appear in a crop.
+    // SiteNav's <nav> is fixed at the top of every page; .hv2-sticky-bar is
+    // fixed at the bottom on mobile. Neither is part of the section being
+    // reviewed, and only the FAQ crops actually overlapped the nav before
+    // this (the nav happened to sit at the same screen position the FAQ
+    // section scrolled to).
+    await page.addStyleTag({ content: 'nav, .hv2-sticky-bar { display: none !important; }' })
+
     const shots: Array<[string, string]> = [
       ['hero', '[data-testid="section-hero"]'],
       ['example-card', '.app-card'],
