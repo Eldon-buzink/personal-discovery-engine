@@ -84,10 +84,6 @@ const landingCSS = `
   .bento-card p{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   .bento-col{display:flex;flex-direction:column;gap:22px;}
   .bento-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1120px;margin:0 auto;}
-  .bento-card.dark{background:${mkCharcoal};color:${mkCream};}
-  .bento-card.dark h3{color:${mkCream};}
-  .bento-card.dark p{color:#C9C4B8;}
-  .badge-pill{display:inline-block;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;background:rgba(247,244,237,0.1);color:#D8D4C8;padding:5px 12px;border-radius:999px;margin-bottom:14px;}
   .bento-cluster-canvas-wrap{position:relative;flex:1;min-height:280px;margin:16px -8px -8px;overflow:visible;}
   .bento-orbit-wrap{position:relative;width:100%;aspect-ratio:380/160;margin-top:14px;overflow:visible;}
   .bento-connect-wrap{position:relative;width:100%;aspect-ratio:380/110;margin-top:16px;overflow:visible;}
@@ -272,12 +268,17 @@ function HeroBlobs() {
 // lib/blobs.ts primitives. Data/positions unchanged — already matched the
 // mockup exactly.
 const BENTO_CLUSTER_VW = 500, BENTO_CLUSTER_VH = 320
+// Autonomous -> Curious (Adventurousness mid), Durable -> Poised
+// (Assertiveness mid), Selective -> Considerate (Altruism mid) — verified
+// against lib/known/scoring.ts TRAIT_WORDS. Deliberate (Cautiousness mid)
+// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// Position/size/hue unchanged; only `word` changed for the three renamed.
 const BENTO_CLUSTER_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 250, cy: 160, r: 112, active: true  },
-  { word: 'Autonomous', hueOff: 5,  cx: 102, cy: 118, r: 72,  active: false },
+  { word: 'Curious',    hueOff: 5,  cx: 102, cy: 118, r: 72,  active: false },
   { word: 'Reflective', hueOff: 10, cx: 390, cy: 105, r: 66,  active: false },
-  { word: 'Durable',    hueOff: 20, cx: 108, cy: 235, r: 62,  active: false },
-  { word: 'Selective',  hueOff: 35, cx: 385, cy: 228, r: 58,  active: false },
+  { word: 'Poised',     hueOff: 20, cx: 108, cy: 235, r: 62,  active: false },
+  { word: 'Considerate',hueOff: 35, cx: 385, cy: 228, r: 58,  active: false },
 ] as const
 
 function BentoCluster() {
@@ -344,10 +345,13 @@ function BentoCluster() {
 // BentoCluster above. Data/positions unchanged.
 const ORBIT_VW = 380, ORBIT_VH = 160
 const ORBIT_CX = ORBIT_VW * 0.48, ORBIT_CY = ORBIT_VH * 0.52
+// Async -> Competence, Deep work -> Structure — the real environment-branch
+// dimension labels (DIM_LABELS, app/assessment/environment/page.tsx:54-58).
+// Autonomy was already correct. Position/size/hue unchanged.
 const ORBIT_ENV = [
-  { word: 'Autonomy',  angle: -0.6, dist: 108, r: 46, hueOff: 5  },
-  { word: 'Async',     angle: 2.65, dist: 100, r: 42, hueOff: 10 },
-  { word: 'Deep work', angle: 0.35, dist: 106, r: 44, hueOff: 15 },
+  { word: 'Autonomy',   angle: -0.6, dist: 108, r: 46, hueOff: 5  },
+  { word: 'Competence', angle: 2.65, dist: 100, r: 42, hueOff: 10 },
+  { word: 'Structure',  angle: 0.35, dist: 106, r: 44, hueOff: 15 },
 ] as const
 
 function OrbitVisual() {
@@ -726,15 +730,15 @@ export default function LandingPageClient() {
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>What you get</div>
-              <h2>Not just who you are.<br />What to do about it.</h2>
+              <h2>See your patterns.<br />Go deeper where it matters.</h2>
             </div>
 
             <div className="bento">
               {/* Cluster card */}
               <div className="bento-card" style={{ display:'flex', flexDirection:'column' }}>
-                <div className="mk-eyebrow">Who you are</div>
-                <h3>Your trait cluster, made visible</h3>
-                <p>Not a label. An organic map of how your traits relate and reinforce each other.</p>
+                <div className="mk-eyebrow">YOUR PATTERNS</div>
+                <h3>Your patterns, made visible</h3>
+                <p>Each of your 30 facets gets a word and a description, so you see specific patterns instead of one label.</p>
                 <div className="bento-cluster-canvas-wrap">
                   <BentoCluster />
                 </div>
@@ -756,7 +760,7 @@ export default function LandingPageClient() {
                   <div className="bento-connect-wrap">
                     <ConnectVisual />
                   </div>
-                  <p style={{ marginTop:14 }}>How you show up in relationships — what energises you, what drains you, how others experience you.</p>
+                  <p style={{ marginTop:14 }}>How you handle closeness and independence in your relationships.</p>
                 </div>
               </div>
             </div>
@@ -767,17 +771,11 @@ export default function LandingPageClient() {
                 <h3>The fuel behind your best days</h3>
                 <p>Specific activities, environments, and interactions that restore rather than deplete you.</p>
               </div>
-              <div className="bento-card dark">
-                <div className="badge-pill">Free to start</div>
-                <h3>No consultant. No credit card to begin.</h3>
-                <p>The kind of insight that used to cost thousands in coaching sessions. Your first 5 patterns are free, private, and instant — unlock the full picture later for a one-time payment.</p>
-              </div>
-              <div className="bento-card">
-                <div className="mk-eyebrow">Actionable insights</div>
-                <h3>Built to use, not just read</h3>
-                <p>Every dimension comes with concrete, specific implications — for work, for relationships, for decisions.</p>
-              </div>
             </div>
+
+            <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
+              Your first 5 patterns are free. The deeper assessments are part of the one-time EUR 49 unlock.
+            </p>
           </div>
         </section>
 
