@@ -666,13 +666,10 @@ export default function LandingPageClient() {
                   <div className="hero-cta-row">
                     {/* startedUnfinished: same button, same position, just the
                         text/href swap described in the file header — not a new
-                        UI element. New label per landing-copy-deck.md section 1:
-                        "Start the assessment" for the fresh state; the
-                        unfinished-progress label is kept exactly as the deck
-                        specifies (with its arrow), so the two are intentionally
-                        not styled the same way right now. */}
+                        UI element. Arrow removed from "Continue your
+                        assessment" so the two states read consistently. */}
                     <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
-                      <button className="mk-btn">{startedUnfinished ? 'Continue your assessment →' : 'Start the assessment'}</button>
+                      <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
                     </Link>
                   </div>
                   {/* Moved below the CTA row per the deck's layout note
