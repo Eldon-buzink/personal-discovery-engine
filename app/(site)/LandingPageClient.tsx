@@ -62,6 +62,20 @@ const landingCSS = `
   .hero-blob-wrap{position:relative;width:100%;aspect-ratio:520/500;overflow:visible;}
   .trait-label-active{font-family:'Newsreader',Georgia,serif;font-style:italic;font-weight:600;font-size:30px;}
 
+  /* Problem section (new, landing-copy-deck.md section 2) — two columns like
+     the hero grid, left-aligned, not centered. .problem-heading copies
+     .section-head h2's exact type values (Newsreader/34px/500/1.2) without
+     that class's own text-align:center (only reachable via the .section-head
+     wrapper, which centers). .problem-list's hairline dividers use mkLine,
+     the same border color every other divider on this page uses. */
+  .problem-section{padding:20px 32px 90px;}
+  .problem-grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:start;}
+  .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
+  .problem-list{display:flex;flex-direction:column;}
+  .problem-list p{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:0;padding:18px 0;border-bottom:1px solid ${mkLine};}
+  .problem-list p:first-child{padding-top:0;}
+  .problem-list p:last-child{border-bottom:none;}
+
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
   .bento{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;max-width:1120px;margin:0 auto 22px;}
@@ -129,6 +143,7 @@ const landingCSS = `
 
   @media(max-width:860px){
     .hero-inner{grid-template-columns:1fr;}
+    .problem-grid{grid-template-columns:1fr;gap:20px;}
     .bento{grid-template-columns:1fr;}
     .bento-row3{grid-template-columns:1fr;}
     .how-steps{grid-template-columns:1fr;}
@@ -144,6 +159,7 @@ const landingCSS = `
        proven-good ~32px gap above the nav. */
     .hero{padding:88px 20px 40px;}
     .hero p{max-width:100%;}
+    .problem-section{padding:10px 20px 60px;}
     .bento-section{padding:28px 0 60px;}
     .usp-section{padding:10px 0 60px;}
     .bento-card{padding:22px;}
@@ -683,6 +699,25 @@ export default function LandingPageClient() {
               )}
             </div>
             <HeroBlobs />
+          </div>
+        </section>
+
+        {/* ── PROBLEM ("Sound familiar?") ──────────────────────────── */}
+        {/* New, landing-copy-deck.md section 2. Two columns like the hero
+            grid, left-aligned throughout — not centered, no cards, no blobs.
+            .wrap plus new .problem-* classes (existing tokens only: mkLine
+            for the dividers, the same serif/sans/mkCharcoalSoft values used
+            everywhere else on the page). */}
+        <section className="problem-section">
+          <div className="wrap">
+            <div className="problem-grid">
+              <h2 className="problem-heading">Sound familiar?</h2>
+              <div className="problem-list">
+                <p>You journal, meditate or talk it through, but it&apos;s hard to tell what to focus on.</p>
+                <p>Reflecting on yourself tends to circle back to what you already believe about yourself.</p>
+                <p>Many personality tests give you a label, and the results could describe almost anyone.</p>
+              </div>
+            </div>
           </div>
         </section>
 
