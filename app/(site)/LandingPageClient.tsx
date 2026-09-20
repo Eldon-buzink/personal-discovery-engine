@@ -32,7 +32,6 @@ const mkCharcoal     = '#262420'
 const mkCharcoalSoft = '#57534A'
 const mkLine         = 'rgba(38,36,32,0.1)'
 const mkTeal         = '#7FD9C4'
-const mkCoral        = '#F0A98A'
 const mkPeriwinkle   = '#AEBBE8'
 const mkRose         = '#E9AFC0'
 
@@ -62,21 +61,6 @@ const landingCSS = `
   .hero-cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .hero-blob-wrap{position:relative;width:100%;aspect-ratio:520/500;overflow:visible;}
   .trait-label-active{font-family:'Newsreader',Georgia,serif;font-style:italic;font-weight:600;font-size:30px;}
-
-  /* Gap/stat section */
-  .gap-section{padding:70px 32px 90px;}
-  .gap-inner{max-width:760px;margin:0 auto;display:flex;align-items:flex-start;justify-content:center;}
-  .gap-point{text-align:center;flex:0 0 auto;width:200px;position:relative;padding-top:20px;}
-  .gap-blob{position:absolute;width:150px;height:150px;border-radius:50%;filter:blur(38px);opacity:0.55;top:0;left:50%;transform:translateX(-50%);z-index:0;}
-  .gap-label{display:none;}
-  .gap-num{font-size:40px;font-weight:500;font-style:italic;position:relative;z-index:1;}
-  .gap-point.start .gap-num{color:${mkCharcoalSoft};}
-  .gap-point.end .gap-num{color:${mkCharcoal};}
-  .gap-cap{font-size:13.5px;color:${mkCharcoalSoft};line-height:1.5;max-width:170px;margin:10px auto 0;position:relative;z-index:1;}
-  .gap-src{display:block;font-size:11px;color:${mkCharcoalSoft};opacity:0.55;margin-top:10px;position:relative;z-index:1;}
-  .gap-track-wrap{flex:1 1 auto;position:relative;top:36px;padding:0 10px;}
-  .gap-track{height:1px;background:repeating-linear-gradient(90deg,${mkCharcoalSoft} 0 6px,transparent 6px 12px);}
-  .gap-track-label{position:absolute;left:50%;top:-26px;transform:translateX(-50%);font-size:12px;color:${mkCharcoalSoft};white-space:nowrap;}
 
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
@@ -157,17 +141,6 @@ const landingCSS = `
     .compare{grid-template-columns:1fr;}
     .hero h1{font-size:38px;}
     .hero-blob-wrap{margin-top:20px;}
-    .gap-card{max-width:480px;margin:0 auto;background:${mkCream};border:1px solid ${mkLine};border-radius:20px;padding:26px 8px 22px;}
-    .gap-inner{flex-direction:row;gap:0;align-items:stretch;}
-    .gap-point{width:auto;flex:1 1 0;padding-top:0;}
-    .gap-point.start{border-right:1px solid ${mkLine};padding-right:14px;}
-    .gap-point.end{padding-left:14px;}
-    .gap-blob{display:none;}
-    .gap-label{display:block;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:${mkCharcoalSoft};opacity:0.65;margin-bottom:8px;}
-    .gap-num{font-size:30px;}
-    .gap-cap{font-size:12px;max-width:none;}
-    .gap-point.end .gap-cap{display:none;}
-    .gap-track-wrap{display:none;}
     .final-card{padding:56px 28px;}
   }
   @media(max-width:640px){
@@ -177,7 +150,6 @@ const landingCSS = `
        proven-good ~32px gap above the nav. */
     .hero{padding:88px 20px 40px;}
     .hero p{max-width:100%;}
-    .gap-section{padding:48px 20px 60px;}
     .bento-section{padding:28px 0 60px;}
     .usp-section{padding:10px 0 60px;}
     .bento-card{padding:22px;}
@@ -700,36 +672,6 @@ export default function LandingPageClient() {
               )}
             </div>
             <HeroBlobs />
-          </div>
-        </section>
-
-        {/* ── GAP / STAT SECTION ("12 yrs" vs "15 min") ────────────── */}
-        {/* Fully replaces the old dark 3-stat FactsBlobs section — different
-            layout, different message, different (light) background. No
-            animated blob math here, just two static blurred circles per the
-            mockup's .gap-blob (plain div + filter:blur, not the organic
-            blob-path shapes used elsewhere on this page). */}
-        <section className="gap-section">
-          <div className="gap-card">
-            <div className="gap-inner">
-              <div className="gap-point start">
-                <div className="gap-blob" style={{ background: mkCoral }} />
-                <span className="gap-label">Old way</span>
-                <div className="gap-num" style={{ fontFamily: serif }}>12 yrs</div>
-                <div className="gap-cap">average time to real clarity on a stuck pattern</div>
-                <span className="gap-src">WHO Mental Health Atlas, 2022</span>
-              </div>
-              <div className="gap-track-wrap">
-                <div className="gap-track-label">most people never close this gap</div>
-                <div className="gap-track" />
-              </div>
-              <div className="gap-point end">
-                <div className="gap-blob" style={{ background: mkTeal }} />
-                <span className="gap-label">With Bearing</span>
-                <div className="gap-num" style={{ fontFamily: serif, color: mkCharcoal }}>15 min</div>
-                <div className="gap-cap">with Bearing</div>
-              </div>
-            </div>
           </div>
         </section>
 
