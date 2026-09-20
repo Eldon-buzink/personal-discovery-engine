@@ -760,7 +760,7 @@ export default function LandingPageClient() {
                   <div className="bento-connect-wrap">
                     <ConnectVisual />
                   </div>
-                  <p style={{ marginTop:14 }}>How you handle closeness and independence in your relationships.</p>
+                  <p style={{ marginTop:14 }}>Your attachment pattern: how you handle closeness and distance in the relationships that matter most.</p>
                 </div>
               </div>
             </div>
