@@ -95,17 +95,11 @@ const landingCSS = `
   .branch-node.pill{background:${mkTeal};border-color:${mkTeal};color:${mkCharcoal};font-weight:500;}
   .branch-arrow{opacity:0.5;}
 
-  /* Demo section */
-  .demo-wrap{padding:0 32px 90px;}
-  .demo{padding:20px 40px 0;text-align:center;}
-  .demo .section-head{margin-bottom:32px;}
-  .app-card{background:${mkCard};color:${mkCharcoal};border:1px solid ${mkLine};border-radius:22px;box-shadow:0 20px 40px -20px rgba(38,36,32,0.12);max-width:380px;margin:0 auto 24px;padding:44px 36px;text-align:center;}
-  .progress-trace{font-size:12px;color:${mkCharcoalSoft};margin-bottom:16px;}
-  .reveal-eyebrow{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:${mkCharcoalSoft};font-weight:600;margin:0 0 8px;}
+  /* .blob-stage/.ring-pulse: pre-existing, already unused before the demo
+     section was removed here (DemoBlob's own markup uses inline styles, not
+     these classes) — left as-is, not part of this deletion's scope. */
   .blob-stage{width:190px;height:170px;display:flex;align-items:center;justify-content:center;margin:16px auto 22px;position:relative;}
   .ring-pulse{position:absolute;inset:6px;border-radius:50%;border:1px solid hsl(8,50%,65%);opacity:0.5;animation:pulseRing 2.4s ease-out infinite;}
-  .reveal-line{font-family:'Newsreader',serif;font-style:italic;font-size:14px;line-height:1.55;color:${mkCharcoal};margin:0 0 16px;}
-  .reveal-sub{font-size:12px;color:${mkCharcoalSoft};margin:0;}
 
   /* How it works */
   .how{padding:20px 32px 90px;}
@@ -153,8 +147,6 @@ const landingCSS = `
     .bento-section{padding:28px 0 60px;}
     .usp-section{padding:10px 0 60px;}
     .bento-card{padding:22px;}
-    .demo-wrap{padding:0 20px 60px;}
-    .demo{padding:12px 4px 0;}
     .how{padding:10px 20px 60px;}
     .step{padding:22px 18px;}
     .final-outer{padding:56px 20px;}
@@ -794,39 +786,6 @@ export default function LandingPageClient() {
             ))}
           </div>
         </section>
-
-        {/* ── DEMO ("Watch it happen") ─────────────────────────────── */}
-        {/* Replaces the old "Progressive Reveal" 3-card section — same slot,
-            same underlying message (results appear early), now a concrete
-            visual demo instead of an abstract 3-card explainer. Confirmed
-            with the user before replacing rather than keeping both.
-            Two nested wrappers, matching the mockup exactly: outer
-            .demo-wrap (plain div) sets the horizontal page padding, inner
-            .demo (an actual <section>) adds its own smaller top padding —
-            not one flattened padding value. */}
-        <div className="demo-wrap">
-          <section className="demo">
-            <div className="section-head">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Watch it happen</div>
-              <h2>We don&apos;t make you wait 80 questions to tell you anything.</h2>
-              <p>Your first trait appears while you&apos;re still mid-assessment. See if it resonates before you commit to the rest.</p>
-            </div>
-
-            <div className="app-card">
-              <p className="progress-trace">28 responses · pattern identified</p>
-              <p className="reveal-eyebrow">Your first pattern</p>
-              <DemoBlob />
-              <p className="reveal-line">
-                &ldquo;You don&apos;t rush toward conclusions. Your responses showed a pattern of holding space before committing.&rdquo;
-              </p>
-              <p className="reveal-sub">This is the strongest signal so far — there&apos;s more underneath it.</p>
-            </div>
-
-            <Link href="/onboarding">
-              <button className="mk-btn">Discover yourself →</button>
-            </Link>
-          </section>
-        </div>
 
         {/* ── FINAL CTA ─────────────────────────────────────────────── */}
         {/* CtaHalos (organic animated blob-path shapes) replaced with the
