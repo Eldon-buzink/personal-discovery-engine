@@ -34,18 +34,40 @@ export default function FaqAccordion({ items }: { items: FaqAccordionItem[] }) {
     <div>
       {items.map((item, i) => {
         const isOpen = openIdx.has(i)
+        const headerId = `faq-question-${i}`
+        const panelId = `faq-answer-${i}`
         return (
-          <div key={item.question} className="faq-item" onClick={() => toggle(i)}>
-            <div className="faq-row">
-              <h3>{item.question}</h3>
-              <span
-                className="faq-icon"
-                style={{ transform: isOpen ? 'rotate(45deg)' : 'none' }}
+          <div key={item.question} className="faq-item">
+            {/* <h3> wraps the <button> (not the other way around) — a
+                <button>'s content model is phrasing content only, so a
+                heading can't legally sit inside it. Enter/Space toggle for
+                free via native button semantics, no key handler needed. */}
+            <h3>
+              <button
+                type="button"
+                id={headerId}
+                className="faq-row"
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => toggle(i)}
               >
-                +
-              </span>
-            </div>
-            <div className="faq-body" style={{ maxHeight: isOpen ? 400 : 0 }}>
+                {item.question}
+                <span
+                  className="faq-icon"
+                  aria-hidden="true"
+                  style={{ transform: isOpen ? 'rotate(45deg)' : 'none' }}
+                >
+                  +
+                </span>
+              </button>
+            </h3>
+            <div
+              className="faq-body"
+              id={panelId}
+              role="region"
+              aria-labelledby={headerId}
+              style={{ maxHeight: isOpen ? 400 : 0 }}
+            >
               <div className="faq-body-inner">
                 {item.answer === null ? (
                   <div className="faq-placeholder">[PLACEHOLDER: no drafted answer in the ledger yet]</div>

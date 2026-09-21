@@ -220,16 +220,34 @@ const landingCSS = `
      only the class names lost their hv2- prefix (faq-* here) and the
      colors are this page's own mk* tokens (were already mk* there too —
      home-v2 shared this page's palette). max-width ~720px, left-aligned,
-     closed by default (FaqAccordion's own openIdx starts empty). */
+     closed by default (FaqAccordion's own openIdx starts empty).
+     .faq-row is now a real <button>, not a <div> — its type carries no
+     visual styling of its own (buttons don't inherit font/color/text-align
+     from a UA stylesheet, and default to their own padding/border/
+     background), so all of that is reset/reapplied here to render pixel-
+     identical to the old div+h3 markup. .faq-item h3 is now just the
+     heading wrapper around that button; margin:0 keeps it from adding
+     the browser's default h3 spacing. */
   .faq-section{padding:20px 0 90px;}
   .faq-wrap{max-width:720px;margin:0 auto;padding:0 32px;}
-  .faq-item{border-bottom:1px solid ${mkLine};padding:26px 22px;cursor:pointer;}
-  .faq-row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;}
-  .faq-item h3{font-size:14.5px;font-weight:600;margin:0;color:${mkCharcoal};text-align:left;}
+  .faq-item{border-bottom:1px solid ${mkLine};padding:26px 22px;}
+  .faq-item h3{margin:0;}
+  .faq-row{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;
+    width:100%;background:none;border:none;padding:0;margin:0;cursor:pointer;
+    font:inherit;font-size:14.5px;font-weight:600;color:${mkCharcoal};text-align:left;
+  }
+  /* :focus-visible, not :focus — shows the outline for keyboard focus only,
+     not on a mouse click, matching how focus rings work everywhere else a
+     browser draws one natively. */
+  .faq-row:focus-visible{outline:2px solid ${mkCharcoal};outline-offset:2px;}
   .faq-icon{font-size:18px;color:${mkCharcoalSoft};transition:transform 0.25s ease;flex-shrink:0;}
   .faq-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease;}
   .faq-body-inner{padding-top:10px;}
   .faq-body-inner p{font-size:13.5px;line-height:1.6;color:${mkCharcoalSoft};margin:0 0 6px;text-align:left;}
+  @media(prefers-reduced-motion: reduce){
+    .faq-body{transition:none;}
+  }
 
   /* Final CTA */
   .final-outer{background:${mkCharcoal};padding:90px 32px;}
