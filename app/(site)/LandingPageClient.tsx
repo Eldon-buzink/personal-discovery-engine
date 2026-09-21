@@ -926,12 +926,19 @@ export default function LandingPageClient() {
                 <div className="compare-label">Bearing</div>
                 <p>Starts from the same questions for everyone. Then it shows the patterns in your answers.</p>
                 <div className="compare-label" style={{ marginTop: 16 }}>An example pattern</div>
-                <div className="compare-title" style={{ fontFamily:serif }}>Your responses showed a pattern of holding space before committing.</div>
+                {/* "before committing", not the "fore committing" in the
+                    request — treated as a dropped word, since this string
+                    must stay verbatim FACET_DESCRIPTIONS.Cautiousness in
+                    lib/known/scoring.ts (confirmed character-for-character
+                    in STEP D). Flagged in the report; happy to change back
+                    if "fore" was intentional. */}
+                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
+                <p>Deliberate. One of 30 facet patterns.</p>
               </div>
             </div>
 
             <p className="mk-microcopy" style={{ textAlign:'center' }}>
-              Built on the Big Five, a widely used research model of personality.
+              Built on the IPIP-NEO-120, a public-domain Big Five inventory from published research (Johnson, 2014).
             </p>
           </div>
         </section>
