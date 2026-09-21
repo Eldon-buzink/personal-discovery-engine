@@ -31,6 +31,7 @@ const mkCard         = '#EFEAE0'
 const mkCharcoal     = '#262420'
 const mkCharcoalSoft = '#57534A'
 const mkLine         = 'rgba(38,36,32,0.1)'
+const mkTeal         = '#7FD9C4'
 const mkPeriwinkle   = '#AEBBE8'
 const mkRose         = '#E9AFC0'
 
@@ -94,6 +95,7 @@ const landingCSS = `
      and 3 don't. */
   .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;min-height:57.6px;}
   .problem-line{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .problem-visual{position:relative;height:56px;display:flex;align-items:center;margin-bottom:18px;}
 
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
@@ -575,6 +577,76 @@ function ConnectVisual() {
   return <svg ref={ref} viewBox="0 0 380 110" width="100%" height="100%" style={{ overflow:'visible' }} />
 }
 
+// ─── Problem card visuals ───────────────────────────────────────────────────
+// Static only — no useBlobAnimation, no RAF, nothing organic. Each reuses an
+// existing static technique from elsewhere on this page rather than
+// inventing one:
+//  - ProblemCirclesVisual: .final-glow's own technique (position:absolute,
+//    border-radius:50%, filter:blur, opacity), just smaller and with the
+//    blur amount overridden per-instance via inline style (inline style
+//    always wins over the class's own blur(60px)). Colors are the existing
+//    mkTeal/mkPeriwinkle/mkRose accents, cycled.
+//  - ProblemBlobRingVisual: the same blurred-circle technique for the inner
+//    "blob", plus a dashed-border circle around it — the same idea as
+//    ConnectVisual's dashed "Someone close" node (light fill + dashed
+//    stroke), expressed as a plain CSS border since this one doesn't need
+//    ConnectVisual's raw-SVG approach.
+//  - ProblemTrioVisual: the same blurred-circle technique again, but three
+//    identical circles (same size, same color) evenly spaced in a row —
+//    a visual shorthand for "a repeating pattern," for card 3's "not seeing
+//    your patterns" copy. Replaces the old INTJ pill (ProblemPillVisual,
+//    deleted along with the chip-flow copy it referenced).
+function ProblemCirclesVisual() {
+  const circles = [
+    { size: 30, top: 2,  left: 4,  color: mkTeal },
+    { size: 20, top: 28, left: 34, color: mkRose },
+    { size: 24, top: 0,  left: 44, color: mkPeriwinkle },
+    { size: 16, top: 32, left: 4,  color: mkPeriwinkle },
+    { size: 18, top: 12, left: 20, color: mkRose },
+  ]
+  return (
+    <div className="problem-visual">
+      {circles.map((c, i) => (
+        <div
+          key={i}
+          className="final-glow"
+          style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(6px)' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ProblemBlobRingVisual() {
+  // Ring's outer edge at left:0, flush with the card's text edge (same as
+  // card 1's circles and card 3's trio) — was left:19, sitting visibly
+  // inside the label. Blob stays centered inside the ring (ring spans
+  // 0-38px, center 19px; blob is 24px, so left = 19 - 24/2 = 7px).
+  return (
+    <div className="problem-visual">
+      <div className="final-glow" style={{ width: 24, height: 24, top: 16, left: 7, background: mkRose, filter: 'blur(5px)' }} />
+      <div style={{ position: 'absolute', width: 38, height: 38, top: 9, left: 0, borderRadius: '50%', border: `1.5px dashed ${mkRose}` }} />
+    </div>
+  )
+}
+
+function ProblemTrioVisual() {
+  // Three identical 18px circles, 26px apart (8px gap between edges),
+  // outer edge flush at left:0 — same convention as the other two visuals.
+  const lefts = [0, 26, 52]
+  return (
+    <div className="problem-visual">
+      {lefts.map((left, i) => (
+        <div
+          key={i}
+          className="final-glow"
+          style={{ width: 18, height: 18, top: 19, left, background: mkTeal, filter: 'blur(5px)' }}
+        />
+      ))}
+    </div>
+  )
+}
+
 // ─── Landing Page ──────────────────────────────────────────────────────────────
 export default function LandingPageClient() {
   const router = useRouter()
@@ -728,12 +800,13 @@ export default function LandingPageClient() {
         </section>
 
         {/* ── PROBLEM ("Sound familiar?") ──────────────────────────── */}
-        {/* STEP D: plain, felt problems — no eyebrow, no italic quote, no
-            visuals. Heading unchanged (.problem-heading, left-aligned).
-            Cards still reuse .how-steps/.step exactly (three columns, one
-            column at <=860px, same as How it works) — grid default
-            align-items:stretch already gives equal card heights with no
-            extra rule needed. Each card is exactly two elements: a
+        {/* Plain, felt problems, no eyebrow or italic quote. Heading
+            unchanged (.problem-heading, left-aligned). Cards still reuse
+            .how-steps/.step exactly (three columns, one column at <=860px,
+            same as How it works) — grid default align-items:stretch already
+            gives equal card heights with no extra rule needed. Each card is
+            a restored static visual (see ProblemCirclesVisual/
+            ProblemBlobRingVisual/ProblemTrioVisual above) plus a
             .problem-title (serif, the dominant element) and a .problem-line
             (sans, muted, below it) — both new classes but built from values
             already used elsewhere (.bento-card h3/.bento-card p's exact
@@ -747,14 +820,17 @@ export default function LandingPageClient() {
             <h2 className="problem-heading">Sound familiar?</h2>
             <div className="how-steps" style={{ marginTop: 32 }}>
               <div className="step">
+                <ProblemCirclesVisual />
                 <div className="problem-title">Not knowing what drives you.</div>
                 <div className="problem-line">You reflect a lot, but it never adds up to a clear direction.</div>
               </div>
               <div className="step">
+                <ProblemBlobRingVisual />
                 <div className="problem-title">Going in circles.</div>
                 <div className="problem-line">Every time you think about yourself, you land on the same story.</div>
               </div>
               <div className="step">
+                <ProblemTrioVisual />
                 <div className="problem-title">Not seeing your patterns.</div>
                 <div className="problem-line">You sense something keeps repeating, but you can&apos;t name it.</div>
               </div>
