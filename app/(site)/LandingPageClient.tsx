@@ -80,6 +80,11 @@ const landingCSS = `
      .bento-section/.usp-section, which never had this extra padding. */
   .problem-section{padding:20px 0 90px;}
   .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
+  /* Same type values as .section-head p (15px/mkCharcoalSoft/1.6), but
+     left-aligned instead of inheriting .section-head's own text-align:center
+     — this section's heading has always been left-aligned, unlike every
+     other section-head. */
+  .problem-subtitle{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:10px 0 0;text-align:left;}
   /* Root cause of the 1280px heading/grid misalignment: .how-steps (below,
      shared with How it works) carries its own max-width:1000px + margin:0
      auto, designed for sitting directly inside .how (no width cap of its
@@ -1038,21 +1043,22 @@ export default function LandingPageClient() {
         <section className="problem-section">
           <div className="wrap">
             <h2 className="problem-heading">Sound familiar?</h2>
+            <p className="problem-subtitle">You&apos;re already doing the work. It still doesn&apos;t quite add up.</p>
             <div className="how-steps" style={{ marginTop: 32 }}>
               <div className="step">
                 <ProblemCirclesVisual />
-                <div className="problem-title">Insight, but no focus.</div>
-                <div className="problem-line">&ldquo;I reflect a lot, but I still don&apos;t know what to focus on.&rdquo;</div>
+                <div className="problem-title">Insight without direction.</div>
+                <div className="problem-line">&ldquo;I&apos;ve learned a lot about myself, but I don&apos;t know what to do with it.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemBlobRingVisual />
-                <div className="problem-title">Going in circles.</div>
-                <div className="problem-line">&ldquo;Every time I think about myself, I land on the same story.&rdquo;</div>
+                <div className="problem-title">Is this really me?</div>
+                <div className="problem-line">&ldquo;I can&apos;t tell if I&apos;m seeing myself clearly or just telling myself a story.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemTrioVisual />
-                <div className="problem-title">Not seeing your patterns.</div>
-                <div className="problem-line">&ldquo;I sense something keeps repeating, but I can&apos;t name it.&rdquo;</div>
+                <div className="problem-title">The same thing, again.</div>
+                <div className="problem-line">&ldquo;Something keeps repeating in my life and I can&apos;t quite name it.&rdquo;</div>
               </div>
             </div>
           </div>
