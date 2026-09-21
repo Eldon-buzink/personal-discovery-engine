@@ -62,19 +62,20 @@ const landingCSS = `
   .hero-blob-wrap{position:relative;width:100%;aspect-ratio:520/500;overflow:visible;}
   .trait-label-active{font-family:'Newsreader',Georgia,serif;font-style:italic;font-weight:600;font-size:30px;}
 
-  /* Problem section (new, landing-copy-deck.md section 2) — two columns like
-     the hero grid, left-aligned, not centered. .problem-heading copies
-     .section-head h2's exact type values (Newsreader/34px/500/1.2) without
-     that class's own text-align:center (only reachable via the .section-head
-     wrapper, which centers). .problem-list's hairline dividers use mkLine,
-     the same border color every other divider on this page uses. */
+  /* Problem section — heading left-aligned above three .step cards (STEP A
+     replaces the earlier two-column divider-list version; .problem-grid/
+     .problem-list are gone, nothing else references them). .problem-heading
+     kept as-is (copies .section-head h2's type values without its
+     text-align:center) since it's reused unchanged. .problem-visual is the
+     only new rule: a small fixed-height, relatively-positioned box so the
+     three different static visuals (blurred circles, blob+dashed ring, pill)
+     align consistently above each card's eyebrow — sizing/position only, no
+     new colors (the visuals themselves reuse .final-glow's blur technique,
+     .branch-node's pill, and mkRose/mkTeal/mkPeriwinkle from the existing
+     palette). */
   .problem-section{padding:20px 32px 90px;}
-  .problem-grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:start;}
   .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
-  .problem-list{display:flex;flex-direction:column;}
-  .problem-list p{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:0;padding:18px 0;border-bottom:1px solid ${mkLine};}
-  .problem-list p:first-child{padding-top:0;}
-  .problem-list p:last-child{border-bottom:none;}
+  .problem-visual{position:relative;height:56px;display:flex;align-items:center;margin-bottom:18px;}
 
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
@@ -139,7 +140,6 @@ const landingCSS = `
 
   @media(max-width:860px){
     .hero-inner{grid-template-columns:1fr;}
-    .problem-grid{grid-template-columns:1fr;gap:20px;}
     .bento{grid-template-columns:1fr;}
     .bento-row3{grid-template-columns:1fr;}
     .how-steps{grid-template-columns:1fr;}
@@ -562,6 +562,61 @@ function ConnectVisual() {
   return <svg ref={ref} viewBox="0 0 380 110" width="100%" height="100%" style={{ overflow:'visible' }} />
 }
 
+// ─── Problem card visuals ───────────────────────────────────────────────────
+// Static only — no useBlobAnimation, no RAF, nothing organic. Each reuses an
+// existing static technique from elsewhere on this page rather than
+// inventing one:
+//  - ProblemCirclesVisual: .final-glow's own technique (position:absolute,
+//    border-radius:50%, filter:blur, opacity), just smaller and with the
+//    blur amount overridden per-instance via inline style (inline style
+//    always wins over the class's own blur(60px)). Colors are the existing
+//    mkTeal/mkPeriwinkle/mkRose accents, cycled.
+//  - ProblemBlobRingVisual: the same blurred-circle technique for the inner
+//    "blob", plus a dashed-border circle around it — the same idea as
+//    ConnectVisual's dashed "Someone close" node (light fill + dashed
+//    stroke), expressed as a plain CSS border since this one doesn't need
+//    ConnectVisual's raw-SVG approach.
+//  - ProblemPillVisual: .branch-node exactly as already used in the
+//    branch-flow chips (not .branch-node.pill, which is reserved on this
+//    page for the highlighted/suggested chip — INTJ here represents the
+//    generic case, not a highlight).
+function ProblemCirclesVisual() {
+  const circles = [
+    { size: 30, top: 2,  left: 4,  color: mkTeal },
+    { size: 20, top: 28, left: 34, color: mkRose },
+    { size: 24, top: 0,  left: 44, color: mkPeriwinkle },
+    { size: 16, top: 32, left: 4,  color: mkPeriwinkle },
+    { size: 18, top: 12, left: 20, color: mkRose },
+  ]
+  return (
+    <div className="problem-visual">
+      {circles.map((c, i) => (
+        <div
+          key={i}
+          className="final-glow"
+          style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(6px)' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ProblemBlobRingVisual() {
+  return (
+    <div className="problem-visual">
+      <div className="final-glow" style={{ width: 24, height: 24, top: 16, left: 26, background: mkRose, filter: 'blur(5px)' }} />
+      <div style={{ position: 'absolute', width: 38, height: 38, top: 9, left: 19, borderRadius: '50%', border: `1.5px dashed ${mkRose}` }} />
+    </div>
+  )
+}
+
+function ProblemPillVisual() {
+  return (
+    <div className="problem-visual">
+      <span className="branch-node">INTJ</span>
+    </div>
+  )
+}
 
 // ─── Landing Page ──────────────────────────────────────────────────────────────
 export default function LandingPageClient() {
@@ -716,19 +771,28 @@ export default function LandingPageClient() {
         </section>
 
         {/* ── PROBLEM ("Sound familiar?") ──────────────────────────── */}
-        {/* New, landing-copy-deck.md section 2. Two columns like the hero
-            grid, left-aligned throughout — not centered, no cards, no blobs.
-            .wrap plus new .problem-* classes (existing tokens only: mkLine
-            for the dividers, the same serif/sans/mkCharcoalSoft values used
-            everywhere else on the page). */}
+        {/* STEP A: three cards instead of the earlier two-column divider
+            list. Heading left-aligned above the grid via the existing
+            .problem-heading class; cards reuse .how-steps/.step exactly
+            (three columns, one column at <=860px, same as How it works). */}
         <section className="problem-section">
           <div className="wrap">
-            <div className="problem-grid">
-              <h2 className="problem-heading">Sound familiar?</h2>
-              <div className="problem-list">
-                <p>You journal, meditate or talk it through, but it&apos;s hard to tell what to focus on.</p>
-                <p>Reflecting on yourself tends to circle back to what you already believe about yourself.</p>
-                <p>Many personality tests give you a label, and the results could describe almost anyone.</p>
+            <h2 className="problem-heading">Sound familiar?</h2>
+            <div className="how-steps" style={{ marginTop: 32 }}>
+              <div className="step">
+                <ProblemCirclesVisual />
+                <div className="mk-eyebrow">NO CLEAR FOCUS</div>
+                <div className="compare-title" style={{ fontFamily: serif }}>&ldquo;I reflect a lot, but I still don&apos;t know what to focus on.&rdquo;</div>
+              </div>
+              <div className="step">
+                <ProblemBlobRingVisual />
+                <div className="mk-eyebrow">GOING IN CIRCLES</div>
+                <div className="compare-title" style={{ fontFamily: serif }}>&ldquo;Every time I think about myself, I land on the same story.&rdquo;</div>
+              </div>
+              <div className="step">
+                <ProblemPillVisual />
+                <div className="mk-eyebrow">ONE LABEL</div>
+                <div className="compare-title" style={{ fontFamily: serif }}>&ldquo;My result could have been written for anyone.&rdquo;</div>
               </div>
             </div>
           </div>
