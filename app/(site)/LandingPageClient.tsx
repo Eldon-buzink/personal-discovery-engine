@@ -124,11 +124,21 @@ const landingCSS = `
   .compare-card.highlight{background:${mkCharcoal};color:${mkCream};}
   .compare-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;color:${mkCharcoalSoft};}
   .compare-card.highlight .compare-label{color:#B9B4A8;}
-  .compare-title{font-size:18px;font-style:italic;line-height:1.4;margin:0 0 10px;}
   /* 16px/1.6, matching .bento-card p/.problem-line — an existing size/
      line-height pair, not a new one — replacing the previous 13px/1.55. */
   .compare-card p{font-size:16px;line-height:1.6;margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
+
+  /* Example pattern — moved out of the dark card into its own centered
+     element below the two (now equal, compact) cards. .mk-eyebrow for the
+     label, matching every other section-level eyebrow on the page; a new
+     .pattern-example-quote (26px/22px mobile, up from .compare-title's
+     18px) since it's now the section's own visual centerpiece rather than
+     a small line inside a card; .mk-microcopy for the caption underneath,
+     the same small-caption style already used for the IPIP-NEO-120 line
+     right below it, for visual consistency between the two. */
+  .pattern-example{max-width:560px;margin:36px auto 0;text-align:center;}
+  .pattern-example-quote{font-size:26px;font-style:italic;line-height:1.35;margin:6px 0 12px;}
   /* align-self:center, not the grid's own align-items:stretch (needed by
      the two cards) — .compare-vs would otherwise stretch to the row's full
      height and its text would sit at the top of that stretched cell. Works
@@ -218,6 +228,7 @@ const landingCSS = `
     .final-card h2{font-size:30px;}
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
+    .pattern-example-quote{font-size:22px;}
     .problem-title{font-size:20px;min-height:48px;}
   }
 `
@@ -962,13 +973,10 @@ export default function LandingPageClient() {
         {/* Replaces the old "Report Preview" browser-frame mockup section,
             which had no counterpart anywhere in the mockup — removed per
             the user's explicit confirmation, not silently dropped. */}
-        {/* STEP D: heading no longer contains "four-letter", so the U+2011
-            fix and its paragraph are gone. Cards are stretch-aligned (was
-            center) since the content is now parallel — a label + body on
-            the left, a label + body + example quote on the right. The old
-            chip flow is removed entirely; a single centered .mk-microcopy
-            line (reused as-is, same as its other bare-<p> usage in the
-            bento section) replaces it. */}
+        {/* Two equal, compact cards (a label + one line each) instead of
+            stacking the "Bearing" card with a second label and an example
+            quote — that quote now lives in its own centered .pattern-example
+            element below the cards, not inside either one. */}
         <section className="usp-section">
           <div className="wrap">
             <div className="section-head">
@@ -985,19 +993,22 @@ export default function LandingPageClient() {
               <div className="compare-card highlight">
                 <div className="compare-label">Bearing</div>
                 <p>Starts from the same questions for everyone. Then it shows the patterns in your answers.</p>
-                <div className="compare-label" style={{ marginTop: 16 }}>An example pattern</div>
-                {/* "before committing", not the "fore committing" in the
-                    request — treated as a dropped word, since this string
-                    must stay verbatim FACET_DESCRIPTIONS.Cautiousness in
-                    lib/known/scoring.ts (confirmed character-for-character
-                    in STEP D). Flagged in the report; happy to change back
-                    if "fore" was intentional. */}
-                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
-                <p>Deliberate. One of 30 facet patterns.</p>
               </div>
             </div>
 
-            <p className="mk-microcopy" style={{ textAlign:'center' }}>
+            <div className="pattern-example">
+              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>An example pattern</div>
+              {/* "before committing", not the "fore committing" in the
+                  request — treated as a dropped word, since this string
+                  must stay verbatim FACET_DESCRIPTIONS.Cautiousness in
+                  lib/known/scoring.ts (confirmed character-for-character
+                  in STEP D). Flagged in the report; happy to change back
+                  if "fore" was intentional. */}
+              <div className="pattern-example-quote" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
+              <p className="mk-microcopy">Deliberate. One of 30 facet patterns.</p>
+            </div>
+
+            <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
               Built on the IPIP-NEO-120, a public-domain Big Five inventory from published research (Johnson, 2014).
             </p>
           </div>
