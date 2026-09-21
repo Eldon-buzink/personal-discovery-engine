@@ -1204,15 +1204,17 @@ export default function LandingPageClient() {
             <div className="final-glow" style={{ width:280, height:280, background:mkPeriwinkle, top:-80, left:-80 }} />
             <div className="final-glow" style={{ width:260, height:260, background:mkRose, bottom:-90, right:-70 }} />
             <div className="final-content">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Free preview · Private · 15 minutes</div>
+              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Free preview · 15 minutes</div>
               <h2>You already sense<em>there&apos;s more to know.</em></h2>
-              <p>Most people spend years trying to understand themselves. Bearing gives you that map in 15 minutes — grounded in research, not guesswork.</p>
+              <p>Understanding yourself can take years. Bearing gives you a clear starting point in about 15 minutes, built on the IPIP-NEO-120, a public-domain Big Five inventory.</p>
               <div className="final-cta-row">
-                <Link href="/onboarding">
-                  <button className="mk-btn">Start your report — it&apos;s free</button>
+                {/* startedUnfinished: same text/href swap as the hero CTA
+                    above, no arrow — not a new state, just reused here. */}
+                <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
+                  <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
                 </Link>
                 <Link href="/report/sample" className="final-link">
-                  See an example report
+                  See a sample report
                 </Link>
               </div>
               <span className="mk-microcopy">No account for your first 5 · No credit card to start</span>
