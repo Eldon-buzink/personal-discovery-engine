@@ -69,7 +69,14 @@ const landingCSS = `
      type values) — both rendered as <div>, not <h3>/<p>, so the .step h3/
      .step p element+class rules below can't override them (the same
      specificity trap fixed elsewhere on this page). */
-  .problem-section{padding:20px 32px 90px;}
+  /* Horizontal padding is 0 here, not 32px — .problem-section wraps its
+     content in .wrap (below), which already supplies its own 32px
+     horizontal padding. A second 32px here doubled the inset to 64px,
+     invisible at wide desktop widths (where .wrap hits its own
+     max-width:1120px and centers regardless) but visible on mobile, where
+     .wrap no longer hits that cap and both paddings stack. Matches
+     .bento-section/.usp-section, which never had this extra padding. */
+  .problem-section{padding:20px 0 90px;}
   .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
   /* Root cause of the 1280px heading/grid misalignment: .how-steps (below,
      shared with How it works) carries its own max-width:1000px + margin:0
@@ -81,7 +88,11 @@ const landingCSS = `
      1056px and starts flush. Scoped to .problem-section only, so How it
      works' own .how-steps usage (not inside .wrap) is untouched. */
   .problem-section .how-steps{max-width:none;margin:0;}
-  .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;}
+  /* min-height reserves 2 lines (24px * 1.2 * 2) so .problem-line starts at
+     the same y in every card regardless of whether that card's title wraps
+     to 1 or 2 lines at this width — card 1's title wraps at 1280px, cards 2
+     and 3 don't. */
+  .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;min-height:57.6px;}
   .problem-line{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
 
   /* Bento grid */
@@ -158,7 +169,7 @@ const landingCSS = `
        proven-good ~32px gap above the nav. */
     .hero{padding:88px 20px 40px;}
     .hero p{max-width:100%;}
-    .problem-section{padding:10px 20px 60px;}
+    .problem-section{padding:10px 0 60px;}
     .bento-section{padding:28px 0 60px;}
     .usp-section{padding:10px 0 60px;}
     .bento-card{padding:22px;}
@@ -168,7 +179,7 @@ const landingCSS = `
     .final-card h2{font-size:30px;}
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
-    .problem-title{font-size:20px;}
+    .problem-title{font-size:20px;min-height:48px;}
   }
 `
 
