@@ -581,7 +581,7 @@ function DemoBlob({ scale = 1 }: { scale?: number }) {
   }, [profile], wrapRef)
 
   return (
-    <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${16 * scale}px auto ${22 * scale}px`, position: 'relative' }}>
+    <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${16 * scale}px 0 ${22 * scale}px`, position: 'relative' }}>
       {/* Fires once on reveal in the real assessment flow; the landing page
           has no reveal moment to key off, so it loops (matches the mockup's
           own note on this same tradeoff). Reuses the app's existing global
