@@ -31,7 +31,6 @@ const mkCard         = '#EFEAE0'
 const mkCharcoal     = '#262420'
 const mkCharcoalSoft = '#57534A'
 const mkLine         = 'rgba(38,36,32,0.1)'
-const mkTeal         = '#7FD9C4'
 const mkPeriwinkle   = '#AEBBE8'
 const mkRose         = '#E9AFC0'
 
@@ -99,7 +98,7 @@ const landingCSS = `
 
   /* USP compare section */
   .usp-section{padding:20px 0 90px;}
-  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;}
+  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:stretch;}
   .compare-card{border-radius:18px;padding:26px;}
   .compare-card.muted{background:${mkCard};border:1px solid ${mkLine};opacity:0.75;}
   .compare-card.highlight{background:${mkCharcoal};color:${mkCream};}
@@ -109,10 +108,6 @@ const landingCSS = `
   .compare-card p{font-size:13px;line-height:1.55;margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
   .compare-vs{font-size:13px;color:${mkCharcoalSoft};text-align:center;}
-  .branch-flow{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:13px;color:${mkCharcoalSoft};}
-  .branch-node{padding:9px 16px;border-radius:999px;border:1px solid ${mkLine};background:${mkCard};}
-  .branch-node.pill{background:${mkTeal};border-color:${mkTeal};color:${mkCharcoal};font-weight:500;}
-  .branch-arrow{opacity:0.5;}
 
   /* .blob-stage/.ring-pulse: pre-existing, already unused before the demo
      section was removed here (DemoBlob's own markup uses inline styles, not
@@ -174,13 +169,6 @@ const landingCSS = `
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
     .problem-title{font-size:20px;}
-    /* Chip flow stacked vertically below the mobile breakpoint — flex-wrap
-       was orphaning the second arrow at the end of row 1 and dropping the
-       teal chip to its own row. Reusing the existing .branch-flow/
-       .branch-arrow classes, not new ones; arrows rotated to point down. */
-    .branch-flow{font-size:12px;gap:8px;flex-direction:column;}
-    .branch-arrow{display:inline-block;transform:rotate(90deg);}
-    .branch-node{padding:7px 12px;}
   }
 `
 
@@ -827,43 +815,37 @@ export default function LandingPageClient() {
         {/* Replaces the old "Report Preview" browser-frame mockup section,
             which had no counterpart anywhere in the mockup — removed per
             the user's explicit confirmation, not silently dropped. */}
+        {/* STEP D: heading no longer contains "four-letter", so the U+2011
+            fix and its paragraph are gone. Cards are stretch-aligned (was
+            center) since the content is now parallel — a label + body on
+            the left, a label + body + example quote on the right. The old
+            chip flow is removed entirely; a single centered .mk-microcopy
+            line (reused as-is, same as its other bare-<p> usage in the
+            bento section) replaces it. */}
         <section className="usp-section">
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
-              {/* U+2011 (non-breaking hyphen) in "four‑letter" — at 390px the
-                  regular hyphen was a valid break point, leaving "four-"
-                  hanging on its own line. Text-only change, renders
-                  identically to a normal hyphen everywhere it doesn't need
-                  to break, so 1280px is unaffected. */}
-              <h2>Patterns, not a four‑letter type.</h2>
-              <p>Journaling and chat tools mostly reflect back what you put in. Bearing starts from the same 120 statements for everyone, in random order, before anything is interpreted.</p>
+              <h2>Most reflection tools just mirror you.</h2>
             </div>
 
             <div className="compare">
               <div className="compare-card muted">
-                <div className="compare-label">A typical result</div>
-                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;INTJ — The Architect&rdquo;</div>
-                <p>One label for everything you are.</p>
+                <div className="compare-label">Journaling &amp; AI chat</div>
+                <p>Starts from what you choose to say, so it mostly reflects that back.</p>
               </div>
               <div className="compare-vs">vs</div>
               <div className="compare-card highlight">
-                <div className="compare-label">An example Bearing pattern</div>
-                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
-                <p>Deliberate. One of 30 facet patterns, each with its own word and description.</p>
+                <div className="compare-label">Bearing</div>
+                <p>Starts from the same questions for everyone. Then it shows the patterns in your answers.</p>
+                <div className="compare-label" style={{ marginTop: 16 }}>An example pattern</div>
+                <div className="compare-title" style={{ fontFamily:serif }}>Your responses showed a pattern of holding space before committing.</div>
               </div>
             </div>
 
-            {/* Sentence case on all three chips (was lowercase-leading on
-                the 2nd/3rd) — a judgment call, flagged in the commit, since
-                it wasn't specified either way. */}
-            <div className="branch-flow">
-              <span className="branch-node">Your first patterns</span>
-              <span className="branch-arrow">→</span>
-              <span className="branch-node">A pattern stands out</span>
-              <span className="branch-arrow">→</span>
-              <span className="branch-node pill">We suggest which assessment to take next</span>
-            </div>
+            <p className="mk-microcopy" style={{ textAlign:'center' }}>
+              Built on the Big Five, a widely used research model of personality.
+            </p>
           </div>
         </section>
 
