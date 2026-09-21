@@ -89,11 +89,11 @@ const landingCSS = `
      1056px and starts flush. Scoped to .problem-section only, so How it
      works' own .how-steps usage (not inside .wrap) is untouched. */
   .problem-section .how-steps{max-width:none;margin:0;}
-  /* min-height reserves 2 lines (24px * 1.2 * 2) so .problem-line starts at
-     the same y in every card regardless of whether that card's title wraps
-     to 1 or 2 lines at this width — card 1's title wraps at 1280px, cards 2
-     and 3 don't. */
-  .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;min-height:57.6px;}
+  /* No min-height workaround: card 1's title ("Insight, but no focus.") is
+     now short enough to fit on one line at every width alongside cards 2
+     and 3, so all three .problem-line elements already start at the same y
+     without reserving extra space for a wrap that no longer happens. */
+  .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;}
   .problem-line{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   .problem-visual{position:relative;height:56px;display:flex;align-items:center;margin-bottom:18px;}
 
@@ -229,7 +229,7 @@ const landingCSS = `
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
     .pattern-example-quote{font-size:22px;}
-    .problem-title{font-size:20px;min-height:48px;}
+    .problem-title{font-size:20px;}
   }
 `
 
@@ -892,7 +892,7 @@ export default function LandingPageClient() {
             <div className="how-steps" style={{ marginTop: 32 }}>
               <div className="step">
                 <ProblemCirclesVisual />
-                <div className="problem-title">Not knowing what drives you.</div>
+                <div className="problem-title">Insight, but no focus.</div>
                 <div className="problem-line">You reflect a lot, but it never adds up to a clear direction.</div>
               </div>
               <div className="step">
