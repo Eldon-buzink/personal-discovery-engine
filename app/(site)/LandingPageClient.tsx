@@ -310,6 +310,7 @@ const landingCSS = `
        elsewhere on the page fits better. */
     .bento{gap:16px;margin:0 auto 16px;}
     .bento-col{gap:16px;}
+    .bento-cluster-canvas-wrap{min-height:220px;}
     .how{padding:10px 20px 60px;}
     .step{padding:22px 18px;}
     .faq-section{padding:10px 0 60px;}
