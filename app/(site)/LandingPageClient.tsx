@@ -908,12 +908,15 @@ export default function LandingPageClient() {
               </div>
             </div>
 
+            {/* Sentence case on all three chips (was lowercase-leading on
+                the 2nd/3rd) — a judgment call, flagged in the commit, since
+                it wasn't specified either way. */}
             <div className="branch-flow">
               <span className="branch-node">Your first patterns</span>
               <span className="branch-arrow">→</span>
-              <span className="branch-node">a pattern stands out</span>
+              <span className="branch-node">A pattern stands out</span>
               <span className="branch-arrow">→</span>
-              <span className="branch-node pill">we suggest which assessment to take next</span>
+              <span className="branch-node pill">We suggest which assessment to take next</span>
             </div>
           </div>
         </section>
