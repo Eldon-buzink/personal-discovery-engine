@@ -95,7 +95,10 @@ const landingCSS = `
      without reserving extra space for a wrap that no longer happens. */
   .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;}
   .problem-line{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
-  .problem-visual{position:relative;height:56px;display:flex;align-items:center;margin-bottom:18px;}
+  /* 84px, up from 56px (x1.5, matching the visuals themselves) — the
+     tallest of the three enlarged visuals (card 1's circles) now bottoms
+     out at 72px, so this still clears it with room to spare. */
+  .problem-visual{position:relative;height:84px;display:flex;align-items:center;margin-bottom:18px;}
 
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
@@ -667,13 +670,17 @@ function ConnectVisual() {
 //    a visual shorthand for "a repeating pattern," for card 3's "not seeing
 //    your patterns" copy. Replaces the old INTJ pill (ProblemPillVisual,
 //    deleted along with the chip-flow copy it referenced).
+// All three visuals' sizes/positions/blur amounts are the previous values
+// x1.5 (e.g. card 1's 30px circle is now 45px; .problem-visual's own height
+// grows from 56px to 84px, same factor, to fit the tallest one — card 1's
+// circle at top:48/size:24 now bottoms out at 72px — without clipping).
 function ProblemCirclesVisual() {
   const circles = [
-    { size: 30, top: 2,  left: 4,  color: mkTeal },
-    { size: 20, top: 28, left: 34, color: mkRose },
-    { size: 24, top: 0,  left: 44, color: mkPeriwinkle },
-    { size: 16, top: 32, left: 4,  color: mkPeriwinkle },
-    { size: 18, top: 12, left: 20, color: mkRose },
+    { size: 45, top: 3,  left: 6,  color: mkTeal },
+    { size: 30, top: 42, left: 51, color: mkRose },
+    { size: 36, top: 0,  left: 66, color: mkPeriwinkle },
+    { size: 24, top: 48, left: 6,  color: mkPeriwinkle },
+    { size: 27, top: 18, left: 30, color: mkRose },
   ]
   return (
     <div className="problem-visual">
@@ -681,7 +688,7 @@ function ProblemCirclesVisual() {
         <div
           key={i}
           className="final-glow"
-          style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(6px)' }}
+          style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(9px)' }}
         />
       ))}
     </div>
@@ -690,28 +697,28 @@ function ProblemCirclesVisual() {
 
 function ProblemBlobRingVisual() {
   // Ring's outer edge at left:0, flush with the card's text edge (same as
-  // card 1's circles and card 3's trio) — was left:19, sitting visibly
-  // inside the label. Blob stays centered inside the ring (ring spans
-  // 0-38px, center 19px; blob is 24px, so left = 19 - 24/2 = 7px).
+  // card 1's circles and card 3's trio). Blob stays centered inside the
+  // ring (ring spans 0-57px, center 28.5px; blob is 36px, so
+  // left = 28.5 - 36/2 = 10.5px).
   return (
     <div className="problem-visual">
-      <div className="final-glow" style={{ width: 24, height: 24, top: 16, left: 7, background: mkRose, filter: 'blur(5px)' }} />
-      <div style={{ position: 'absolute', width: 38, height: 38, top: 9, left: 0, borderRadius: '50%', border: `1.5px dashed ${mkRose}` }} />
+      <div className="final-glow" style={{ width: 36, height: 36, top: 24, left: 10.5, background: mkRose, filter: 'blur(7.5px)' }} />
+      <div style={{ position: 'absolute', width: 57, height: 57, top: 13.5, left: 0, borderRadius: '50%', border: `2.25px dashed ${mkRose}` }} />
     </div>
   )
 }
 
 function ProblemTrioVisual() {
-  // Three identical 18px circles, 26px apart (8px gap between edges),
+  // Three identical 27px circles, 39px apart (12px gap between edges),
   // outer edge flush at left:0 — same convention as the other two visuals.
-  const lefts = [0, 26, 52]
+  const lefts = [0, 39, 78]
   return (
     <div className="problem-visual">
       {lefts.map((left, i) => (
         <div
           key={i}
           className="final-glow"
-          style={{ width: 18, height: 18, top: 19, left, background: mkTeal, filter: 'blur(5px)' }}
+          style={{ width: 27, height: 27, top: 28.5, left, background: mkTeal, filter: 'blur(7.5px)' }}
         />
       ))}
     </div>
