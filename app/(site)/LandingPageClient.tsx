@@ -122,8 +122,20 @@ const landingCSS = `
 
   /* USP compare section */
   .usp-section{padding:20px 0 90px;}
-  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:stretch;}
-  .compare-card{border-radius:18px;padding:26px;}
+  /* column-gap/row-gap, not the shorthand gap, so the 20px horizontal gap
+     between the two cards (and the vs column) doesn't also open up
+     unwanted vertical banding between the 3 subgrid rows inside each card
+     — that separation comes from .compare-item's own hairline instead.
+     grid-template-rows:repeat(3,auto) gives .compare-card's subgrid rows
+     (below) 3 explicit tracks to align to, shared by both cards, so row 1
+     in the muted card is exactly as tall as row 1 in the highlight card
+     (whichever is taller), same for rows 2 and 3. */
+  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:repeat(3,auto);column-gap:20px;row-gap:0;align-items:stretch;}
+  /* grid-row:1/span 3 + grid-template-rows:subgrid: the card claims all 3
+     of .compare's row tracks and hands them straight to its own
+     .compare-item children, instead of sizing its own rows independently
+     of the other card. */
+  .compare-card{grid-row:1/span 3;display:grid;grid-template-rows:subgrid;border-radius:18px;padding:26px;}
   /* No opacity — the muted look comes from the lighter mkCard fill and
      mkLine border against the highlight card's solid mkCharcoal, not from
      translucency. opacity:0.75 here previously diluted the text along with
@@ -133,8 +145,17 @@ const landingCSS = `
      restores that token's real, solid contrast (~6.4:1). */
   .compare-card.muted{background:${mkCard};border:1px solid ${mkLine};}
   .compare-card.highlight{background:${mkCharcoal};color:${mkCream};}
-  .compare-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;color:${mkCharcoalSoft};}
-  .compare-card.highlight .compare-label{color:#B9B4A8;}
+  /* Each card is now a 3-item list — .compare-item holds one lead+body
+     pair and is one subgrid row. Hairline only between items (the
+     adjacent-sibling selector), not framing the list's top/bottom edge;
+     mkLine is a dark-based translucent color, invisible on the highlight
+     card's mkCharcoal background, so that card gets a light-based one. */
+  .compare-item{padding:14px 0;}
+  .compare-item:first-child{padding-top:0;}
+  .compare-item:last-child{padding-bottom:0;}
+  .compare-item + .compare-item{border-top:1px solid ${mkLine};}
+  .compare-card.highlight .compare-item + .compare-item{border-top-color:rgba(247,244,237,0.15);}
+  .compare-card.highlight .mk-eyebrow{color:#B9B4A8;}
   /* 16px/1.6, matching .bento-card p/.problem-line — an existing size/
      line-height pair, not a new one — replacing the previous 13px/1.55. */
   .compare-card p{font-size:16px;line-height:1.6;margin:0;color:${mkCharcoalSoft};}
@@ -150,13 +171,11 @@ const landingCSS = `
      right below it, for visual consistency between the two. */
   .pattern-example{max-width:560px;margin:36px auto 0;text-align:center;}
   .pattern-example-quote{font-size:26px;font-style:italic;line-height:1.35;margin:6px 0 12px;}
-  /* align-self:center, not the grid's own align-items:stretch (needed by
-     the two cards) — .compare-vs would otherwise stretch to the row's full
-     height and its text would sit at the top of that stretched cell. Works
-     the same way at the <=860px single-column breakpoint, where the cell's
-     own height already equals its content height, so centering is a no-op
-     there but harmless. */
-  .compare-vs{font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
+  /* grid-row:1/span 3, same as .compare-card — otherwise, now that
+     .compare has 3 row tracks instead of 1, auto-placement would only put
+     "vs" in row 1, not spanning the full height of the cards beside it.
+     align-self:center then centers it within that full 3-row span. */
+  .compare-vs{grid-row:1/span 3;font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
 
   /* .blob-stage/.ring-pulse: pre-existing, already unused before the demo
      section was removed here (DemoBlob's own markup uses inline styles, not
@@ -217,7 +236,14 @@ const landingCSS = `
     .bento{grid-template-columns:1fr;}
     .bento-row3{grid-template-columns:1fr;}
     .how-steps{grid-template-columns:1fr;}
+    /* grid-row:auto (was 1/span 3) + display:block (was grid/subgrid) on
+       both the cards and "vs" — single column now, so nothing should span
+       multiple row tracks anymore; without this override the muted card,
+       "vs", and highlight card would all try to occupy the same single
+       column's rows 1-3 at once and stack on top of each other. */
     .compare{grid-template-columns:1fr;}
+    .compare-card{grid-row:auto;display:block;}
+    .compare-vs{grid-row:auto;}
     .hero h1{font-size:38px;}
     .hero-blob-wrap{margin-top:20px;}
     .final-card{padding:56px 28px;}
@@ -1004,26 +1030,47 @@ export default function LandingPageClient() {
         {/* Replaces the old "Report Preview" browser-frame mockup section,
             which had no counterpart anywhere in the mockup — removed per
             the user's explicit confirmation, not silently dropped. */}
-        {/* Two equal, compact cards (a label + one line each) instead of
-            stacking the "Bearing" card with a second label and an example
-            quote — that quote now lives in its own centered .pattern-example
-            element below the cards, not inside either one. */}
+        {/* Each card is now a 3-item hairline-separated list (.compare-item:
+            an .mk-eyebrow lead + a body paragraph) instead of a single
+            label+line — rows aligned across both cards via CSS subgrid
+            (.compare-card{grid-template-rows:subgrid}, above), not just
+            equal-height cards with top-aligned lists. */}
         <section className="usp-section">
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
-              <h2>Most reflection tools just mirror you.</h2>
+              <h2>Fixed questions, specific patterns.</h2>
             </div>
 
             <div className="compare">
               <div className="compare-card muted">
-                <div className="compare-label">Journaling &amp; AI chat</div>
-                <p>Starts from what you choose to say, so it mostly reflects that back.</p>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">AI chat</div>
+                  <p>Tends to tell you what you want to hear.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Professional assessments</div>
+                  <p>Often need a certified coach to explain what your results mean.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Type tests</div>
+                  <p>Sort you into one of a fixed set of four-letter labels.</p>
+                </div>
               </div>
               <div className="compare-vs">vs</div>
               <div className="compare-card highlight">
-                <div className="compare-label">Bearing</div>
-                <p>Starts from the same questions for everyone. Then it shows the patterns in your answers.</p>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Fixed questions</div>
+                  <p>Your scores come from the same 120 statements for everyone. AI only explains them.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Explained in the report</div>
+                  <p>Each pattern comes with a written explanation in the report itself.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">30 facets</div>
+                  <p>Specific patterns across the Big Five, not one label.</p>
+                </div>
               </div>
             </div>
 
