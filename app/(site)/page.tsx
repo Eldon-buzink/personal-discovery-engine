@@ -6,8 +6,8 @@ import LandingPageClient from './LandingPageClient'
 // same pattern as the pricing and onboarding pages.
 export const metadata = buildMetadata({
   path: '/',
-  title: "Bearing — Find out what's actually driving you",
-  description: "A 15-minute assessment that surfaces your traits, your loops, your energy — not a type, a picture. Your first 5 patterns are free, no account needed.",
+  title: 'Bearing — Get to know yourself better',
+  description: 'A Big Five personality assessment. Rate 120 short statements and see your patterns. Your first 5 patterns are free, no account needed.',
 })
 
 // No logo asset or internal search feature exists yet (checked public/ and
