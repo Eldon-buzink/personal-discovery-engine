@@ -336,7 +336,7 @@ function HeroBlobs() {
     items.forEach(b => {
       pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t))
     })
-  }, [items], wrapRef)
+  }, [items], wrapRef, { respectReducedMotion: true })
 
   return (
     <div className="hero-blob-wrap" ref={wrapRef}>
@@ -414,7 +414,7 @@ function BentoCluster() {
 
   useBlobAnimation(t => {
     items.forEach(b => pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, t)))
-  }, [items], wrapRef)
+  }, [items], wrapRef, { respectReducedMotion: true })
 
   return (
     <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
@@ -493,7 +493,7 @@ function OrbitVisual() {
   useBlobAnimation(t => {
     envItems.forEach(b => pathRefs.current[b.word]?.setAttribute('d', sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, t)))
     youPathRef.current?.setAttribute('d', sharedGenerateAnimatedBlobPath(ORBIT_CX, ORBIT_CY, 20, youProfile, 0.25, t))
-  }, [envItems, youProfile], wrapRef)
+  }, [envItems, youProfile], wrapRef, { respectReducedMotion: true })
 
   return (
     <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
@@ -585,7 +585,7 @@ function DemoBlob({ scale = 1, marginTop }: { scale?: number; marginTop?: number
 
   useBlobAnimation(t => {
     pathRef.current?.setAttribute('d', sharedGenerateAnimatedBlobPath(110, 110, 78, profile, 0.3, t))
-  }, [profile], wrapRef)
+  }, [profile], wrapRef, { respectReducedMotion: true })
 
   return (
     <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${marginTop ?? 16 * scale}px 0 ${22 * scale}px`, position: 'relative' }}>
