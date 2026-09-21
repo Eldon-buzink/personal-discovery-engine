@@ -13,7 +13,9 @@ import {
 } from '@/lib/blobs'
 import CtaButton from './CtaButton'
 import ContinueLink from './ContinueLink'
-import FaqAccordion from './FaqAccordion'
+// Moved to ../FaqAccordion.tsx (app/(site)/FaqAccordion.tsx) so it survives
+// when /home-v2 is deleted; this import just follows it to the new path.
+import FaqAccordion from '../FaqAccordion'
 
 // Phase 3b — reference/landing-redesign.md section 10, aligning the Phase 3
 // skeleton with the approved reuse map (4b). Copy below is taken verbatim
