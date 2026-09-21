@@ -120,7 +120,13 @@ const landingCSS = `
   .compare-title{font-size:18px;font-style:italic;line-height:1.4;margin:0 0 10px;}
   .compare-card p{font-size:13px;line-height:1.55;margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
-  .compare-vs{font-size:13px;color:${mkCharcoalSoft};text-align:center;}
+  /* align-self:center, not the grid's own align-items:stretch (needed by
+     the two cards) — .compare-vs would otherwise stretch to the row's full
+     height and its text would sit at the top of that stretched cell. Works
+     the same way at the <=860px single-column breakpoint, where the cell's
+     own height already equals its content height, so centering is a no-op
+     there but harmless. */
+  .compare-vs{font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
 
   /* .blob-stage/.ring-pulse: pre-existing, already unused before the demo
      section was removed here (DemoBlob's own markup uses inline styles, not
