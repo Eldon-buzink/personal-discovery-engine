@@ -261,7 +261,10 @@ const landingCSS = `
        column's rows 1-3 at once and stack on top of each other. */
     .compare{grid-template-columns:1fr;}
     .compare-card{grid-row:auto;display:block;}
-    .compare-vs{grid-row:auto;}
+    /* .compare's own row-gap:0 (needed for the desktop subgrid, above)
+       left "vs" flush against both cards once stacked — 14px top and
+       bottom gives it breathing room between them. */
+    .compare-vs{grid-row:auto;margin:14px 0;}
     .hero h1{font-size:38px;}
     .hero-blob-wrap{margin-top:20px;}
     .final-card{padding:56px 28px;}
