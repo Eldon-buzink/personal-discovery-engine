@@ -311,6 +311,17 @@ const landingCSS = `
     .bento{gap:16px;margin:0 auto 16px;}
     .bento-col{gap:16px;}
     .bento-cluster-canvas-wrap{min-height:220px;}
+    /* B6 (optional/revertable): horizontal card layout — visual left
+       (~64px), title+line stacked to its right, left-aligned, instead of
+       stacked-and-centered. Grid, not a JSX change (this round is CSS-
+       only): .problem-visual/.problem-title/.problem-line keep their
+       existing DOM order and classes, just placed via grid-column/row. */
+    .problem-section .step{
+      display:grid;grid-template-columns:64px 1fr;column-gap:16px;align-items:start;text-align:left;
+    }
+    .problem-section .problem-visual{grid-column:1;grid-row:1 / span 2;width:64px;height:64px;margin-bottom:0;justify-content:flex-start;}
+    .problem-section .problem-title{grid-column:2;grid-row:1;}
+    .problem-section .problem-line{grid-column:2;grid-row:2;}
     .how{padding:10px 20px 60px;}
     .step{padding:22px 18px;}
     .faq-section{padding:10px 0 60px;}
