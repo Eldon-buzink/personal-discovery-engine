@@ -136,6 +136,28 @@ const landingCSS = `
   .step h3{font-size:16px;font-weight:600;margin:0 0 8px;}
   .step p{font-size:13.5px;line-height:1.55;color:${mkCharcoalSoft};margin:0;}
 
+  /* Static 5-dot scale (step 1), restored from the earlier /home-v2 build
+     (HomeV2Client.tsx's StaticDotScale/.hv2-dotscale*, renamed without the
+     hv2- prefix since this file isn't home-v2). Sizes match
+     QuestionCard.tsx's own DotScale: dots 20px, connecting line inset 10px
+     (half a dot's width) from each end, row-to-labels gap 16px. Colors are
+     mk* tokens, not QuestionCard's Tailwind colors — matching size/
+     thickness/gaps was the ask, not recoloring. */
+  .dotscale{display:flex;flex-direction:column;gap:16px;max-width:220px;margin:16px 0 0;}
+  .dotscale-row{position:relative;display:flex;align-items:center;justify-content:space-between;}
+  .dotscale-line{position:absolute;left:10px;right:10px;top:50%;transform:translateY(-50%);height:1px;background:${mkLine};}
+  .dotscale-dot{position:relative;z-index:1;width:20px;height:20px;border-radius:50%;background:${mkCream};border:2px solid ${mkCharcoalSoft};}
+  .dotscale-labels{display:flex;justify-content:space-between;font-size:11px;color:${mkCharcoalSoft};}
+
+  /* Light-background pill (step 3), restored from the earlier /home-v2
+     build's .hv2-benefit-pill — itself a recolor of .badge-pill (radius
+     999px, padding 5px 12px kept) for a light/cream context, since
+     .badge-pill's own translucent-white-on-dark colors are for the dark
+     .bento-card.dark it was designed to sit on and would be invisible here.
+     Font-size 13px matches .mk-microcopy, not a new value. */
+  .step-pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .step-pill{font-size:13px;color:${mkCharcoalSoft};border:1px solid ${mkLine};border-radius:999px;padding:5px 12px;background:${mkCard};}
+
   /* Final CTA */
   .final-outer{background:${mkCharcoal};padding:90px 32px;}
   .final-card{max-width:900px;margin:0 auto;border-radius:32px;padding:80px 60px;text-align:center;position:relative;overflow:hidden;background:${mkCream};}
@@ -503,6 +525,29 @@ function DemoBlob() {
       }}>
         Deliberate
       </span>
+    </div>
+  )
+}
+
+// ─── StaticDotScale ───────────────────────────────────────────────────────────
+// Restored from the earlier /home-v2 build (HomeV2Client.tsx's
+// StaticDotScale) for How it works step 1. Not imported from
+// QuestionCard.tsx: its DotScale isn't exported, and the assessment files
+// stay out of scope for this page. All 5 dots render unselected — showing
+// the scale itself, not a specific (fabricated) answer.
+function StaticDotScale() {
+  return (
+    <div className="dotscale">
+      <div className="dotscale-row">
+        <div className="dotscale-line" />
+        {[1, 2, 3, 4, 5].map(n => (
+          <div key={n} className="dotscale-dot" />
+        ))}
+      </div>
+      <div className="dotscale-labels">
+        <span>Very Inaccurate</span>
+        <span>Very Accurate</span>
+      </div>
     </div>
   )
 }
@@ -946,25 +991,45 @@ export default function LandingPageClient() {
         {/* ── HOW IT WORKS (3-step) ────────────────────────────────── */}
         {/* id="how-it-works" kept even though the mockup's .how section has
             no id — SiteFooter.tsx (untouched, out of scope) links to
-            /#how-it-works and would silently break without it. */}
+            /#how-it-works and would silently break without it. Each step
+            gets its own small static visual now (StaticDotScale, DemoBlob,
+            the pill row) instead of the shared .map() over plain
+            title/desc pairs, since the three visuals aren't interchangeable. */}
         <section id="how-it-works" className="how">
           <div className="section-head">
             <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>How it works</div>
             <h2>Three steps. One honest picture.</h2>
           </div>
           <div className="how-steps">
-            {[
-              { n:'1', title:'Answer naturally',      desc:'60–80 real-scenario questions, not abstract sliders. Your first trait shows up after about 15 of them.' },
-              { n:'2', title:'See if it resonates',    desc:"If it doesn't feel right, stop — no cost, no account. If it does, keep going for the full picture." },
-              { n:'3', title:'Get your plan',          desc:'Six dimensions and concrete next steps, plus a recommendation on which branch to explore deeper — unlocked for a one-time payment.' },
-            ].map(step => (
-              <div key={step.n} className="step">
-                <div className="step-mark">{step.n}</div>
-                <h3>{step.title}</h3>
-                <p>{step.desc}</p>
+            <div className="step">
+              <div className="step-mark">1</div>
+              <h3>Rate 120 short statements</h3>
+              <p>Statements like &lsquo;Worry about things.&rsquo;, rated from very inaccurate to very accurate. About 15 minutes.</p>
+              <StaticDotScale />
+            </div>
+            <div className="step">
+              <div className="step-mark">2</div>
+              {/* "resonates", not the request's "resates" — treated as a
+                  dropped syllable, same as "fore"/"before" in the compare
+                  section. Flagged in the report. */}
+              <h3>See if it resonates</h3>
+              <p>Your first patterns appear while you&apos;re still answering, usually before the halfway point. If it doesn&apos;t feel right, stop: no cost, no account.</p>
+              <DemoBlob />
+            </div>
+            <div className="step">
+              <div className="step-mark">3</div>
+              <h3>Go deeper</h3>
+              <p>Unlock all 30 facets plus five deeper assessments for EUR 49, once. Bearing suggests which to take first. No subscription.</p>
+              <div className="step-pill-row">
+                {['Working style', 'Relationships', 'Energy', 'Environment', 'Direction'].map(label => (
+                  <span key={label} className="step-pill">{label}</span>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
+          <p className="mk-microcopy" style={{ textAlign:'center', marginTop:32 }}>
+            The written explanation of each pattern is generated by AI from your results.
+          </p>
         </section>
 
         {/* ── FINAL CTA ─────────────────────────────────────────────── */}
