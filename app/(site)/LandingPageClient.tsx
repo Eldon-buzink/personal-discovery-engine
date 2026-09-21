@@ -284,7 +284,10 @@ const landingCSS = `
        bottom gives it breathing room between them. */
     .compare-vs{grid-row:auto;margin:14px 0;}
     .hero h1{font-size:38px;}
-    .hero-blob-wrap{margin-top:20px;}
+    /* .hero-blob-wrap's own margin-top:20px (removed) stacked on top of
+       .hero-inner's grid gap:40px, double-spacing the text column and the
+       blob once they're single-column here — the grid's own gap already
+       separates them. */
     .final-card{padding:56px 28px;}
   }
   @media(max-width:640px){
@@ -295,9 +298,18 @@ const landingCSS = `
     .hero{padding:88px 20px 40px;}
     .hero p{max-width:100%;}
     .problem-section{padding:10px 0 60px;}
-    .bento-section{padding:28px 0 60px;}
+    /* 10px, matching .problem-section/.usp-section/.faq-section's mobile
+       top padding — this was the one section-padding outlier at 28px. */
+    .bento-section{padding:10px 0 60px;}
     .usp-section{padding:10px 0 60px;}
-    .bento-card{padding:22px;}
+    /* 20px, matching .compare-card's own mobile padding. */
+    .bento-card{padding:20px;}
+    /* 16px, matching .dotscale's own gap — desktop's 22px card-to-card
+       gaps, unchanged there, are this page's spacing for a 2-column grid;
+       single-column here, so the tighter existing 16px value already used
+       elsewhere on the page fits better. */
+    .bento{gap:16px;margin:0 auto 16px;}
+    .bento-col{gap:16px;}
     .how{padding:10px 20px 60px;}
     .step{padding:22px 18px;}
     .faq-section{padding:10px 0 60px;}
