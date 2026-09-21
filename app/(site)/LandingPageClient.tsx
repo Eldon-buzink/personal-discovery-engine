@@ -75,6 +75,16 @@ const landingCSS = `
      palette). */
   .problem-section{padding:20px 32px 90px;}
   .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
+  /* Root cause of the 1280px heading/grid misalignment: .how-steps (below,
+     shared with How it works) carries its own max-width:1000px + margin:0
+     auto, designed for sitting directly inside .how (no width cap of its
+     own). Nested inside .wrap here, .wrap already caps + centers the content
+     area (1120px total, 1056px inside its 32px padding) — .how-steps then
+     re-centers its narrower 1000px box a second time, indenting it ~28px
+     from .wrap's edge while .problem-heading (no max-width) fills the full
+     1056px and starts flush. Scoped to .problem-section only, so How it
+     works' own .how-steps usage (not inside .wrap) is untouched. */
+  .problem-section .how-steps{max-width:none;margin:0;}
   .problem-visual{position:relative;height:56px;display:flex;align-items:center;margin-bottom:18px;}
 
   /* Bento grid */
