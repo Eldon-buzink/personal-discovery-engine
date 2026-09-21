@@ -617,10 +617,14 @@ function ProblemCirclesVisual() {
 }
 
 function ProblemBlobRingVisual() {
+  // Ring's outer edge at left:0, flush with the card's text edge (same as
+  // card 1's circles and card 3's pill) — was left:19, sitting visibly
+  // inside the label. Blob stays centered inside the ring (ring spans
+  // 0-38px, center 19px; blob is 24px, so left = 19 - 24/2 = 7px).
   return (
     <div className="problem-visual">
-      <div className="final-glow" style={{ width: 24, height: 24, top: 16, left: 26, background: mkRose, filter: 'blur(5px)' }} />
-      <div style={{ position: 'absolute', width: 38, height: 38, top: 9, left: 19, borderRadius: '50%', border: `1.5px dashed ${mkRose}` }} />
+      <div className="final-glow" style={{ width: 24, height: 24, top: 16, left: 7, background: mkRose, filter: 'blur(5px)' }} />
+      <div style={{ position: 'absolute', width: 38, height: 38, top: 9, left: 0, borderRadius: '50%', border: `1.5px dashed ${mkRose}` }} />
     </div>
   )
 }
