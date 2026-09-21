@@ -510,7 +510,14 @@ function OrbitVisual() {
 // New — the "Watch it happen" demo section's single pattern-reveal blob,
 // ported from the mockup's setupPatternBlob()/patternBlobTick(). Same JSX +
 // refs pattern as the other blob components above.
-function DemoBlob() {
+//
+// `scale` (default 1, the original size) shrinks every pixel value below by
+// the same factor. The SVG's viewBox stays a fixed "0 0 220 220" — its own
+// path/gradient/blur math is untouched — only the rendered width/height
+// attributes shrink, so the browser scales the whole drawing down for free.
+// Only the wrapper box, the pulseRing div, and the label's font-size are
+// plain CSS pixels outside that viewBox and need scaling by hand.
+function DemoBlob({ scale = 1 }: { scale?: number }) {
   const pathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const hue = useMemo(() => sharedUserCuratedHue(SHARED_USER_SEED, 0), [])
@@ -521,7 +528,7 @@ function DemoBlob() {
   }, [profile], wrapRef)
 
   return (
-    <div ref={wrapRef} style={{ width: 190, height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '16px auto 22px', position: 'relative' }}>
+    <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${16 * scale}px auto ${22 * scale}px`, position: 'relative' }}>
       {/* Fires once on reveal in the real assessment flow; the landing page
           has no reveal moment to key off, so it loops (matches the mockup's
           own note on this same tradeoff). Reuses the app's existing global
@@ -529,11 +536,11 @@ function DemoBlob() {
           identical inline one, for visual consistency with the same ring
           used on the assessment page's real pattern-reveal moment. */}
       <div style={{
-        position: 'absolute', inset: 6, borderRadius: '50%',
+        position: 'absolute', inset: 6 * scale, borderRadius: '50%',
         border: '1px solid hsl(8,50%,65%)', opacity: 0.5,
         animation: 'pulseRing 2.4s ease-out infinite',
       }} />
-      <svg viewBox="0 0 220 220" width="220" height="220" style={{ overflow: 'visible' }}>
+      <svg viewBox="0 0 220 220" width={220 * scale} height={220 * scale} style={{ overflow: 'visible' }}>
         <defs>
           <filter id="demo-blob-blur" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="9" />
@@ -549,7 +556,7 @@ function DemoBlob() {
       <span style={{
         position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
         zIndex: 5, pointerEvents: 'none', whiteSpace: 'nowrap',
-        fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: 30,
+        fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: 30 * scale,
         color: `hsl(${hue},45%,24%)`,
       }}>
         Deliberate
@@ -1047,7 +1054,7 @@ export default function LandingPageClient() {
                   section. Flagged in the report. */}
               <h3>See if it resonates</h3>
               <p>Your first patterns appear while you&apos;re still answering, usually before the halfway point. If it doesn&apos;t feel right, stop: no cost, no account.</p>
-              <DemoBlob />
+              <DemoBlob scale={0.45} />
             </div>
             <div className="step">
               <div className="step-mark">3</div>
