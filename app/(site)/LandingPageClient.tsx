@@ -113,12 +113,21 @@ const landingCSS = `
   .usp-section{padding:20px 0 90px;}
   .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:stretch;}
   .compare-card{border-radius:18px;padding:26px;}
-  .compare-card.muted{background:${mkCard};border:1px solid ${mkLine};opacity:0.75;}
+  /* No opacity — the muted look comes from the lighter mkCard fill and
+     mkLine border against the highlight card's solid mkCharcoal, not from
+     translucency. opacity:0.75 here previously diluted the text along with
+     the background, dropping label/body contrast against mkCard to ~3.6:1
+     (below the 4.5:1 AA minimum for body text) even though their color
+     value was already the solid mkCharcoalSoft token — removing it alone
+     restores that token's real, solid contrast (~6.4:1). */
+  .compare-card.muted{background:${mkCard};border:1px solid ${mkLine};}
   .compare-card.highlight{background:${mkCharcoal};color:${mkCream};}
   .compare-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;color:${mkCharcoalSoft};}
   .compare-card.highlight .compare-label{color:#B9B4A8;}
   .compare-title{font-size:18px;font-style:italic;line-height:1.4;margin:0 0 10px;}
-  .compare-card p{font-size:13px;line-height:1.55;margin:0;color:${mkCharcoalSoft};}
+  /* 16px/1.6, matching .bento-card p/.problem-line — an existing size/
+     line-height pair, not a new one — replacing the previous 13px/1.55. */
+  .compare-card p{font-size:16px;line-height:1.6;margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
   /* align-self:center, not the grid's own align-items:stretch (needed by
      the two cards) — .compare-vs would otherwise stretch to the row's full
