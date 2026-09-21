@@ -19,7 +19,7 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'Bearing',
   url: 'https://www.getbearing.me',
-  description: "A personal discovery engine — find out what's actually driving you.",
+  description: "A Big Five personality assessment. Rate 120 short statements and see your patterns. Your first 5 patterns are free, no account needed.",
 }
 
 const websiteJsonLd = {

@@ -2,10 +2,10 @@ import { ImageResponse } from 'next/og'
 import { loadGoogleFont } from './og-font'
 
 export const SITE_OG_IMAGE_SIZE = { width: 1200, height: 630 }
-export const SITE_OG_IMAGE_ALT = "Bearing — Find out what's actually driving you"
+export const SITE_OG_IMAGE_ALT = 'Bearing — Get to know yourself better'
 
 const TITLE = 'Bearing'
-const TAGLINE = "Find out what's actually driving you"
+const TAGLINE = 'Get to know yourself better'
 
 // Shared by app/opengraph-image.tsx (the true root, covering routes like
 // /report and /blob-demo that sit outside every route group) and

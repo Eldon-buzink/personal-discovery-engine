@@ -75,7 +75,7 @@ export default function BlogPage() {
         >
           <div style={{ maxWidth: 480 }}>
             <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: blogRose, marginBottom: 10 }}>
-              Free · Private · 15 minutes
+              Free · 15 minutes
             </div>
             <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 24, marginBottom: 10, lineHeight: 1.25 }}>See where you actually land.</h3>
             <p style={{ fontSize: 14, color: '#C9C5BA', lineHeight: 1.55 }}>

@@ -22,7 +22,7 @@ export default function AssessmentCTA() {
     >
       <div style={{ maxWidth: 400, margin: '0 auto' }}>
         <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#D9D4C7', marginBottom: 16 }}>
-          Free · Private · 15 minutes
+          Free · 15 minutes
         </div>
         <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontStyle: 'italic', fontSize: 24, lineHeight: 1.3, color: blogCream, marginBottom: 12 }}>
           See where you actually land.
@@ -32,7 +32,7 @@ export default function AssessmentCTA() {
         </p>
         <Link href="/onboarding">
           <button style={{ background: blogCream, color: blogCharcoal, border: 'none', padding: '13px 26px', borderRadius: 100, fontWeight: 600, fontSize: 14.5, cursor: 'pointer', fontFamily: blogSans }}>
-            Start your report — it&apos;s free
+            Start the assessment
           </button>
         </Link>
         <div style={{ fontSize: 12, color: '#C4BFB2', marginTop: 14 }}>No account to start · No credit card</div>

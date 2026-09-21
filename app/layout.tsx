@@ -23,7 +23,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.getbearing.me"),
   title: "Bearing",
-  description: "A personal discovery engine — find out what's actually driving you.",
+  description: "A Big Five personality assessment. Rate 120 short statements and see your patterns. Your first 5 patterns are free, no account needed.",
   openGraph: {
     siteName: "Bearing",
     type: "website",
