@@ -175,7 +175,12 @@ const landingCSS = `
     .final-card h2{font-size:30px;}
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
-    .branch-flow{font-size:12px;gap:8px;}
+    /* Chip flow stacked vertically below the mobile breakpoint — flex-wrap
+       was orphaning the second arrow at the end of row 1 and dropping the
+       teal chip to its own row. Reusing the existing .branch-flow/
+       .branch-arrow classes, not new ones; arrows rotated to point down. */
+    .branch-flow{font-size:12px;gap:8px;flex-direction:column;}
+    .branch-arrow{display:inline-block;transform:rotate(90deg);}
     .branch-node{padding:7px 12px;}
   }
 `
