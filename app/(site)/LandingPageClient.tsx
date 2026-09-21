@@ -167,16 +167,6 @@ const landingCSS = `
   .compare-card p{font-size:16px;line-height:1.6;margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
 
-  /* Example pattern — moved out of the dark card into its own centered
-     element below the two (now equal, compact) cards. .mk-eyebrow for the
-     label, matching every other section-level eyebrow on the page; a new
-     .pattern-example-quote (26px/22px mobile, up from .compare-title's
-     18px) since it's now the section's own visual centerpiece rather than
-     a small line inside a card; .mk-microcopy for the caption underneath,
-     the same small-caption style already used for the IPIP-NEO-120 line
-     right below it, for visual consistency between the two. */
-  .pattern-example{max-width:560px;margin:36px auto 0;text-align:center;}
-  .pattern-example-quote{font-size:26px;font-style:italic;line-height:1.35;margin:6px 0 12px;}
   /* grid-row:1/span 3, same as .compare-card — otherwise, now that
      .compare has 3 row tracks instead of 1, auto-placement would only put
      "vs" in row 1, not spanning the full height of the cards beside it.
@@ -334,7 +324,6 @@ const landingCSS = `
     .final-card h2{font-size:30px;}
     .final-card p{font-size:14px;}
     .compare-card{padding:20px;}
-    .pattern-example-quote{font-size:22px;}
     .problem-title{font-size:20px;}
   }
 `
@@ -1170,18 +1159,6 @@ export default function LandingPageClient() {
                   <p>Specific patterns across the Big Five, not one label.</p>
                 </div>
               </div>
-            </div>
-
-            <div className="pattern-example">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>An example pattern</div>
-              {/* "before committing", not the "fore committing" in the
-                  request — treated as a dropped word, since this string
-                  must stay verbatim FACET_DESCRIPTIONS.Cautiousness in
-                  lib/known/scoring.ts (confirmed character-for-character
-                  in STEP D). Flagged in the report; happy to change back
-                  if "fore" was intentional. */}
-              <div className="pattern-example-quote" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
-              <p className="mk-microcopy">Deliberate. One of 30 facet patterns.</p>
             </div>
 
             <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
