@@ -89,16 +89,24 @@ const landingCSS = `
      1056px and starts flush. Scoped to .problem-section only, so How it
      works' own .how-steps usage (not inside .wrap) is untouched. */
   .problem-section .how-steps{max-width:none;margin:0;}
-  /* No min-height workaround: card 1's title ("Insight, but no focus.") is
-     now short enough to fit on one line at every width alongside cards 2
-     and 3, so all three .problem-line elements already start at the same y
-     without reserving extra space for a wrap that no longer happens. */
+  /* Centered text, scoped to .problem-section's own .step cards only — the
+     shared .step{text-align:left} (below, used by How it works too) stays
+     untouched there. No min-height workaround: card 1's title ("Insight,
+     but no focus.") is short enough to fit on one line at every width
+     alongside cards 2 and 3, so all three .problem-line elements already
+     start at the same y without reserving extra space for a wrap that
+     never happens. */
+  .problem-section .step{text-align:center;}
   .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;}
-  .problem-line{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  /* Serif italic, same body color as before (mkCharcoalSoft) — a quote now,
+     not plain body copy. */
+  .problem-line{font-family:'Newsreader',serif;font-style:italic;font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   /* 84px, up from 56px (x1.5, matching the visuals themselves) — the
      tallest of the three enlarged visuals (card 1's circles) now bottoms
-     out at 72px, so this still clears it with room to spare. */
-  .problem-visual{position:relative;height:84px;display:flex;align-items:center;margin-bottom:18px;}
+     out at 72px, so this still clears it with room to spare.
+     justify-content:center centers each visual's inner wrapper (see
+     ProblemCirclesVisual etc. above) instead of leaving it flush left. */
+  .problem-visual{position:relative;height:84px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
 
   /* Bento grid */
   .bento-section{padding:40px 0 90px;}
@@ -681,53 +689,61 @@ function ConnectVisual() {
 // x1.5 (e.g. card 1's 30px circle is now 45px; .problem-visual's own height
 // grows from 56px to 84px, same factor, to fit the tallest one — card 1's
 // circle at top:48/size:24 now bottoms out at 72px — without clipping).
+// Each visual's absolutely-positioned circles sit inside an inner
+// position:relative wrapper sized to that visual's own bounding footprint
+// (not full-width), so .problem-visual's justify-content:center (below)
+// centers the wrapper — and everything inside it — as a unit instead of
+// leaving the circles pinned to the card's left edge.
 function ProblemCirclesVisual() {
   const circles = [
-    { size: 45, top: 3,  left: 6,  color: mkTeal },
-    { size: 30, top: 42, left: 51, color: mkRose },
-    { size: 36, top: 0,  left: 66, color: mkPeriwinkle },
-    { size: 24, top: 48, left: 6,  color: mkPeriwinkle },
-    { size: 27, top: 18, left: 30, color: mkRose },
+    { size: 45, top: 3,  left: 0,  color: mkTeal },
+    { size: 30, top: 42, left: 45, color: mkRose },
+    { size: 36, top: 0,  left: 60, color: mkPeriwinkle },
+    { size: 24, top: 48, left: 0,  color: mkPeriwinkle },
+    { size: 27, top: 18, left: 24, color: mkRose },
   ]
   return (
     <div className="problem-visual">
-      {circles.map((c, i) => (
-        <div
-          key={i}
-          className="final-glow"
-          style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(9px)' }}
-        />
-      ))}
+      <div style={{ position: 'relative', width: 96, height: 72 }}>
+        {circles.map((c, i) => (
+          <div
+            key={i}
+            className="final-glow"
+            style={{ width: c.size, height: c.size, top: c.top, left: c.left, background: c.color, filter: 'blur(9px)' }}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
 function ProblemBlobRingVisual() {
-  // Ring's outer edge at left:0, flush with the card's text edge (same as
-  // card 1's circles and card 3's trio). Blob stays centered inside the
-  // ring (ring spans 0-57px, center 28.5px; blob is 36px, so
-  // left = 28.5 - 36/2 = 10.5px).
+  // Blob stays centered inside the ring (ring spans 0-57px, center 28.5px;
+  // blob is 36px, so left = 28.5 - 36/2 = 10.5px).
   return (
     <div className="problem-visual">
-      <div className="final-glow" style={{ width: 36, height: 36, top: 24, left: 10.5, background: mkRose, filter: 'blur(7.5px)' }} />
-      <div style={{ position: 'absolute', width: 57, height: 57, top: 13.5, left: 0, borderRadius: '50%', border: `2.25px dashed ${mkRose}` }} />
+      <div style={{ position: 'relative', width: 57, height: 70.5 }}>
+        <div className="final-glow" style={{ width: 36, height: 36, top: 24, left: 10.5, background: mkRose, filter: 'blur(7.5px)' }} />
+        <div style={{ position: 'absolute', width: 57, height: 57, top: 13.5, left: 0, borderRadius: '50%', border: `2.25px dashed ${mkRose}` }} />
+      </div>
     </div>
   )
 }
 
 function ProblemTrioVisual() {
-  // Three identical 27px circles, 39px apart (12px gap between edges),
-  // outer edge flush at left:0 — same convention as the other two visuals.
+  // Three identical 27px circles, 39px apart (12px gap between edges).
   const lefts = [0, 39, 78]
   return (
     <div className="problem-visual">
-      {lefts.map((left, i) => (
-        <div
-          key={i}
-          className="final-glow"
-          style={{ width: 27, height: 27, top: 28.5, left, background: mkTeal, filter: 'blur(7.5px)' }}
-        />
-      ))}
+      <div style={{ position: 'relative', width: 105, height: 55.5 }}>
+        {lefts.map((left, i) => (
+          <div
+            key={i}
+            className="final-glow"
+            style={{ width: 27, height: 27, top: 28.5, left, background: mkTeal, filter: 'blur(7.5px)' }}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -885,21 +901,22 @@ export default function LandingPageClient() {
         </section>
 
         {/* ── PROBLEM ("Sound familiar?") ──────────────────────────── */}
-        {/* Plain, felt problems, no eyebrow or italic quote. Heading
-            unchanged (.problem-heading, left-aligned). Cards still reuse
+        {/* Heading unchanged (.problem-heading, left-aligned) — only the
+            three cards are centered (.problem-section .step, scoped so How
+            it works' shared .step stays left-aligned). Cards still reuse
             .how-steps/.step exactly (three columns, one column at <=860px,
             same as How it works) — grid default align-items:stretch already
             gives equal card heights with no extra rule needed. Each card is
             a restored static visual (see ProblemCirclesVisual/
-            ProblemBlobRingVisual/ProblemTrioVisual above) plus a
-            .problem-title (serif, the dominant element) and a .problem-line
-            (sans, muted, below it) — both new classes but built from values
-            already used elsewhere (.bento-card h3/.bento-card p's exact
-            font-family/size/weight/color), not invented ones. <div>s, not
-            <h3>/<p>: .step h3 (sans/16px/600) and .step p (13.5px) would
-            otherwise win on specificity over any conflicting class rule on
-            those elements, the same trap fixed on the hero microcopy and
-            the STEP A quote earlier. */}
+            ProblemBlobRingVisual/ProblemTrioVisual above, now centered via
+            .problem-visual's justify-content:center) plus a .problem-title
+            (serif, the dominant element) and a .problem-line, now a serif
+            italic first-person quote in the same body color as before, not
+            plain third-person copy. <div>s, not <h3>/<p>: .step h3 (sans/
+            16px/600) and .step p (13.5px) would otherwise win on
+            specificity over any conflicting class rule on those elements,
+            the same trap fixed on the hero microcopy and the STEP A quote
+            earlier. */}
         <section className="problem-section">
           <div className="wrap">
             <h2 className="problem-heading">Sound familiar?</h2>
@@ -907,17 +924,17 @@ export default function LandingPageClient() {
               <div className="step">
                 <ProblemCirclesVisual />
                 <div className="problem-title">Insight, but no focus.</div>
-                <div className="problem-line">You reflect a lot, but it never adds up to a clear direction.</div>
+                <div className="problem-line">&ldquo;I reflect a lot, but I still don&apos;t know what to focus on.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemBlobRingVisual />
                 <div className="problem-title">Going in circles.</div>
-                <div className="problem-line">Every time you think about yourself, you land on the same story.</div>
+                <div className="problem-line">&ldquo;Every time I think about myself, I land on the same story.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemTrioVisual />
                 <div className="problem-title">Not seeing your patterns.</div>
-                <div className="problem-line">You sense something keeps repeating, but you can&apos;t name it.</div>
+                <div className="problem-line">&ldquo;I sense something keeps repeating, but I can&apos;t name it.&rdquo;</div>
               </div>
             </div>
           </div>
