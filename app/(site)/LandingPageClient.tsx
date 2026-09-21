@@ -885,7 +885,12 @@ export default function LandingPageClient() {
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
-              <h2>Patterns, not a four-letter type.</h2>
+              {/* U+2011 (non-breaking hyphen) in "four‑letter" — at 390px the
+                  regular hyphen was a valid break point, leaving "four-"
+                  hanging on its own line. Text-only change, renders
+                  identically to a normal hyphen everywhere it doesn't need
+                  to break, so 1280px is unaffected. */}
+              <h2>Patterns, not a four‑letter type.</h2>
               <p>Journaling and chat tools mostly reflect back what you put in. Bearing starts from the same 120 statements for everyone, in random order, before anything is interpreted.</p>
             </div>
 
