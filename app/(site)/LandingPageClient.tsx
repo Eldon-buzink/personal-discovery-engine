@@ -802,30 +802,30 @@ export default function LandingPageClient() {
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
-              <h2>It&apos;s not a label. It&apos;s a plan.</h2>
-              <p>Generic tests hand you four letters and stop there. Bearing reads your answers and tells you what to actually do next — and where it&apos;s worth going deeper.</p>
+              <h2>Patterns, not a four-letter type.</h2>
+              <p>Journaling and chat tools mostly reflect back what you put in. Bearing starts from the same 120 statements for everyone, in random order, before anything is interpreted.</p>
             </div>
 
             <div className="compare">
               <div className="compare-card muted">
                 <div className="compare-label">A typical result</div>
                 <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;INTJ — The Architect&rdquo;</div>
-                <p>A type. Interesting to read. Nothing to act on.</p>
+                <p>One label for everything you are.</p>
               </div>
               <div className="compare-vs">vs</div>
               <div className="compare-card highlight">
-                <div className="compare-label">Your Bearing insight</div>
-                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;You&apos;re drained by open-plan noise before you&apos;ve named it as the problem.&rdquo;</div>
-                <p>Block two hours of async deep work before your team&apos;s stand-up — the first change most people in your cluster make.</p>
+                <div className="compare-label">An example Bearing pattern</div>
+                <div className="compare-title" style={{ fontFamily:serif }}>&ldquo;Your responses showed a pattern of holding space before committing.&rdquo;</div>
+                <p>Deliberate. One of 30 facet patterns, each with its own word and description.</p>
               </div>
             </div>
 
             <div className="branch-flow">
-              <span className="branch-node">Your core results</span>
+              <span className="branch-node">Your first patterns</span>
               <span className="branch-arrow">→</span>
-              <span className="branch-node">strong pattern in <strong>Energy</strong></span>
+              <span className="branch-node">a pattern stands out</span>
               <span className="branch-arrow">→</span>
-              <span className="branch-node pill">we suggest the Energy assessment</span>
+              <span className="branch-node pill">we suggest which assessment to take next</span>
             </div>
           </div>
         </section>
