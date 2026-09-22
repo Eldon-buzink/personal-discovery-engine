@@ -1051,18 +1051,18 @@ export default function LandingPageClient() {
             <div className="how-steps" style={{ marginTop: 32 }}>
               <div className="step">
                 <ProblemCirclesVisual />
-                <div className="problem-title">Insight without direction.</div>
-                <div className="problem-line">&ldquo;I&apos;ve learned a lot about myself, but I don&apos;t know what to do with it.&rdquo;</div>
+                <div className="problem-title">Not knowing what drives me.</div>
+                <div className="problem-line">&ldquo;I can point to what&apos;s wrong, but not why it keeps happening.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemBlobRingVisual />
-                <div className="problem-title">Is this really me?</div>
-                <div className="problem-line">&ldquo;I can&apos;t tell if I&apos;m seeing myself clearly or just telling myself a story.&rdquo;</div>
+                <div className="problem-title">Insight, but no direction.</div>
+                <div className="problem-line">&ldquo;I&apos;ve learned a lot about myself, but I don&apos;t know what to do with it.&rdquo;</div>
               </div>
               <div className="step">
                 <ProblemTrioVisual />
-                <div className="problem-title">The same thing, again.</div>
-                <div className="problem-line">&ldquo;Something keeps repeating in my life and I can&apos;t quite name it.&rdquo;</div>
+                <div className="problem-title">Stuck in the same pattern.</div>
+                <div className="problem-line">&ldquo;I keep ending up in the same place, and I can&apos;t tell how to break free of it.&rdquo;</div>
               </div>
             </div>
           </div>
