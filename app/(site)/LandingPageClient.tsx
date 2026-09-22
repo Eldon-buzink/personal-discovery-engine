@@ -490,7 +490,12 @@ function BentoCluster() {
             transform: 'translate(-50%,-50%)',
             pointerEvents: 'none',
             ...(b.active
-              ? { fontFamily: serif, fontStyle: 'italic' as const, fontSize: 22, color: `hsl(${b.hue},45%,24%)` }
+              // fontWeight:600 matches HeroBlobs' own active label — same
+              // serif italic treatment, just scaled down (22px vs 30px) for
+              // this smaller visual. Missing here before; the two visuals'
+              // active labels are the same "Deliberate" pattern name and
+              // should read with the same weight.
+              ? { fontFamily: serif, fontStyle: 'italic' as const, fontWeight: 600, fontSize: 22, color: `hsl(${b.hue},45%,24%)` }
               : { fontFamily: sans, fontSize: 12.5, fontWeight: 500, color: 'rgba(28,28,26,0.58)' }),
           }}
         >
