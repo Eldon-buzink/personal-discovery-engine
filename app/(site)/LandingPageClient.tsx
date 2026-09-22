@@ -616,7 +616,10 @@ function OrbitVisual() {
 // `marginTop` optionally overrides the wrapper's top margin (otherwise
 // 16*scale, e.g. 7.2px at scale 0.45) — decoupled from scale so a call site
 // can set an exact gap above the blob regardless of how small it's scaled.
-function DemoBlob({ scale = 1, marginTop }: { scale?: number; marginTop?: number }) {
+// `center` switches the wrapper's horizontal margin from 0 (flush left,
+// matching StaticDotScale/.step-pill-row) to auto (centered) — default
+// false so existing call sites keep their current alignment.
+function DemoBlob({ scale = 1, marginTop, center }: { scale?: number; marginTop?: number; center?: boolean }) {
   const pathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const hue = useMemo(() => sharedUserCuratedHue(SHARED_USER_SEED, 0), [])
@@ -627,7 +630,7 @@ function DemoBlob({ scale = 1, marginTop }: { scale?: number; marginTop?: number
   }, [profile], wrapRef, { respectReducedMotion: true })
 
   return (
-    <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${marginTop ?? 16 * scale}px 0 ${22 * scale}px`, position: 'relative' }}>
+    <div ref={wrapRef} style={{ width: 190 * scale, height: 170 * scale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: `${marginTop ?? 16 * scale}px ${center ? 'auto' : '0'} ${22 * scale}px`, position: 'relative' }}>
       {/* Fires once on reveal in the real assessment flow; the landing page
           has no reveal moment to key off, so it loops (matches the mockup's
           own note on this same tradeoff). Reuses the app's existing global
@@ -1200,7 +1203,7 @@ export default function LandingPageClient() {
                   section. Flagged in the report. */}
               <h3>See if it resonates</h3>
               <p>Your first patterns appear while you&apos;re still answering, usually before the halfway point. If it doesn&apos;t feel right, stop: no cost, no account.</p>
-              <DemoBlob scale={0.45} marginTop={14} />
+              <DemoBlob scale={0.45} marginTop={14} center />
             </div>
             <div className="step">
               <div className="step-mark">3</div>
