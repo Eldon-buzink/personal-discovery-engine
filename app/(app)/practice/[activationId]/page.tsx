@@ -1,0 +1,266 @@
+'use client'
+
+/**
+ * Facet detail — covers both mockup variants (FacetDetailDirectional.dc.html
+ * and the non-directional EvidenceTrail.dc.html/FacetDetailEmpty.dc.html) in
+ * one component, switched on showsDirectionalBadge.
+ *
+ * Trend display matches EvidenceTrail.dc.html's actual locked behavior: BOTH
+ * lines always show once there's at least 1 check-in — the large prominent
+ * line is "Most recently, you noticed X" (needs only the single latest
+ * check-in, not trend qualification), and the small muted line underneath is
+ * what upgrades once there's enough data: "Not yet a N-week trend" while
+ * unqualified, replaced by the real weekly plurality observation once
+ * trend.isTrendQualified. Both are plain interim text (§3.1's templated/LLM
+ * synthesis is a separate future content pass), and the weekly line never
+ * fabricates a lean from a genuine tie (computeTrend's WeekLean 'tie' case).
+ *
+ * The directional (showBadge) path is untouched from before and deliberately
+ * simpler — matching FacetDetailDirectional.dc.html, which has no
+ * most-recent-observation line at all, just the single "too early, and
+ * directional carries extra uncertainty" muted note.
+ */
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { FACET_DESCRIPTIONS } from '@/lib/known/scoring'
+import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
+import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
+import { showsDirectionalBadge } from '@/lib/known/practiceData'
+import { computeTrend, isCurrentIsoWeek, type TrendResult } from '@/lib/known/trend'
+import { TREND_MIN_QUALIFYING_WEEKS } from '@/lib/known/practiceConfig'
+import { checkInOptionWord } from '@/lib/known/checkInOptions'
+import PaywallModal from '@/components/known/PaywallModal'
+
+interface DetailState {
+  facetId: string
+  directional: boolean
+  showBadge: boolean
+  checkInCount: number
+  trend: TrendResult | null // null when there's no open period to scope a trend to (e.g. a deactivated facet viewed directly)
+}
+
+// The small, muted, secondary line — upgrades from a static "still
+// gathering" message to the real weekly plurality once trend-qualified.
+function formatTrendStatus(facetId: string, trend: TrendResult): string {
+  if (!trend.isTrendQualified) {
+    return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
+  }
+  const obs = trend.mostRecentObservation
+  if (!obs) return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
+  const weekWord = isCurrentIsoWeek(obs.weekStart) ? 'this week' : 'that week'
+  if (obs.lean.type === 'tie') {
+    return `${obs.checkInCount} check-in${obs.checkInCount === 1 ? '' : 's'} ${weekWord} were evenly split — no clear lean.`
+  }
+  if (obs.lean.type === 'option') {
+    return `${obs.topCount} out of ${obs.checkInCount} check-ins ${weekWord} leaned toward "${checkInOptionWord(facetId, obs.lean.value)}."`
+  }
+  return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
+}
+
+// The large, prominent line — always there once at least 1 check-in exists,
+// regardless of trend qualification. Just the single latest check-in's
+// response, not a weekly aggregate.
+function formatMostRecent(facetId: string, trend: TrendResult): string {
+  const latest = trend.mostRecentCheckIn
+  if (!latest) return ''
+  return `Most recently, you noticed "${checkInOptionWord(facetId, latest.responseOption)}."`
+}
+
+export default function FacetDetailPage({ params }: { params: { activationId: string } }) {
+  const router = useRouter()
+  const { activationId } = params
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [detail, setDetail] = useState<DetailState | null>(null)
+  const [paywallOpen, setPaywallOpen] = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/')
+        return
+      }
+      setUserId(user.id)
+
+      const [activationRes, revealsRes, checkInsRes] = await Promise.all([
+        supabase
+          .from('facet_activations')
+          .select('facet_id, directional, facet_activation_periods(started_at, ended_at)')
+          .eq('id', activationId)
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase.from('user_facet_reveals').select('facet_id').eq('user_id', user.id),
+        supabase.from('check_ins').select('check_in_date, response_option').eq('facet_activation_id', activationId),
+      ])
+
+      if (activationRes.error || !activationRes.data) {
+        console.error('[FacetDetail] load error:', activationRes.error?.message ?? 'activation not found')
+        router.push('/practice')
+        return
+      }
+
+      const revealedFacetIds = new Set((revealsRes.data ?? []).map((r: { facet_id: string }) => r.facet_id))
+      const { facet_id, directional, facet_activation_periods: periods } = activationRes.data
+      const checkIns = checkInsRes.data ?? []
+      const openPeriod = (periods as { started_at: string; ended_at: string | null }[]).find((p) => p.ended_at === null)
+      const trend = openPeriod ? computeTrend(checkIns, openPeriod.started_at) : null
+
+      setDetail({
+        facetId: facet_id,
+        directional,
+        showBadge: showsDirectionalBadge({ directional, facet_id }, revealedFacetIds),
+        checkInCount: checkIns.length,
+        trend,
+      })
+      setIsLoading(false)
+    }
+
+    load()
+  }, [activationId, router])
+
+  if (isLoading || !detail) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <p className="font-sans text-sm text-muted">Loading…</p>
+      </div>
+    )
+  }
+
+  const label = facetDisplayLabel(detail.facetId)
+  const description = FACET_DESCRIPTIONS[detail.facetId] ?? ''
+
+  return (
+    <div className="min-h-screen bg-cream flex flex-col">
+      <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 20, flexGrow: 1, overflowY: 'auto' }}>
+        <div>
+          <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 14 }}>
+            ← Your practice
+          </Link>
+          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 6 }}>
+            {detail.checkInCount === 0 ? 'Just added' : 'Your pattern so far'}
+          </p>
+          <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 27, lineHeight: 1.25 }}>
+            {label}
+          </h1>
+        </div>
+
+        {detail.showBadge && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, borderRadius: 12, background: directionalAccent }}>
+            <div className="flex items-center gap-2">
+              <span className="font-sans font-semibold" style={{ fontSize: 13, color: '#F7F4ED' }}>
+                Directional result
+              </span>
+            </div>
+            <p className="font-sans" style={{ fontSize: 13, lineHeight: 1.55, color: directionalSoft }}>
+              This pattern came from a 6-question mini-assessment, not the full 30-facet report. Everything below is a
+              starting read, not a confident one.
+            </p>
+            <button
+              onClick={() => setPaywallOpen(true)}
+              className="font-sans font-medium"
+              style={{ display: 'inline-flex', alignSelf: 'flex-start', padding: '9px 14px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 13, marginTop: 2 }}
+            >
+              Unlock the full assessment — €49
+            </button>
+          </div>
+        )}
+
+        {description && (
+          <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.6 }}>
+            {description}
+          </p>
+        )}
+
+        {detail.checkInCount > 0 && !detail.showBadge && detail.trend ? (
+          // Has real (non-directional) data: always both lines — the
+          // most-recent-observation line is the prominent element, the
+          // trend-status/weekly-observation line is small and muted below
+          // it. Matches EvidenceTrail.dc.html's actual locked layout.
+          <div
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 14, padding: 20, borderRadius: 14,
+              background: directionalSoft, border: `1.5px solid ${directionalAccent}`,
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+                Your progress
+              </p>
+              <p className="font-sans text-muted" style={{ fontSize: 12, fontStyle: 'italic' }}>
+                {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
+              </p>
+            </div>
+            <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.45 }}>
+              {formatMostRecent(detail.facetId, detail.trend)}
+            </p>
+            <p
+              className="font-sans text-muted"
+              style={{ fontSize: 12, lineHeight: 1.5, fontStyle: 'italic', paddingTop: 2, borderTop: `1px solid ${directionalAccent}40` }}
+            >
+              {formatTrendStatus(detail.facetId, detail.trend)}
+            </p>
+            <Link href={`/practice/${activationId}/recap`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+              See this month's recap
+            </Link>
+          </div>
+        ) : (
+          // Zero check-ins yet, OR a directional facet — the directional
+          // path stays deliberately simpler, matching
+          // FacetDetailDirectional.dc.html (no most-recent-observation line
+          // at all, just the single "too early, extra uncertainty" note).
+          <div
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 8, padding: '22px 18px', borderRadius: 14,
+              border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
+            }}
+          >
+            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
+              {detail.checkInCount === 0 ? 'Nothing logged yet' : `${detail.checkInCount} check-in${detail.checkInCount === 1 ? '' : 's'} logged`}
+            </p>
+            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              {detail.checkInCount === 0
+                ? 'Your first check-in starts building this.'
+                : detail.showBadge
+                  ? 'Too early to say anything yet — and, being directional, any read here would carry extra uncertainty regardless.'
+                  : "This pattern isn't currently active, so no trend is being tracked."}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          padding: '16px 28px 32px 28px', display: 'flex', flexDirection: 'column', gap: 10,
+          background: 'linear-gradient(to top, #F7F4ED 70%, rgba(247,244,237,0))',
+        }}
+      >
+        <Link
+          href={`/practice/${activationId}/checkin`}
+          className="font-sans font-medium"
+          style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+        >
+          Check in today
+        </Link>
+      </div>
+
+      <PaywallModal
+        isOpen={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        isAuthenticated={true}
+        userId={userId}
+        traitCount={1}
+        onAuthenticated={() => {}}
+        onPaymentConfirmed={() => setPaywallOpen(false)}
+      />
+    </div>
+  )
+}
