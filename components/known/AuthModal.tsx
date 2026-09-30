@@ -2,26 +2,66 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { POST_AUTH_REOPEN_KEY, POST_AUTH_PATH_KEY } from '@/components/known/PaywallModal'
 
 type ModalView = 'email' | 'confirm'
 
-// This modal is scoped to exactly one trigger now: the pre-cap "keep going"
-// prompt after the first Ring 1 reveal (save-progress framing only). Every
-// post-cap/unlock entry point goes through PaywallModal instead — see that
-// component for why these stayed as two distinct modals rather than one
-// growing a third context here.
+// Two known triggers now — each its own `context`, both free (no payment
+// step, that's PaywallModal's job):
+//   - 'save-progress' (original, only trigger until the mini-assessment
+//     signup gate needed a second one): the pre-cap "keep going" prompt
+//     after the first Ring 1 reveal. Persists the in-progress full
+//     assessment session to anonymous_sessions so it survives the
+//     magic-link round trip.
+//   - 'mini-assessment-signup': fires when a logged-out mini-assessment
+//     user taps "Add to your daily check-ins" on the mini-assessment result
+//     screen (handover §6). No assessment session to persist — instead
+//     stamps PENDING_MINI_ASSESSMENT_ID_KEY so app/auth/claim/page.tsx can
+//     claim the mini_assessment_results row and create the resulting
+//     facet_activation once auth resolves. Sets POST_AUTH_REOPEN_KEY/
+//     POST_AUTH_PATH_KEY the same way PaywallModal does, so the claim page
+//     sends the user back to the practice home rather than /assessment.
+//
+// Every post-cap/unlock (paid) entry point still goes through PaywallModal
+// instead — see that component for why these stayed separate rather than
+// growing PaywallModal a signup-only mode. A third context here should stay
+// the exception, not the default instinct — most new "ask for an email"
+// moments belong on one of these two, not a fourth.
+export type AuthModalContext = 'save-progress' | 'mini-assessment-signup'
+
+// Read by app/auth/claim/page.tsx — set only for the mini-assessment-signup
+// context, mirroring known_pending_session_id's role for the save-progress
+// context. Claiming that row (and creating the facet_activation from it) is
+// the claim page's job, not this modal's — this modal's only responsibility
+// is authenticating the user and leaving a breadcrumb to what should be
+// claimed once that succeeds.
+export const PENDING_MINI_ASSESSMENT_ID_KEY = 'known_pending_mini_assessment_id'
+
 export interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
-  questionCount: number
   onSuccess: () => void
+  context?: AuthModalContext
+  // 'save-progress' only.
+  questionCount?: number
+  // 'mini-assessment-signup' only — the mini_assessment_results row id to
+  // claim once auth resolves.
+  miniAssessmentResultId?: string
+  // 'mini-assessment-signup' only — where the claim page should send the
+  // user back to (the practice home, once it exists) after a successful
+  // claim. Passed through rather than hardcoded here since this modal has
+  // no reason to know that route.
+  returnPath?: string
 }
 
 export default function AuthModal({
   isOpen,
   onClose,
-  questionCount,
   onSuccess,
+  context = 'save-progress',
+  questionCount,
+  miniAssessmentResultId,
+  returnPath,
 }: AuthModalProps) {
   const [view, setView] = useState<ModalView>('email')
   const [email, setEmail] = useState('')
@@ -36,7 +76,13 @@ export default function AuthModal({
 
   if (!isOpen) return null
 
-  const headline = isReturning ? 'Sign in to keep going' : 'Save your progress to keep going'
+  const isMiniAssessment = context === 'mini-assessment-signup'
+
+  const headline = isReturning
+    ? 'Sign in to keep going'
+    : isMiniAssessment
+      ? 'Create a free account to track this'
+      : 'Save your progress to keep going'
 
   function flashError() {
     setInputError(true)
@@ -57,23 +103,35 @@ export default function AuthModal({
     try {
       const supabase = createClient()
 
-      const raw = localStorage.getItem('known_session')
-      // Store the full session object (responses + questionOrder + patternShown)
-      // The responses jsonb column holds the entire session so it can be restored later
-      const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
+      if (isMiniAssessment) {
+        // No assessment session to persist here — just leave a breadcrumb
+        // to what app/auth/claim/page.tsx should claim once auth resolves.
+        if (miniAssessmentResultId) {
+          localStorage.setItem(PENDING_MINI_ASSESSMENT_ID_KEY, miniAssessmentResultId)
+        }
+        if (returnPath) {
+          localStorage.setItem(POST_AUTH_REOPEN_KEY, '1')
+          localStorage.setItem(POST_AUTH_PATH_KEY, returnPath)
+        }
+      } else {
+        const raw = localStorage.getItem('known_session')
+        // Store the full session object (responses + questionOrder + patternShown)
+        // The responses jsonb column holds the entire session so it can be restored later
+        const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
 
-      console.log('[AuthModal] inserting session to anonymous_sessions, responses:', session.responses?.length ?? 0)
-      const { data, error } = await supabase
-        .from('anonymous_sessions')
-        .insert({ responses: session })
-        .select('id')
-        .single()
+        console.log('[AuthModal] inserting session to anonymous_sessions, responses:', session.responses?.length ?? 0)
+        const { data, error } = await supabase
+          .from('anonymous_sessions')
+          .insert({ responses: session })
+          .select('id')
+          .single()
 
-      if (error) throw error
-      console.log('[AuthModal] insert ok, row id:', data?.id)
+        if (error) throw error
+        console.log('[AuthModal] insert ok, row id:', data?.id)
 
-      if (data?.id) {
-        localStorage.setItem('known_pending_session_id', data.id as string)
+        if (data?.id) {
+          localStorage.setItem('known_pending_session_id', data.id as string)
+        }
       }
 
       console.log('[AuthModal] calling signInWithOtp for', email)
@@ -117,7 +175,7 @@ export default function AuthModal({
               className="font-sans font-semibold uppercase text-muted text-center"
               style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}
             >
-              {isReturning ? 'Welcome back' : 'Save your progress'}
+              {isReturning ? 'Welcome back' : isMiniAssessment ? 'One more step' : 'Save your progress'}
             </p>
 
             <p
@@ -133,7 +191,9 @@ export default function AuthModal({
             >
               {isReturning
                 ? "Enter your email and we'll send you a link to get back in."
-                : `You've answered ${questionCount} questions. Leave your email and we'll make sure none of it disappears.`}
+                : isMiniAssessment
+                  ? "No payment, no verdict — just a daily check-in on what you noticed. Leave your email and we'll set you up."
+                  : `You've answered ${questionCount} questions. Leave your email and we'll make sure none of it disappears.`}
             </p>
 
             <input
@@ -161,7 +221,7 @@ export default function AuthModal({
               className="w-full font-sans font-medium text-cream bg-charcoal"
               style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
             >
-              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in link' : 'Save and continue'}
+              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in link' : isMiniAssessment ? 'Continue →' : 'Save and continue'}
             </button>
 
             <p
@@ -186,7 +246,7 @@ export default function AuthModal({
               className="font-sans text-muted underline text-center w-full"
               style={{ fontSize: 12.5 }}
             >
-              Skip — I don&apos;t mind starting over
+              {isMiniAssessment ? 'Not now' : "Skip — I don't mind starting over"}
             </button>
           </>
         ) : (
@@ -213,7 +273,11 @@ export default function AuthModal({
             >
               We sent a link to{' '}
               <span className="font-medium text-charcoal">{submittedEmail}</span>. Click it
-              {isReturning ? ' to sign back in.' : ' to save your progress and keep going.'}
+              {isReturning
+                ? ' to sign back in.'
+                : isMiniAssessment
+                  ? ' to start tracking this.'
+                  : ' to save your progress and keep going.'}
             </p>
 
             <button
