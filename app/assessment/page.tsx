@@ -12,6 +12,7 @@ import QuestionCard from '@/components/known/QuestionCard'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { REVEAL_CAP, fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
 import type { CompletedFacetRecord, PatternContent, PatternContentEntry } from '@/lib/known/types'
@@ -623,6 +624,18 @@ export default function AssessmentPage() {
       if (prev.some((r) => r.facet === facet)) return prev
       return [...prev, record]
     })
+
+    // Fire-and-forget — only covers the case where an account already
+    // exists at reveal time (a paid user continuing past the free cap, or a
+    // returning signed-in user). The far more common case — reveals that
+    // happen before signup — gets backfilled in bulk from
+    // revealedFacets once the anonymous session is claimed; see
+    // app/auth/claim/page.tsx.
+    if (userId) {
+      recordFacetReveals(userId, [facet]).catch((err) =>
+        console.error('[triggerReveal] recordFacetReveals error:', err)
+      )
+    }
 
     // Free tier caps at REVEAL_CAP traits, enforced here (before generation),
     // not just at render — a paid user has no cap. Reads the isPaid state
