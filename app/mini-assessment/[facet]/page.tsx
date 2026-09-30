@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, notFound } from 'next/navigation'
 import QuestionCard from '@/components/known/QuestionCard'
 import { createClient } from '@/lib/supabase/client'
+import { fetchIsPaid } from '@/lib/known/paywall'
 import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_ITEMS,
@@ -28,8 +29,31 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
   const [currentIndex, setCurrentIndex] = useState(0)
   const [responses, setResponses] = useState<number[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [eligibilityChecked, setEligibilityChecked] = useState(false)
+
+  // Handover §7.1 eligibility rule, confirmed in review: gate on is_paid —
+  // mini-assessments are acquisition, not for existing paid users. This was
+  // the quiz-ACCESS half of the "two-place enforcement" the doc calls for;
+  // the other half (landing-page routing) belongs to the separate
+  // 02-landing-page-handover.md build, not here. A logged-out or
+  // logged-in-but-unpaid visitor is unaffected — this only redirects paid
+  // users away.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        const paid = await fetchIsPaid(user.id)
+        if (paid) {
+          router.push('/practice')
+          return
+        }
+      }
+      setEligibilityChecked(true)
+    })
+  }, [router])
 
   if (!facet) notFound()
+  if (!eligibilityChecked) return null
 
   const items = MINI_ASSESSMENT_ITEMS[facet]
   const displayLabel = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
