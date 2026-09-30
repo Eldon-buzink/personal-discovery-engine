@@ -120,6 +120,7 @@ const landingCSS = `
   .bento-card{background:${mkCard};border:1px solid ${mkLine};border-radius:24px;padding:34px;overflow:visible;}
   .bento-card h3{font-family:'Newsreader',serif;font-size:24px;font-weight:500;margin:0 0 8px;line-height:1.2;}
   .bento-card p{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .bento-example-link{color:${mkCharcoal};font-size:14px;text-decoration:underline;margin-top:12px;}
   .bento-col{display:flex;flex-direction:column;gap:22px;}
   .bento-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1120px;margin:0 auto;}
   .bento-cluster-canvas-wrap{position:relative;flex:1;min-height:280px;margin:16px -8px -8px;overflow:visible;}
@@ -1082,6 +1083,7 @@ export default function LandingPageClient() {
                 <div className="mk-eyebrow">YOUR PATTERNS</div>
                 <h3>Your patterns, made visible</h3>
                 <p>Each of your 30 facets gets a word and a description, so you see specific patterns instead of one label.</p>
+                <Link href="/report/sample" className="bento-example-link">See an example report</Link>
                 <div className="bento-cluster-canvas-wrap">
                   <BentoCluster />
                 </div>
