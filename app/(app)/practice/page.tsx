@@ -140,7 +140,7 @@ export default function PracticeHomePage() {
           A quick check
         </p>
         <p className="font-serif font-medium text-charcoal" style={{ fontSize: 22, lineHeight: 1.4 }}>
-          {facetDisplayLabel(nudgeTarget.facetId)} hasn't been landing lately.
+          {facetDisplayLabel(nudgeTarget.facetId)} hasn&apos;t been landing lately.
         </p>
         <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.55 }}>
           No pressure either way — just checking if this is still the right one to keep active.
@@ -177,7 +177,7 @@ export default function PracticeHomePage() {
               Your practice
             </p>
             <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
-              What you're noticing
+              What you&apos;re noticing
             </h1>
           </div>
           <Link href="/practice/manage" aria-label="Manage your practice" style={{ padding: 6, marginTop: 2 }}>
@@ -190,7 +190,7 @@ export default function PracticeHomePage() {
         </div>
 
         <Link href="/practice/quarterly" className="font-sans" style={{ display: 'inline-block', fontSize: 12.5, color: '#8a8375', textDecoration: 'underline', marginBottom: 20 }}>
-          This quarter's review
+          This quarter&apos;s review
         </Link>
 
         {notice && (
@@ -290,7 +290,7 @@ export default function PracticeHomePage() {
 
           {candidates.length === 0 ? (
             <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-              Nothing else yet — as you reveal more patterns in your report, they'll show up here.
+              Nothing else yet — as you reveal more patterns in your report, they&apos;ll show up here.
             </p>
           ) : (
             <div className="flex flex-col gap-2">

@@ -118,7 +118,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
         <div className="flex items-center gap-2">
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: directionalAccent }} />
           <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
-            Today's check-in
+            Today&apos;s check-in
           </p>
         </div>
 

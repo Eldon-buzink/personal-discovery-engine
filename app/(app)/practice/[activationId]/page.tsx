@@ -209,7 +209,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
               {formatTrendStatus(detail.facetId, detail.trend)}
             </p>
             <Link href={`/practice/${activationId}/recap`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-              See this month's recap
+              See this month&apos;s recap
             </Link>
           </div>
         ) : (

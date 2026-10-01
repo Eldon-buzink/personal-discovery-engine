@@ -131,7 +131,7 @@ export default function ManagePracticePage() {
           Manage your practice
         </p>
         <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 23, lineHeight: 1.3 }}>
-          What's part of your check-ins?
+          What&apos;s part of your check-ins?
         </h1>
         <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 2 }}>
           We suggest a few, for focus. You decide what stays.
