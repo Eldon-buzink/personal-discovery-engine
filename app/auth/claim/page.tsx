@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { PENDING_MINI_ASSESSMENT_ID_KEY } from '@/components/known/AuthModal'
-import { isActive } from '@/lib/known/practiceData'
-import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
+import { claimMiniAssessmentResult } from '@/lib/known/miniAssessmentClaim'
 
 export default function ClaimPage() {
   const router = useRouter()
@@ -64,68 +63,19 @@ export default function ClaimPage() {
         }
 
         // Mini-assessment signup gate (AuthModal's 'mini-assessment-signup'
-        // context) — claim the result row, then create the facet_activation
-        // it converts into (handover §6/§8). unique(user_id, facet_id) on
-        // facet_activations is the "already active" check: rather than a
-        // separate pre-check, just attempt the insert and treat a unique
-        // violation as that case (per Eldon's rule — friendly message,
-        // route to practice home, no changes made).
-        //
-        // ACTIVE_FACET_CAP is checked here too, ahead of the insert — the
-        // handover is explicit that the cap is shared across every source
-        // (base/branch/mini-assessment), and this path is the one place a
-        // facet gets activated outside the Manage/Practice-home flows that
-        // already enforce it (lib/known/facetActivationClient.ts). Account
-        // creation itself still always succeeds regardless — only the
-        // activation is blocked, with its own distinct notice.
+        // context) — convert the claimed result into a facet_activation.
+        // Shared with the mini-assessment result screen's own
+        // already-authenticated path (no AuthModal needed there at all) via
+        // lib/known/miniAssessmentClaim.ts, so the two can't drift.
         const miniAssessmentId = localStorage.getItem(PENDING_MINI_ASSESSMENT_ID_KEY)
         if (miniAssessmentId) {
-          const { data: claimedResult, error: claimError } = await supabase
-            .from('mini_assessment_results')
-            .update({ claimed_by: user.id })
-            .eq('id', miniAssessmentId)
-            .select('facet_id')
-            .single()
+          localStorage.removeItem(PENDING_MINI_ASSESSMENT_ID_KEY)
+          const result = await claimMiniAssessmentResult(supabase, user.id, miniAssessmentId)
 
-          if (claimError) {
-            console.error('[claim] mini-assessment claim error:', claimError.message)
-          } else {
-            localStorage.removeItem(PENDING_MINI_ASSESSMENT_ID_KEY)
-
-            const { data: existingActivations, error: countError } = await supabase
-              .from('facet_activations')
-              .select('facet_activation_periods(started_at, ended_at)')
-              .eq('user_id', user.id)
-
-            if (countError) {
-              console.error('[claim] activation count error:', countError.message)
-            } else if ((existingActivations ?? []).filter(isActive).length >= ACTIVE_FACET_CAP) {
-              console.log('[claim] at ACTIVE_FACET_CAP, not activating:', claimedResult.facet_id)
-              atCapNotice = true
-            } else {
-              const { data: activation, error: activationError } = await supabase
-                .from('facet_activations')
-                .insert({ user_id: user.id, facet_id: claimedResult.facet_id, source: 'mini_assessment', directional: true })
-                .select('id')
-                .single()
-
-              if (activationError) {
-                if (activationError.code === '23505') {
-                  console.log('[claim] facet already active for this user, skipping activation:', claimedResult.facet_id)
-                  alreadyActiveNotice = true
-                } else {
-                  console.error('[claim] facet_activations insert error:', activationError.message)
-                }
-              } else {
-                const { error: periodError } = await supabase
-                  .from('facet_activation_periods')
-                  .insert({ facet_activation_id: activation.id, user_id: user.id })
-
-                if (periodError) {
-                  console.error('[claim] facet_activation_periods insert error:', periodError.message)
-                }
-              }
-            }
+          if (!result.ok) {
+            if (result.reason === 'already-active') alreadyActiveNotice = true
+            else if (result.reason === 'at-cap') atCapNotice = true
+            else console.error('[claim] mini-assessment claim error:', result.message)
           }
         }
       }
