@@ -11,9 +11,6 @@
  *
  * Facet display names come from MINI_ASSESSMENT_DISPLAY_LABEL, never the
  * facet_id — 'Liberalism' must not reach UI copy.
- *
- * Question previews are read from MINI_ASSESSMENT_ITEMS (the real quiz
- * items), not duplicated here, so the preview can't drift from the quiz.
  */
 
 import type { MiniAssessmentSlug } from './miniAssessmentScoring'
@@ -66,8 +63,74 @@ export const LANDING_SHARED = {
   cta: 'Start the quick check',
   microcopy: '6 statements · about 2 minutes · no account needed to see your result',
   honesty: 'A directional read from 6 questions, not the full picture.',
-  previewLabel: 'The first statement',
-  previewScaleLabels: ['Very inaccurate', 'Very accurate'] as [string, string],
+}
+
+export interface SoundFamiliarCard {
+  title: string
+  quote: string
+}
+
+export interface SoundFamiliarCopy {
+  subtitle: string
+  cards: [SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard]
+}
+
+// "Sound familiar?" section — ported from the home page's Problem section
+// (reference/landing-copy-deck.md §2), subtitle + 3 first-person quotes
+// rewritten per facet so the page says something recognizable instead of
+// showing a bare quiz-statement preview.
+export const LANDING_SOUND_FAMILIAR: Record<MiniAssessmentSlug, SoundFamiliarCopy> = {
+  discipline: {
+    subtitle: 'You know what you should be doing. That part was never the problem.',
+    cards: [
+      {
+        title: 'Starting is the hard part.',
+        quote: 'I know exactly what I should be doing. I just don’t start.',
+      },
+      {
+        title: 'Momentum doesn’t stick.',
+        quote: 'I do great for a few days, then it quietly falls apart.',
+      },
+      {
+        title: 'Interesting beats important.',
+        quote: 'The thing I need to do loses to whatever feels easier right now.',
+      },
+    ],
+  },
+  anxiety: {
+    subtitle: 'Nothing is actually wrong right now. That doesn’t always help.',
+    cards: [
+      {
+        title: 'The what-ifs pile up.',
+        quote: 'I’ve thought through every way this could go wrong. None of them happened.',
+      },
+      {
+        title: 'Small things feel bigger.',
+        quote: 'I know this isn’t a big deal. My body hasn’t gotten the message.',
+      },
+      {
+        title: 'Rest doesn’t feel like rest.',
+        quote: 'I’m not doing anything, and I’m still somehow on edge.',
+      },
+    ],
+  },
+  values: {
+    subtitle: 'You respect where things came from. You still notice what doesn’t add up.',
+    cards: [
+      {
+        title: 'Old rules, new questions.',
+        quote: 'I follow this because it’s always been done this way — I’m not sure why anymore.',
+      },
+      {
+        title: 'Loyalty versus honesty.',
+        quote: 'I can see the problem with how we’ve always done it. I don’t always say so.',
+      },
+      {
+        title: 'Change can feel like betrayal.',
+        quote: 'Updating my mind on this feels like letting someone down.',
+      },
+    ],
+  },
 }
 
 export interface LandingStep {

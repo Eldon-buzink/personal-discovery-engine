@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useRouter, notFound } from 'next/navigation'
+import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
 import PaywallModal from '@/components/known/PaywallModal'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +16,13 @@ import {
   type MiniAssessmentBand,
 } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent } from '@/lib/known/practiceTokens'
+
+// Staggered reveal timing, same technique as the full assessment's
+// PatternDetectedScreen (app/assessment/page.tsx) — blob first, then text
+// fading in underneath it rather than everything appearing at once.
+function fade(delayMs: number): CSSProperties {
+  return { animation: 'fadeIn 0.6s ease both', animationDelay: `${delayMs}ms` }
+}
 
 const BAND_LABEL: Record<MiniAssessmentBand, string> = {
   low: 'Lower',
@@ -95,27 +104,59 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
       <div className="w-full max-w-md flex flex-col items-center">
         <span
           className="font-sans font-semibold uppercase text-center"
-          style={{ fontSize: 11, letterSpacing: '0.07em', color: directionalAccent, marginBottom: 14 }}
+          style={{ ...fade(0), fontSize: 11, letterSpacing: '0.07em', color: directionalAccent, marginBottom: 14 }}
         >
           Directional read
         </span>
 
-        <p className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ marginBottom: 10 }}>
+        <p className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ ...fade(100), marginBottom: 20 }}>
           {displayLabel}
         </p>
 
+        {/* Blob — fixed container height prevents layout shift once the
+            text below fades in, same pattern as the full assessment's
+            PatternDetectedScreen. */}
+        <div style={{ height: 240, overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: 200,
+              height: 200,
+              overflow: 'visible',
+              animation: 'blobReveal 1.1s cubic-bezier(0.22,1,0.36,1) both',
+              animationDelay: '150ms',
+            }}
+          >
+            <AnimatedBlob seed={`mini-result-${slug}-${band}`} word={displayLabel} size={200} />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 6,
+                borderRadius: '50%',
+                border: '1px solid hsl(8, 50%, 65%)',
+                pointerEvents: 'none',
+                animation: 'pulseRing 2.4s ease-out both',
+                animationDelay: '900ms',
+              }}
+            />
+          </div>
+        </div>
+
         <h1
           className="font-serif font-medium text-charcoal text-center"
-          style={{ fontSize: 26, lineHeight: 1.3, marginBottom: 20 }}
+          style={{ ...fade(300), fontSize: 26, lineHeight: 1.3, marginTop: 8, marginBottom: 20 }}
         >
           {BAND_LABEL[band]} {displayLabel.toLowerCase()}
         </h1>
 
-        <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 12 }}>
+        <p
+          className="font-serif italic text-charcoal-soft text-center"
+          style={{ ...fade(450), fontSize: 17, lineHeight: 1.6, marginBottom: 16 }}
+        >
           {bandCopy}
         </p>
 
-        <p className="font-sans text-muted text-center" style={{ fontSize: 12.5, lineHeight: 1.5, marginBottom: 32 }}>
+        <p className="font-sans text-muted text-center" style={{ ...fade(600), fontSize: 12.5, lineHeight: 1.5, marginBottom: 32 }}>
           This is a directional read from 6 questions, not the full picture — the complete report gives you a
           confident score plus everything else your patterns show.
         </p>
@@ -126,22 +167,24 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
           </p>
         )}
 
-        <button
-          onClick={handleAddToCheckIns}
-          disabled={isActivating}
-          className="w-full font-sans font-medium text-cream bg-charcoal"
-          style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12, opacity: isActivating ? 0.6 : 1 }}
-        >
-          {isActivating ? 'Adding…' : 'Add to your daily check-ins'}
-        </button>
+        <div className="w-full" style={fade(750)}>
+          <button
+            onClick={handleAddToCheckIns}
+            disabled={isActivating}
+            className="w-full font-sans font-medium text-cream bg-charcoal"
+            style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12, opacity: isActivating ? 0.6 : 1 }}
+          >
+            {isActivating ? 'Adding…' : 'Add to your daily check-ins'}
+          </button>
 
-        <button
-          onClick={() => setPaywallOpen(true)}
-          className="font-sans text-muted underline text-center w-full"
-          style={{ fontSize: 12.5 }}
-        >
-          Unlock the full report — €49
-        </button>
+          <button
+            onClick={() => setPaywallOpen(true)}
+            className="font-sans text-muted underline text-center w-full"
+            style={{ fontSize: 12.5 }}
+          >
+            Unlock the full report — €49
+          </button>
+        </div>
       </div>
 
       <AuthModal

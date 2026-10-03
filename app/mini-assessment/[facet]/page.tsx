@@ -26,6 +26,7 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
   const slug = params.facet as MiniAssessmentSlug
   const facet = MINI_ASSESSMENT_SLUG_TO_FACET[slug]
 
+  const [started, setStarted] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [responses, setResponses] = useState<number[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -94,6 +95,16 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
     router.push(`/mini-assessment/${slug}/result?id=${data.id}&band=${band}`)
   }
 
+  if (!started) {
+    return (
+      <MiniOnboarding
+        displayLabel={displayLabel}
+        questionCount={items.length}
+        onStart={() => setStarted(true)}
+      />
+    )
+  }
+
   return (
     <>
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-10">
@@ -101,7 +112,9 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
           {displayLabel} · quick check
         </span>
       </div>
-      <div style={{ opacity: isSubmitting ? 0.4 : 1, transition: 'opacity 0.2s ease', pointerEvents: isSubmitting ? 'none' : 'auto' }}>
+      {isSubmitting ? (
+        <FindingResultLoader />
+      ) : (
         <QuestionCard
           key={currentIndex}
           questionNumber={currentIndex + 1}
@@ -112,7 +125,77 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
           centered={false}
           scaleLabels={['Very Inaccurate', 'Very Accurate']}
         />
-      </div>
+      )}
     </>
+  )
+}
+
+// Short "before you begin" interstitial, modeled on the full assessment's
+// /onboarding screen (app/onboarding/OnboardingClient.tsx) but scaled down
+// to match a 6-question, ~2-minute mini-assessment — a single screen, no
+// trust-building essay, since there's much less to set expectations for.
+function MiniOnboarding({
+  displayLabel,
+  questionCount,
+  onStart,
+}: {
+  displayLabel: string
+  questionCount: number
+  onStart: () => void
+}) {
+  return (
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md flex flex-col items-center text-center">
+        <span className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ marginBottom: 20 }}>
+          {displayLabel} · quick check
+        </span>
+
+        <h1 className="font-serif text-[24px] font-medium leading-[1.4] text-charcoal" style={{ marginBottom: 16 }}>
+          There&apos;s no wrong answer here.
+        </h1>
+
+        <p className="font-sans text-[15px] leading-[1.65] text-charcoal-soft" style={{ marginBottom: 32 }}>
+          Rate each statement as it actually is for you right now, not how you wish it were. Go with your first
+          instinct.
+        </p>
+
+        <button
+          onClick={onStart}
+          className="w-full bg-charcoal text-cream font-sans font-medium text-[15px] rounded-full"
+          style={{ padding: '14px 24px', marginBottom: 14 }}
+        >
+          Start
+        </button>
+
+        <span className="font-sans text-[12.5px] text-muted">
+          {questionCount} statements · about 2 minutes
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function FindingResultLoader() {
+  const [dots, setDots] = useState('.')
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? '.' : d + '.'))
+    }, 450)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
+      <p
+        className="font-serif italic text-center"
+        style={{ fontSize: 19, color: '#56534D', lineHeight: 1.55, marginBottom: 10 }}
+      >
+        Finding your result{dots}
+      </p>
+      <p className="font-sans text-center text-[13px]" style={{ color: '#8C8A83' }}>
+        Just a moment.
+      </p>
+    </div>
   )
 }
