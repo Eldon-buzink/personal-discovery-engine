@@ -14,7 +14,10 @@ import {
   MINI_ASSESSMENT_BAND_COPY,
   type MiniAssessmentSlug,
   type MiniAssessmentBand,
+  type MiniAssessmentFacet,
 } from '@/lib/known/miniAssessmentScoring'
+import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
+import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { directionalAccent } from '@/lib/known/practiceTokens'
 
 // Staggered reveal timing, same technique as the full assessment's
@@ -24,10 +27,52 @@ function fade(delayMs: number): CSSProperties {
   return { animation: 'fadeIn 0.6s ease both', animationDelay: `${delayMs}ms` }
 }
 
-const BAND_LABEL: Record<MiniAssessmentBand, string> = {
-  low: 'Lower',
-  mid: 'Middle',
-  high: 'Higher',
+const BAND_ORDER: MiniAssessmentBand[] = ['low', 'mid', 'high']
+
+// Static three-point read of where the band sits, left-to-right — same
+// dot-and-line visual grammar as QuestionCard's DotScale (the component the
+// person just answered six questions with), just non-interactive and fixed
+// at 3 points instead of 5. Labels are the product's own band vocabulary
+// (checkInOptionWord), not invented here.
+function BandSpectrum({ facet, band }: { facet: MiniAssessmentFacet; band: MiniAssessmentBand }) {
+  return (
+    <div className="w-full" style={{ maxWidth: 320 }}>
+      <div className="relative flex items-center justify-between w-full" style={{ marginBottom: 10 }}>
+        <div className="absolute left-[11px] right-[11px] top-1/2 -translate-y-1/2 h-px bg-line" />
+        {BAND_ORDER.map((b) => {
+          const active = b === band
+          return (
+            <div
+              key={b}
+              className="relative z-10 rounded-full"
+              style={{
+                width: active ? 22 : 14,
+                height: active ? 22 : 14,
+                background: active ? '#262420' : '#F7F4ED',
+                border: `2px solid ${active ? '#262420' : '#8C8A83'}`,
+                transition: 'width 0.3s ease, height 0.3s ease',
+              }}
+            />
+          )
+        })}
+      </div>
+      <div className="flex justify-between w-full">
+        {BAND_ORDER.map((b) => (
+          <span
+            key={b}
+            className="font-sans"
+            style={{
+              fontSize: 11,
+              color: b === band ? '#262420' : '#8C8A83',
+              fontWeight: b === band ? 600 : 400,
+            }}
+          >
+            {checkInOptionWord(facet, b)}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function MiniAssessmentResultPage({ params }: { params: { facet: string } }) {
@@ -37,6 +82,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
   const [resultId, setResultId] = useState<string | null>(null)
   const [band, setBand] = useState<MiniAssessmentBand | null>(null)
+  const [responses, setResponses] = useState<number[] | null>(null)
   const [ready, setReady] = useState(false)
 
   // Null until the auth check resolves — distinct from "checked and found no
@@ -51,8 +97,26 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
   useEffect(() => {
     const search = new URLSearchParams(window.location.search)
-    setResultId(search.get('id'))
+    const id = search.get('id')
+    setResultId(id)
     setBand(search.get('band') as MiniAssessmentBand | null)
+
+    // Best-effort: the quiz page stashes the raw responses here right
+    // before navigating over. Absent for a direct/shared link or a
+    // different browser — the item-level insight section below just
+    // doesn't render in that case, falling back to the plain band copy.
+    // No RLS change: this never reads `responses` back from the database,
+    // only from this same browser's own sessionStorage.
+    if (id) {
+      try {
+        const raw = sessionStorage.getItem(`mini-assessment-responses-${id}`)
+        if (raw) setResponses(JSON.parse(raw))
+      } catch {
+        // Malformed/inaccessible storage — leave responses null, same as
+        // the "absent" case.
+      }
+    }
+
     setReady(true)
 
     const supabase = createClient()
@@ -67,7 +131,13 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
   if (!resultId || !band) notFound()
 
   const displayLabel = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
+  const bandWord = checkInOptionWord(facet, band)
   const bandCopy = MINI_ASSESSMENT_BAND_COPY[facet][band]
+  const checkInPrompt = getCheckInPrompt(facet)
+
+  const insight =
+    responses && responses.length === 6 ? computeMiniAssessmentInsight(facet, responses) : { type: 'none' as const }
+  const insightText = formatMiniAssessmentInsight(insight)
 
   // Only a logged-out visitor needs the signup gate at all — an already-
   // authenticated user (e.g. someone with an existing free-tier account who
@@ -115,7 +185,9 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
         {/* Blob — fixed container height prevents layout shift once the
             text below fades in, same pattern as the full assessment's
-            PatternDetectedScreen. */}
+            PatternDetectedScreen. Shows the band word itself (e.g.
+            "Steady"), not the facet name — the facet is already named in
+            the eyebrow above, so the blob carries the actual result. */}
         <div style={{ height: 240, overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div
             style={{
@@ -127,7 +199,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
               animationDelay: '150ms',
             }}
           >
-            <AnimatedBlob seed={`mini-result-${slug}-${band}`} word={displayLabel} size={200} />
+            <AnimatedBlob seed={`mini-result-${slug}-${band}`} word={bandWord} size={200} />
             <div
               style={{
                 position: 'absolute',
@@ -144,22 +216,70 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
         <h1
           className="font-serif font-medium text-charcoal text-center"
-          style={{ ...fade(300), fontSize: 26, lineHeight: 1.3, marginTop: 8, marginBottom: 20 }}
+          style={{ ...fade(300), fontSize: 26, lineHeight: 1.3, marginTop: 8, marginBottom: 24 }}
         >
-          {BAND_LABEL[band]} {displayLabel.toLowerCase()}
+          {bandWord} {displayLabel.toLowerCase()}
         </h1>
+
+        {/* Position on the line, not just a word — a 'mid' result reads as
+            a real place between the two ends instead of a bare label. */}
+        <div style={{ ...fade(400), marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+          <BandSpectrum facet={facet} band={band} />
+        </div>
 
         <p
           className="font-serif italic text-charcoal-soft text-center"
-          style={{ ...fade(450), fontSize: 17, lineHeight: 1.6, marginBottom: 16 }}
+          style={{ ...fade(500), fontSize: 17, lineHeight: 1.6, marginBottom: insightText ? 12 : 16 }}
         >
           {bandCopy}
         </p>
 
-        <p className="font-sans text-muted text-center" style={{ ...fade(600), fontSize: 12.5, lineHeight: 1.5, marginBottom: 32 }}>
+        {/* Item-level insight (Part B3) — only renders when the raw
+            responses made it over via sessionStorage and the six answers
+            cleanly support a specific statement; otherwise this section is
+            simply absent and the band copy above stands on its own. */}
+        {insightText && (
+          <p
+            className="font-sans text-charcoal-soft text-center"
+            style={{ ...fade(600), fontSize: 13.5, lineHeight: 1.6, marginBottom: 16 }}
+          >
+            {insightText}
+          </p>
+        )}
+
+        <p className="font-sans text-muted text-center" style={{ ...fade(700), fontSize: 12.5, lineHeight: 1.5, marginBottom: 32 }}>
           This is a directional read from 6 questions, not the full picture — the complete report gives you a
           confident score plus everything else your patterns show.
         </p>
+
+        {/* Bridge to the daily check-in (Part B5) — the actual question and
+            options this facet's check-in asks, read from the same source
+            the check-in screen itself uses, so this can't drift from it. */}
+        <div
+          className="w-full"
+          style={{ ...fade(800), background: '#F2EEE4', border: '1px solid #E5E1D5', borderRadius: 12, padding: 18, marginBottom: 20 }}
+        >
+          <p className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ marginBottom: 10 }}>
+            Tomorrow&apos;s check-in
+          </p>
+          <p className="font-serif text-charcoal" style={{ fontSize: 16, lineHeight: 1.4, marginBottom: 12 }}>
+            {checkInPrompt.question}
+          </p>
+          <div className="flex flex-col gap-2" style={{ marginBottom: 14 }}>
+            {checkInPrompt.options.map((option) => (
+              <div
+                key={option.id}
+                className="font-sans text-charcoal-soft"
+                style={{ fontSize: 13, lineHeight: 1.5, padding: '8px 12px', background: '#ffffff', border: '1px solid #E5E1D5', borderRadius: 8 }}
+              >
+                {option.label}
+              </div>
+            ))}
+          </div>
+          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+            Six questions give you a starting point. The daily check-in is how you find out if it holds for you.
+          </p>
+        </div>
 
         {activateError && (
           <p className="font-sans text-center" style={{ fontSize: 13, color: '#8a5a3d', marginBottom: 12 }}>
@@ -167,7 +287,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
           </p>
         )}
 
-        <div className="w-full" style={fade(750)}>
+        <div className="w-full" style={fade(900)}>
           <button
             onClick={handleAddToCheckIns}
             disabled={isActivating}

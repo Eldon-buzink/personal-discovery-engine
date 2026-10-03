@@ -92,6 +92,19 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
       return
     }
 
+    // Hand the raw per-item responses to the result page via sessionStorage,
+    // keyed by the result row's own id — same browser, same tab lineage,
+    // no RLS change needed to let the (possibly pre-signup) result page
+    // read responses back out of the database. Purely an enhancement: the
+    // result page falls back to band-only copy if this key is missing
+    // (direct link, different browser, cleared storage).
+    try {
+      sessionStorage.setItem(`mini-assessment-responses-${data.id}`, JSON.stringify(newResponses))
+    } catch {
+      // sessionStorage can throw in rare cases (private mode, storage full)
+      // — the result page's fallback handles a missing key either way.
+    }
+
     router.push(`/mini-assessment/${slug}/result?id=${data.id}&band=${band}`)
   }
 

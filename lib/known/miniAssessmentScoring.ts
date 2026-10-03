@@ -118,20 +118,25 @@ export function bandForScore(score: number): MiniAssessmentBand {
 // to make the result screen functional. Same status as the item text:
 // unvalidated draft, fine to ship given the "directional, not confident"
 // framing, worth revisiting once real band-distribution data exists.
+//
+// 'mid' rewritten (round 3 feedback) to describe an actual position —
+// middling scores come from averaging 6 items, not from "no clear lean",
+// and the old copy read as a non-answer. Each mid line now names what the
+// middle ground actually looks like day to day, same as low/high do.
 export const MINI_ASSESSMENT_BAND_COPY: Record<MiniAssessmentFacet, Record<MiniAssessmentBand, string>> = {
   'Self-Discipline': {
     low: 'Right now, the pull to set things aside shows up more often than the pull to push through.',
-    mid: 'You follow through in some situations and stall in others — no single, predictable pattern yet.',
+    mid: 'You keep a steady pace — not immune to distraction, but not easily knocked off course either. Whether you follow through tends to depend on the task more than on willpower alone.',
     high: 'You have a strong pull toward finishing what you start, even past the point it stops feeling interesting.',
   },
   Anxiety: {
     low: "Uncertainty doesn't seem to sit with you for long — you lean toward steady rather than tense.",
-    mid: "Some situations put you on edge and others don't — a mixed picture rather than a clear lean.",
+    mid: "You notice tension when it shows up, but it doesn't usually take over. Some situations get under your skin more than others, without a single pattern to it.",
     high: 'Worry and tension show up readily for you, especially around what might go wrong.',
   },
   Liberalism: {
     low: 'You lean toward holding onto the frameworks you were raised with, more than questioning them.',
-    mid: 'You hold some inherited views loosely and others firmly — no clear lean yet.',
+    mid: "You hold onto some of what you were raised with and question other parts of it — picking and choosing rather than deferring wholesale or rejecting it outright.",
     high: 'You lean toward questioning inherited rules and beliefs rather than deferring to them.',
   },
 }
