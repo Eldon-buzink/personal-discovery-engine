@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useRouter, notFound } from 'next/navigation'
 import QuestionCard from '@/components/known/QuestionCard'
 import { createClient } from '@/lib/supabase/client'
@@ -147,6 +148,8 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
 // /onboarding screen (app/onboarding/OnboardingClient.tsx) but scaled down
 // to match a 6-question, ~2-minute mini-assessment — a single screen, no
 // trust-building essay, since there's much less to set expectations for.
+// Same staggered fade-in + fade-out-on-start transition as that screen,
+// just a shorter choreography (3 beats instead of 5).
 function MiniOnboarding({
   displayLabel,
   questionCount,
@@ -156,33 +159,56 @@ function MiniOnboarding({
   questionCount: number
   onStart: () => void
 }) {
+  const [exiting, setExiting] = useState(false)
+
+  function handleStart() {
+    setExiting(true)
+    setTimeout(onStart, 280)
+  }
+
+  function fade(delayMs: number): CSSProperties {
+    return { animation: 'fadeIn 0.6s ease both', animationDelay: `${delayMs}ms` }
+  }
+
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6 py-12">
+    <div
+      className="min-h-screen bg-cream flex flex-col items-center justify-center px-6 py-12"
+      style={{
+        transition: 'opacity 0.28s ease, transform 0.28s ease',
+        opacity: exiting ? 0 : 1,
+        transform: exiting ? 'translateY(-14px)' : 'none',
+      }}
+    >
       <div className="w-full max-w-md flex flex-col items-center text-center">
-        <span className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ marginBottom: 20 }}>
+        <span className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ ...fade(0), marginBottom: 20 }}>
           {displayLabel} · quick check
         </span>
 
-        <h1 className="font-serif text-[24px] font-medium leading-[1.4] text-charcoal" style={{ marginBottom: 16 }}>
+        <h1
+          className="font-serif text-[24px] font-medium leading-[1.4] text-charcoal"
+          style={{ ...fade(200), marginBottom: 16 }}
+        >
           There&apos;s no wrong answer here.
         </h1>
 
-        <p className="font-sans text-[15px] leading-[1.65] text-charcoal-soft" style={{ marginBottom: 32 }}>
+        <p className="font-sans text-[15px] leading-[1.65] text-charcoal-soft" style={{ ...fade(400), marginBottom: 32 }}>
           Rate each statement as it actually is for you right now, not how you wish it were. Go with your first
           instinct.
         </p>
 
-        <button
-          onClick={onStart}
-          className="w-full bg-charcoal text-cream font-sans font-medium text-[15px] rounded-full"
-          style={{ padding: '14px 24px', marginBottom: 14 }}
-        >
-          Start
-        </button>
+        <div style={fade(600)} className="w-full flex flex-col items-center">
+          <button
+            onClick={handleStart}
+            className="w-full bg-charcoal text-cream font-sans font-medium text-[15px] rounded-full"
+            style={{ padding: '14px 24px', marginBottom: 14 }}
+          >
+            Start
+          </button>
 
-        <span className="font-sans text-[12.5px] text-muted">
-          {questionCount} statements · about 2 minutes
-        </span>
+          <span className="font-sans text-[12.5px] text-muted">
+            {questionCount} statements · about 2 minutes
+          </span>
+        </div>
       </div>
     </div>
   )

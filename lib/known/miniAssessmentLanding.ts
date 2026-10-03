@@ -11,6 +11,14 @@
  *
  * Facet display names come from MINI_ASSESSMENT_DISPLAY_LABEL, never the
  * facet_id — 'Liberalism' must not reach UI copy.
+ *
+ * Round 3 feedback: headlines are now grounded in the product's own
+ * language — the daily check-in question (lib/known/checkInOptions.ts) and
+ * the quiz items themselves (lib/known/miniAssessmentScoring.ts) — rather
+ * than invented metaphors. The "Sound familiar?" cards below quote real
+ * quiz items by INDEX, not by retyped string, so they can never drift from
+ * MINI_ASSESSMENT_ITEMS — see StartLandingClient.tsx for where the index
+ * gets resolved to text.
  */
 
 import type { MiniAssessmentSlug } from './miniAssessmentScoring'
@@ -27,32 +35,32 @@ export const LANDING_ANGLES: LandingAngle[] = ['curiosity', 'behavior']
 export const LANDING_COPY: Record<MiniAssessmentSlug, Record<LandingAngle, LandingAngleCopy>> = {
   discipline: {
     curiosity: {
-      headline: 'How do you handle the things you don’t feel like doing?',
-      subhead: 'Six short statements. See which way you lean on self-discipline.',
+      headline: 'Do you keep going after it stops feeling easy?',
+      subhead: 'Six short statements about starting, finishing, and everything that pulls you away in between.',
     },
     behavior: {
-      headline: 'Do you finish what you start?',
-      subhead: 'Six short statements about follow-through. See which way you lean.',
+      headline: 'What happens when a task stops being interesting?',
+      subhead: 'Six short statements about follow-through — and what wins when something more appealing shows up.',
     },
   },
   anxiety: {
     curiosity: {
-      headline: 'How much do you carry the ‘what if’?',
-      subhead: 'Six short statements. See which way you lean on anxiety.',
+      headline: 'How does uncertainty sit with you?',
+      subhead: "Six short statements about how unresolved things land for you — there's no right way to sit with not knowing.",
     },
     behavior: {
-      headline: 'Do small problems leave you on edge?',
-      subhead: 'Six short statements about tension and worry. See which way you lean.',
+      headline: "When something's unresolved, where do you feel it?",
+      subhead: 'Six short statements about tension and worry, grounded in what actually shows up for you.',
     },
   },
   values: {
     curiosity: {
-      headline: 'What do you hold onto, and what are you ready to question?',
-      subhead: 'Six short statements. See which way you lean on values.',
+      headline: 'What are you willing to question?',
+      subhead: 'Six short statements about tradition, change, and where you draw your own line.',
     },
     behavior: {
-      headline: 'Do you keep a tradition because it works, or because it’s there?',
-      subhead: 'Six short statements about rules and tradition. See which way you lean.',
+      headline: 'Do you follow the rules you grew up with, or rewrite them?',
+      subhead: "Six short statements about the beliefs you keep, and the ones you've let go.",
     },
   },
 }
@@ -63,94 +71,67 @@ export const LANDING_SHARED = {
   cta: 'Start the quick check',
   microcopy: '6 statements · about 2 minutes · no account needed to see your result',
   honesty: 'A directional read from 6 questions, not the full picture.',
+  previewLabel: 'The first statement',
+  previewScaleLabels: ['Very inaccurate', 'Very accurate'] as [string, string],
+  neitherWrong: 'Neither end of this is "wrong" — this just shows where you tend to sit.',
+}
+
+// One line, adapted only by facet label — the "this isn't a diagnosis"
+// reassurance (Part C3). 30 verified against the product's own facet count
+// (lib/known/scoring.ts TRAIT_WORDS / reference/04-facet-trait-words-and-
+// descriptions.md lists exactly 30), matching the home page's existing
+// "Each of your 30 facets..." line rather than introducing a new number.
+export function landingReassurance(displayLabel: string): string {
+  return `This is a personality read, not a diagnosis. ${displayLabel} is one of 30 traits here — everyone sits somewhere on it.`
 }
 
 export interface SoundFamiliarCard {
   title: string
-  quote: string
+  // Index into MINI_ASSESSMENT_ITEMS[facet] — resolved to the real item
+  // text where this is rendered, never retyped here, so the quote can't
+  // drift from the quiz. 3 straight-keyed items + 1 reverse-keyed item
+  // per facet, so both ends of the trait are represented.
+  itemIndex: number
 }
 
 export interface SoundFamiliarCopy {
   subtitle: string
-  cards: [SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard]
+  cards: [SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard]
 }
 
 // "Sound familiar?" section — ported from the home page's Problem section
-// (reference/landing-copy-deck.md §2), subtitle + 3 first-person quotes
-// rewritten per facet so the page says something recognizable instead of
-// showing a bare quiz-statement preview.
+// (reference/landing-copy-deck.md §2). Titles are editorial framing (not
+// factual claims); the quotes themselves are real quiz items by index.
+// Avoids index 0 where possible — that item is already shown in the hero's
+// own first-statement preview card, right above this section — except for
+// Values, where item 0 is one of only 3 straight-keyed items and leaving it
+// out would mean only 2 straight items for this section's required 3.
 export const LANDING_SOUND_FAMILIAR: Record<MiniAssessmentSlug, SoundFamiliarCopy> = {
   discipline: {
     subtitle: 'You know what you should be doing. That part was never the problem.',
     cards: [
-      {
-        title: 'Starting is the hard part.',
-        quote: 'I know exactly what I should be doing. I just don’t start.',
-      },
-      {
-        title: 'Momentum doesn’t stick.',
-        quote: 'I do great for a few days, then it quietly falls apart.',
-      },
-      {
-        title: 'Interesting beats important.',
-        quote: 'The thing I need to do loses to whatever feels easier right now.',
-      },
+      { title: 'Starting is the hard part.', itemIndex: 1 }, // straight: "I get started on things right away..."
+      { title: 'Follow-through, when it matters.', itemIndex: 3 }, // straight: "Once I commit to something, I follow through on it."
+      { title: 'Pushing through the boring part.', itemIndex: 5 }, // straight: "I can push through boredom to get a job done."
+      { title: 'And sometimes, starting is genuinely hard.', itemIndex: 2 }, // reverse: "I have a hard time making myself..."
     ],
   },
   anxiety: {
-    subtitle: 'Nothing is actually wrong right now. That doesn’t always help.',
+    subtitle: 'Nothing is actually wrong right now. That doesn’t always settle it.',
     cards: [
-      {
-        title: 'The what-ifs pile up.',
-        quote: 'I’ve thought through every way this could go wrong. None of them happened.',
-      },
-      {
-        title: 'Small things feel bigger.',
-        quote: 'I know this isn’t a big deal. My body hasn’t gotten the message.',
-      },
-      {
-        title: 'Rest doesn’t feel like rest.',
-        quote: 'I’m not doing anything, and I’m still somehow on edge.',
-      },
+      { title: 'The what-ifs pile up.', itemIndex: 3 }, // straight: "I tend to expect the worst in uncertain situations."
+      { title: 'Small things can feel bigger.', itemIndex: 1 }, // straight: "Small problems can make me feel tense..."
+      { title: 'It shows up in the body, not just the thoughts.', itemIndex: 5 }, // straight: "I notice physical tension..."
+      { title: 'And sometimes, it just doesn’t take hold.', itemIndex: 2 }, // reverse: "I generally feel calm and relaxed..."
     ],
   },
   values: {
     subtitle: 'You respect where things came from. You still notice what doesn’t add up.',
     cards: [
-      {
-        title: 'Old rules, new questions.',
-        quote: 'I follow this because it’s always been done this way — I’m not sure why anymore.',
-      },
-      {
-        title: 'Loyalty versus honesty.',
-        quote: 'I can see the problem with how we’ve always done it. I don’t always say so.',
-      },
-      {
-        title: 'Change can feel like betrayal.',
-        quote: 'Updating my mind on this feels like letting someone down.',
-      },
+      { title: 'Questioning what no longer fits.', itemIndex: 0 }, // straight: "I'm willing to question traditions..."
+      { title: 'Old rules, new questions.', itemIndex: 2 }, // straight: "I often reconsider beliefs I was raised with."
+      { title: 'Comfortable standing apart.', itemIndex: 4 }, // straight: "I'm comfortable holding views that differ..."
+      { title: 'And sometimes, change can feel like betrayal.', itemIndex: 5 }, // reverse: "I feel loyalty to the values I was taught..."
     ],
   },
 }
-
-export interface LandingStep {
-  title: string
-  body: string
-}
-
-// "How it works" strip, shared across all three facets — the steps describe
-// the mini-assessment flow itself, not facet-specific content.
-export const LANDING_STEPS: LandingStep[] = [
-  {
-    title: 'Answer 6 short statements',
-    body: 'Rated from very inaccurate to very accurate, same format as the full assessment.',
-  },
-  {
-    title: 'See which way you lean',
-    body: 'A quick, directional read on this one facet — no account needed.',
-  },
-  {
-    title: 'Keep it, or go deeper',
-    body: 'Add it to your daily check-ins, or unlock the full 30-facet report later.',
-  },
-]

@@ -16,13 +16,15 @@ import { fetchIsPaid } from '@/lib/known/paywall'
 import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_DISPLAY_LABEL,
+  MINI_ASSESSMENT_ITEMS,
   type MiniAssessmentSlug,
 } from '@/lib/known/miniAssessmentScoring'
+import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import {
   LANDING_COPY,
   LANDING_SHARED,
-  LANDING_STEPS,
   LANDING_SOUND_FAMILIAR,
+  landingReassurance,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
 import { START_LANDING_CSS, mkCream, mkCharcoal, mkTeal, mkRose, mkPeriwinkle, sans, serif } from '../startLandingShared'
@@ -111,9 +113,11 @@ function StartHeroBlobs({ seed, activeWord }: { seed: string; activeWord: string
 }
 
 // ─── "Sound familiar?" visuals ──────────────────────────────────────────────
-// Ported as-is from the home page's Problem section — same three static
-// visuals (blurred circle cluster, dashed-ring blob, three-in-a-row), just
-// re-pointed at this file's copy of the mk* tokens.
+// Ported as-is from the home page's Problem section — same static visuals
+// (blurred circle cluster, dashed-ring blob, three-in-a-row, single circle),
+// re-pointed at this file's copy of the mk* tokens. A 4th visual (single
+// circle) was added this round since the section now shows 4 cards (3 real
+// items + 1 reverse-keyed) instead of 3.
 function ProblemCirclesVisual() {
   const circles = [
     { size: 45, top: 3,  left: 0,  color: mkTeal },
@@ -165,12 +169,27 @@ function ProblemTrioVisual() {
   )
 }
 
+function ProblemSingleVisual() {
+  return (
+    <div className="problem-visual">
+      <div style={{ position: 'relative', width: 48, height: 48 }}>
+        <div className="final-glow" style={{ width: 48, height: 48, top: 0, left: 0, background: mkPeriwinkle, filter: 'blur(9px)' }} />
+      </div>
+    </div>
+  )
+}
+
+const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual, ProblemSingleVisual]
+
 export default function StartLandingClient({ slug, angle }: { slug: MiniAssessmentSlug; angle: LandingAngle }) {
   const router = useRouter()
   const facet = MINI_ASSESSMENT_SLUG_TO_FACET[slug]
   const label = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
   const copy = LANDING_COPY[slug][angle]
   const soundFamiliar = LANDING_SOUND_FAMILIAR[slug]
+  const items = MINI_ASSESSMENT_ITEMS[facet]
+  const firstItem = items[0].text
+  const checkInPrompt = getCheckInPrompt(facet)
   const quizHref = `/mini-assessment/${slug}`
 
   // Mirrors the quiz page's own is_paid gate (app/mini-assessment/[facet]/
@@ -205,8 +224,29 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
               <span className="mk-microcopy" style={{ display: 'block', marginTop: 14 }}>
                 {LANDING_SHARED.microcopy}
               </span>
+              <span className="mk-microcopy" style={{ display: 'block', marginTop: 8 }}>
+                {landingReassurance(label)}
+              </span>
             </div>
             <StartHeroBlobs seed={`start-${slug}`} activeWord={label} />
+          </div>
+        </section>
+
+        {/* First-statement preview — the real first quiz item, sitting
+            right under the hero with no section gap above it (Part C5). */}
+        <section className="start-preview-section">
+          <div className="wrap">
+            <div className="start-preview-card">
+              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>{LANDING_SHARED.previewLabel}</p>
+              <p className="start-preview-text">{firstItem}</p>
+              <div className="start-preview-scale">
+                <span>{LANDING_SHARED.previewScaleLabels[0]}</span>
+                <span className="start-preview-dots" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map(i => <span key={i} />)}
+                </span>
+                <span>{LANDING_SHARED.previewScaleLabels[1]}</span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -214,38 +254,46 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
           <div className="wrap">
             <h2 className="problem-heading">Sound familiar?</h2>
             <p className="problem-subtitle">{soundFamiliar.subtitle}</p>
-            <div className="how-steps" style={{ marginTop: 32 }}>
-              <div className="step">
-                <ProblemCirclesVisual />
-                <div className="problem-title">{soundFamiliar.cards[0].title}</div>
-                <div className="problem-line">“{soundFamiliar.cards[0].quote}”</div>
-              </div>
-              <div className="step">
-                <ProblemBlobRingVisual />
-                <div className="problem-title">{soundFamiliar.cards[1].title}</div>
-                <div className="problem-line">“{soundFamiliar.cards[1].quote}”</div>
-              </div>
-              <div className="step">
-                <ProblemTrioVisual />
-                <div className="problem-title">{soundFamiliar.cards[2].title}</div>
-                <div className="problem-line">“{soundFamiliar.cards[2].quote}”</div>
-              </div>
+            <div className="sound-familiar-grid">
+              {soundFamiliar.cards.map((card, i) => {
+                const Visual = PROBLEM_VISUALS[i]
+                return (
+                  <div className="step" key={card.title}>
+                    <Visual />
+                    <div className="problem-title">{card.title}</div>
+                    <div className="problem-line">“{items[card.itemIndex].text}”</div>
+                  </div>
+                )
+              })}
             </div>
+            <p className="mk-microcopy" style={{ textAlign: 'center', marginTop: 24 }}>
+              {LANDING_SHARED.neitherWrong}
+            </p>
           </div>
         </section>
 
-        <section className="wrap" style={{ paddingBottom: 56 }}>
-          <div className="section-head">
-            <h2>How it works</h2>
-          </div>
-          <div className="how-steps">
-            {LANDING_STEPS.map((step, i) => (
-              <div className="step" key={step.title}>
-                <div className="step-mark">{i + 1}</div>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
+        {/* "What you get" — Part C4: a preview of the band vocabulary this
+            facet uses (not a result — nothing is scored yet) plus the real
+            check-in question/options tomorrow would ask, from the same
+            source the check-in screen itself reads. */}
+        <section className="get-section">
+          <div className="wrap">
+            <div className="section-head">
+              <h2>What you&apos;ll get</h2>
+            </div>
+            <div className="get-card">
+              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>Where you might land</p>
+              <div className="get-bands">
+                {(['low', 'mid', 'high'] as const).map((band) => (
+                  <span key={band} className="get-band-word">{checkInOptionWord(facet, band)}</span>
+                ))}
               </div>
-            ))}
+              <p className="mk-eyebrow" style={{ marginBottom: 10 }}>Tomorrow&apos;s check-in looks like this</p>
+              <p className="get-checkin-question">{checkInPrompt.question}</p>
+              {checkInPrompt.options.map((option) => (
+                <div key={option.id} className="get-checkin-option">{option.label}</div>
+              ))}
+            </div>
           </div>
         </section>
 
