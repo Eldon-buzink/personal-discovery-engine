@@ -32,6 +32,14 @@ export interface LandingAngleCopy {
 
 export const LANDING_ANGLES: LandingAngle[] = ['curiosity', 'behavior']
 
+// Part C6: tapping the landing page's first-statement preview stores that
+// answer here, keyed by slug, so the quiz page can pick it up and skip
+// re-asking question 1. Shared between StartLandingClient.tsx (writer) and
+// the quiz page (reader + remover) so the key can't drift between them.
+export function preAnswerStorageKey(slug: MiniAssessmentSlug): string {
+  return `mini-assessment-preanswer-${slug}`
+}
+
 export const LANDING_COPY: Record<MiniAssessmentSlug, Record<LandingAngle, LandingAngleCopy>> = {
   discipline: {
     curiosity: {

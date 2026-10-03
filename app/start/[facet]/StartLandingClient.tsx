@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   hashSeed,
@@ -25,6 +25,7 @@ import {
   LANDING_SHARED,
   LANDING_SOUND_FAMILIAR,
   landingReassurance,
+  preAnswerStorageKey,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
 import { START_LANDING_CSS, mkCream, mkCharcoal, mkTeal, mkRose, mkPeriwinkle, sans, serif } from '../startLandingShared'
@@ -181,6 +182,41 @@ function ProblemSingleVisual() {
 
 const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual, ProblemSingleVisual]
 
+// Part C6: tapping a dot stores that answer (1-5) for the quiz page to pick
+// up (see preAnswerStorageKey / the quiz page's eligibility effect) and
+// marks the dot selected — it does NOT navigate on its own. The person
+// still clicks "Start the quick check" when ready; this only means
+// question 1 is already answered once they do. Doesn't touch
+// scoreMiniAssessment or the result-row insert — the quiz page just starts
+// one question further in, with one response pre-filled.
+function FirstStatementPreview({ slug }: { slug: MiniAssessmentSlug }) {
+  const [selected, setSelected] = useState<number | null>(null)
+
+  function handleSelect(value: number) {
+    setSelected(value)
+    try {
+      sessionStorage.setItem(preAnswerStorageKey(slug), String(value))
+    } catch {
+      // Best-effort only — the quiz page falls back to a normal empty
+      // start if this never made it to storage.
+    }
+  }
+
+  return (
+    <div className="start-preview-dots">
+      {[1, 2, 3, 4, 5].map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-label={`${value} out of 5`}
+          aria-pressed={selected === value}
+          onClick={() => handleSelect(value)}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function StartLandingClient({ slug, angle }: { slug: MiniAssessmentSlug; angle: LandingAngle }) {
   const router = useRouter()
   const facet = MINI_ASSESSMENT_SLUG_TO_FACET[slug]
@@ -233,7 +269,9 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
         </section>
 
         {/* First-statement preview — the real first quiz item, sitting
-            right under the hero with no section gap above it (Part C5). */}
+            right under the hero with no section gap above it (Part C5).
+            Tappable (Part C6): rating it here pre-fills question 1 for
+            when the person clicks through to the quiz. */}
         <section className="start-preview-section">
           <div className="wrap">
             <div className="start-preview-card">
@@ -241,9 +279,7 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
               <p className="start-preview-text">{firstItem}</p>
               <div className="start-preview-scale">
                 <span>{LANDING_SHARED.previewScaleLabels[0]}</span>
-                <span className="start-preview-dots" aria-hidden="true">
-                  {[0, 1, 2, 3, 4].map(i => <span key={i} />)}
-                </span>
+                <FirstStatementPreview slug={slug} />
                 <span>{LANDING_SHARED.previewScaleLabels[1]}</span>
               </div>
             </div>

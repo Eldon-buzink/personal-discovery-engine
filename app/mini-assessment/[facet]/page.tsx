@@ -14,6 +14,7 @@ import {
   bandForScore,
   type MiniAssessmentSlug,
 } from '@/lib/known/miniAssessmentScoring'
+import { preAnswerStorageKey } from '@/lib/known/miniAssessmentLanding'
 
 // Per-browser identifier for a pre-account mini-assessment result, distinct
 // from the row's own id (which is what actually gets claimed on signup —
@@ -41,6 +42,28 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
   // logged-in-but-unpaid visitor is unaffected — this only redirects paid
   // users away.
   useEffect(() => {
+    // Part C6: a tap on the landing page's first-statement preview may have
+    // already answered question 1 — pick it up here, before anything
+    // renders (eligibilityChecked still false), so there's no flash of
+    // question 1 before jumping to question 2. One-shot: removed from
+    // storage immediately so a later, unrelated visit to this same quiz
+    // doesn't replay a stale answer.
+    try {
+      const key = preAnswerStorageKey(slug)
+      const stored = sessionStorage.getItem(key)
+      if (stored !== null) {
+        sessionStorage.removeItem(key)
+        const value = Number(stored)
+        if (Number.isInteger(value) && value >= 1 && value <= 5) {
+          setResponses([value])
+          setCurrentIndex(1)
+        }
+      }
+    } catch {
+      // sessionStorage can throw (private mode, storage full) — fall back
+      // to the normal empty-start state, same as if no pre-answer existed.
+    }
+
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
@@ -52,7 +75,7 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
       }
       setEligibilityChecked(true)
     })
-  }, [router])
+  }, [router, slug])
 
   if (!facet) notFound()
   if (!eligibilityChecked) return null
