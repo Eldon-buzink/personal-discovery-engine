@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FACET_DESCRIPTIONS } from '@/lib/known/scoring'
-import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
+import { facetDisplayLabel, MINI_ASSESSMENT_BAND_COPY, type MiniAssessmentBand, type MiniAssessmentFacet } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { activateFacet } from '@/lib/known/facetActivationClient'
 import {
@@ -17,6 +17,37 @@ import {
   type PracticeData,
 } from '@/lib/known/practiceData'
 import { isLowEngagement } from '@/lib/known/engagement'
+
+// Card copy for a directional active pattern used to be the same static
+// FACET_DESCRIPTIONS line every user with that facet sees, regardless of
+// their actual answers ("Your responses showed a clear signal..." — true
+// for nobody in particular). Review feedback: show the real per-user band
+// read instead, wherever a claimed mini-assessment attempt exists for it.
+async function fetchDirectionalBandCopy(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  facetIds: string[]
+): Promise<Map<string, string>> {
+  if (facetIds.length === 0) return new Map()
+  const { data, error } = await supabase
+    .from('mini_assessment_results')
+    .select('facet_id, band, created_at')
+    .eq('claimed_by', userId)
+    .in('facet_id', facetIds)
+    .order('created_at', { ascending: false })
+
+  if (error || !data) return new Map()
+
+  const copyByFacet = new Map<string, string>()
+  for (const row of data as { facet_id: string; band: MiniAssessmentBand }[]) {
+    // Most-recent-first order, first write per facet wins — same
+    // most-recent-attempt convention as fetchClaimedMiniAssessmentResult.
+    if (copyByFacet.has(row.facet_id)) continue
+    const bandCopy = MINI_ASSESSMENT_BAND_COPY[row.facet_id as MiniAssessmentFacet]?.[row.band]
+    if (bandCopy) copyByFacet.set(row.facet_id, bandCopy)
+  }
+  return copyByFacet
+}
 
 const NOTICE_COPY: Record<string, string> = {
   'already-active': "This one's already active — no changes made.",
@@ -41,6 +72,7 @@ export default function PracticeHomePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [data, setData] = useState<PracticeData | null>(null)
   const [checkedInToday, setCheckedInToday] = useState<Set<string>>(new Set())
+  const [directionalBandCopy, setDirectionalBandCopy] = useState<Map<string, string>>(new Map())
   const [notice, setNotice] = useState<string | null>(null)
   const [activatingFacet, setActivatingFacet] = useState<string | null>(null)
   const [candidateMessage, setCandidateMessage] = useState<string | null>(null)
@@ -74,6 +106,8 @@ export default function PracticeHomePage() {
       setData(practiceData)
       const todayIds = await fetchTodayCheckedInActivationIds(supabase, uid)
       setCheckedInToday(todayIds)
+      const directionalFacetIds = activeActivations(practiceData).filter((a) => a.directional).map((a) => a.facet_id)
+      setDirectionalBandCopy(await fetchDirectionalBandCopy(supabase, uid, directionalFacetIds))
       await checkForNudge(supabase, practiceData)
       setIsLoading(false)
       return true
@@ -258,7 +292,7 @@ export default function PracticeHomePage() {
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: directionalAccent, flexShrink: 0 }} />
                       </div>
                       <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>
-                        {FACET_DESCRIPTIONS[a.facet_id] ?? ''}
+                        {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
                     </Link>
                     {showBadge && (

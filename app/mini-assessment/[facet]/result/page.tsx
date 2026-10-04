@@ -6,6 +6,7 @@ import { useRouter, notFound } from 'next/navigation'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
 import PaywallModal from '@/components/known/PaywallModal'
+import BandSpectrum from '@/components/known/BandSpectrum'
 import { createClient } from '@/lib/supabase/client'
 import { claimMiniAssessmentResult } from '@/lib/known/miniAssessmentClaim'
 import {
@@ -14,7 +15,6 @@ import {
   MINI_ASSESSMENT_BAND_COPY,
   type MiniAssessmentSlug,
   type MiniAssessmentBand,
-  type MiniAssessmentFacet,
 } from '@/lib/known/miniAssessmentScoring'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
@@ -25,75 +25,6 @@ import { directionalAccent } from '@/lib/known/practiceTokens'
 // fading in underneath it rather than everything appearing at once.
 function fade(delayMs: number): CSSProperties {
   return { animation: 'fadeIn 0.6s ease both', animationDelay: `${delayMs}ms` }
-}
-
-const BAND_ORDER: MiniAssessmentBand[] = ['low', 'mid', 'high']
-const BAND_POSITION: Record<MiniAssessmentBand, number> = { low: 0, mid: 50, high: 100 }
-const BAND_ANCHOR: Record<MiniAssessmentBand, 'left' | 'center' | 'right'> = { low: 'left', mid: 'center', high: 'right' }
-
-function anchorTransform(anchor: 'left' | 'center' | 'right'): string {
-  if (anchor === 'left') return 'translateX(0)'
-  if (anchor === 'right') return 'translateX(-100%)'
-  return 'translateX(-50%)'
-}
-
-// Static three-point read of where the band sits, left-to-right — same
-// dot-and-line visual grammar as QuestionCard's DotScale (the component the
-// person just answered six questions with), just non-interactive and fixed
-// at 3 points instead of 5. Labels are the product's own band vocabulary
-// (checkInOptionWord), not invented here.
-//
-// Labels are absolutely positioned at each dot's own 0%/50%/100% anchor
-// (left-aligned, centered, right-aligned respectively) rather than laid out
-// with flex justify-between — justify-between only adds visible space
-// between items out of LEFTOVER container width, and with words like
-// "Traditional"/"Progressive" that leftover shrank to ~0px in practice,
-// rendering the three labels jammed together with no visible gap at all.
-// Anchoring each label independently to its own dot's position can't
-// collide this way regardless of word length.
-function BandSpectrum({ facet, band }: { facet: MiniAssessmentFacet; band: MiniAssessmentBand }) {
-  return (
-    <div className="w-full" style={{ maxWidth: 320 }}>
-      <div className="relative w-full" style={{ height: 22, marginBottom: 12 }}>
-        <div className="absolute bg-line" style={{ left: 11, right: 11, top: '50%', height: 1, transform: 'translateY(-50%)' }} />
-        {BAND_ORDER.map((b) => {
-          const active = b === band
-          return (
-            <div
-              key={b}
-              className="absolute rounded-full"
-              style={{
-                left: `${BAND_POSITION[b]}%`,
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: active ? 22 : 14,
-                height: active ? 22 : 14,
-                background: active ? '#262420' : '#F7F4ED',
-                border: `2px solid ${active ? '#262420' : '#8C8A83'}`,
-              }}
-            />
-          )
-        })}
-      </div>
-      <div className="relative w-full" style={{ height: 16 }}>
-        {BAND_ORDER.map((b) => (
-          <span
-            key={b}
-            className="absolute font-sans whitespace-nowrap"
-            style={{
-              left: `${BAND_POSITION[b]}%`,
-              transform: anchorTransform(BAND_ANCHOR[b]),
-              fontSize: 11,
-              color: b === band ? '#262420' : '#8C8A83',
-              fontWeight: b === band ? 600 : 400,
-            }}
-          >
-            {checkInOptionWord(facet, b)}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 export default function MiniAssessmentResultPage({ params }: { params: { facet: string } }) {

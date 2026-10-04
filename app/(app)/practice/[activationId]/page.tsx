@@ -3,22 +3,28 @@
 /**
  * Facet detail — covers both mockup variants (FacetDetailDirectional.dc.html
  * and the non-directional EvidenceTrail.dc.html/FacetDetailEmpty.dc.html) in
- * one component, switched on showsDirectionalBadge.
+ * one component. The paywall badge (showsDirectionalBadge) still switches
+ * the top unlock box on/off, but the check-in progress box below it no
+ * longer branches on directional vs. not — check-ins are the user's own
+ * real observations regardless of how the facet was activated, so a
+ * directional facet earns the exact same trend/weekly/monthly treatment a
+ * non-directional one does (review feedback: this used to stay a static
+ * "too early, directional carries extra uncertainty" note forever, no
+ * matter how many check-ins piled up). Only the mini-assessment score
+ * itself — shown in its own block above, blob/spectrum/band-copy/insight
+ * pulled from the same engine the mini-assessment result page uses — stays
+ * labeled as a directional, lower-confidence read.
  *
  * Trend display matches EvidenceTrail.dc.html's actual locked behavior: BOTH
- * lines always show once there's at least 1 check-in — the large prominent
- * line is "Most recently, you noticed X" (needs only the single latest
- * check-in, not trend qualification), and the small muted line underneath is
- * what upgrades once there's enough data: "Not yet a N-week trend" while
- * unqualified, replaced by the real weekly plurality observation once
- * trend.isTrendQualified. Both are plain interim text (§3.1's templated/LLM
- * synthesis is a separate future content pass), and the weekly line never
- * fabricates a lean from a genuine tie (computeTrend's WeekLean 'tie' case).
- *
- * The directional (showBadge) path is untouched from before and deliberately
- * simpler — matching FacetDetailDirectional.dc.html, which has no
- * most-recent-observation line at all, just the single "too early, and
- * directional carries extra uncertainty" muted note.
+ * lines always show once there's at least 1 check-in against an open period
+ * — the large prominent line is "Most recently, you noticed X" (needs only
+ * the single latest check-in, not trend qualification), and the small muted
+ * line underneath is what upgrades once there's enough data: "Not yet a
+ * N-week trend" while unqualified, replaced by the real weekly plurality
+ * observation once trend.isTrendQualified. Both are plain interim text
+ * (§3.1's templated/LLM synthesis is a separate future content pass), and
+ * the weekly line never fabricates a lean from a genuine tie (computeTrend's
+ * WeekLean 'tie' case).
  */
 
 import { useEffect, useState } from 'react'
@@ -26,13 +32,22 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FACET_DESCRIPTIONS } from '@/lib/known/scoring'
-import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
+import {
+  facetDisplayLabel,
+  MINI_ASSESSMENT_BAND_COPY,
+  type MiniAssessmentFacet,
+} from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { showsDirectionalBadge } from '@/lib/known/practiceData'
 import { computeTrend, isCurrentIsoWeek, type TrendResult } from '@/lib/known/trend'
-import { TREND_MIN_QUALIFYING_WEEKS } from '@/lib/known/practiceConfig'
+import { TREND_MIN_QUALIFYING_WEEKS, WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
+import { fetchClaimedMiniAssessmentResult, type ClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
+import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
+import { computeWeeklyInsight, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
+import AnimatedBlob from '@/components/known/AnimatedBlob'
+import BandSpectrum from '@/components/known/BandSpectrum'
 import PaywallModal from '@/components/known/PaywallModal'
 
 interface DetailState {
@@ -42,6 +57,13 @@ interface DetailState {
   checkInCount: number
   checkedInToday: boolean
   trend: TrendResult | null // null when there's no open period to scope a trend to (e.g. a deactivated facet viewed directly)
+  weekly: WeeklyInsightResult | null // null alongside trend, same reason
+  // Only set for a directional (mini-assessment-sourced) facet, and only
+  // when that original attempt was actually claimed onto this account — see
+  // lib/known/miniAssessmentResult.ts. Kept even after the paywall badge
+  // clears (showBadge goes false once the facet is revealed) since it's
+  // still the honest record of how this pattern started.
+  miniResult: ClaimedMiniAssessmentResult | null
 }
 
 // The small, muted, secondary line — upgrades from a static "still
@@ -69,6 +91,17 @@ function formatMostRecent(facetId: string, trend: TrendResult): string {
   const latest = trend.mostRecentCheckIn
   if (!latest) return ''
   return `Most recently, you noticed "${checkInOptionWord(facetId, latest.responseOption)}."`
+}
+
+// Only renders something when there's a reason to: a check-in already
+// logged this week but not yet enough for a weekly read. Zero check-ins
+// this week stays silent here rather than opening with "0 of 3" — that
+// reads as a deficit the moment the page loads, not information.
+function formatWeeklyProgress(weekly: WeeklyInsightResult): string | null {
+  const { summary } = weekly
+  if (summary.checkInCount === 0 || summary.qualifies) return null
+  const remaining = WEEKLY_CHECKIN_FLOOR - summary.checkInCount
+  return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week — ${remaining} more for a weekly read.`
 }
 
 export default function FacetDetailPage({ params }: { params: { activationId: string } }) {
@@ -115,6 +148,9 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
       const checkIns = checkInsRes.data ?? []
       const openPeriod = (periods as { started_at: string; ended_at: string | null }[]).find((p) => p.ended_at === null)
       const trend = openPeriod ? computeTrend(checkIns, openPeriod.started_at) : null
+      const weekly = openPeriod ? computeWeeklyInsight(checkIns, openPeriod.started_at) : null
+
+      const miniResult = directional ? await fetchClaimedMiniAssessmentResult(supabase, user.id, facet_id) : null
 
       setDetail({
         facetId: facet_id,
@@ -126,6 +162,8 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         // query just for today's date.
         checkedInToday: checkIns.some((c) => c.check_in_date === todayLocalDateString()),
         trend,
+        weekly,
+        miniResult,
       })
       setIsLoading(false)
     }
@@ -143,6 +181,22 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
 
   const label = facetDisplayLabel(detail.facetId)
   const description = FACET_DESCRIPTIONS[detail.facetId] ?? ''
+
+  // Result block only renders for a directional facet whose original
+  // mini-assessment attempt was actually claimed onto this account — see
+  // DetailState.miniResult. Same insight engine the result page uses,
+  // recomputed from the responses/band read back from the DB rather than
+  // the result page's own browser-local sessionStorage copy.
+  const miniFacet = detail.miniResult ? (detail.facetId as MiniAssessmentFacet) : null
+  const miniBand = detail.miniResult?.band ?? null
+  const bandWord = miniFacet && miniBand ? checkInOptionWord(miniFacet, miniBand) : ''
+  const bandCopy = miniFacet && miniBand ? MINI_ASSESSMENT_BAND_COPY[miniFacet][miniBand] : ''
+  const insightText = detail.miniResult
+    ? formatMiniAssessmentInsight(computeMiniAssessmentInsight(miniFacet as MiniAssessmentFacet, detail.miniResult.responses, detail.miniResult.band))
+    : ''
+
+  const weeklyProgress = detail.weekly ? formatWeeklyProgress(detail.weekly) : null
+  const weeklyQualifies = detail.weekly?.summary.qualifies ?? false
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
@@ -186,17 +240,75 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           </div>
         )}
 
-        {description && (
+        {/* Mini-assessment result block — the "bring in the result page"
+            review feedback. Only for a directional facet with a claimed
+            attempt on file; stays visible after the badge above clears
+            (paywall unlocked), since it's still the honest record of how
+            this pattern started, just no longer the only read available. */}
+        {miniFacet && miniBand && (
+          <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
+            <div style={{ width: 120, height: 120, position: 'relative', marginBottom: 8 }}>
+              <AnimatedBlob seed={`facet-detail-${activationId}`} word={bandWord} size={120} />
+            </div>
+            <h2 className="font-serif font-medium text-charcoal" style={{ fontSize: 19, marginBottom: 16 }}>
+              {bandWord} {label.toLowerCase()}
+            </h2>
+            <div style={{ width: '100%', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+              <BandSpectrum facet={miniFacet} band={miniBand} />
+            </div>
+            <p className="font-serif italic text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.6, marginBottom: insightText ? 10 : 0 }}>
+              {bandCopy}
+            </p>
+            {insightText && (
+              <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                {insightText}
+              </p>
+            )}
+          </div>
+        )}
+
+        {!miniFacet && description && (
           <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.6 }}>
             {description}
           </p>
         )}
 
-        {detail.checkInCount > 0 && !detail.showBadge && detail.trend ? (
-          // Has real (non-directional) data: always both lines — the
-          // most-recent-observation line is the prominent element, the
-          // trend-status/weekly-observation line is small and muted below
-          // it. Matches EvidenceTrail.dc.html's actual locked layout.
+        {detail.checkInCount === 0 ? (
+          <div
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 8, padding: '22px 18px', borderRadius: 14,
+              border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
+            }}
+          >
+            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
+              Nothing logged yet
+            </p>
+            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              Your first check-in starts building this.
+            </p>
+          </div>
+        ) : !detail.trend ? (
+          <div
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 8, padding: '22px 18px', borderRadius: 14,
+              border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
+            }}
+          >
+            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
+              {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
+            </p>
+            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              This pattern isn&apos;t currently active, so no trend is being tracked.
+            </p>
+          </div>
+        ) : (
+          // Has at least one check-in against an open period — always both
+          // lines (the most-recent-observation line is the prominent
+          // element, the trend-status/weekly-observation line is small and
+          // muted below it), regardless of whether the original read was
+          // directional. Check-ins are the user's own real observations
+          // either way; only the mini-assessment score above carries extra
+          // uncertainty, not this.
           <div
             style={{
               display: 'flex', flexDirection: 'column', gap: 14, padding: 20, borderRadius: 14,
@@ -220,31 +332,21 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             >
               {formatTrendStatus(detail.facetId, detail.trend)}
             </p>
-            <Link href={`/practice/${activationId}/recap`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-              See this month&apos;s recap
-            </Link>
-          </div>
-        ) : (
-          // Zero check-ins yet, OR a directional facet — the directional
-          // path stays deliberately simpler, matching
-          // FacetDetailDirectional.dc.html (no most-recent-observation line
-          // at all, just the single "too early, extra uncertainty" note).
-          <div
-            style={{
-              display: 'flex', flexDirection: 'column', gap: 8, padding: '22px 18px', borderRadius: 14,
-              border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
-            }}
-          >
-            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
-              {detail.checkInCount === 0 ? 'Nothing logged yet' : `${detail.checkInCount} check-in${detail.checkInCount === 1 ? '' : 's'} logged`}
-            </p>
-            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-              {detail.checkInCount === 0
-                ? 'Your first check-in starts building this.'
-                : detail.showBadge
-                  ? 'Too early to say anything yet — and, being directional, any read here would carry extra uncertainty regardless.'
-                  : "This pattern isn't currently active, so no trend is being tracked."}
-            </p>
+            {weeklyProgress && (
+              <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                {weeklyProgress}
+              </p>
+            )}
+            <div className="flex flex-col" style={{ gap: 6 }}>
+              {weeklyQualifies && (
+                <Link href={`/practice/${activationId}/weekly`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+                  See this week&apos;s check-ins
+                </Link>
+              )}
+              <Link href={`/practice/${activationId}/recap`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+                See this month&apos;s recap
+              </Link>
+            </div>
           </div>
         )}
       </div>
