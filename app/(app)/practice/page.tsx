@@ -11,11 +11,13 @@ import { activateFacet } from '@/lib/known/facetActivationClient'
 import {
   fetchPracticeData,
   fetchTodayCheckedInActivationIds,
+  fetchWeeklyInsights,
   activeActivations,
   candidateFacetIds,
   showsDirectionalBadge,
   type PracticeData,
 } from '@/lib/known/practiceData'
+import { formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
 import { isLowEngagement } from '@/lib/known/engagement'
 
 // Card copy for a directional active pattern used to be the same static
@@ -73,6 +75,7 @@ export default function PracticeHomePage() {
   const [data, setData] = useState<PracticeData | null>(null)
   const [checkedInToday, setCheckedInToday] = useState<Set<string>>(new Set())
   const [directionalBandCopy, setDirectionalBandCopy] = useState<Map<string, string>>(new Map())
+  const [weeklyInsights, setWeeklyInsights] = useState<Map<string, WeeklyInsightResult>>(new Map())
   const [notice, setNotice] = useState<string | null>(null)
   const [activatingFacet, setActivatingFacet] = useState<string | null>(null)
   const [candidateMessage, setCandidateMessage] = useState<string | null>(null)
@@ -108,6 +111,7 @@ export default function PracticeHomePage() {
       setCheckedInToday(todayIds)
       const directionalFacetIds = activeActivations(practiceData).filter((a) => a.directional).map((a) => a.facet_id)
       setDirectionalBandCopy(await fetchDirectionalBandCopy(supabase, uid, directionalFacetIds))
+      setWeeklyInsights(await fetchWeeklyInsights(supabase, uid, practiceData.activations))
       await checkForNudge(supabase, practiceData)
       setIsLoading(false)
       return true
@@ -263,6 +267,9 @@ export default function PracticeHomePage() {
             <div className="flex flex-col gap-3">
               {active.map((a) => {
                 const showBadge = showsDirectionalBadge(a, data.revealedFacetIds)
+                const weekly = weeklyInsights.get(a.id)
+                const weeklyProgress = weekly ? formatWeeklyProgress(weekly) : null
+                const weeklyQualifies = weekly?.summary.qualifies ?? false
                 return (
                   <div
                     key={a.id}
@@ -272,25 +279,32 @@ export default function PracticeHomePage() {
                       background: showBadge ? directionalSoft : '#FFFFFF',
                     }}
                   >
+                    {/* Review feedback: this used to be a solid-fill orange
+                        pill — the loudest thing on the card, competing with
+                        the facet name itself for the first thing a reader's
+                        eye lands on. A plain uppercase label matches how
+                        every other eyebrow in this app reads ("ACTIVE",
+                        "YOUR PROGRESS") — still distinguishable by color,
+                        no longer shouting. The card's own tinted
+                        background/border already carries the primary
+                        "this one's directional" signal. */}
                     {showBadge && (
-                      <div
-                        style={{
-                          display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 6,
-                          padding: '5px 10px', borderRadius: 7, background: directionalAccent,
-                        }}
+                      <p
+                        className="font-sans font-semibold uppercase"
+                        style={{ fontSize: 11, letterSpacing: '0.04em', color: directionalAccent }}
                       >
-                        <span className="font-sans font-medium" style={{ fontSize: 11, color: '#F7F4ED' }}>
-                          Directional · from mini-assessment
-                        </span>
-                      </div>
+                        Directional · from mini-assessment
+                      </p>
                     )}
                     <Link href={`/practice/${a.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div className="flex items-center justify-between">
-                        <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>
-                          {facetDisplayLabel(a.facet_id)}
-                        </span>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: directionalAccent, flexShrink: 0 }} />
-                      </div>
+                      {/* The small dot that used to sit next to every active
+                          facet's name — directional or not — is gone: it
+                          never carried information distinct from the badge
+                          above and the card's own tint/border, just an
+                          unexplained mark (review feedback). */}
+                      <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>
+                        {facetDisplayLabel(a.facet_id)}
+                      </span>
                       <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>
                         {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
@@ -332,6 +346,26 @@ export default function PracticeHomePage() {
                       >
                         Check in today
                       </Link>
+                    )}
+                    {/* Review feedback: weekly progress only ever showed up
+                        on a facet's own detail page — the homepage, where
+                        people actually land day to day, said nothing about
+                        it. Same quiet, count-based copy as facet detail;
+                        silent when there's nothing yet to report. */}
+                    {weeklyQualifies ? (
+                      <Link
+                        href={`/practice/${a.id}/report`}
+                        className="font-sans"
+                        style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}
+                      >
+                        This week&apos;s check-ins are ready
+                      </Link>
+                    ) : (
+                      weeklyProgress && (
+                        <p className="font-sans text-muted" style={{ fontSize: 12, textAlign: 'center' }}>
+                          {weeklyProgress}
+                        </p>
+                      )
                     )}
                   </div>
                 )

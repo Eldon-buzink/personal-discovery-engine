@@ -15,6 +15,7 @@
 
 import { startOfISOWeek } from 'date-fns'
 import { scopeToCurrentPeriod, summarizeSingleWeek, type CheckInForTrend, type WeekSummary } from './weekSummary'
+import { WEEKLY_CHECKIN_FLOOR } from './practiceConfig'
 
 export interface WeeklyInsightResult {
   weekStart: Date
@@ -25,4 +26,17 @@ export function computeWeeklyInsight(checkIns: CheckInForTrend[], periodStartedA
   const scoped = scopeToCurrentPeriod(checkIns, periodStartedAt)
   const weekStart = startOfISOWeek(now)
   return { weekStart, summary: summarizeSingleWeek(scoped, weekStart) }
+}
+
+// Shared by facet detail and Practice home's cards — same non-gamified
+// progress line in both places. Only renders something when there's a
+// reason to: a check-in already logged this week but not yet enough for a
+// weekly read. Zero check-ins this week stays silent rather than opening
+// with "0 of 3" — that reads as a deficit the moment the page loads, not
+// information.
+export function formatWeeklyProgress(weekly: WeeklyInsightResult): string | null {
+  const { summary } = weekly
+  if (summary.checkInCount === 0 || summary.qualifies) return null
+  const remaining = WEEKLY_CHECKIN_FLOOR - summary.checkInCount
+  return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week — ${remaining} more for a weekly read.`
 }

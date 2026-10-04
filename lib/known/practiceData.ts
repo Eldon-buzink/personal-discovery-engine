@@ -7,7 +7,10 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { startOfISOWeek } from 'date-fns'
 import { todayLocalDateString } from './checkInDate'
+import { weekKey, type CheckInForTrend } from './weekSummary'
+import { computeWeeklyInsight, type WeeklyInsightResult } from './weeklyInsight'
 
 export interface ActivationRow {
   id: string
@@ -54,6 +57,45 @@ export async function fetchTodayCheckedInActivationIds(supabase: SupabaseClient,
 
   if (error) throw new Error(error.message)
   return new Set((data ?? []).map((r: { facet_activation_id: string }) => r.facet_activation_id))
+}
+
+// Review feedback: weekly progress only showed up once a user clicked into
+// a facet's own detail page — the practice homepage itself, the page
+// people actually land on daily, said nothing about it. One query across
+// every active activation's check-ins since the start of this ISO week,
+// bucketed client-side, rather than N per-facet queries.
+export async function fetchWeeklyInsights(
+  supabase: SupabaseClient,
+  userId: string,
+  activations: ActivationRow[]
+): Promise<Map<string, WeeklyInsightResult>> {
+  const active = activations.filter(isActive)
+  if (active.length === 0) return new Map()
+
+  const weekStart = startOfISOWeek(new Date())
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('facet_activation_id, check_in_date, response_option')
+    .eq('user_id', userId)
+    .in('facet_activation_id', active.map((a) => a.id))
+    .gte('check_in_date', weekKey(weekStart))
+
+  if (error) throw new Error(error.message)
+
+  const byActivation = new Map<string, CheckInForTrend[]>()
+  for (const row of (data ?? []) as { facet_activation_id: string; check_in_date: string; response_option: string }[]) {
+    const arr = byActivation.get(row.facet_activation_id) ?? []
+    arr.push({ check_in_date: row.check_in_date, response_option: row.response_option })
+    byActivation.set(row.facet_activation_id, arr)
+  }
+
+  const result = new Map<string, WeeklyInsightResult>()
+  for (const a of active) {
+    const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
+    if (!openPeriod) continue
+    result.set(a.id, computeWeeklyInsight(byActivation.get(a.id) ?? [], openPeriod.started_at))
+  }
+  return result
 }
 
 export function isActive(a: Pick<ActivationRow, 'facet_activation_periods'>): boolean {

@@ -40,12 +40,12 @@ import {
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { showsDirectionalBadge } from '@/lib/known/practiceData'
 import { computeTrend, isCurrentIsoWeek, type TrendResult } from '@/lib/known/trend'
-import { TREND_MIN_QUALIFYING_WEEKS, WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
+import { TREND_MIN_QUALIFYING_WEEKS } from '@/lib/known/practiceConfig'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { fetchClaimedMiniAssessmentResult, type ClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
-import { computeWeeklyInsight, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
+import { computeWeeklyInsight, formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import BandSpectrum from '@/components/known/BandSpectrum'
 import PaywallModal from '@/components/known/PaywallModal'
@@ -91,17 +91,6 @@ function formatMostRecent(facetId: string, trend: TrendResult): string {
   const latest = trend.mostRecentCheckIn
   if (!latest) return ''
   return `Most recently, you noticed "${checkInOptionWord(facetId, latest.responseOption)}."`
-}
-
-// Only renders something when there's a reason to: a check-in already
-// logged this week but not yet enough for a weekly read. Zero check-ins
-// this week stays silent here rather than opening with "0 of 3" — that
-// reads as a deficit the moment the page loads, not information.
-function formatWeeklyProgress(weekly: WeeklyInsightResult): string | null {
-  const { summary } = weekly
-  if (summary.checkInCount === 0 || summary.qualifies) return null
-  const remaining = WEEKLY_CHECKIN_FLOOR - summary.checkInCount
-  return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week — ${remaining} more for a weekly read.`
 }
 
 export default function FacetDetailPage({ params }: { params: { activationId: string } }) {
@@ -196,7 +185,6 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
     : ''
 
   const weeklyProgress = detail.weekly ? formatWeeklyProgress(detail.weekly) : null
-  const weeklyQualifies = detail.weekly?.summary.qualifies ?? false
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
@@ -204,9 +192,15 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           practice screen uses — see the check-in page's identical comment
           for why. No-op below 448px. The paywall modal stays outside this
           wrapper (see below) since it's a fixed-position overlay, not part
-          of the column layout. */}
-      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
-      <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 20, flexGrow: 1, overflowY: 'auto' }}>
+          of the column layout.
+          Review feedback: this used to force minHeight:100vh on this
+          wrapper with flexGrow:1 on the content below, so a short page
+          (few check-ins, no mini-assessment block) stretched to fill the
+          viewport and left a large dead gap before the bottom CTA. Natural
+          flow — height follows content, CTA sits right after it — matches
+          how the mini-assessment result page itself is laid out. */}
+      <div className="w-full max-w-md flex flex-col">
+      <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
           <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 14 }}>
             ← Your practice
@@ -247,12 +241,14 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             this pattern started, just no longer the only read available. */}
         {miniFacet && miniBand && (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
-            <div style={{ width: 120, height: 120, position: 'relative', marginBottom: 8 }}>
+            {/* No separate "{band} {facet}" heading here (there used to be
+                one) — the H1 above already names the facet, and the blob's
+                own caption plus the spectrum's bold label both already say
+                the band word. A third repetition of the same word in three
+                lines was noise, not hierarchy. */}
+            <div style={{ width: 120, height: 120, position: 'relative', marginBottom: 20 }}>
               <AnimatedBlob seed={`facet-detail-${activationId}`} word={bandWord} size={120} />
             </div>
-            <h2 className="font-serif font-medium text-charcoal" style={{ fontSize: 19, marginBottom: 16 }}>
-              {bandWord} {label.toLowerCase()}
-            </h2>
             <div style={{ width: '100%', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
               <BandSpectrum facet={miniFacet} band={miniBand} />
             </div>
@@ -309,10 +305,16 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           // directional. Check-ins are the user's own real observations
           // either way; only the mini-assessment score above carries extra
           // uncertainty, not this.
+          //
+          // Review feedback: this used to share the same orange accent
+          // border/background as the paywall box above it, so the page had
+          // two loud accent-colored blocks competing for attention. Neutral
+          // styling here keeps the orange reserved for the one thing on the
+          // page that's actually a call to action (the paywall unlock).
           <div
             style={{
               display: 'flex', flexDirection: 'column', gap: 14, padding: 20, borderRadius: 14,
-              background: directionalSoft, border: `1.5px solid ${directionalAccent}`,
+              background: '#FFFFFF', border: '1px solid #E5E1D5',
             }}
           >
             <div className="flex items-center justify-between">
@@ -328,7 +330,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             </p>
             <p
               className="font-sans text-muted"
-              style={{ fontSize: 12, lineHeight: 1.5, fontStyle: 'italic', paddingTop: 2, borderTop: `1px solid ${directionalAccent}40` }}
+              style={{ fontSize: 12, lineHeight: 1.5, fontStyle: 'italic', paddingTop: 2, borderTop: '1px solid #E5E1D5' }}
             >
               {formatTrendStatus(detail.facetId, detail.trend)}
             </p>
@@ -337,26 +339,14 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
                 {weeklyProgress}
               </p>
             )}
-            <div className="flex flex-col" style={{ gap: 6 }}>
-              {weeklyQualifies && (
-                <Link href={`/practice/${activationId}/weekly`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-                  See this week&apos;s check-ins
-                </Link>
-              )}
-              <Link href={`/practice/${activationId}/recap`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-                See this month&apos;s recap
-              </Link>
-            </div>
+            <Link href={`/practice/${activationId}/report`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+              See your weekly &amp; monthly report
+            </Link>
           </div>
         )}
       </div>
 
-      <div
-        style={{
-          padding: '16px 28px 32px 28px', display: 'flex', flexDirection: 'column', gap: 10,
-          background: 'linear-gradient(to top, #F7F4ED 70%, rgba(247,244,237,0))',
-        }}
-      >
+      <div style={{ padding: '28px 28px 32px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {detail.checkedInToday ? (
           // Matches Practice home's confirmed state (Round 5 feedback) —
           // this button used to stay a plain clickable CTA here even after
