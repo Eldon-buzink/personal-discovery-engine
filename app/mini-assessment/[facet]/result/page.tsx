@@ -17,7 +17,7 @@ import {
   type MiniAssessmentFacet,
 } from '@/lib/known/miniAssessmentScoring'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
-import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
+import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { directionalAccent } from '@/lib/known/practiceTokens'
 
 // Staggered reveal timing, same technique as the full assessment's
@@ -28,40 +28,61 @@ function fade(delayMs: number): CSSProperties {
 }
 
 const BAND_ORDER: MiniAssessmentBand[] = ['low', 'mid', 'high']
+const BAND_POSITION: Record<MiniAssessmentBand, number> = { low: 0, mid: 50, high: 100 }
+const BAND_ANCHOR: Record<MiniAssessmentBand, 'left' | 'center' | 'right'> = { low: 'left', mid: 'center', high: 'right' }
+
+function anchorTransform(anchor: 'left' | 'center' | 'right'): string {
+  if (anchor === 'left') return 'translateX(0)'
+  if (anchor === 'right') return 'translateX(-100%)'
+  return 'translateX(-50%)'
+}
 
 // Static three-point read of where the band sits, left-to-right — same
 // dot-and-line visual grammar as QuestionCard's DotScale (the component the
 // person just answered six questions with), just non-interactive and fixed
 // at 3 points instead of 5. Labels are the product's own band vocabulary
 // (checkInOptionWord), not invented here.
+//
+// Labels are absolutely positioned at each dot's own 0%/50%/100% anchor
+// (left-aligned, centered, right-aligned respectively) rather than laid out
+// with flex justify-between — justify-between only adds visible space
+// between items out of LEFTOVER container width, and with words like
+// "Traditional"/"Progressive" that leftover shrank to ~0px in practice,
+// rendering the three labels jammed together with no visible gap at all.
+// Anchoring each label independently to its own dot's position can't
+// collide this way regardless of word length.
 function BandSpectrum({ facet, band }: { facet: MiniAssessmentFacet; band: MiniAssessmentBand }) {
   return (
     <div className="w-full" style={{ maxWidth: 320 }}>
-      <div className="relative flex items-center justify-between w-full" style={{ marginBottom: 10 }}>
-        <div className="absolute left-[11px] right-[11px] top-1/2 -translate-y-1/2 h-px bg-line" />
+      <div className="relative w-full" style={{ height: 22, marginBottom: 12 }}>
+        <div className="absolute bg-line" style={{ left: 11, right: 11, top: '50%', height: 1, transform: 'translateY(-50%)' }} />
         {BAND_ORDER.map((b) => {
           const active = b === band
           return (
             <div
               key={b}
-              className="relative z-10 rounded-full"
+              className="absolute rounded-full"
               style={{
+                left: `${BAND_POSITION[b]}%`,
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
                 width: active ? 22 : 14,
                 height: active ? 22 : 14,
                 background: active ? '#262420' : '#F7F4ED',
                 border: `2px solid ${active ? '#262420' : '#8C8A83'}`,
-                transition: 'width 0.3s ease, height 0.3s ease',
               }}
             />
           )
         })}
       </div>
-      <div className="flex justify-between w-full">
+      <div className="relative w-full" style={{ height: 16 }}>
         {BAND_ORDER.map((b) => (
           <span
             key={b}
-            className="font-sans"
+            className="absolute font-sans whitespace-nowrap"
             style={{
+              left: `${BAND_POSITION[b]}%`,
+              transform: anchorTransform(BAND_ANCHOR[b]),
               fontSize: 11,
               color: b === band ? '#262420' : '#8C8A83',
               fontWeight: b === band ? 600 : 400,
@@ -133,7 +154,6 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
   const displayLabel = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
   const bandWord = checkInOptionWord(facet, band)
   const bandCopy = MINI_ASSESSMENT_BAND_COPY[facet][band]
-  const checkInPrompt = getCheckInPrompt(facet)
 
   const insight =
     responses && responses.length === 6
@@ -174,12 +194,26 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center px-6 py-16">
       <div className="w-full max-w-md flex flex-col items-center">
-        <span
-          className="font-sans font-semibold uppercase text-center"
-          style={{ ...fade(0), fontSize: 11, letterSpacing: '0.07em', color: directionalAccent, marginBottom: 14 }}
+        {/* Badge, not plain text — matches the same solid-fill pill used for
+            "Directional · from mini-assessment" on the practice screens, so
+            this reads as a meta-label sitting above the real content
+            (facet, blob, headline) rather than competing with it for
+            attention. */}
+        <div
+          style={{
+            ...fade(0),
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '5px 12px',
+            borderRadius: 7,
+            background: directionalAccent,
+            marginBottom: 18,
+          }}
         >
-          Directional read
-        </span>
+          <span className="font-sans font-medium uppercase" style={{ fontSize: 11, letterSpacing: '0.05em', color: '#F7F4ED' }}>
+            Directional read
+          </span>
+        </div>
 
         <p className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ ...fade(100), marginBottom: 20 }}>
           {displayLabel}
@@ -224,8 +258,17 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
         </h1>
 
         {/* Position on the line, not just a word — a 'mid' result reads as
-            a real place between the two ends instead of a bare label. */}
-        <div style={{ ...fade(400), marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+            a real place between the two ends instead of a bare label.
+            width:'100%' here is load-bearing, not decorative: this div is a
+            child of a flex-col parent with items-center (not items-stretch
+            and no w-full of its own), so without an explicit width it
+            shrink-wraps toward its content's min size — collapsing
+            BandSpectrum's own percentage-based left:0%/50%/100% positions
+            to that same tiny width and stacking all three dots/labels on
+            top of each other. This is what actually caused the "jammed
+            together" labels, not the flex justify-between math the first
+            fix targeted. */}
+        <div style={{ ...fade(400), width: '100%', marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
           <BandSpectrum facet={facet} band={band} />
         </div>
 
@@ -254,32 +297,23 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
           confident score plus everything else your patterns show.
         </p>
 
-        {/* Bridge to the daily check-in (Part B5) — the actual question and
-            options this facet's check-in asks, read from the same source
-            the check-in screen itself uses, so this can't drift from it. */}
+        {/* What checking in actually gets you — replaces a static preview
+            of tomorrow's check-in question that looked tappable but wasn't
+            (round 5 feedback). Explains the real downstream mechanism
+            (check-ins -> a qualified weekly read -> monthly recap ->
+            quarterly review) instead of previewing quiz-like UI the person
+            can't yet interact with here. */}
         <div
           className="w-full"
           style={{ ...fade(800), background: '#F2EEE4', border: '1px solid #E5E1D5', borderRadius: 12, padding: 18, marginBottom: 20 }}
         >
           <p className="font-sans text-[11px] uppercase tracking-wide text-muted" style={{ marginBottom: 10 }}>
-            Tomorrow&apos;s check-in
+            What happens next
           </p>
-          <p className="font-serif text-charcoal" style={{ fontSize: 16, lineHeight: 1.4, marginBottom: 12 }}>
-            {checkInPrompt.question}
-          </p>
-          <div className="flex flex-col gap-2" style={{ marginBottom: 14 }}>
-            {checkInPrompt.options.map((option) => (
-              <div
-                key={option.id}
-                className="font-sans text-charcoal-soft"
-                style={{ fontSize: 13, lineHeight: 1.5, padding: '8px 12px', background: '#ffffff', border: '1px solid #E5E1D5', borderRadius: 8 }}
-              >
-                {option.label}
-              </div>
-            ))}
-          </div>
-          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
-            Six questions give you a starting point. The daily check-in is how you find out if it holds for you.
+          <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+            Six questions can only point in a direction. Checking in regularly is what turns that into something
+            real — each one becomes a data point, building toward a weekly read, then a monthly recap, then a full
+            quarterly review of whether this still holds.
           </p>
         </div>
 
