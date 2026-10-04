@@ -11,7 +11,7 @@
  * plain band copy in that case, exactly like detectLeanNarrative's 'flat'.
  */
 
-import { MINI_ASSESSMENT_ITEMS, type MiniAssessmentFacet } from './miniAssessmentScoring'
+import { MINI_ASSESSMENT_ITEMS, type MiniAssessmentFacet, type MiniAssessmentBand } from './miniAssessmentScoring'
 
 export type InsightDirection = 'agree' | 'disagree'
 
@@ -26,7 +26,11 @@ function strength(response: number): number {
   return Math.abs(response - 3)
 }
 
-export function computeMiniAssessmentInsight(facet: MiniAssessmentFacet, responses: number[]): MiniAssessmentInsight {
+export function computeMiniAssessmentInsight(
+  facet: MiniAssessmentFacet,
+  responses: number[],
+  band: MiniAssessmentBand
+): MiniAssessmentInsight {
   const items = MINI_ASSESSMENT_ITEMS[facet]
   if (responses.length !== items.length) return { type: 'none' }
 
@@ -44,22 +48,40 @@ export function computeMiniAssessmentInsight(facet: MiniAssessmentFacet, respons
   const byStrengthThenIndex = (a: (typeof scored)[number], b: (typeof scored)[number]) =>
     b.strength - a.strength || a.index - b.index
 
-  // Tension: the strongest answer pulling toward the "high" end of the
-  // trait and the strongest pulling toward the "low" end, when both are
-  // genuinely held (not neutral) — the six-item version of a mixed
-  // picture, not a non-answer. This is intentionally symmetric: a reverse-
-  // keyed item the person disagreed with can pull "high" just as a
-  // straight item they agreed with can, since both reports use the item's
-  // own text plus whether they agreed or disagreed with it, never a
-  // trait-level claim.
+  // Tension candidates: the strongest answer pulling toward the "high" end
+  // of the trait and the strongest pulling toward the "low" end. This is
+  // intentionally symmetric: a reverse-keyed item the person disagreed
+  // with can pull "high" just as a straight item they agreed with can,
+  // since both reports use the item's own text plus whether they agreed or
+  // disagreed with it, never a trait-level claim.
   const bestHigh = scored.filter((s) => s.adjusted > 3).sort(byStrengthThenIndex)[0]
   const bestLow = scored.filter((s) => s.adjusted < 3).sort(byStrengthThenIndex)[0]
 
-  if (bestHigh && bestLow && bestHigh.strength >= 1 && bestLow.strength >= 1) {
+  // Round 4 feedback: tension used to fire whenever any non-neutral answer
+  // existed on each side, regardless of band — so a mostly-consistent
+  // 'high' or 'low' result with one mildly-opposing answer read as a
+  // contradiction it wasn't. Now:
+  //  - 'mid' band: unchanged — any genuinely-held (strength >= 1) answer on
+  //    each side is a real split worth naming, since the band itself
+  //    already says the six answers didn't lean either way overall.
+  //  - 'low' / 'high' band: only when BOTH sides are held at full strength
+  //    (response exactly 1 or 5, not just "somewhat") AND the minority
+  //    side isn't a single outlier — at least 2 of the 6 items sit there.
+  //    One strongly-worded exception inside an otherwise consistent
+  //    result isn't a pattern; two or more is.
+  const highExtremeCount = scored.filter((s) => s.adjusted > 3 && s.strength === 2).length
+  const lowExtremeCount = scored.filter((s) => s.adjusted < 3 && s.strength === 2).length
+  const minorityExtremeCount = Math.min(highExtremeCount, lowExtremeCount)
+
+  const tensionEligible =
+    !!bestHigh && !!bestLow && bestHigh.strength >= 1 && bestLow.strength >= 1 &&
+    (band === 'mid' || minorityExtremeCount >= 2)
+
+  if (tensionEligible) {
     return {
       type: 'tension',
-      high: { itemText: bestHigh.text, direction: bestHigh.response > 3 ? 'agree' : 'disagree' },
-      low: { itemText: bestLow.text, direction: bestLow.response > 3 ? 'agree' : 'disagree' },
+      high: { itemText: bestHigh!.text, direction: bestHigh!.response > 3 ? 'agree' : 'disagree' },
+      low: { itemText: bestLow!.text, direction: bestLow!.response > 3 ? 'agree' : 'disagree' },
     }
   }
 

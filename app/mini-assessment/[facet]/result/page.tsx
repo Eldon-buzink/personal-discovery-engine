@@ -136,7 +136,9 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
   const checkInPrompt = getCheckInPrompt(facet)
 
   const insight =
-    responses && responses.length === 6 ? computeMiniAssessmentInsight(facet, responses) : { type: 'none' as const }
+    responses && responses.length === 6
+      ? computeMiniAssessmentInsight(facet, responses, band)
+      : { type: 'none' as const }
   const insightText = formatMiniAssessmentInsight(insight)
 
   // Only a logged-out visitor needs the signup gate at all — an already-

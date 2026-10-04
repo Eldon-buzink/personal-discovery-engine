@@ -119,24 +119,31 @@ export function bandForScore(score: number): MiniAssessmentBand {
 // unvalidated draft, fine to ship given the "directional, not confident"
 // framing, worth revisiting once real band-distribution data exists.
 //
-// 'mid' rewritten (round 3 feedback) to describe an actual position —
-// middling scores come from averaging 6 items, not from "no clear lean",
-// and the old copy read as a non-answer. Each mid line now names what the
-// middle ground actually looks like day to day, same as low/high do.
+// 'mid' rewritten twice now. Round 3 feedback moved it away from "no clear
+// lean yet" (a non-answer) toward describing a position. Round 4 feedback
+// caught that the round-3 version overcorrected: it asserted a specific
+// pattern (picking-and-choosing, task-dependence, situational variation)
+// that a mean-of-6 in the middle band doesn't actually support — a mid
+// score can come from genuinely mixed answers, or from every answer being
+// neutral (the same data computeMiniAssessmentInsight falls back to 'none'
+// on). So 'mid' now says only that the answers landed near the middle,
+// with no claim about why or in what pattern — any pattern claim belongs
+// to the item-level insight (lib/known/miniAssessmentInsight.ts), and only
+// renders when the six answers actually support one.
 export const MINI_ASSESSMENT_BAND_COPY: Record<MiniAssessmentFacet, Record<MiniAssessmentBand, string>> = {
   'Self-Discipline': {
     low: 'Right now, the pull to set things aside shows up more often than the pull to push through.',
-    mid: 'You keep a steady pace — not immune to distraction, but not easily knocked off course either. Whether you follow through tends to depend on the task more than on willpower alone.',
+    mid: "Your answers landed near the middle of this trait — not a strong pull toward pushing through, and not a strong pull toward setting things aside.",
     high: 'You have a strong pull toward finishing what you start, even past the point it stops feeling interesting.',
   },
   Anxiety: {
     low: "Uncertainty doesn't seem to sit with you for long — you lean toward steady rather than tense.",
-    mid: "You notice tension when it shows up, but it doesn't usually take over. Some situations get under your skin more than others, without a single pattern to it.",
+    mid: "Your answers landed near the middle of this trait — not a strong pull toward staying grounded, and not a strong pull toward feeling anxious.",
     high: 'Worry and tension show up readily for you, especially around what might go wrong.',
   },
   Liberalism: {
     low: 'You lean toward holding onto the frameworks you were raised with, more than questioning them.',
-    mid: "You hold onto some of what you were raised with and question other parts of it — picking and choosing rather than deferring wholesale or rejecting it outright.",
+    mid: "Your answers landed near the middle of this trait — not a strong pull toward holding onto tradition, and not a strong pull toward questioning it.",
     high: 'You lean toward questioning inherited rules and beliefs rather than deferring to them.',
   },
 }
