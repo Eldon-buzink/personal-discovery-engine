@@ -116,7 +116,11 @@ export default function MonthlyRecapPage({ params }: { params: { activationId: s
   const headline = formatHeadline(state.facetId, recap)
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col items-center">
+      {/* Centers the whole screen in the same max-w-md column every other
+          practice screen uses — see the check-in page's identical comment
+          for why. No-op below 448px. */}
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
           {monthName} recap
@@ -189,6 +193,7 @@ export default function MonthlyRecapPage({ params }: { params: { activationId: s
         <Link href={`/practice/${activationId}`} className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>
           Back to your pattern
         </Link>
+      </div>
       </div>
     </div>
   )

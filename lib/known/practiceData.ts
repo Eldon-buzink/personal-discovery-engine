@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { todayLocalDateString } from './checkInDate'
 
 export interface ActivationRow {
   id: string
@@ -38,6 +39,21 @@ export async function fetchPracticeData(supabase: SupabaseClient, userId: string
     activations: (activationsRes.data ?? []) as ActivationRow[],
     revealedFacetIds: new Set((revealsRes.data ?? []).map((r: { facet_id: string }) => r.facet_id)),
   }
+}
+
+// Round 5 feedback: Practice home showed "Check in today" on every active
+// card even after the user had already checked in — the button worked (the
+// check-in itself saved fine), there was just no UI reflecting that it had
+// happened. One query, by today's date, for every activation at once.
+export async function fetchTodayCheckedInActivationIds(supabase: SupabaseClient, userId: string): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('facet_activation_id')
+    .eq('user_id', userId)
+    .eq('check_in_date', todayLocalDateString())
+
+  if (error) throw new Error(error.message)
+  return new Set((data ?? []).map((r: { facet_activation_id: string }) => r.facet_activation_id))
 }
 
 export function isActive(a: Pick<ActivationRow, 'facet_activation_periods'>): boolean {

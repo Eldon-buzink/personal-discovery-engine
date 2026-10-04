@@ -10,6 +10,7 @@ import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { activateFacet } from '@/lib/known/facetActivationClient'
 import {
   fetchPracticeData,
+  fetchTodayCheckedInActivationIds,
   activeActivations,
   candidateFacetIds,
   showsDirectionalBadge,
@@ -39,6 +40,7 @@ export default function PracticeHomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [data, setData] = useState<PracticeData | null>(null)
+  const [checkedInToday, setCheckedInToday] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState<string | null>(null)
   const [activatingFacet, setActivatingFacet] = useState<string | null>(null)
   const [candidateMessage, setCandidateMessage] = useState<string | null>(null)
@@ -70,6 +72,8 @@ export default function PracticeHomePage() {
     try {
       const practiceData = await fetchPracticeData(supabase, uid)
       setData(practiceData)
+      const todayIds = await fetchTodayCheckedInActivationIds(supabase, uid)
+      setCheckedInToday(todayIds)
       await checkForNudge(supabase, practiceData)
       setIsLoading(false)
       return true
@@ -180,12 +184,18 @@ export default function PracticeHomePage() {
               What you&apos;re noticing
             </h1>
           </div>
-          <Link href="/practice/manage" aria-label="Manage your practice" style={{ padding: 6, marginTop: 2 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#262420" strokeWidth="1.8" strokeLinecap="round">
-              <line x1="4" y1="7" x2="20" y2="7" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="17" x2="20" y2="17" />
-            </svg>
+          {/* A 3-line hamburger here used to just navigate straight to
+              /practice/manage — no actual menu behind it — which reads as a
+              mobile-nav convention gone wrong on desktop (an icon implying
+              a dropdown that never opens). Plain text matches the
+              quarterly-review link right below and is unambiguous at any
+              width. */}
+          <Link
+            href="/practice/manage"
+            className="font-sans"
+            style={{ fontSize: 13, color: '#8a8375', textDecoration: 'underline', marginTop: 4, flexShrink: 0 }}
+          >
+            Manage
           </Link>
         </div>
 
@@ -263,13 +273,36 @@ export default function PracticeHomePage() {
                         Unlock the full assessment (€49) for a complete, non-directional read on this pattern.
                       </p>
                     )}
-                    <Link
-                      href={`/practice/${a.id}/checkin`}
-                      className="font-sans font-medium"
-                      style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
-                    >
-                      Check in today
-                    </Link>
+                    {checkedInToday.has(a.id) ? (
+                      // Round 5 feedback: this used to always show the dark
+                      // "Check in today" button, even right after the user
+                      // had just checked in — no way to tell it had worked.
+                      // A distinct, non-clickable confirmed state (checking
+                      // back in again today isn't a thing the product
+                      // supports — check_ins is one row per day) closes
+                      // that loop.
+                      <div
+                        className="font-sans font-medium"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                          textAlign: 'center', padding: 11, borderRadius: 8,
+                          border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 14,
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Checked in today
+                      </div>
+                    ) : (
+                      <Link
+                        href={`/practice/${a.id}/checkin`}
+                        className="font-sans font-medium"
+                        style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+                      >
+                        Check in today
+                      </Link>
+                    )}
                   </div>
                 )
               })}

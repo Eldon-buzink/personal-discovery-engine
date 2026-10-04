@@ -15,19 +15,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent } from '@/lib/known/practiceTokens'
-import { getCheckInPrompt } from '@/lib/known/checkInOptions'
-
-// Browser-local date, not server/UTC — this is a personal daily-reflection
-// app, and a user checking in late in their own evening shouldn't have that
-// land on "tomorrow" because a server elsewhere has already rolled over.
-// No existing precedent in the codebase for this; flagging the choice.
-function todayLocalDateString(): string {
-  const d = new Date()
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
+import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
+import { todayLocalDateString } from '@/lib/known/checkInDate'
 
 export default function CheckInPage({ params }: { params: { activationId: string } }) {
   const router = useRouter()
@@ -39,6 +28,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
   const [selected, setSelected] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -95,7 +85,14 @@ export default function CheckInPage({ params }: { params: { activationId: string
       return
     }
 
-    router.push('/practice')
+    // Round 5 feedback: saving used to redirect to /practice with zero
+    // visual confirmation — the user genuinely couldn't tell it had worked.
+    // Hold here briefly on an explicit "saved" state (what was logged, in
+    // the same wording the option itself used) before moving on, instead
+    // of an instant, silent redirect.
+    setIsSaving(false)
+    setSaved(true)
+    setTimeout(() => router.push('/practice'), 1100)
   }
 
   if (isLoading || !facetId) {
@@ -106,10 +103,43 @@ export default function CheckInPage({ params }: { params: { activationId: string
     )
   }
 
+  if (saved && selected) {
+    return (
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-md flex flex-col items-center text-center">
+          <div
+            style={{
+              width: 40, height: 40, borderRadius: '50%', background: directionalAccent, flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+              animation: 'blobReveal 0.35s ease both',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <p className="font-serif font-medium text-charcoal" style={{ fontSize: 20, lineHeight: 1.4, marginBottom: 6 }}>
+            Checked in
+          </p>
+          <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.5 }}>
+            Logged as &ldquo;{checkInOptionWord(facetId, selected)}&rdquo; for {facetDisplayLabel(facetId)} today.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const prompt = getCheckInPrompt(facetId)
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col" style={{ position: 'relative' }}>
+    <div className="min-h-screen bg-cream flex flex-col items-center" style={{ position: 'relative' }}>
+      {/* Centers the whole screen in a max-w-md column on wide viewports —
+          same width every other practice screen (Practice home) uses.
+          Below 448px (max-w-md) this is a no-op: mobile renders pixel-
+          identical to before. The inner flex-col + minHeight keeps the
+          existing sticky-bottom-button-bar structure working exactly as
+          it did when this div was the root. */}
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div className="flex-1 flex flex-col" style={{ padding: '48px 28px 0 28px', gap: 28, overflowY: 'auto' }}>
         <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
           ← Your practice
@@ -191,6 +221,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
         <Link href="/practice" className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>
           Skip today
         </Link>
+      </div>
       </div>
     </div>
   )

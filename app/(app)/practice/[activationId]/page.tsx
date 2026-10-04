@@ -139,7 +139,13 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
   const description = FACET_DESCRIPTIONS[detail.facetId] ?? ''
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col items-center">
+      {/* Centers the whole screen in the same max-w-md column every other
+          practice screen uses — see the check-in page's identical comment
+          for why. No-op below 448px. The paywall modal stays outside this
+          wrapper (see below) since it's a fixed-position overlay, not part
+          of the column layout. */}
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 20, flexGrow: 1, overflowY: 'auto' }}>
         <div>
           <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 14 }}>
@@ -250,6 +256,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         >
           Check in today
         </Link>
+      </div>
       </div>
 
       <PaywallModal
