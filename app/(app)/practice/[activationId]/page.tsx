@@ -32,6 +32,7 @@ import { showsDirectionalBadge } from '@/lib/known/practiceData'
 import { computeTrend, isCurrentIsoWeek, type TrendResult } from '@/lib/known/trend'
 import { TREND_MIN_QUALIFYING_WEEKS } from '@/lib/known/practiceConfig'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
+import { todayLocalDateString } from '@/lib/known/checkInDate'
 import PaywallModal from '@/components/known/PaywallModal'
 
 interface DetailState {
@@ -39,6 +40,7 @@ interface DetailState {
   directional: boolean
   showBadge: boolean
   checkInCount: number
+  checkedInToday: boolean
   trend: TrendResult | null // null when there's no open period to scope a trend to (e.g. a deactivated facet viewed directly)
 }
 
@@ -119,6 +121,10 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         directional,
         showBadge: showsDirectionalBadge({ directional, facet_id }, revealedFacetIds),
         checkInCount: checkIns.length,
+        // Same bug class Practice home already fixed (Round 5): reuse the
+        // check-ins this page already fetches rather than firing a second
+        // query just for today's date.
+        checkedInToday: checkIns.some((c) => c.check_in_date === todayLocalDateString()),
         trend,
       })
       setIsLoading(false)
@@ -249,13 +255,33 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           background: 'linear-gradient(to top, #F7F4ED 70%, rgba(247,244,237,0))',
         }}
       >
-        <Link
-          href={`/practice/${activationId}/checkin`}
-          className="font-sans font-medium"
-          style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
-        >
-          Check in today
-        </Link>
+        {detail.checkedInToday ? (
+          // Matches Practice home's confirmed state (Round 5 feedback) —
+          // this button used to stay a plain clickable CTA here even after
+          // today's check-in was already saved, with nothing on this page
+          // reflecting it.
+          <div
+            className="font-sans font-medium"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              textAlign: 'center', padding: 15, borderRadius: 10,
+              border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 15,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Checked in today
+          </div>
+        ) : (
+          <Link
+            href={`/practice/${activationId}/checkin`}
+            className="font-sans font-medium"
+            style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+          >
+            Check in today
+          </Link>
+        )}
       </div>
       </div>
 

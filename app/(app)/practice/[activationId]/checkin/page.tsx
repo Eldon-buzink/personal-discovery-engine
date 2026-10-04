@@ -159,6 +159,14 @@ export default function CheckInPage({ params }: { params: { activationId: string
           <p className="font-sans text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.55 }}>
             {prompt.question}
           </p>
+          {/* Review feedback: this screen had zero framing of what a
+              check-in is for, despite being the highest-frequency screen in
+              the product. Mechanism, not momentum — no streaks, no counts,
+              no "keep it up," matching the recap's own "No score. No
+              verdict." voice. */}
+          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
+            This becomes part of your next recap — not a score, just a record of what you noticed.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2.5">

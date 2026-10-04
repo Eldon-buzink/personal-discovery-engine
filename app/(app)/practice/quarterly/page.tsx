@@ -144,7 +144,7 @@ export default function QuarterlyReviewPage() {
         </h1>
       </div>
 
-      <div style={{ padding: '22px 28px 0 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ padding: '22px 28px 32px 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ padding: 18, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <p className="font-sans text-charcoal-soft" style={{ fontSize: 13 }}>
             Across {monthNames[0]}, {monthNames[1]}, {monthNames[2]}
@@ -202,12 +202,6 @@ export default function QuarterlyReviewPage() {
             </Link>
           </div>
         </div>
-      </div>
-
-      <div style={{ padding: '16px 28px 32px 28px' }}>
-        <Link href="/practice" className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>
-          Back to your practice
-        </Link>
       </div>
       </div>
     </div>

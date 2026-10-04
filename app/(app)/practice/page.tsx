@@ -199,10 +199,6 @@ export default function PracticeHomePage() {
           </Link>
         </div>
 
-        <Link href="/practice/quarterly" className="font-sans" style={{ display: 'inline-block', fontSize: 12.5, color: '#8a8375', textDecoration: 'underline', marginBottom: 20 }}>
-          This quarter&apos;s review
-        </Link>
-
         {notice && (
           <p
             className="font-sans text-charcoal-soft"
@@ -356,6 +352,17 @@ export default function PracticeHomePage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Moved down from top-of-page (review feedback): a once-a-quarter
+            link doesn't earn permanent second-item billing above Active,
+            the thing people actually open this page for daily. Quiet
+            footer placement matches quarterly/recap's own bottom-link
+            convention instead of competing with the daily surface. */}
+        <div style={{ marginTop: 32, textAlign: 'center' }}>
+          <Link href="/practice/quarterly" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
+            This quarter&apos;s review
+          </Link>
         </div>
       </div>
     </div>
