@@ -18,6 +18,7 @@ import { directionalAccent } from '@/lib/known/practiceTokens'
 import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
+import { detectUnlockMoment, formatUnlockMoment, type UnlockMoment } from '@/lib/known/checkInUnlock'
 
 export default function CheckInPage({ params }: { params: { activationId: string } }) {
   const router = useRouter()
@@ -27,6 +28,8 @@ export default function CheckInPage({ params }: { params: { activationId: string
   const [userId, setUserId] = useState<string | null>(null)
   const [facetId, setFacetId] = useState<string | null>(null)
   const [directional, setDirectional] = useState(false)
+  const [periodStartedAt, setPeriodStartedAt] = useState<string | null>(null)
+  const [existingCheckIns, setExistingCheckIns] = useState<{ check_in_date: string; response_option: string }[]>([])
   // Whether this activation has zero check-ins so far — decides whether the
   // full purpose line or the shorter return-visit line shows (Part 1: the
   // message belongs on the first check-in, not repeated every day).
@@ -35,6 +38,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [unlockMoment, setUnlockMoment] = useState<UnlockMoment>(null)
 
   useEffect(() => {
     async function load() {
@@ -52,11 +56,11 @@ export default function CheckInPage({ params }: { params: { activationId: string
       const [activationRes, checkInsRes] = await Promise.all([
         supabase
           .from('facet_activations')
-          .select('facet_id, directional')
+          .select('facet_id, directional, facet_activation_periods(started_at, ended_at)')
           .eq('id', activationId)
           .eq('user_id', user.id)
           .maybeSingle(),
-        supabase.from('check_ins').select('id').eq('facet_activation_id', activationId).limit(1),
+        supabase.from('check_ins').select('check_in_date, response_option').eq('facet_activation_id', activationId),
       ])
 
       if (activationRes.error || !activationRes.data) {
@@ -65,9 +69,15 @@ export default function CheckInPage({ params }: { params: { activationId: string
         return
       }
 
+      const periods = activationRes.data.facet_activation_periods as { started_at: string; ended_at: string | null }[]
+      const openPeriod = periods.find((p) => p.ended_at === null)
+      const checkIns = checkInsRes.data ?? []
+
       setFacetId(activationRes.data.facet_id)
       setDirectional(activationRes.data.directional)
-      setIsFirstCheckIn((checkInsRes.data ?? []).length === 0)
+      setPeriodStartedAt(openPeriod?.started_at ?? null)
+      setExistingCheckIns(checkIns)
+      setIsFirstCheckIn(checkIns.length === 0)
       setIsLoading(false)
     }
 
@@ -78,12 +88,13 @@ export default function CheckInPage({ params }: { params: { activationId: string
     if (!userId || !selected) return
     setIsSaving(true)
 
+    const today = todayLocalDateString()
     const supabase = createClient()
     const { error } = await supabase.from('check_ins').upsert(
       {
         user_id: userId,
         facet_activation_id: activationId,
-        check_in_date: todayLocalDateString(),
+        check_in_date: today,
         response_option: selected,
         note: note.trim() || null,
       },
@@ -96,14 +107,28 @@ export default function CheckInPage({ params }: { params: { activationId: string
       return
     }
 
+    // Only a genuinely NEW day's check-in can "unlock" something — editing
+    // a check-in that already existed for today isn't a new data point, so
+    // it never re-triggers this (it already fired, if it was going to, the
+    // first time today's check-in was saved).
+    const alreadyCheckedInToday = existingCheckIns.some((c) => c.check_in_date === today)
+    let moment: UnlockMoment = null
+    if (!alreadyCheckedInToday && periodStartedAt) {
+      const afterCheckIns = [...existingCheckIns, { check_in_date: today, response_option: selected }]
+      moment = detectUnlockMoment(existingCheckIns, afterCheckIns, periodStartedAt)
+    }
+    setUnlockMoment(moment)
+
     // Round 5 feedback: saving used to redirect to /practice with zero
     // visual confirmation — the user genuinely couldn't tell it had worked.
     // Hold here briefly on an explicit "saved" state (what was logged, in
     // the same wording the option itself used) before moving on, instead
-    // of an instant, silent redirect.
+    // of an instant, silent redirect. Rework Part 5: if this save crossed a
+    // real milestone, stay a beat longer so there's time to read it and
+    // follow the link, instead of auto-redirecting it away.
     setIsSaving(false)
     setSaved(true)
-    setTimeout(() => router.push('/practice'), 1100)
+    if (!formatUnlockMoment(moment)) setTimeout(() => router.push('/practice'), 1100)
   }
 
   if (isLoading || !facetId) {
@@ -135,6 +160,25 @@ export default function CheckInPage({ params }: { params: { activationId: string
           <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.5 }}>
             Logged as &ldquo;{checkInOptionWord(facetId, selected)}&rdquo; for {facetDisplayLabel(facetId)} today.
           </p>
+          {/* Rework Part 5 — say so, once, exactly when this check-in is
+              the one that unlocks something (the weekly floor, the first
+              picture, or enough data to compare against the starting
+              result). Never a progress count on the way there, never shown
+              when nothing actually unlocked. */}
+          {formatUnlockMoment(unlockMoment) && (
+            <>
+              <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.5, marginTop: 14 }}>
+                {formatUnlockMoment(unlockMoment)}
+              </p>
+              <Link
+                href={`/practice/${activationId}/report`}
+                className="font-sans font-medium"
+                style={{ display: 'inline-block', marginTop: 14, padding: '11px 20px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+              >
+                See your report
+              </Link>
+            </>
+          )}
         </div>
       </div>
     )

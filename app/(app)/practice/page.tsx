@@ -389,7 +389,7 @@ export default function PracticeHomePage() {
                         className="font-sans"
                         style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}
                       >
-                        This week&apos;s check-ins are ready
+                        Your weekly read is ready
                       </Link>
                     ) : (
                       weeklyProgress && (
