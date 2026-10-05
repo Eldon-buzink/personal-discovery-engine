@@ -28,6 +28,10 @@ export interface RecentWeeksReportResult {
   // monthlyRecap.ts had, just bounded by the period window now instead of
   // the calendar month.
   weeks: WeekSummary[]
+  // The raw in-window check-ins — exposed so the report page can derive its
+  // own distribution (Part 3a) and start-vs-now comparison (Part 3b)
+  // without re-deriving the same window filter a second time.
+  checkIns: CheckInForTrend[]
 }
 
 export function computeRecentWeeksReport(
@@ -50,5 +54,5 @@ export function computeRecentWeeksReport(
     cursor = addWeeks(cursor, 1)
   }
 
-  return { window, checkInCount: inWindow.length, weeks }
+  return { window, checkInCount: inWindow.length, weeks, checkIns: inWindow }
 }

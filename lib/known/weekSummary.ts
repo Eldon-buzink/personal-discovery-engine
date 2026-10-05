@@ -47,6 +47,17 @@ export function weekKey(d: Date): string {
   return format(d, 'yyyy-MM-dd')
 }
 
+// Rework Part 3a — per-option tallies over a set of check-ins, for the
+// report's distribution line ("Attuned 5 · Anxious 3 · Grounded 1") rather
+// than only the single winning option computeLean below reports. Order of
+// the returned entries is insertion order (first-seen option first); the
+// caller sorts by count for display.
+export function computeDistribution(checkIns: CheckInForTrend[]): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const c of checkIns) counts.set(c.response_option, (counts.get(c.response_option) ?? 0) + 1)
+  return counts
+}
+
 export function computeLean(options: string[]): { lean: WeekLean; topCount: number } {
   if (options.length === 0) return { lean: { type: 'none' }, topCount: 0 }
   const counts = new Map<string, number>()

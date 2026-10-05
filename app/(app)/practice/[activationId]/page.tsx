@@ -343,7 +343,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
                 </p>
               )}
               <Link href={`/practice/${activationId}/report`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-                See your weekly &amp; monthly report
+                See your full report
               </Link>
             </div>
           </>

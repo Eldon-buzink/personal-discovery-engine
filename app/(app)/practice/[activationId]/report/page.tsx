@@ -1,21 +1,31 @@
 'use client'
 
 /**
- * Report — this week plus a recent-weeks window, for one pattern, on a
- * single page. Used to be two separate routes (/weekly, /recap); merged
- * after review feedback that splitting a "this week" card and a "this
- * month" card into two destinations was more navigation than the content
- * warranted. Quarterly/milestone review stays its own page
- * (app/(app)/practice/quarterly) since it's practice-wide across every
- * active pattern, not scoped to one facet the way these two are.
+ * Report — this week, a recent-weeks window, and what the check-ins
+ * actually show, for one pattern, on a single page. Used to be two
+ * separate routes (/weekly, /recap); merged after review feedback that
+ * splitting a "this week" card and a "this month" card into two
+ * destinations was more navigation than the content warranted.
+ * Milestone review stays its own page (app/(app)/practice/quarterly)
+ * since it's practice-wide across every active pattern, not scoped to one
+ * facet the way this page is.
  *
  * Rework Part 4: the recent-weeks window is anchored to when THIS facet's
  * current activation period started (lib/known/recentWeeksReport.ts), not
  * the calendar month — "Your first 4 weeks" until that window closes, then
  * a rolling "Last 4 weeks".
  *
- * Same observational voice as the milestone page — one "No score. No
- * verdict." line for the whole page, not repeated per section.
+ * Rework Part 3: this page used to try a synthesized "shift" narrative
+ * headline over the window's weekly leans, falling back to a bare check-in
+ * count whenever the data didn't cleanly support one — which in practice
+ * was most of the time, so the "fallback" was usually the real headline.
+ * Replaced with the actual distribution (every option's count, not just
+ * the winner) plus, when a starting result exists and there's enough data,
+ * a plain start-vs-now comparison. Also the first place check-in notes are
+ * shown anywhere — they've always been saved, never displayed until now.
+ *
+ * Same observational voice throughout — one "No score. No verdict." line
+ * for the whole page, not repeated per section.
  */
 
 import { useEffect, useState } from 'react'
@@ -28,13 +38,19 @@ import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { computeWeeklyInsight, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
 import { computeRecentWeeksReport, type RecentWeeksReportResult } from '@/lib/known/recentWeeksReport'
-import { detectLeanNarrative } from '@/lib/known/narrativeSynthesis'
+import { scopeToCurrentPeriod, computeDistribution, parseCheckInDate } from '@/lib/known/weekSummary'
+import { compareStartToNowFromOptions, formatStartVsNow, type BandId } from '@/lib/known/startVsNow'
+import { selectRecentNotes, type CheckInNote } from '@/lib/known/checkInNotes'
+import { fetchClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
+import { fetchBaseAssessmentBand } from '@/lib/known/baseAssessmentResult'
 import { WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
 
 interface ReportState {
   facetId: string
   weekly: WeeklyInsightResult
   recent: RecentWeeksReportResult
+  startBand: BandId | null
+  notes: CheckInNote[]
 }
 
 function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult): string {
@@ -46,21 +62,16 @@ function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult): strin
   return `${summary.checkInCount} check-ins this week.`
 }
 
-function formatRecentWeeksHeadline(facetId: string, recent: RecentWeeksReportResult): { primary: string; secondary: string | null } {
-  const plain = { primary: `${recent.checkInCount} check-in${recent.checkInCount === 1 ? '' : 's'} in this window.`, secondary: null }
-  if (recent.checkInCount === 0) return plain
-
-  const leanSequence = recent.weeks
-    .filter((w) => w.qualifies && w.lean.type === 'option')
-    .map((w) => (w.lean as { type: 'option'; value: string }).value)
-  const narrative = detectLeanNarrative(leanSequence)
-  const secondary = `Based on ${recent.checkInCount} check-in${recent.checkInCount === 1 ? '' : 's'}.`
-
-  if (narrative.type === 'steady') return { primary: `A steady lean toward "${checkInOptionWord(facetId, narrative.option)}," most weeks.`, secondary }
-  if (narrative.type === 'shift') {
-    return { primary: `A shift from "${checkInOptionWord(facetId, narrative.from)}" toward "${checkInOptionWord(facetId, narrative.to)}."`, secondary }
-  }
-  return plain
+// Every option's count, highest first — "Attuned 5 · Anxious 3 · Grounded
+// 1" — not just the single winning option. Null when there's nothing in
+// the window yet, so the caller can show an honest empty state instead of
+// an empty string.
+function formatDistribution(facetId: string, distribution: Map<string, number>): string | null {
+  if (distribution.size === 0) return null
+  return Array.from(distribution.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([optionId, count]) => `${checkInOptionWord(facetId, optionId)} ${count}`)
+    .join(' · ')
 }
 
 export default function PatternReportPage({ params }: { params: { activationId: string } }) {
@@ -85,11 +96,11 @@ export default function PatternReportPage({ params }: { params: { activationId: 
       const [activationRes, checkInsRes] = await Promise.all([
         supabase
           .from('facet_activations')
-          .select('facet_id, facet_activation_periods(started_at, ended_at)')
+          .select('facet_id, directional, facet_activation_periods(started_at, ended_at)')
           .eq('id', activationId)
           .eq('user_id', user.id)
           .maybeSingle(),
-        supabase.from('check_ins').select('check_in_date, response_option').eq('facet_activation_id', activationId),
+        supabase.from('check_ins').select('check_in_date, response_option, note').eq('facet_activation_id', activationId),
       ])
 
       if (activationRes.error || !activationRes.data) {
@@ -98,7 +109,7 @@ export default function PatternReportPage({ params }: { params: { activationId: 
         return
       }
 
-      const { facet_id, facet_activation_periods: periods } = activationRes.data
+      const { facet_id, directional, facet_activation_periods: periods } = activationRes.data
       const openPeriod = (periods as { started_at: string; ended_at: string | null }[]).find((p) => p.ended_at === null)
 
       if (!openPeriod) {
@@ -109,7 +120,16 @@ export default function PatternReportPage({ params }: { params: { activationId: 
       const checkIns = checkInsRes.data ?? []
       const weekly = computeWeeklyInsight(checkIns, openPeriod.started_at)
       const recent = computeRecentWeeksReport(checkIns, openPeriod.started_at)
-      setState({ facetId: facet_id, weekly, recent })
+      // Notes are scoped to the whole current period, not just the 4-week
+      // window — a thoughtful note from five weeks ago shouldn't disappear
+      // from "What you wrote" just because the window moved past it.
+      const notes = selectRecentNotes(scopeToCurrentPeriod(checkIns, openPeriod.started_at))
+
+      const startBand = directional
+        ? ((await fetchClaimedMiniAssessmentResult(supabase, user.id, facet_id))?.band ?? null)
+        : await fetchBaseAssessmentBand(supabase, user.id, facet_id)
+
+      setState({ facetId: facet_id, weekly, recent, startBand, notes })
       setIsLoading(false)
     }
 
@@ -124,7 +144,7 @@ export default function PatternReportPage({ params }: { params: { activationId: 
     )
   }
 
-  const { weekly, recent } = state
+  const { weekly, recent, startBand, notes } = state
   const label = facetDisplayLabel(state.facetId)
   const weekLabel = `${format(weekly.weekStart, 'MMM d')} – ${format(addDays(weekly.weekStart, 6), 'MMM d')}`
   // "Your first 4 weeks" while still inside that first window since
@@ -133,7 +153,11 @@ export default function PatternReportPage({ params }: { params: { activationId: 
   // Part 4 — this used to be a hardcoded calendar-month name, which meant
   // activating on the 28th produced a near-empty "October").
   const windowLabel = recent.window.isFirstWindow ? 'Your first 4 weeks' : 'Last 4 weeks'
-  const recentHeadline = formatRecentWeeksHeadline(state.facetId, recent)
+  const windowDateRange = `${format(recent.window.start, 'MMM d')} – ${format(recent.window.end, 'MMM d')}`
+  const distributionLine = formatDistribution(state.facetId, computeDistribution(recent.checkIns))
+  const comparison = startBand
+    ? compareStartToNowFromOptions(startBand, recent.checkIns.map((c) => c.response_option))
+    : null
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
@@ -164,15 +188,29 @@ export default function PatternReportPage({ params }: { params: { activationId: 
 
           <div>
             <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-              {windowLabel}
+              {windowLabel} · {windowDateRange}
             </p>
             <div style={{ padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-              <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
-                {recentHeadline.primary}
-              </p>
-              {recentHeadline.secondary && (
-                <p className="font-sans text-muted" style={{ fontSize: 13 }}>
-                  {recentHeadline.secondary}
+              {distributionLine ? (
+                <>
+                  <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+                    {distributionLine}
+                  </p>
+                  <p className="font-sans text-muted" style={{ fontSize: 13 }}>
+                    Based on {recent.checkInCount} check-in{recent.checkInCount === 1 ? '' : 's'}.
+                  </p>
+                </>
+              ) : (
+                <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+                  No check-ins logged in this window yet.
+                </p>
+              )}
+              {comparison && (
+                <p
+                  className="font-sans text-muted"
+                  style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}
+                >
+                  {formatStartVsNow(comparison, state.facetId)}
                 </p>
               )}
             </div>
@@ -209,6 +247,30 @@ export default function PatternReportPage({ params }: { params: { activationId: 
               ))}
             </div>
           </div>
+
+          {/* "What you wrote" (Part 3c) — check-in notes have always been
+              saved, never shown anywhere until now. Exactly as typed, no
+              editing or summarizing; hidden entirely when there's nothing
+              to show. */}
+          {notes.length > 0 && (
+            <div>
+              <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+                What you wrote
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {notes.map((n) => (
+                  <div key={n.date} style={{ padding: '12px 14px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
+                    <p className="font-sans text-muted" style={{ fontSize: 11, marginBottom: 4 }}>
+                      {format(parseCheckInDate(n.date), 'MMM d')}
+                    </p>
+                    <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.5 }}>
+                      {n.note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '28px 0 4px' }}>
