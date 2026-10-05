@@ -1,47 +1,50 @@
 'use client'
 
 /**
- * Quarterly review — Quarterly.dc.html in the mockup. Practice-wide, not
- * per-facet (the mockup itself lists multiple patterns together, and the
- * "Still feels right?" decision point is about the whole practice, not one
- * facet). Deliberately skips the mockup's synthesized cross-pattern
- * narrative ("Reading into silence moved from assuming the worst...") — a
- * separate future content decision (§3.1), same interim-copy rule as
- * monthly recap and the facet-detail trend line. The per-facet "leaning
- * toward X" / "too early to say" read reuses the SAME computeTrend() the
- * facet-detail screen uses (5-week lookback), rather than inventing a
- * separate quarter-scaled qualification window the handover never
- * specified.
+ * Milestone review — Quarterly.dc.html in the mockup, kept at the
+ * /practice/quarterly route (the link from Practice home and any
+ * bookmarks already point here) but no longer anchored to the calendar
+ * quarter. Rework Part 4: each active facet has its own 90-day window
+ * anchored to when ITS current activation period started
+ * (lib/known/quarterlyReview.ts) — there's no single shared "quarter"
+ * once activation dates differ per facet, so each row reads its own
+ * window; the page-level framing ("Your first 90 days" / "Last 90 days")
+ * follows whichever active facet started earliest, since "Still feels
+ * right?" is a whole-practice decision point either way.
+ *
+ * Also fixes a real bug: the title used to always read "Three months of
+ * showing up" regardless of data — including with zero check-ins logged.
+ * The headline is data-driven now (a plain count, or "Nothing logged
+ * yet"), not a fixed phrase that can contradict what's actually true.
  */
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { startOfQuarter, addMonths, format } from 'date-fns'
+import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
-import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
-import { countCheckInsInQuarter, dominantLeanForMonth, quarterMonthStarts } from '@/lib/known/quarterlyReview'
-import { detectLeanNarrative } from '@/lib/known/narrativeSynthesis'
-import { computeTrend } from '@/lib/known/trend'
+import { computeFacetMilestone } from '@/lib/known/quarterlyReview'
+import { computePeriodWindow, type PeriodWindow } from '@/lib/known/periodWindow'
 import { isActive, type ActivationRow } from '@/lib/known/practiceData'
+import { COMPARISON_MIN_CHECKINS, MILESTONE_WINDOW_DAYS } from '@/lib/known/practiceConfig'
 
-interface FacetQuarterRow {
+interface FacetMilestoneRow {
   facetId: string
   checkInCount: number
   statusText: string
 }
 
-export default function QuarterlyReviewPage() {
+export default function MilestoneReviewPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const [rows, setRows] = useState<FacetQuarterRow[]>([])
+  const [rows, setRows] = useState<FacetMilestoneRow[]>([])
   const [totalCount, setTotalCount] = useState(0)
-
-  const quarterStart = startOfQuarter(new Date())
-  const monthNames = [0, 1, 2].map((i) => format(addMonths(quarterStart, i), 'MMMM'))
-  const quarterNumber = Math.floor(quarterStart.getMonth() / 3) + 1
+  // The earliest-started active facet's own window — used only for the
+  // page-level "Your first 90 days" vs "Last 90 days" framing, since the
+  // decision point below is about the whole practice, not one facet.
+  const [pageWindow, setPageWindow] = useState<PeriodWindow | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -61,7 +64,7 @@ export default function QuarterlyReviewPage() {
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('[Quarterly] load error:', error.message)
+        console.error('[Milestone] load error:', error.message)
         setIsLoading(false)
         return
       }
@@ -76,44 +79,26 @@ export default function QuarterlyReviewPage() {
             .select('check_in_date, response_option')
             .eq('facet_activation_id', a.id)
 
-          const rows = checkIns ?? []
-          const checkInCount = countCheckInsInQuarter(rows, openPeriod.started_at, quarterStart)
-
-          // Try the 3-month shift/steady narrative first (coarser, more
-          // robust than week-by-week over a whole quarter — see
-          // quarterlyReview.ts). Only falls through to the existing
-          // single-read (computeTrend, same as facet detail) when the
-          // 3-point sequence doesn't cleanly support a story.
-          const monthlyLeans = quarterMonthStarts(quarterStart)
-            .map((m) => dominantLeanForMonth(rows, openPeriod.started_at, m))
-            .filter((l): l is { type: 'option'; value: string } => l.type === 'option')
-            .map((l) => l.value)
-          const narrative = detectLeanNarrative(monthlyLeans)
+          const milestone = computeFacetMilestone(checkIns ?? [], openPeriod.started_at)
 
           let statusText = 'too early to say'
-          if (narrative.type === 'steady') {
-            statusText = `a steady lean toward "${checkInOptionWord(a.facet_id, narrative.option)}"`
-          } else if (narrative.type === 'shift') {
-            statusText = `a shift from "${checkInOptionWord(a.facet_id, narrative.from)}" toward "${checkInOptionWord(a.facet_id, narrative.to)}"`
-          } else {
-            const trend = computeTrend(rows, openPeriod.started_at)
-            if (trend.isTrendQualified && trend.mostRecentObservation) {
-              const lean = trend.mostRecentObservation.lean
-              statusText =
-                lean.type === 'option'
-                  ? `leaning toward "${checkInOptionWord(a.facet_id, lean.value)}"`
-                  : lean.type === 'tie'
-                    ? 'an even split, no clear lean'
-                    : 'too early to say'
-            }
+          if (milestone.checkInCount >= COMPARISON_MIN_CHECKINS) {
+            if (milestone.lean.type === 'option') statusText = `leaning toward "${checkInOptionWord(a.facet_id, milestone.lean.value)}"`
+            else if (milestone.lean.type === 'tie') statusText = 'an even split, no clear lean'
           }
 
-          return { facetId: a.facet_id, checkInCount, statusText }
+          return { facetId: a.facet_id, checkInCount: milestone.checkInCount, statusText, periodStartedAt: openPeriod.started_at }
         })
       )
 
-      setRows(computed)
+      setRows(computed.map(({ facetId, checkInCount, statusText }) => ({ facetId, checkInCount, statusText })))
       setTotalCount(computed.reduce((sum, r) => sum + r.checkInCount, 0))
+
+      if (computed.length > 0) {
+        const earliestStart = computed.reduce((min, r) => (r.periodStartedAt < min ? r.periodStartedAt : min), computed[0].periodStartedAt)
+        setPageWindow(computePeriodWindow(earliestStart, MILESTONE_WINDOW_DAYS))
+      }
+
       setIsLoading(false)
     }
 
@@ -129,6 +114,10 @@ export default function QuarterlyReviewPage() {
     )
   }
 
+  const windowEyebrow = pageWindow ? (pageWindow.isFirstWindow ? 'Your first 90 days' : 'Last 90 days') : 'Your practice'
+  const windowDateRange = pageWindow ? `${format(pageWindow.start, 'MMM d')} – ${format(pageWindow.end, 'MMM d')}` : null
+  const headline = totalCount === 0 ? 'Nothing logged yet.' : `${totalCount} check-in${totalCount === 1 ? '' : 's'} across your active pattern${rows.length === 1 ? '' : 's'}.`
+
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
       {/* Centers the whole screen in the same max-w-md column every other
@@ -137,28 +126,23 @@ export default function QuarterlyReviewPage() {
       <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
-          Q{quarterNumber} review
+          {windowEyebrow}
         </p>
         <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 25, lineHeight: 1.3 }}>
-          Three months of showing up
+          {headline}
         </h1>
       </div>
 
       <div style={{ padding: '22px 28px 32px 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ padding: 18, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 13 }}>
-            Across {monthNames[0]}, {monthNames[1]}, {monthNames[2]}
+        {windowDateRange && (
+          <p className="font-sans text-muted" style={{ fontSize: 13 }}>
+            {windowDateRange}
           </p>
-          <p className="font-serif text-charcoal" style={{ fontSize: 17, lineHeight: 1.5 }}>
-            {totalCount === 0
-              ? 'No check-ins logged this quarter yet.'
-              : `${totalCount} check-in${totalCount === 1 ? '' : 's'} across your active pattern${rows.length === 1 ? '' : 's'} this quarter.`}
-          </p>
-        </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
-            Your patterns this quarter
+            Your patterns
           </p>
           {rows.length === 0 ? (
             <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
@@ -177,6 +161,10 @@ export default function QuarterlyReviewPage() {
             ))
           )}
         </div>
+
+        <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '4px 0' }}>
+          No score. No verdict. Just what you noticed.
+        </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
           <p className="font-serif text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>

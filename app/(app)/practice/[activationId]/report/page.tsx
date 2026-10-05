@@ -1,37 +1,40 @@
 'use client'
 
 /**
- * Report — the weekly + monthly cadence for one pattern, on a single page.
- * Used to be two separate routes (/weekly, /recap); merged after review
- * feedback that splitting a "this week" card and a "this month" card into
- * two destinations, each linked separately from facet detail, was more
- * navigation than the content warranted — a reader wants both numbers in
- * one glance, not a click to pick which timescale first. Quarterly review
- * stays its own page (app/(app)/practice/quarterly) since it's practice-
- * wide across every active pattern, not scoped to one facet the way these
- * two are.
+ * Report — this week plus a recent-weeks window, for one pattern, on a
+ * single page. Used to be two separate routes (/weekly, /recap); merged
+ * after review feedback that splitting a "this week" card and a "this
+ * month" card into two destinations was more navigation than the content
+ * warranted. Quarterly/milestone review stays its own page
+ * (app/(app)/practice/quarterly) since it's practice-wide across every
+ * active pattern, not scoped to one facet the way these two are.
  *
- * Same observational voice as quarterly review — one "No score. No
+ * Rework Part 4: the recent-weeks window is anchored to when THIS facet's
+ * current activation period started (lib/known/recentWeeksReport.ts), not
+ * the calendar month — "Your first 4 weeks" until that window closes, then
+ * a rolling "Last 4 weeks".
+ *
+ * Same observational voice as the milestone page — one "No score. No
  * verdict." line for the whole page, not repeated per section.
  */
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { startOfMonth, format, addDays } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { computeWeeklyInsight, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
-import { computeMonthlyRecap, type MonthlyRecapResult } from '@/lib/known/monthlyRecap'
+import { computeRecentWeeksReport, type RecentWeeksReportResult } from '@/lib/known/recentWeeksReport'
 import { detectLeanNarrative } from '@/lib/known/narrativeSynthesis'
 import { WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
 
 interface ReportState {
   facetId: string
   weekly: WeeklyInsightResult
-  monthly: MonthlyRecapResult
+  recent: RecentWeeksReportResult
 }
 
 function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult): string {
@@ -43,19 +46,19 @@ function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult): strin
   return `${summary.checkInCount} check-ins this week.`
 }
 
-function formatMonthHeadline(facetId: string, recap: MonthlyRecapResult): { primary: string; secondary: string | null } {
-  const plain = { primary: `${recap.checkInCount} check-in${recap.checkInCount === 1 ? '' : 's'} this month.`, secondary: null }
-  if (recap.checkInCount === 0) return plain
+function formatRecentWeeksHeadline(facetId: string, recent: RecentWeeksReportResult): { primary: string; secondary: string | null } {
+  const plain = { primary: `${recent.checkInCount} check-in${recent.checkInCount === 1 ? '' : 's'} in this window.`, secondary: null }
+  if (recent.checkInCount === 0) return plain
 
-  const leanSequence = recap.weeks
+  const leanSequence = recent.weeks
     .filter((w) => w.qualifies && w.lean.type === 'option')
     .map((w) => (w.lean as { type: 'option'; value: string }).value)
   const narrative = detectLeanNarrative(leanSequence)
-  const secondary = `Based on ${recap.checkInCount} check-in${recap.checkInCount === 1 ? '' : 's'} this month.`
+  const secondary = `Based on ${recent.checkInCount} check-in${recent.checkInCount === 1 ? '' : 's'}.`
 
-  if (narrative.type === 'steady') return { primary: `A steady lean toward "${checkInOptionWord(facetId, narrative.option)}," most weeks this month.`, secondary }
+  if (narrative.type === 'steady') return { primary: `A steady lean toward "${checkInOptionWord(facetId, narrative.option)}," most weeks.`, secondary }
   if (narrative.type === 'shift') {
-    return { primary: `A shift from "${checkInOptionWord(facetId, narrative.from)}" toward "${checkInOptionWord(facetId, narrative.to)}," this month.`, secondary }
+    return { primary: `A shift from "${checkInOptionWord(facetId, narrative.from)}" toward "${checkInOptionWord(facetId, narrative.to)}."`, secondary }
   }
   return plain
 }
@@ -105,8 +108,8 @@ export default function PatternReportPage({ params }: { params: { activationId: 
 
       const checkIns = checkInsRes.data ?? []
       const weekly = computeWeeklyInsight(checkIns, openPeriod.started_at)
-      const monthly = computeMonthlyRecap(checkIns, openPeriod.started_at, startOfMonth(new Date()))
-      setState({ facetId: facet_id, weekly, monthly })
+      const recent = computeRecentWeeksReport(checkIns, openPeriod.started_at)
+      setState({ facetId: facet_id, weekly, recent })
       setIsLoading(false)
     }
 
@@ -121,11 +124,16 @@ export default function PatternReportPage({ params }: { params: { activationId: 
     )
   }
 
-  const { weekly, monthly } = state
+  const { weekly, recent } = state
   const label = facetDisplayLabel(state.facetId)
   const weekLabel = `${format(weekly.weekStart, 'MMM d')} – ${format(addDays(weekly.weekStart, 6), 'MMM d')}`
-  const monthName = format(monthly.monthStart, 'MMMM')
-  const monthHeadline = formatMonthHeadline(state.facetId, monthly)
+  // "Your first 4 weeks" while still inside that first window since
+  // activation; once it closes, a plain rolling "Last 4 weeks" — anchored
+  // to when THIS facet's period started, not the calendar month (rework
+  // Part 4 — this used to be a hardcoded calendar-month name, which meant
+  // activating on the 28th produced a near-empty "October").
+  const windowLabel = recent.window.isFirstWindow ? 'Your first 4 weeks' : 'Last 4 weeks'
+  const recentHeadline = formatRecentWeeksHeadline(state.facetId, recent)
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
@@ -156,20 +164,20 @@ export default function PatternReportPage({ params }: { params: { activationId: 
 
           <div>
             <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-              {monthName}
+              {windowLabel}
             </p>
             <div style={{ padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
-                {monthHeadline.primary}
+                {recentHeadline.primary}
               </p>
-              {monthHeadline.secondary && (
+              {recentHeadline.secondary && (
                 <p className="font-sans text-muted" style={{ fontSize: 13 }}>
-                  {monthHeadline.secondary}
+                  {recentHeadline.secondary}
                 </p>
               )}
             </div>
             <div className="flex" style={{ gap: 6 }}>
-              {monthly.weeks.map((w, i) => (
+              {recent.weeks.map((w, i) => (
                 <div
                   key={i}
                   style={{
