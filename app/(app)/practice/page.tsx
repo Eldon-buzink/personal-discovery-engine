@@ -12,12 +12,15 @@ import {
   fetchPracticeData,
   fetchTodayCheckedInActivationIds,
   fetchWeeklyInsights,
+  fetchTrends,
   activeActivations,
   candidateFacetIds,
   showsDirectionalBadge,
   type PracticeData,
 } from '@/lib/known/practiceData'
 import { formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
+import { computeStage, formatStageCompact } from '@/lib/known/practiceStage'
+import type { TrendResult } from '@/lib/known/trend'
 import { isLowEngagement } from '@/lib/known/engagement'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 
@@ -77,6 +80,7 @@ export default function PracticeHomePage() {
   const [checkedInToday, setCheckedInToday] = useState<Set<string>>(new Set())
   const [directionalBandCopy, setDirectionalBandCopy] = useState<Map<string, string>>(new Map())
   const [weeklyInsights, setWeeklyInsights] = useState<Map<string, WeeklyInsightResult>>(new Map())
+  const [trends, setTrends] = useState<Map<string, TrendResult>>(new Map())
   const [notice, setNotice] = useState<string | null>(null)
   const [activatingFacet, setActivatingFacet] = useState<string | null>(null)
   const [candidateMessage, setCandidateMessage] = useState<string | null>(null)
@@ -118,6 +122,7 @@ export default function PracticeHomePage() {
       const directionalFacetIds = activeActivations(practiceData).filter((a) => a.directional).map((a) => a.facet_id)
       setDirectionalBandCopy(await fetchDirectionalBandCopy(supabase, uid, directionalFacetIds))
       setWeeklyInsights(await fetchWeeklyInsights(supabase, uid, practiceData.activations))
+      setTrends(await fetchTrends(supabase, uid, practiceData.activations))
       await checkForNudge(supabase, practiceData)
       setIsLoading(false)
       return true
@@ -286,6 +291,8 @@ export default function PracticeHomePage() {
                 const weekly = weeklyInsights.get(a.id)
                 const weeklyProgress = weekly ? formatWeeklyProgress(weekly) : null
                 const weeklyQualifies = weekly?.summary.qualifies ?? false
+                const trend = trends.get(a.id)
+                const stageLine = trend ? formatStageCompact(computeStage(trend)) : null
                 return (
                   <div
                     key={a.id}
@@ -324,6 +331,14 @@ export default function PracticeHomePage() {
                       <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>
                         {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
+                      {/* Compact ladder (rework Part 2) — same stage this
+                          facet's detail page shows, one line, so the card
+                          itself says where things stand without a click. */}
+                      {stageLine && (
+                        <p className="font-sans text-muted" style={{ fontSize: 12 }}>
+                          {stageLine}
+                        </p>
+                      )}
                     </Link>
                     {showBadge && (
                       <p

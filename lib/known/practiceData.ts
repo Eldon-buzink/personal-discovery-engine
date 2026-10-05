@@ -11,6 +11,7 @@ import { startOfISOWeek } from 'date-fns'
 import { todayLocalDateString } from './checkInDate'
 import { weekKey, type CheckInForTrend } from './weekSummary'
 import { computeWeeklyInsight, type WeeklyInsightResult } from './weeklyInsight'
+import { computeTrend, type TrendResult } from './trend'
 
 export interface ActivationRow {
   id: string
@@ -94,6 +95,45 @@ export async function fetchWeeklyInsights(
     const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
     if (!openPeriod) continue
     result.set(a.id, computeWeeklyInsight(byActivation.get(a.id) ?? [], openPeriod.started_at))
+  }
+  return result
+}
+
+// Rework Part 2: the progress ladder's compact form needs to show on every
+// active card, not just after clicking into one — same "one batched query,
+// not N" shape as fetchWeeklyInsights. No date filter on this one (unlike
+// fetchWeeklyInsights): computeTrend needs the full history since the
+// current period started to correctly bucket its rolling lookback window,
+// and scopeToCurrentPeriod (inside computeTrend) already excludes anything
+// from before that period began.
+export async function fetchTrends(
+  supabase: SupabaseClient,
+  userId: string,
+  activations: ActivationRow[]
+): Promise<Map<string, TrendResult>> {
+  const active = activations.filter(isActive)
+  if (active.length === 0) return new Map()
+
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('facet_activation_id, check_in_date, response_option')
+    .eq('user_id', userId)
+    .in('facet_activation_id', active.map((a) => a.id))
+
+  if (error) throw new Error(error.message)
+
+  const byActivation = new Map<string, CheckInForTrend[]>()
+  for (const row of (data ?? []) as { facet_activation_id: string; check_in_date: string; response_option: string }[]) {
+    const arr = byActivation.get(row.facet_activation_id) ?? []
+    arr.push({ check_in_date: row.check_in_date, response_option: row.response_option })
+    byActivation.set(row.facet_activation_id, arr)
+  }
+
+  const result = new Map<string, TrendResult>()
+  for (const a of active) {
+    const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
+    if (!openPeriod) continue
+    result.set(a.id, computeTrend(byActivation.get(a.id) ?? [], openPeriod.started_at))
   }
   return result
 }

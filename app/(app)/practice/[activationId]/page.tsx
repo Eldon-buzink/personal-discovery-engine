@@ -39,9 +39,9 @@ import {
 } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { showsDirectionalBadge } from '@/lib/known/practiceData'
-import { computeTrend, isCurrentIsoWeek, type TrendResult } from '@/lib/known/trend'
-import { TREND_MIN_QUALIFYING_WEEKS } from '@/lib/known/practiceConfig'
+import { computeTrend, type TrendResult } from '@/lib/known/trend'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
+import { computeStage, formatStageProgress, STAGE_LABEL } from '@/lib/known/practiceStage'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { fetchClaimedMiniAssessmentResult, type ClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
@@ -65,24 +65,6 @@ interface DetailState {
   // clears (showBadge goes false once the facet is revealed) since it's
   // still the honest record of how this pattern started.
   miniResult: ClaimedMiniAssessmentResult | null
-}
-
-// The small, muted, secondary line — upgrades from a static "still
-// gathering" message to the real weekly plurality once trend-qualified.
-function formatTrendStatus(facetId: string, trend: TrendResult): string {
-  if (!trend.isTrendQualified) {
-    return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
-  }
-  const obs = trend.mostRecentObservation
-  if (!obs) return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
-  const weekWord = isCurrentIsoWeek(obs.weekStart) ? 'this week' : 'that week'
-  if (obs.lean.type === 'tie') {
-    return `${obs.checkInCount} check-in${obs.checkInCount === 1 ? '' : 's'} ${weekWord} were evenly split — no clear lean.`
-  }
-  if (obs.lean.type === 'option') {
-    return `${obs.topCount} out of ${obs.checkInCount} check-ins ${weekWord} leaned toward "${checkInOptionWord(facetId, obs.lean.value)}."`
-  }
-  return `Not yet a ${TREND_MIN_QUALIFYING_WEEKS}-week trend — still gathering the picture.`
 }
 
 // The large, prominent line — always there once at least 1 check-in exists,
@@ -307,51 +289,64 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             </p>
           </div>
         ) : (
-          // Has at least one check-in against an open period — always both
-          // lines (the most-recent-observation line is the prominent
-          // element, the trend-status/weekly-observation line is small and
-          // muted below it), regardless of whether the original read was
-          // directional. Check-ins are the user's own real observations
-          // either way; only the mini-assessment score above carries extra
-          // uncertainty, not this.
-          //
-          // Review feedback: this used to share the same orange accent
-          // border/background as the paywall box above it, so the page had
-          // two loud accent-colored blocks competing for attention. Neutral
-          // styling here keeps the orange reserved for the one thing on the
-          // page that's actually a call to action (the paywall unlock).
-          <div
-            style={{
-              display: 'flex', flexDirection: 'column', gap: 14, padding: 20, borderRadius: 14,
-              background: '#FFFFFF', border: '1px solid #E5E1D5',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
-                Your progress
-              </p>
-              <p className="font-sans text-muted" style={{ fontSize: 12, fontStyle: 'italic' }}>
-                {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
-              </p>
-            </div>
-            <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.45 }}>
-              {formatMostRecent(detail.facetId, detail.trend)}
-            </p>
-            <p
-              className="font-sans text-muted"
-              style={{ fontSize: 12, lineHeight: 1.5, fontStyle: 'italic', paddingTop: 2, borderTop: '1px solid #E5E1D5' }}
+          // Has at least one check-in against an open period. Review
+          // feedback: the old secondary line here was a vague "Not yet a
+          // 3-week trend — still gathering the picture" that never said
+          // what "enough" meant or what came next. Replaced (rework Part 2)
+          // by an explicit 3-step ladder that only ever moves forward.
+          <>
+            {(() => {
+              const stageResult = computeStage(detail.trend)
+              const progressLine = formatStageProgress(stageResult)
+              return (
+                <div
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 8, padding: 20, borderRadius: 14,
+                    background: '#FFFFFF', border: '1px solid #E5E1D5',
+                  }}
+                >
+                  <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+                    Step {stageResult.stepNumber} of 3
+                  </p>
+                  <p className="font-serif font-medium text-charcoal" style={{ fontSize: 18, lineHeight: 1.3 }}>
+                    {STAGE_LABEL[stageResult.stage]}
+                  </p>
+                  {progressLine && (
+                    <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                      {progressLine}
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
+
+            <div
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 14, padding: 20, borderRadius: 14,
+                background: '#FFFFFF', border: '1px solid #E5E1D5',
+              }}
             >
-              {formatTrendStatus(detail.facetId, detail.trend)}
-            </p>
-            {weeklyProgress && (
-              <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
-                {weeklyProgress}
+              <div className="flex items-center justify-between">
+                <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+                  Your progress
+                </p>
+                <p className="font-sans text-muted" style={{ fontSize: 12, fontStyle: 'italic' }}>
+                  {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
+                </p>
+              </div>
+              <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.45 }}>
+                {formatMostRecent(detail.facetId, detail.trend)}
               </p>
-            )}
-            <Link href={`/practice/${activationId}/report`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
-              See your weekly &amp; monthly report
-            </Link>
-          </div>
+              {weeklyProgress && (
+                <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                  {weeklyProgress}
+                </p>
+              )}
+              <Link href={`/practice/${activationId}/report`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+                See your weekly &amp; monthly report
+              </Link>
+            </div>
+          </>
         )}
       </div>
 
