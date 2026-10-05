@@ -46,6 +46,7 @@ import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { fetchClaimedMiniAssessmentResult, type ClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
 import { computeWeeklyInsight, formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
+import { computeRecentWeeksReport, type RecentWeeksReportResult } from '@/lib/known/recentWeeksReport'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import BandSpectrum from '@/components/known/BandSpectrum'
@@ -59,6 +60,7 @@ interface DetailState {
   checkedInToday: boolean
   trend: TrendResult | null // null when there's no open period to scope a trend to (e.g. a deactivated facet viewed directly)
   weekly: WeeklyInsightResult | null // null alongside trend, same reason
+  recent: RecentWeeksReportResult | null // null alongside trend, same reason — feeds the ladder's unified stage-3 gate
   // Only set for a directional (mini-assessment-sourced) facet, and only
   // when that original attempt was actually claimed onto this account — see
   // lib/known/miniAssessmentResult.ts. Kept even after the paywall badge
@@ -121,6 +123,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
       const openPeriod = (periods as { started_at: string; ended_at: string | null }[]).find((p) => p.ended_at === null)
       const trend = openPeriod ? computeTrend(checkIns, openPeriod.started_at) : null
       const weekly = openPeriod ? computeWeeklyInsight(checkIns, openPeriod.started_at) : null
+      const recent = openPeriod ? computeRecentWeeksReport(checkIns, openPeriod.started_at) : null
 
       const miniResult = directional ? await fetchClaimedMiniAssessmentResult(supabase, user.id, facet_id) : null
 
@@ -135,6 +138,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         checkedInToday: checkIns.some((c) => c.check_in_date === todayLocalDateString()),
         trend,
         weekly,
+        recent,
         miniResult,
       })
       setIsLoading(false)
@@ -296,8 +300,14 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           // by an explicit 3-step ladder that only ever moves forward.
           <>
             {(() => {
-              const stageResult = computeStage(detail.trend)
-              const progressLine = formatStageProgress(stageResult)
+              // Unified stage-3 gate (follow-up fix): the ladder and the
+              // report's start-vs-now comparison now read the exact same
+              // condition — reportWindowCheckInCount >=
+              // COMPARISON_MIN_CHECKINS — so this page can never say "Does
+              // it fit?" while the report still says "not enough yet", or
+              // the reverse.
+              const stageResult = computeStage(detail.trend!.qualifyingWeekCount, detail.recent!.checkInCount)
+              const progressLines = formatStageProgress(stageResult)
               return (
                 <div
                   style={{
@@ -311,10 +321,14 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
                   <p className="font-serif font-medium text-charcoal" style={{ fontSize: 18, lineHeight: 1.3 }}>
                     {STAGE_LABEL[stageResult.stage]}
                   </p>
-                  {progressLine && (
-                    <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-                      {progressLine}
-                    </p>
+                  {progressLines && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {progressLines.map((line) => (
+                        <p key={line} className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
                   )}
                 </div>
               )

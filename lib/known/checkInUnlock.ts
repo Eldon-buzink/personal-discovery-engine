@@ -17,6 +17,7 @@
 
 import { computeTrend } from './trend'
 import { computeWeeklyInsight } from './weeklyInsight'
+import { computeRecentWeeksReport } from './recentWeeksReport'
 import { computeStage } from './practiceStage'
 import { WEEKLY_CHECKIN_FLOOR } from './practiceConfig'
 import type { CheckInForTrend } from './weekSummary'
@@ -29,8 +30,19 @@ export function detectUnlockMoment(
   periodStartedAt: string,
   now: Date = new Date()
 ): UnlockMoment {
-  const beforeStage = computeStage(computeTrend(beforeCheckIns, periodStartedAt, now))
-  const afterStage = computeStage(computeTrend(afterCheckIns, periodStartedAt, now))
+  // Same unified "does it fit?" gate practiceStage.ts and the report page
+  // both read now — reportWindowCheckInCount (computeRecentWeeksReport's
+  // 28-day window), not computeTrend's own isTrendQualified. Using
+  // anything else here would risk telling the user something unlocked that
+  // the report then disagrees with.
+  const beforeStage = computeStage(
+    computeTrend(beforeCheckIns, periodStartedAt, now).qualifyingWeekCount,
+    computeRecentWeeksReport(beforeCheckIns, periodStartedAt, now).checkInCount
+  )
+  const afterStage = computeStage(
+    computeTrend(afterCheckIns, periodStartedAt, now).qualifyingWeekCount,
+    computeRecentWeeksReport(afterCheckIns, periodStartedAt, now).checkInCount
+  )
   if (beforeStage.stage !== 'does_it_fit' && afterStage.stage === 'does_it_fit') return 'does_it_fit'
   if (beforeStage.stage === 'collecting' && afterStage.stage !== 'collecting') return 'first_picture'
 

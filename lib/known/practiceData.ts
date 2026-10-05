@@ -11,7 +11,9 @@ import { startOfISOWeek } from 'date-fns'
 import { todayLocalDateString } from './checkInDate'
 import { weekKey, type CheckInForTrend } from './weekSummary'
 import { computeWeeklyInsight, type WeeklyInsightResult } from './weeklyInsight'
-import { computeTrend, type TrendResult } from './trend'
+import { computeTrend } from './trend'
+import { computeRecentWeeksReport } from './recentWeeksReport'
+import { computeStage, type StageResult } from './practiceStage'
 
 export interface ActivationRow {
   id: string
@@ -102,15 +104,23 @@ export async function fetchWeeklyInsights(
 // Rework Part 2: the progress ladder's compact form needs to show on every
 // active card, not just after clicking into one — same "one batched query,
 // not N" shape as fetchWeeklyInsights. No date filter on this one (unlike
-// fetchWeeklyInsights): computeTrend needs the full history since the
-// current period started to correctly bucket its rolling lookback window,
-// and scopeToCurrentPeriod (inside computeTrend) already excludes anything
-// from before that period began.
-export async function fetchTrends(
+// fetchWeeklyInsights): computeTrend and computeRecentWeeksReport both need
+// the full history since the current period started, and
+// scopeToCurrentPeriod (inside both) already excludes anything from before
+// that period began.
+//
+// Follow-up fix: returns the fully-computed StageResult (not a bare
+// TrendResult) because the stage now needs TWO counts — qualifying weeks
+// (computeTrend) AND the report's own 28-day-window check-in count
+// (computeRecentWeeksReport) — to agree with the report page's own
+// "enough to compare" gate. Computing both here, from the same fetched
+// check-ins, keeps that single definition in one place rather than
+// leaving each caller to assemble it.
+export async function fetchStages(
   supabase: SupabaseClient,
   userId: string,
   activations: ActivationRow[]
-): Promise<Map<string, TrendResult>> {
+): Promise<Map<string, StageResult>> {
   const active = activations.filter(isActive)
   if (active.length === 0) return new Map()
 
@@ -129,11 +139,14 @@ export async function fetchTrends(
     byActivation.set(row.facet_activation_id, arr)
   }
 
-  const result = new Map<string, TrendResult>()
+  const result = new Map<string, StageResult>()
   for (const a of active) {
     const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
     if (!openPeriod) continue
-    result.set(a.id, computeTrend(byActivation.get(a.id) ?? [], openPeriod.started_at))
+    const checkIns = byActivation.get(a.id) ?? []
+    const qualifyingWeekCount = computeTrend(checkIns, openPeriod.started_at).qualifyingWeekCount
+    const reportWindowCheckInCount = computeRecentWeeksReport(checkIns, openPeriod.started_at).checkInCount
+    result.set(a.id, computeStage(qualifyingWeekCount, reportWindowCheckInCount))
   }
   return result
 }
