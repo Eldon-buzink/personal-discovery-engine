@@ -46,6 +46,7 @@ import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { fetchClaimedMiniAssessmentResult, type ClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
 import { computeWeeklyInsight, formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
+import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import BandSpectrum from '@/components/known/BandSpectrum'
 import PaywallModal from '@/components/known/PaywallModal'
@@ -211,6 +212,14 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 27, lineHeight: 1.25 }}>
             {label}
           </h1>
+          {/* Purpose line (rework Part 1) — only on first visit, matching
+              the "Just added" eyebrow above. A returning visitor who's
+              already checking in doesn't need the pitch repeated. */}
+          {detail.checkInCount === 0 && (
+            <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.55, marginTop: 10 }}>
+              {practicePurposeCopy(detail.directional)}
+            </p>
+          )}
         </div>
 
         {detail.showBadge && (

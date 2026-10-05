@@ -19,6 +19,7 @@ import {
 import { computeMiniAssessmentInsight, formatMiniAssessmentInsight } from '@/lib/known/miniAssessmentInsight'
 import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { directionalAccent } from '@/lib/known/practiceTokens'
+import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 
 // Staggered reveal timing, same technique as the full assessment's
 // PatternDetectedScreen (app/assessment/page.tsx) — blob first, then text
@@ -230,10 +231,15 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
         {/* What checking in actually gets you — replaces a static preview
             of tomorrow's check-in question that looked tappable but wasn't
-            (round 5 feedback). Explains the real downstream mechanism
-            (check-ins -> a qualified weekly read -> monthly recap ->
-            quarterly review) instead of previewing quiz-like UI the person
-            can't yet interact with here. */}
+            (round 5 feedback). Rework Part 1: same wording as
+            practicePurposeCopy(true), used verbatim on facet detail, the
+            first check-in screen, and the Practice home activation banner —
+            this is the one place a logged-out visitor sees it before any of
+            those exist, so it has to say the same thing. Deliberately
+            doesn't name "weekly/monthly/quarterly" (that language is gone —
+            see the step ladder on facet detail) so this page can't drift
+            out of sync with how the rest of the product now describes
+            itself. */}
         <div
           className="w-full"
           style={{ ...fade(800), background: '#F2EEE4', border: '1px solid #E5E1D5', borderRadius: 12, padding: 18, marginBottom: 20 }}
@@ -242,9 +248,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
             What happens next
           </p>
           <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
-            Six questions can only point in a direction. Checking in regularly is what turns that into something
-            real — each one becomes a data point, building toward a weekly read, then a monthly recap, then a full
-            quarterly review of whether this still holds.
+            {practicePurposeCopy(true)} The more you check in, the clearer the picture gets.
           </p>
         </div>
 

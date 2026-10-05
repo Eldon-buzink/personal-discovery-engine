@@ -17,6 +17,7 @@ import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent } from '@/lib/known/practiceTokens'
 import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
+import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 
 export default function CheckInPage({ params }: { params: { activationId: string } }) {
   const router = useRouter()
@@ -25,6 +26,11 @@ export default function CheckInPage({ params }: { params: { activationId: string
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [facetId, setFacetId] = useState<string | null>(null)
+  const [directional, setDirectional] = useState(false)
+  // Whether this activation has zero check-ins so far — decides whether the
+  // full purpose line or the shorter return-visit line shows (Part 1: the
+  // message belongs on the first check-in, not repeated every day).
+  const [isFirstCheckIn, setIsFirstCheckIn] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -43,20 +49,25 @@ export default function CheckInPage({ params }: { params: { activationId: string
       }
       setUserId(user.id)
 
-      const { data, error } = await supabase
-        .from('facet_activations')
-        .select('facet_id')
-        .eq('id', activationId)
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const [activationRes, checkInsRes] = await Promise.all([
+        supabase
+          .from('facet_activations')
+          .select('facet_id, directional')
+          .eq('id', activationId)
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase.from('check_ins').select('id').eq('facet_activation_id', activationId).limit(1),
+      ])
 
-      if (error || !data) {
-        console.error('[CheckIn] load error:', error?.message ?? 'activation not found')
+      if (activationRes.error || !activationRes.data) {
+        console.error('[CheckIn] load error:', activationRes.error?.message ?? 'activation not found')
         router.push('/practice')
         return
       }
 
-      setFacetId(data.facet_id)
+      setFacetId(activationRes.data.facet_id)
+      setDirectional(activationRes.data.directional)
+      setIsFirstCheckIn((checkInsRes.data ?? []).length === 0)
       setIsLoading(false)
     }
 
@@ -162,10 +173,12 @@ export default function CheckInPage({ params }: { params: { activationId: string
           {/* Review feedback: this screen had zero framing of what a
               check-in is for, despite being the highest-frequency screen in
               the product. Mechanism, not momentum — no streaks, no counts,
-              no "keep it up," matching the recap's own "No score. No
-              verdict." voice. */}
+              no "keep it up". First visit gets the full purpose line
+              (Part 1 — same wording as facet detail and the activation
+              banner); every return visit gets a shorter mechanism-only
+              reminder so it doesn't repeat the pitch daily. */}
           <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
-            This becomes part of your next recap — not a score, just a record of what you noticed.
+            {isFirstCheckIn ? practicePurposeCopy(directional) : 'This becomes part of your report — not a score, just a record of what you noticed.'}
           </p>
         </div>
 

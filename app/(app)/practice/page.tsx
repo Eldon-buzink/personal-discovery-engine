@@ -19,6 +19,7 @@ import {
 } from '@/lib/known/practiceData'
 import { formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
 import { isLowEngagement } from '@/lib/known/engagement'
+import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 
 // Card copy for a directional active pattern used to be the same static
 // FACET_DESCRIPTIONS line every user with that facet sees, regardless of
@@ -79,6 +80,11 @@ export default function PracticeHomePage() {
   const [notice, setNotice] = useState<string | null>(null)
   const [activatingFacet, setActivatingFacet] = useState<string | null>(null)
   const [candidateMessage, setCandidateMessage] = useState<string | null>(null)
+  // Purpose line (rework Part 1) — shown once, right after a "+" activation
+  // succeeds, naming which facet it's for. Client-side state only, not
+  // persisted: gone on the next reload, same "said once, not nagged" rule
+  // the rest of this page's copy already follows.
+  const [justActivatedFacet, setJustActivatedFacet] = useState<string | null>(null)
   const [nudgeTarget, setNudgeTarget] = useState<NudgeTarget | null>(null)
 
   async function checkForNudge(supabase: ReturnType<typeof createClient>, practiceData: PracticeData) {
@@ -150,6 +156,7 @@ export default function PracticeHomePage() {
     if (result.ok) {
       const refreshed = await load(supabase, userId)
       if (!refreshed) setCandidateMessage('Added — but the page could not refresh. Reload to see it.')
+      else setJustActivatedFacet(facetId)
     } else if (result.reason === 'cap') {
       setCandidateMessage("You're at your check-in limit — manage your practice to swap one out first.")
     } else {
@@ -243,6 +250,15 @@ export default function PracticeHomePage() {
             style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
           >
             {notice}
+          </p>
+        )}
+
+        {justActivatedFacet && (
+          <p
+            className="font-sans text-charcoal-soft"
+            style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
+          >
+            {facetDisplayLabel(justActivatedFacet)} added. {practicePurposeCopy(false)}
           </p>
         )}
 
