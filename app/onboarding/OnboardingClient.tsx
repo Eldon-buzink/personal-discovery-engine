@@ -165,12 +165,12 @@ export default function OnboardingClient() {
           for ~1.8s after load — trust-row text visibly bleeding through
           the button bar. Disabled below 640px so it's opaque immediately;
           desktop keeps the original staggered reveal. */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .onboarding-cta-bar { animation: fadeIn 0.6s ease 1200ms both; }
         @media (max-width: 640px) {
           .onboarding-cta-bar { animation: none; opacity: 1; transform: none; }
         }
-      `}</style>
+      ` }} />
     </main>
   )
 }

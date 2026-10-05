@@ -133,7 +133,7 @@ export default function PricingClient() {
 
   return (
     <div style={{ background: cream, color: charcoal, fontFamily: sans }}>
-      <style>{pricingCSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: pricingCSS }} />
 
       <div style={{ maxWidth: 920, margin: '0 auto', padding: '88px 24px 64px' }}>
 

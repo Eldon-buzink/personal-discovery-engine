@@ -244,7 +244,7 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
 
   return (
     <>
-      <style>{START_LANDING_CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: START_LANDING_CSS }} />
       <div style={{ background: mkCream, color: mkCharcoal, fontFamily: sans }}>
         <section className="hero">
           <div className="hero-inner">

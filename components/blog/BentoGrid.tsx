@@ -21,15 +21,16 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-// Explicit numeric grid-column/grid-row placement, not grid-template-areas —
-// grid-template-areas needs quoted area-name strings ('large' 'small1' ...),
-// and a quote character inside a <style>{`...`}</style> template hits the
-// exact same SSR/CSR text-escaping mismatch the `>` combinator did elsewhere
-// on this page (see landing-page/blog work earlier this session): React's
-// server renderer HTML-escapes text content of a <style> tag (' becomes
-// &#x27;), the client-side re-render doesn't re-escape identically, and
-// hydration fails on the mismatch. Numeric grid-column/grid-row values and
-// class-selector-only overrides sidestep both known trigger characters.
+// Explicit numeric grid-column/grid-row placement, not grid-template-areas
+// (which needs quoted area-name strings like 'large' 'small1'). This used to
+// be required to dodge a real bug — a quote or `>` character inside a plain
+// <style>{`...`}</style> JSX child triggered an SSR/CSR hydration mismatch,
+// since <style> is an HTML "raw text" element (browsers never decode
+// entities inside it) but React's server renderer HTML-escapes the string
+// anyway ('  becomes &#x27;) when serializing it as a text child. That's now
+// fixed at the source for every <style> tag in the app (dangerouslySetInnerHTML
+// instead of a text child skips the escaping step entirely), so this is no
+// longer load-bearing — kept as the simpler approach, not a workaround.
 const SLOT_PLACEMENT: Record<'large' | 'small1' | 'small2', { gridColumn: string; gridRow: string }> = {
   large: { gridColumn: '1', gridRow: '1 / 3' },
   small1: { gridColumn: '2', gridRow: '1' },
@@ -88,12 +89,12 @@ export default function BentoGrid({ posts }: { posts: BlogPost[] }) {
       {small1 && <BentoCard post={small1} slot="small1" />}
       {small2 && <BentoCard post={small2} slot="small2" />}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 860px) {
           .bento-grid { grid-template-columns: 1fr !important; }
           .bento-card-item { grid-column: 1 !important; grid-row: auto !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

@@ -785,7 +785,7 @@ export default function ReportPage() {
         transition: entryCream === 1 ? 'none' : 'opacity 0.6s ease',
       }} />
 
-      <style>{reportCSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: reportCSS }} />
       <SiteNav />
       {stickyBar && <StickyBar {...stickyBar} />}
 

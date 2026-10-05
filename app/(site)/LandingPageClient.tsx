@@ -946,7 +946,7 @@ export default function LandingPageClient() {
 
   return (
     <>
-      <style>{landingCSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: landingCSS }} />
       <div style={{ background:mkCream, color:mkCharcoal, fontFamily:sans }}>
 
         {/* ── HERO ─────────────────────────────────────────────────── */}

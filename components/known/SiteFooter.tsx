@@ -109,11 +109,11 @@ export default function SiteFooter() {
         </p>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 640px) {
           .sf-grid { grid-template-columns: 1fr 1fr !important; }
         }
-      `}</style>
+      ` }} />
     </footer>
   )
 }

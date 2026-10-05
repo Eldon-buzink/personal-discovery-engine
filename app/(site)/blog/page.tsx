@@ -94,13 +94,13 @@ export default function BlogPage() {
 
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 640px) {
           .blog-index-wrap { padding-top: 120px !important; padding-left: 20px !important; padding-right: 20px !important; }
           .strip-card { flex-direction: column !important; align-items: flex-start !important; text-align: left !important; }
           .strip-cta-block { text-align: left !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

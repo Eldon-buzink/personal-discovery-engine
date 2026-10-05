@@ -100,7 +100,7 @@ export default function SiteNav() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .sn-links { display: flex; align-items: center; gap: 28px; }
         .sn-cta-wrap { display: flex; }
         .sn-hamburger { display: none; }
@@ -114,7 +114,7 @@ export default function SiteNav() {
           .sn-hamburger { display: flex !important; }
           .sn-mobile { display: flex; }
         }
-      `}</style>
+      ` }} />
 
       {/* ── Fixed nav bar ──────────────────────────────────────────────────── */}
       <nav style={{

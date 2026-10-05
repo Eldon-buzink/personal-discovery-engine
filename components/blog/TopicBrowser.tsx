@@ -127,7 +127,7 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
         )
       })}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 860px) {
           .topic-tabs { grid-template-columns: 1fr 1fr !important; }
           .topic-dir-grid { grid-template-columns: minmax(0, 1fr) !important; }
@@ -144,7 +144,7 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
         @media (max-width: 560px) {
           .topic-tabs { grid-template-columns: 1fr !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

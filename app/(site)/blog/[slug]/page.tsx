@@ -187,7 +187,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 900px) {
           .blog-layout { grid-template-columns: 1fr !important; }
           .blog-sidebar-col { order: -1; }
@@ -195,7 +195,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         @media (max-width: 640px) {
           .blog-wrap { padding-top: 120px !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   )
 }

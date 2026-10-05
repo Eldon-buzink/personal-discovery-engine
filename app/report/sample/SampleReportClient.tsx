@@ -86,7 +86,7 @@ export default function SampleReportClient() {
 
   return (
     <>
-      <style>{sampleReportCSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: sampleReportCSS }} />
       <SiteNav />
 
       <div style={{ background: cream, minHeight: '100vh', paddingTop: NAV_H }}>
