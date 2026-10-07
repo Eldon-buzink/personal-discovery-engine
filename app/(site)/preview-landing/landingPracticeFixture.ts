@@ -15,6 +15,7 @@
 import { addDays, format, isSunday, startOfISOWeek, subWeeks } from 'date-fns'
 import type { CheckInOptionId } from '@/lib/known/checkInOptions'
 import type { BandId } from '@/lib/known/startVsNow'
+import { LANDING_PRACTICE_FACET_ID } from './landingPracticeFacet'
 
 export interface LandingPracticeFixture {
   facetId: string
@@ -29,7 +30,7 @@ export interface LandingPracticeFixture {
 }
 
 export const landingPracticeFixture: LandingPracticeFixture = {
-  facetId: 'Self-Discipline',
+  facetId: LANDING_PRACTICE_FACET_ID,
   directional: true,
   startBand: 'mid',
   checkIns: [

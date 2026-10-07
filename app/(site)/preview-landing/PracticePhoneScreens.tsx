@@ -96,6 +96,61 @@ function Eyebrow({ children, size = 11 }: { children: React.ReactNode; size?: nu
   )
 }
 
+// The daily check-in screen (mirrors [activationId]/checkin/page.tsx), with
+// the fixture's answer selected. Used in the phone row above (animated via
+// the pp-* classes) and, with `standalone`, as a static crop elsewhere on the
+// landing preview — standalone uses its own class and inline styles so the
+// phone row's CSS (scale, rewind-for-animation) never applies to it.
+export function CheckInScreen({ standalone = false }: { standalone?: boolean }) {
+  const fx = landingPracticeFixture
+  const prompt = getCheckInPrompt(fx.facetId)
+  const label = facetDisplayLabel(fx.facetId)
+  const optionStyle = (selected: boolean): React.CSSProperties =>
+    standalone
+      ? { padding: '16px 18px', borderRadius: 12, border: `1.5px solid ${selected ? directionalAccent : '#DAD3C3'}`, background: selected ? directionalSoft : '#FFFFFF' }
+      : { padding: '16px 18px', borderRadius: 12 }
+  return (
+    <div className={standalone ? 'bg-cream' : 'pp-screen bg-cream'} style={{ display: 'flex', flexDirection: 'column', ...(standalone ? { width: SCREEN_W } : {}) }}>
+      <div style={{ padding: '40px 24px 0', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
+        <span className="font-sans text-muted" style={{ fontSize: 13 }}>← Your practice</span>
+        <div className="flex items-center gap-2">
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: directionalAccent }} />
+          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+            Today&apos;s check-in
+          </p>
+        </div>
+        <div>
+          <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 28, lineHeight: 1.25, marginBottom: 12 }}>{label}</h3>
+          <p className="font-sans text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.55 }}>{prompt.question}</p>
+          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
+            This becomes part of your report — not a score, just a record of what you noticed.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {prompt.options.map((o) => (
+            <div
+              key={o.id}
+              className={standalone ? 'font-sans text-charcoal' : `font-sans text-charcoal pp-opt${o.id === fx.today.option ? ' pp-sel' : ''}`}
+              style={optionStyle(o.id === fx.today.option)}
+            >
+              <span style={{ fontSize: 15, lineHeight: 1.4 }}>{o.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: '16px 24px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div
+          className={standalone ? 'font-sans font-medium' : 'font-sans font-medium pp-save'}
+          style={{ textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+        >
+          Save check-in
+        </div>
+        <span className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>Skip today</span>
+      </div>
+    </div>
+  )
+}
+
 export default function PracticePhoneScreens() {
   const fx = landingPracticeFixture
   const data = useMemo(() => {
@@ -207,44 +262,7 @@ export default function PracticePhoneScreens() {
         <div className="pp-col">
           <div className="pp-frame" aria-hidden="true">
             <span className="pp-example">Example</span>
-            <div className="pp-screen bg-cream" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '40px 24px 0', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
-                <span className="font-sans text-muted" style={{ fontSize: 13 }}>← Your practice</span>
-                <div className="flex items-center gap-2">
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: directionalAccent }} />
-                  <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
-                    Today&apos;s check-in
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 28, lineHeight: 1.25, marginBottom: 12 }}>{label}</h3>
-                  <p className="font-sans text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.55 }}>{data.prompt.question}</p>
-                  <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
-                    This becomes part of your report — not a score, just a record of what you noticed.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {data.prompt.options.map((o) => (
-                    <div
-                      key={o.id}
-                      className={`font-sans text-charcoal pp-opt${o.id === fx.today.option ? ' pp-sel' : ''}`}
-                      style={{ padding: '16px 18px', borderRadius: 12 }}
-                    >
-                      <span style={{ fontSize: 15, lineHeight: 1.4 }}>{o.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ padding: '16px 24px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div
-                  className="font-sans font-medium pp-save"
-                  style={{ textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
-                >
-                  Save check-in
-                </div>
-                <span className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>Skip today</span>
-              </div>
-            </div>
+            <CheckInScreen />
           </div>
           <p className="pp-caption"><b>Daily check-in</b></p>
         </div>
