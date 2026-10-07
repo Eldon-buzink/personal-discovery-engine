@@ -17,8 +17,8 @@ import {
 import FaqAccordion, { type FaqAccordionItem } from './FaqAccordion'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const sans  = "var(--font-inter), -apple-system, sans-serif"
-const serif = "var(--font-newsreader), Georgia, serif"
+export const sans  = "var(--font-inter), -apple-system, sans-serif"
+export const serif = "var(--font-newsreader), Georgia, serif"
 
 // ─── Mockup-exact tokens (reference/bearing-landing-v6_2.html :root) ──────────
 // Every rebuilt section on this page uses these — confirmed with the user
@@ -27,14 +27,14 @@ const serif = "var(--font-newsreader), Georgia, serif"
 // charcoal/cream values. mkPlum/mkAmber are in the mockup's own :root but
 // unused by any of the 7 sections rebuilt here, so left out rather than
 // carried as dead code.
-const mkCream        = '#F7F4ED'
-const mkCard         = '#EFEAE0'
-const mkCharcoal     = '#262420'
-const mkCharcoalSoft = '#57534A'
-const mkLine         = 'rgba(38,36,32,0.1)'
-const mkTeal         = '#7FD9C4'
-const mkPeriwinkle   = '#AEBBE8'
-const mkRose         = '#E9AFC0'
+export const mkCream        = '#F7F4ED'
+export const mkCard         = '#EFEAE0'
+export const mkCharcoal     = '#262420'
+export const mkCharcoalSoft = '#57534A'
+export const mkLine         = 'rgba(38,36,32,0.1)'
+export const mkTeal         = '#7FD9C4'
+export const mkPeriwinkle   = '#AEBBE8'
+export const mkRose         = '#E9AFC0'
 
 // ─── Blob engine (ConnectVisual builds its SVG via raw DOM calls, not JSX —
 // see comment there — so it subscribes to the shared lib/blobs.ts clock via
@@ -47,7 +47,7 @@ const NS = 'http://www.w3.org/2000/svg'
 // same values, so this file stays diffable against the mockup source.
 // Report Preview's .lp-report-grid was removed along with that section
 // (confirmed with the user — no mockup counterpart).
-const landingCSS = `
+export const landingCSS = `
   .wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
   .section-head{max-width:600px;margin:0 auto 48px;text-align:center;}
   .section-head h2{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0 0 14px;}
@@ -363,7 +363,7 @@ const HERO_TRAITS = [
   { word: 'Warm',       hueOff: 20, cx: 378, cy: 385, r: 64,  active: false },
 ] as const
 
-function HeroBlobs() {
+export function HeroBlobs() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const wrapRef = useRef<HTMLDivElement>(null)
   const items = useMemo(() => HERO_TRAITS.map(tr => ({
@@ -443,7 +443,7 @@ const BENTO_CLUSTER_TRAITS = [
   { word: 'Considerate',hueOff: 35, cx: 385, cy: 228, r: 58,  active: false },
 ] as const
 
-function BentoCluster() {
+export function BentoCluster() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const wrapRef = useRef<HTMLDivElement>(null)
   const items = useMemo(() => BENTO_CLUSTER_TRAITS.map(tr => ({
@@ -521,7 +521,7 @@ const ORBIT_ENV = [
   { word: 'Structure',  angle: 0.35, dist: 106, r: 44, hueOff: 15 },
 ] as const
 
-function OrbitVisual() {
+export function OrbitVisual() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const youPathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -625,7 +625,7 @@ function OrbitVisual() {
 // `center` switches the wrapper's horizontal margin from 0 (flush left,
 // matching StaticDotScale/.step-pill-row) to auto (centered) — default
 // false so existing call sites keep their current alignment.
-function DemoBlob({ scale = 1, marginTop, center }: { scale?: number; marginTop?: number; center?: boolean }) {
+export function DemoBlob({ scale = 1, marginTop, center }: { scale?: number; marginTop?: number; center?: boolean }) {
   const pathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const hue = useMemo(() => sharedUserCuratedHue(SHARED_USER_SEED, 0), [])
@@ -679,7 +679,7 @@ function DemoBlob({ scale = 1, marginTop, center }: { scale?: number; marginTop?
 // QuestionCard.tsx: its DotScale isn't exported, and the assessment files
 // stay out of scope for this page. All 5 dots render unselected — showing
 // the scale itself, not a specific (fabricated) answer.
-function StaticDotScale() {
+export function StaticDotScale() {
   return (
     <div className="dotscale">
       <div className="dotscale-row">
@@ -697,7 +697,7 @@ function StaticDotScale() {
 }
 
 // ─── ConnectVisual ────────────────────────────────────────────────────────────
-function ConnectVisual() {
+export function ConnectVisual() {
   const ref = useRef<SVGSVGElement>(null)
   useEffect(() => {
     const svg = ref.current; if (!svg) return
@@ -794,7 +794,7 @@ function ConnectVisual() {
 // (not full-width), so .problem-visual's justify-content:center (below)
 // centers the wrapper — and everything inside it — as a unit instead of
 // leaving the circles pinned to the card's left edge.
-function ProblemCirclesVisual() {
+export function ProblemCirclesVisual() {
   const circles = [
     { size: 45, top: 3,  left: 0,  color: mkTeal },
     { size: 30, top: 42, left: 45, color: mkRose },
@@ -817,7 +817,7 @@ function ProblemCirclesVisual() {
   )
 }
 
-function ProblemBlobRingVisual() {
+export function ProblemBlobRingVisual() {
   // Blob stays centered inside the ring (ring spans 0-57px, center 28.5px;
   // blob is 36px, so left = 28.5 - 36/2 = 10.5px).
   return (
@@ -830,7 +830,7 @@ function ProblemBlobRingVisual() {
   )
 }
 
-function ProblemTrioVisual() {
+export function ProblemTrioVisual() {
   // Three identical 27px circles, 39px apart (12px gap between edges).
   const lefts = [0, 39, 78]
   return (
@@ -849,7 +849,7 @@ function ProblemTrioVisual() {
 }
 
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
-const FAQ_ITEMS: FaqAccordionItem[] = [
+export const FAQ_ITEMS: FaqAccordionItem[] = [
   {
     question: 'Why should I trust this?',
     answer: 'Bearing is built on the IPIP-NEO-120, a public-domain Big Five inventory published in peer-reviewed research (Johnson, 2014). Everyone answers the same 120 statements, and your scores are calculated directly from your answers. Like any self-report questionnaire, it reflects how you answer, so it describes patterns rather than diagnosing you.',
@@ -875,9 +875,21 @@ const FAQ_ITEMS: FaqAccordionItem[] = [
     answer: "No. Bearing describes patterns in how you answered a questionnaire. It isn't therapy, a diagnosis or a substitute for professional support.",
   },
 ]
+// ─── Shared sections ──────────────────────────────────────────────────────────
+// Extracted from LandingPageClient so the noindex preview at
+// app/(site)/preview-landing/ can import the sections it keeps as-is
+// (Problem, FAQ, Final CTA) and the hero's CTA block, instead of copying
+// them. Markup is unchanged; `/` renders these exactly as before.
 
-// ─── Landing Page ──────────────────────────────────────────────────────────────
-export default function LandingPageClient() {
+export interface LandingVisitor {
+  ready: boolean
+  welcomeBack: boolean
+  startedUnfinished: boolean
+}
+
+// redirectSignedIn: `/` sends signed-in users on to /report or /assessment.
+// The preview page passes false so the owner can view it while signed in.
+export function useLandingVisitor({ redirectSignedIn = true }: { redirectSignedIn?: boolean } = {}): LandingVisitor {
   const router = useRouter()
   const [ready, setReady] = useState(false)
   const [welcomeBack, setWelcomeBack] = useState(false)
@@ -888,15 +900,11 @@ export default function LandingPageClient() {
   // questions but haven't hit a pattern reveal yet. Not a new detection
   // mechanism, just the same existing one applied to this button too.
   const [startedUnfinished, setStartedUnfinished] = useState(false)
-  const [email, setEmail] = useState('')
-  const [emailSent, setEmailSent] = useState(false)
-  const [emailLoading, setEmailLoading] = useState(false)
-  const [emailError, setEmailError] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && redirectSignedIn) {
         try {
           const raw = localStorage.getItem('known_session')
           if (raw) {
@@ -920,7 +928,17 @@ export default function LandingPageClient() {
       } catch {}
       setReady(true)
     })
-  }, [router])
+  }, [router, redirectSignedIn])
+
+  return { ready, welcomeBack, startedUnfinished }
+}
+
+export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boolean; startedUnfinished: boolean }) {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailError, setEmailError] = useState(false)
 
   async function handleMagicLink() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -942,6 +960,182 @@ export default function LandingPageClient() {
     router.push('/onboarding')
   }
 
+  return welcomeBack ? (
+    <div>
+      <p style={{ fontFamily:sans, fontSize:13, color:mkCharcoalSoft, marginBottom:14 }}>
+        Welcome back — pick up where you left off.
+      </p>
+      {emailSent ? (
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: '50%', background: '#3D6B5C', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'blobReveal 0.35s ease both',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <p style={{ fontSize:14, color:mkCharcoalSoft, lineHeight:1.6, margin:0 }}>Check your email for the sign-in link.</p>
+        </div>
+      ) : (
+        <div style={{ display:'flex', gap:10, maxWidth:440 }}>
+          <input
+            type="email" value={email} onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleMagicLink() }}
+            placeholder="Your email address"
+            style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, fontSize:14, fontFamily:sans, background:'white', outline:'none', color:mkCharcoal }}
+          />
+          <button className="mk-btn" onClick={handleMagicLink} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
+            {emailLoading ? 'Sending…' : 'Send me a link'}
+          </button>
+        </div>
+      )}
+      <button onClick={handleStartFresh} style={{ marginTop:14, background:'none', border:'none', cursor:'pointer', fontFamily:sans, fontSize:13, color:mkCharcoalSoft, padding:0, textDecoration:'underline', textUnderlineOffset:3 }}>
+        or start fresh
+      </button>
+    </div>
+  ) : (
+    <div>
+      <div className="hero-cta-row">
+        {/* startedUnfinished: same button, same position, just the
+            text/href swap described in the file header — not a new
+            UI element. Arrow removed from "Continue your
+            assessment" so the two states read consistently. */}
+        <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
+          <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
+        </Link>
+      </div>
+      {/* Moved below the CTA row per the deck's layout note
+          ("small .mk-microcopy line under the CTA row"), not
+          inline beside the button like the old "12-15 min ·
+          nothing to install" text. A <span>, not a <p>: .hero p
+          (font-size:17px, line 60) has higher specificity than
+          .mk-microcopy (element+class beats a single class), so
+          as a <p> this rendered at body size instead of the
+          small-caption size the bento's identical .mk-microcopy
+          note gets. A <span> here isn't targeted by .hero p at
+          all — same fix as leaving this as a <span> the way the
+          final CTA's own .mk-microcopy line already is. Still
+          renders on its own line: it's the sole second child of
+          this wrapping div, after the block-level .hero-cta-row. */}
+      <span className="mk-microcopy" style={{ display: 'block', marginTop: 14 }}>
+        Rate 120 short statements. Your first 5 patterns are free, no account needed. About 15 minutes.
+      </span>
+    </div>
+  )
+}
+
+// ── PROBLEM ("Sound familiar?") ──────────────────────────────────────────────
+// Heading unchanged (.problem-heading, left-aligned) — only the
+// three cards are centered (.problem-section .step, scoped so How
+// it works' shared .step stays left-aligned). Cards still reuse
+// .how-steps/.step exactly (three columns, one column at <=860px,
+// same as How it works) — grid default align-items:stretch already
+// gives equal card heights with no extra rule needed. Each card is
+// a restored static visual (see ProblemCirclesVisual/
+// ProblemBlobRingVisual/ProblemTrioVisual above, now centered via
+// .problem-visual's justify-content:center) plus a .problem-title
+// (serif, the dominant element) and a .problem-line, now a serif
+// italic first-person quote in the same body color as before, not
+// plain third-person copy. <div>s, not <h3>/<p>: .step h3 (sans/
+// 16px/600) and .step p (13.5px) would otherwise win on
+// specificity over any conflicting class rule on those elements,
+// the same trap fixed on the hero microcopy and the STEP A quote
+// earlier.
+//
+// thirdCardTitle: lets the preview page try an alternative third-card
+// title without touching `/`, which always uses the default.
+export function ProblemSection({ thirdCardTitle = 'Stuck in the same pattern.' }: { thirdCardTitle?: string }) {
+  return (
+    <section className="problem-section">
+      <div className="wrap">
+        <h2 className="problem-heading">Sound familiar?</h2>
+        <p className="problem-subtitle">You&apos;re already doing the work. It still doesn&apos;t quite add up.</p>
+        <div className="how-steps" style={{ marginTop: 32 }}>
+          <div className="step">
+            <ProblemCirclesVisual />
+            <div className="problem-title">Not knowing what drives me.</div>
+            <div className="problem-line">&ldquo;I can point to what&apos;s wrong, but not why it keeps happening.&rdquo;</div>
+          </div>
+          <div className="step">
+            <ProblemBlobRingVisual />
+            <div className="problem-title">Insight, but no direction.</div>
+            <div className="problem-line">&ldquo;I&apos;ve learned a lot about myself, but I don&apos;t know what to do with it.&rdquo;</div>
+          </div>
+          <div className="step">
+            <ProblemTrioVisual />
+            <div className="problem-title">{thirdCardTitle}</div>
+            <div className="problem-line">&ldquo;I keep ending up in the same place, and I can&apos;t tell how to break free of it.&rdquo;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── FAQ ──────────────────────────────────────────────────────────────────────
+// Two columns on desktop, one column (heading above list) at
+// <=860px — see .faq-cols. Left column reuses .problem-heading
+// as-is (left-aligned 34px serif, same as the Problem section)
+// plus a left-aligned "FAQ" eyebrow — no centering inline style
+// this time, unlike every other section's eyebrow, since this
+// column isn't centered. FAQ items live in FAQ_ITEMS just above
+// the component, not inline here, so FaqAccordion's items prop
+// stays a plain array reference rather than a new array literal
+// on every render.
+export function FaqSection() {
+  return (
+    <section className="faq-section">
+      <div className="wrap">
+        <div className="faq-cols">
+          <div>
+            <div className="mk-eyebrow">FAQ</div>
+            <h2 className="problem-heading">Common questions</h2>
+          </div>
+          <FaqAccordion items={FAQ_ITEMS} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── FINAL CTA ────────────────────────────────────────────────────────────────
+// CtaHalos (organic animated blob-path shapes) replaced with the
+// mockup's .final-glow — two static blurred circles, no animation
+// at all. Not an oversight: the mockup genuinely doesn't animate
+// this one, unlike every other blob visual on the page.
+export function FinalCtaSection({ startedUnfinished }: { startedUnfinished: boolean }) {
+  return (
+    <section className="final-outer">
+      <div className="final-card">
+        <div className="final-glow" style={{ width:280, height:280, background:mkPeriwinkle, top:-80, left:-80 }} />
+        <div className="final-glow" style={{ width:260, height:260, background:mkRose, bottom:-90, right:-70 }} />
+        <div className="final-content">
+          <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Free preview · 15 minutes</div>
+          <h2>You already sense<em>there&apos;s more to know.</em></h2>
+          <p>Understanding yourself can take years. Bearing gives you a clear starting point in about 15 minutes, built on the IPIP-NEO-120, a public-domain Big Five inventory.</p>
+          <div className="final-cta-row">
+            {/* startedUnfinished: same text/href swap as the hero CTA
+                above, no arrow — not a new state, just reused here. */}
+            <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
+              <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
+            </Link>
+            <Link href="/report/sample" className="final-link">
+              See a sample report
+            </Link>
+          </div>
+          <span className="mk-microcopy">No account for your first 5 · No credit card to start</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Landing Page ──────────────────────────────────────────────────────────────
+export default function LandingPageClient() {
+  const { ready, welcomeBack, startedUnfinished } = useLandingVisitor()
+
   if (!ready) return <div style={{ minHeight:'100vh', background:mkCream }} />
 
   return (
@@ -959,115 +1153,13 @@ export default function LandingPageClient() {
             <div>
               <h1>Get to know<br /><em>yourself better.</em></h1>
               <p>See the patterns behind how you think, feel and act, and go deeper on how you work, connect and recharge, so your choices fit who you are.</p>
-              {welcomeBack ? (
-                <div>
-                  <p style={{ fontFamily:sans, fontSize:13, color:mkCharcoalSoft, marginBottom:14 }}>
-                    Welcome back — pick up where you left off.
-                  </p>
-                  {emailSent ? (
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%', background: '#3D6B5C', flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        animation: 'blobReveal 0.35s ease both',
-                      }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                      <p style={{ fontSize:14, color:mkCharcoalSoft, lineHeight:1.6, margin:0 }}>Check your email for the sign-in link.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display:'flex', gap:10, maxWidth:440 }}>
-                      <input
-                        type="email" value={email} onChange={e => setEmail(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleMagicLink() }}
-                        placeholder="Your email address"
-                        style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, fontSize:14, fontFamily:sans, background:'white', outline:'none', color:mkCharcoal }}
-                      />
-                      <button className="mk-btn" onClick={handleMagicLink} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
-                        {emailLoading ? 'Sending…' : 'Send me a link'}
-                      </button>
-                    </div>
-                  )}
-                  <button onClick={handleStartFresh} style={{ marginTop:14, background:'none', border:'none', cursor:'pointer', fontFamily:sans, fontSize:13, color:mkCharcoalSoft, padding:0, textDecoration:'underline', textUnderlineOffset:3 }}>
-                    or start fresh
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="hero-cta-row">
-                    {/* startedUnfinished: same button, same position, just the
-                        text/href swap described in the file header — not a new
-                        UI element. Arrow removed from "Continue your
-                        assessment" so the two states read consistently. */}
-                    <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
-                      <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
-                    </Link>
-                  </div>
-                  {/* Moved below the CTA row per the deck's layout note
-                      ("small .mk-microcopy line under the CTA row"), not
-                      inline beside the button like the old "12-15 min ·
-                      nothing to install" text. A <span>, not a <p>: .hero p
-                      (font-size:17px, line 60) has higher specificity than
-                      .mk-microcopy (element+class beats a single class), so
-                      as a <p> this rendered at body size instead of the
-                      small-caption size the bento's identical .mk-microcopy
-                      note gets. A <span> here isn't targeted by .hero p at
-                      all — same fix as leaving this as a <span> the way the
-                      final CTA's own .mk-microcopy line already is. Still
-                      renders on its own line: it's the sole second child of
-                      this wrapping div, after the block-level .hero-cta-row. */}
-                  <span className="mk-microcopy" style={{ display: 'block', marginTop: 14 }}>
-                    Rate 120 short statements. Your first 5 patterns are free, no account needed. About 15 minutes.
-                  </span>
-                </div>
-              )}
+              <HeroCta welcomeBack={welcomeBack} startedUnfinished={startedUnfinished} />
             </div>
             <HeroBlobs />
           </div>
         </section>
 
-        {/* ── PROBLEM ("Sound familiar?") ──────────────────────────── */}
-        {/* Heading unchanged (.problem-heading, left-aligned) — only the
-            three cards are centered (.problem-section .step, scoped so How
-            it works' shared .step stays left-aligned). Cards still reuse
-            .how-steps/.step exactly (three columns, one column at <=860px,
-            same as How it works) — grid default align-items:stretch already
-            gives equal card heights with no extra rule needed. Each card is
-            a restored static visual (see ProblemCirclesVisual/
-            ProblemBlobRingVisual/ProblemTrioVisual above, now centered via
-            .problem-visual's justify-content:center) plus a .problem-title
-            (serif, the dominant element) and a .problem-line, now a serif
-            italic first-person quote in the same body color as before, not
-            plain third-person copy. <div>s, not <h3>/<p>: .step h3 (sans/
-            16px/600) and .step p (13.5px) would otherwise win on
-            specificity over any conflicting class rule on those elements,
-            the same trap fixed on the hero microcopy and the STEP A quote
-            earlier. */}
-        <section className="problem-section">
-          <div className="wrap">
-            <h2 className="problem-heading">Sound familiar?</h2>
-            <p className="problem-subtitle">You&apos;re already doing the work. It still doesn&apos;t quite add up.</p>
-            <div className="how-steps" style={{ marginTop: 32 }}>
-              <div className="step">
-                <ProblemCirclesVisual />
-                <div className="problem-title">Not knowing what drives me.</div>
-                <div className="problem-line">&ldquo;I can point to what&apos;s wrong, but not why it keeps happening.&rdquo;</div>
-              </div>
-              <div className="step">
-                <ProblemBlobRingVisual />
-                <div className="problem-title">Insight, but no direction.</div>
-                <div className="problem-line">&ldquo;I&apos;ve learned a lot about myself, but I don&apos;t know what to do with it.&rdquo;</div>
-              </div>
-              <div className="step">
-                <ProblemTrioVisual />
-                <div className="problem-title">Stuck in the same pattern.</div>
-                <div className="problem-line">&ldquo;I keep ending up in the same place, and I can&apos;t tell how to break free of it.&rdquo;</div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <ProblemSection />
 
         {/* ── BENTO GRID ("Not just who you are...") ───────────────── */}
         <section className="bento-section">
@@ -1228,55 +1320,10 @@ export default function LandingPageClient() {
           </p>
         </section>
 
-        {/* ── FAQ ──────────────────────────────────────────────────── */}
-        {/* Two columns on desktop, one column (heading above list) at
-            <=860px — see .faq-cols. Left column reuses .problem-heading
-            as-is (left-aligned 34px serif, same as the Problem section)
-            plus a left-aligned "FAQ" eyebrow — no centering inline style
-            this time, unlike every other section's eyebrow, since this
-            column isn't centered. FAQ items live in FAQ_ITEMS just below
-            the component, not inline here, so FaqAccordion's items prop
-            stays a plain array reference rather than a new array literal
-            on every render. */}
-        <section className="faq-section">
-          <div className="wrap">
-            <div className="faq-cols">
-              <div>
-                <div className="mk-eyebrow">FAQ</div>
-                <h2 className="problem-heading">Common questions</h2>
-              </div>
-              <FaqAccordion items={FAQ_ITEMS} />
-            </div>
-          </div>
-        </section>
 
-        {/* ── FINAL CTA ─────────────────────────────────────────────── */}
-        {/* CtaHalos (organic animated blob-path shapes) replaced with the
-            mockup's .final-glow — two static blurred circles, no animation
-            at all. Not an oversight: the mockup genuinely doesn't animate
-            this one, unlike every other blob visual on the page. */}
-        <section className="final-outer">
-          <div className="final-card">
-            <div className="final-glow" style={{ width:280, height:280, background:mkPeriwinkle, top:-80, left:-80 }} />
-            <div className="final-glow" style={{ width:260, height:260, background:mkRose, bottom:-90, right:-70 }} />
-            <div className="final-content">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Free preview · 15 minutes</div>
-              <h2>You already sense<em>there&apos;s more to know.</em></h2>
-              <p>Understanding yourself can take years. Bearing gives you a clear starting point in about 15 minutes, built on the IPIP-NEO-120, a public-domain Big Five inventory.</p>
-              <div className="final-cta-row">
-                {/* startedUnfinished: same text/href swap as the hero CTA
-                    above, no arrow — not a new state, just reused here. */}
-                <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
-                  <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
-                </Link>
-                <Link href="/report/sample" className="final-link">
-                  See a sample report
-                </Link>
-              </div>
-              <span className="mk-microcopy">No account for your first 5 · No credit card to start</span>
-            </div>
-          </div>
-        </section>
+        <FaqSection />
+
+        <FinalCtaSection startedUnfinished={startedUnfinished} />
 
       </div>
     </>
