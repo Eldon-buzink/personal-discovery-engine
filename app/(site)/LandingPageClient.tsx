@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +16,10 @@ import {
   registerBlobTask,
 } from '@/lib/blobs'
 import FaqAccordion, { type FaqAccordionItem } from './FaqAccordion'
+
+// "Your practice" phone frames (app/(site)/landing/): loaded only when the
+// section is near the viewport; WhenNear reserves their height meanwhile.
+const PracticePhoneScreens = dynamic(() => import('./landing/PracticePhoneScreens'), { ssr: false })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const sans  = "var(--font-inter), -apple-system, sans-serif"
@@ -137,12 +142,12 @@ export const landingCSS = `
      (below) 3 explicit tracks to align to, shared by both cards, so row 1
      in the muted card is exactly as tall as row 1 in the highlight card
      (whichever is taller), same for rows 2 and 3. */
-  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:repeat(3,auto);column-gap:20px;row-gap:0;align-items:stretch;}
+  .compare{max-width:900px;margin:0 auto 44px;display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:repeat(4,auto);column-gap:20px;row-gap:0;align-items:stretch;}
   /* grid-row:1/span 3 + grid-template-rows:subgrid: the card claims all 3
      of .compare's row tracks and hands them straight to its own
      .compare-item children, instead of sizing its own rows independently
      of the other card. */
-  .compare-card{grid-row:1/span 3;display:grid;grid-template-rows:subgrid;border-radius:18px;padding:26px;}
+  .compare-card{grid-row:1/span 4;display:grid;grid-template-rows:subgrid;border-radius:18px;padding:26px;}
   /* No opacity — the muted look comes from the lighter mkCard fill and
      mkLine border against the highlight card's solid mkCharcoal, not from
      translucency. opacity:0.75 here previously diluted the text along with
@@ -172,13 +177,22 @@ export const landingCSS = `
      .compare has 3 row tracks instead of 1, auto-placement would only put
      "vs" in row 1, not spanning the full height of the cards beside it.
      align-self:center then centers it within that full 3-row span. */
-  .compare-vs{grid-row:1/span 3;font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
+  .compare-vs{grid-row:1/span 4;font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
 
   /* .blob-stage/.ring-pulse: pre-existing, already unused before the demo
      section was removed here (DemoBlob's own markup uses inline styles, not
      these classes) — left as-is, not part of this deletion's scope. */
   .blob-stage{width:190px;height:170px;display:flex;align-items:center;justify-content:center;margin:16px auto 22px;position:relative;}
   .ring-pulse{position:absolute;inset:6px;border-radius:50%;border:1px solid hsl(8,50%,65%);opacity:0.5;animation:pulseRing 2.4s ease-out infinite;}
+
+  /* Your practice */
+  .practice-section{padding:0 0 90px;}
+  .practice-hold{min-height:600px;}
+  .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
+  .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
+  .practice-cadence b{display:block;font-family:'Newsreader',serif;font-weight:500;font-size:20px;margin-bottom:6px;}
+  .practice-cadence p{font-size:15px;line-height:1.6;color:${mkCharcoalSoft};margin:0;}
+  .practice-closing{font-family:'Newsreader',serif;font-style:italic;font-size:18px;line-height:1.5;text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:40px auto 0;}
 
   /* How it works */
   .how{padding:20px 32px 90px;}
@@ -266,6 +280,7 @@ export const landingCSS = `
   .mk-btn{background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',var(--font-inter),sans-serif;}
 
   @media(max-width:860px){
+    .practice-cadence{grid-template-columns:1fr;gap:18px;margin-top:36px;}
     .hero-inner{grid-template-columns:1fr;}
     .bento{grid-template-columns:1fr;}
     .bento-row3{grid-template-columns:1fr;}
@@ -290,6 +305,8 @@ export const landingCSS = `
     .final-card{padding:56px 28px;}
   }
   @media(max-width:640px){
+    .practice-section{padding-bottom:60px;}
+    .practice-closing{font-size:16px;}
     /* Top padding was 56px — exactly NAV_H (the fixed nav's own height),
        so the headline had zero breathing room below the nav, not just a
        tight gap. Matches desktop's 88px instead, which already has a
@@ -875,6 +892,23 @@ export const FAQ_ITEMS: FaqAccordionItem[] = [
     answer: "No. Bearing describes patterns in how you answered a questionnaire. It isn't therapy, a diagnosis or a substitute for professional support.",
   },
 ]
+// Mounts its children once the placeholder is within ~600px of the
+// viewport, so below-the-fold visuals don't load with the first paint.
+function WhenNear({ className, children }: { className: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [near, setNear] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setNear(true); io.disconnect() }
+    }, { rootMargin: '600px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return <div ref={ref} className={className}>{near ? children : null}</div>
+}
+
 // ─── Shared sections ──────────────────────────────────────────────────────────
 // Extracted from LandingPageClient so the noindex preview at
 // app/(site)/preview-landing/ can import the sections it keeps as-is
@@ -1161,6 +1195,63 @@ export default function LandingPageClient() {
 
         <ProblemSection />
 
+        {/* ── WHY IT'S DIFFERENT ──────────────────────────────────── */}
+        {/* Sits right under "Sound familiar?". Same two-card comparison
+            layout as before (.compare subgrid, now four rows); copy matches
+            the four points of the landing preview's version. */}
+        <section className="usp-section">
+          <div className="wrap">
+            <div className="section-head">
+              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
+              <h2>Not just an insight. A way to work with it.</h2>
+            </div>
+
+            <div className="compare">
+              <div className="compare-card muted">
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Type tests</div>
+                  <p>Sort you into one of a fixed set of four-letter labels.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Most tools</div>
+                  <p>Stop once you&apos;ve seen your results.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Professional assessments</div>
+                  <p>Often need a certified coach to explain what the results mean.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">AI chat</div>
+                  <p>Builds on what you tell it.</p>
+                </div>
+              </div>
+              <div className="compare-vs">vs</div>
+              <div className="compare-card highlight">
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Patterns, not labels</div>
+                  <p>30 specific patterns, each with its own word, so you see how you actually lean.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Guidance, not just a report</div>
+                  <p>Evening check-ins, recaps, and deeper assessments Bearing suggests, so you keep working with your patterns.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">No coach needed</div>
+                  <p>Every pattern comes with its own written explanation, ready to read at your own pace.</p>
+                </div>
+                <div className="compare-item">
+                  <div className="mk-eyebrow">Not another AI echo</div>
+                  <p>120 fixed statements from a published Big Five inventory, the same for everyone. AI only explains your scores afterwards and can&apos;t change them.</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
+              Still self-report: Bearing describes patterns, not a diagnosis.
+            </p>
+          </div>
+        </section>
+
         {/* ── BENTO GRID ("Not just who you are...") ───────────────── */}
         <section className="bento-section">
           <div className="wrap">
@@ -1222,56 +1313,31 @@ export default function LandingPageClient() {
           </div>
         </section>
 
-        {/* ── USP COMPARE SECTION ("It's not a label. It's a plan.") ── */}
-        {/* Replaces the old "Report Preview" browser-frame mockup section,
-            which had no counterpart anywhere in the mockup — removed per
-            the user's explicit confirmation, not silently dropped. */}
-        {/* Each card is now a 3-item hairline-separated list (.compare-item:
-            an .mk-eyebrow lead + a body paragraph) instead of a single
-            label+line — rows aligned across both cards via CSS subgrid
-            (.compare-card{grid-template-rows:subgrid}, above), not just
-            equal-height cards with top-aligned lists. */}
-        <section className="usp-section">
+        {/* ── YOUR PRACTICE ──────────────────────────────────────── */}
+        {/* The phone screens mirror the real practice pages and take every
+            string from the app's own lib/known functions over one fixture
+            (app/(site)/landing/landingPracticeFixture.ts). Nothing here says
+            what is free or paid in the practice. */}
+        <section className="practice-section">
           <div className="wrap">
             <div className="section-head">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Why it&apos;s different</div>
-              <h2>Fixed questions, specific patterns.</h2>
+              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Your practice</div>
+              <h2>Insight sticks when you keep noticing.</h2>
+              <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
             </div>
 
-            <div className="compare">
-              <div className="compare-card muted">
-                <div className="compare-item">
-                  <div className="mk-eyebrow">AI chat</div>
-                  <p>Tends to tell you what you want to hear.</p>
-                </div>
-                <div className="compare-item">
-                  <div className="mk-eyebrow">Professional assessments</div>
-                  <p>Often need a certified coach to explain what your results mean.</p>
-                </div>
-                <div className="compare-item">
-                  <div className="mk-eyebrow">Type tests</div>
-                  <p>Sort you into one of a fixed set of four-letter labels.</p>
-                </div>
-              </div>
-              <div className="compare-vs">vs</div>
-              <div className="compare-card highlight">
-                <div className="compare-item">
-                  <div className="mk-eyebrow">Fixed questions</div>
-                  <p>Your scores come from the same 120 statements for everyone. AI only explains them.</p>
-                </div>
-                <div className="compare-item">
-                  <div className="mk-eyebrow">Explained in the report</div>
-                  <p>Each pattern comes with a written explanation in the report itself.</p>
-                </div>
-                <div className="compare-item">
-                  <div className="mk-eyebrow">30 facets</div>
-                  <p>Specific patterns across the Big Five, not one label.</p>
-                </div>
-              </div>
+            <WhenNear className="practice-hold">
+              <PracticePhoneScreens />
+            </WhenNear>
+
+            <div className="practice-cadence">
+              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
+              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
+              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
             </div>
 
-            <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
-              Built on the IPIP-NEO-120, a public-domain Big Five inventory from published research (Johnson, 2014).
+            <p className="practice-closing">
+              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
             </p>
           </div>
         </section>
