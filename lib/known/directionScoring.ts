@@ -103,7 +103,7 @@ const ALL_TYPES: DirectionType[] = [
 ];
 
 // Draft labels — confirm against reference files before shipping.
-export const TYPE_LABELS: Record<DirectionType, string> = {
+const TYPE_LABELS: Record<DirectionType, string> = {
   realistic: "Making things work",
   investigative: "Figuring things out",
   artistic: "Making something original",

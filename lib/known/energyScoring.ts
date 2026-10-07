@@ -80,7 +80,7 @@ const DRAIN_CATEGORIES: EnergyCategory[] = [
   "relatedness_drain",
 ];
 
-export const CATEGORY_LABELS: Record<EnergyCategory, string> = {
+const CATEGORY_LABELS: Record<EnergyCategory, string> = {
   autonomy_fuel: "Having a say",
   autonomy_drain: "Feeling boxed in",
   competence_fuel: "Making real progress",

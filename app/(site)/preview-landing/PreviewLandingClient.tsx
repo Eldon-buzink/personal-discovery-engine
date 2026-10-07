@@ -1,25 +1,23 @@
 'use client'
 
 /**
- * Landing page preview — reference/bearing-landing-preview-spec.md.
+ * Landing page preview — reference/bearing-landing-preview-spec.md, with
+ * the owner's second-round changes.
  *
- * Same page as `/` (LandingPageClient.tsx) with only the sections the spec
- * marks modify/new changed. Kept sections are imported from
- * LandingPageClient, not copied: ProblemSection, FaqSection,
- * FinalCtaSection, HeroCta, the blob visuals, landingCSS and the mk*
- * tokens. Modified sections (Hero, What you get, Why it's different, How it
- * works) reuse the same classes with their changed copy inline here. New
- * sections (AI hook, Deep-dives, Your practice) add the pv-* classes below.
+ * Same page as `/` (LandingPageClient.tsx) with only these sections
+ * changed. Kept sections are imported from LandingPageClient, not copied:
+ * ProblemSection, FaqSection, FinalCtaSection, HeroCta, the blob visuals,
+ * landingCSS and the mk* tokens. `/` itself is not modified by this page.
  *
- * Every example on this page is labeled "Example" and comes from existing
- * product content, never from a user:
- * - Report excerpts: SAMPLE_FACETS / SAMPLE_ENVIRONMENT_CONTENT, the same
- *   sample content the public /report/sample page shows. The repo stores no
- *   other written explanations (they're generated per user at runtime).
- * - Deep-dive findings: the branches' own templated/label output (working
- *   style reveal line, energy CATEGORY_LABELS, direction TYPE_LABELS,
- *   relationships quadrant word) plus the environment sample.
- * - Practice screens: PracticePhoneScreens over landingPracticeFixture.
+ * - Hero: original, with the new subhead only.
+ * - What you get: original content (copied from LandingPageClient's inline
+ *   JSX, since `/` isn't touched to extract it).
+ * - Your full report (new): the public sample report, scrolling, in a
+ *   browser frame (SampleReportPreview → app/report/sample/SampleReportBody).
+ * - AI hook and Your practice (new): unchanged from round one.
+ * - Why it's different: one extra row, plus a compact branch map (the main
+ *   assessment in the center, the five branch assessments around it).
+ * - How it works: step 3 wording only.
  *
  * Unlike `/`, signed-in visitors are not redirected away, so the owner can
  * view this while logged in.
@@ -29,22 +27,16 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
 import {
-  landingCSS, sans, mkCream, mkCharcoal, mkCharcoalSoft, mkCard, mkLine,
+  landingCSS, sans, mkCream, mkCharcoal, mkCharcoalSoft, mkCard, mkLine, mkTeal, mkPeriwinkle, mkRose,
   useLandingVisitor, HeroCta, ProblemSection, FaqSection, FinalCtaSection,
   HeroBlobs, BentoCluster, OrbitVisual, ConnectVisual, StaticDotScale, DemoBlob,
 } from '../LandingPageClient'
-import { SAMPLE_FACETS, SAMPLE_ENVIRONMENT_CONTENT } from '@/app/report/sample/sampleContent'
-import { CATEGORY_LABELS } from '@/lib/known/energyScoring'
-import { TYPE_LABELS } from '@/lib/known/directionScoring'
 
-// Lazy: the phone frames (and the practice libs they pull in) only load
-// once the section is near the viewport. The placeholder reserves the
-// frame row's height so nothing shifts when they arrive.
-const PracticePhoneScreens = dynamic(() => import('./PracticePhoneScreens'), {
-  ssr: false,
-  loading: () => <div style={{ height: PRACTICE_ROW_HEIGHT }} />,
-})
-const PRACTICE_ROW_HEIGHT = 600 // PracticePhoneScreens: 557px frame + caption
+// Lazy: below-the-fold visuals (and the libs/components they pull in) only
+// load once their section is near the viewport. The placeholders reserve
+// the final height so nothing shifts when they arrive.
+const PracticePhoneScreens = dynamic(() => import('./PracticePhoneScreens'), { ssr: false })
+const SampleReportPreview = dynamic(() => import('./SampleReportPreview'), { ssr: false })
 
 // Spec 4.3 — optional variant of the third "Sound familiar?" card, for the
 // owner to evaluate. 'current' renders exactly what `/` shows. Try the
@@ -58,86 +50,33 @@ const PROBLEM_THIRD_CARD_TITLE: Record<ProblemVariant, string> = {
   ongoing: 'Insight that doesn’t stick.',
 }
 
-// First sentence only, so an excerpt always ends cleanly at a sentence end.
-function firstSentence(text: string): string {
-  const m = text.match(/^.+?[.!?](?=\s|$)/)
-  return m ? m[0] : text
-}
-
-const HERO_EXAMPLE = SAMPLE_FACETS[0] // Deliberate — also the active word in HeroBlobs
-const BENTO_EXAMPLES = SAMPLE_FACETS.slice(1) // Autonomous, Reflective
-
-// One example finding per branch, from the branch's own output.
-const DEEP_DIVES: { name: string; finding: string; note?: string }[] = [
-  {
-    name: 'Working style',
-    // Reveal line template + AXIS_LEAN_PHRASE.independence.left, both in
-    // app/assessment/working-style/page.tsx (a page file, so not importable).
-    finding: 'Your pull toward working things out on your own is one of the clearest signals in how you answered.',
-  },
-  {
-    name: 'Relationships',
-    // TODO(owner): the relationships branch has no stored written finding,
-    // only its quadrant word (lib/known/relationshipsScoring.ts). Swap in a
-    // real generated finding when one is available.
-    finding: 'Independent',
-    note: 'Your attachment pattern',
-  },
-  {
-    name: 'Energy',
-    finding: CATEGORY_LABELS.competence_fuel,
-    note: 'Your top fuel',
-  },
-  {
-    name: 'Environment',
-    finding: SAMPLE_ENVIRONMENT_CONTENT.trait_quote,
-  },
-  {
-    name: 'Direction',
-    // TYPE_LABELS are marked "Draft labels" in lib/known/directionScoring.ts.
-    finding: TYPE_LABELS.investigative,
-    note: 'One direction that fits',
-  },
-]
+// Branch map: five branch assessments evenly around the main report,
+// starting at the top. x/y are percentages of the map box; xm is the
+// tighter horizontal radius used at phone width.
+const BRANCHES = ['Working style', 'Relationships', 'Energy', 'Environment', 'Direction'].map((name, i) => {
+  const a = ((-90 + i * 72) * Math.PI) / 180
+  return {
+    name,
+    x: 50 + 40 * Math.cos(a),
+    xm: 50 + 33 * Math.cos(a),
+    y: 50 + 40 * Math.sin(a),
+    color: [mkTeal, mkRose, '#F2C98A', mkPeriwinkle, '#B9DDB0'][i],
+  }
+})
 
 const previewCSS = `
-  .pv-tag{display:inline-block;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:${mkCharcoalSoft};
-    border:1px solid ${mkLine};border-radius:999px;padding:3px 9px;background:${mkCream};}
-
-  /* Hero example card — tucked under the blob composition, overlapping
-     only its empty lower edge so HeroBlobs' own "Deliberate" label stays
-     visible above it. */
-  .pv-hero-visual{position:relative;}
-  .pv-hero-card{position:relative;margin:-56px 0 0 auto;max-width:380px;background:${mkCream};border:1px solid ${mkLine};
-    border-radius:18px;padding:18px 20px;box-shadow:0 14px 32px -22px rgba(38,36,32,0.45);}
-  .pv-hero-card .pv-word{font-family:'Newsreader',serif;font-style:italic;font-size:24px;line-height:1.2;margin:10px 0 6px;}
-  .pv-hero-card p{font-size:14px !important;line-height:1.55 !important;color:${mkCharcoalSoft};margin:0 0 6px !important;max-width:none !important;}
-  .pv-hero-card p:last-child{margin-bottom:0 !important;}
-
-  /* Report excerpts inside the What you get cards */
-  .pv-excerpts{display:flex;flex-direction:column;gap:12px;margin-top:14px;}
-  .pv-excerpt{border-left:2px solid ${mkLine};padding-left:14px;}
-  .pv-excerpt-word{font-family:'Newsreader',serif;font-style:italic;font-size:19px;line-height:1.25;margin-bottom:2px;}
-  .bento-card .pv-excerpt p{font-size:15px;}
-  .pv-energy-pair{display:flex;gap:28px;margin-top:14px;flex-wrap:wrap;}
-  .pv-energy-pair span{display:block;font-size:12px;color:${mkCharcoalSoft};letter-spacing:0.04em;}
-
   /* AI hook */
   .pv-hook-section{padding:0 0 90px;}
   .pv-hook-section .section-head{margin-bottom:0;}
 
-  /* Deep-dives */
-  .pv-deep-section{padding:0 0 90px;}
-  .pv-deep-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
-  .pv-deep-card{background:${mkCard};border:1px solid ${mkLine};border-radius:18px;padding:22px 20px;display:flex;flex-direction:column;}
-  .pv-deep-card h3{font-family:'Newsreader',serif;font-size:20px;font-weight:500;margin:0 0 14px;line-height:1.2;}
-  .pv-deep-note{font-size:12px;color:${mkCharcoalSoft};margin:12px 0 4px;}
-  .pv-deep-finding{font-family:'Newsreader',serif;font-style:italic;font-size:17px;line-height:1.4;margin:0;}
-  .pv-deep-card .pv-tag{align-self:flex-start;margin-top:auto;}
-  .pv-deep-card .pv-deep-body{margin-bottom:16px;}
+  /* Your full report */
+  .pv-report-section{padding:0 0 90px;}
+  .pv-report-hold{min-height:600px;}
+  .pv-report-link{display:block;text-align:center;margin-top:22px;color:${mkCharcoal};font-size:14px;text-decoration:underline;}
 
   /* Your practice */
   .pv-practice-section{padding:0 0 90px;}
+  .pv-practice-hold{min-height:600px;}
   .pv-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
   .pv-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
   .pv-cadence b{display:block;font-family:'Newsreader',serif;font-weight:500;font-size:20px;margin-bottom:6px;}
@@ -152,24 +91,40 @@ const previewCSS = `
     .compare.pv-compare-4 .compare-card,.compare.pv-compare-4 .compare-vs{grid-row:1/span 4;}
   }
 
-  @media(max-width:1080px){
-    .pv-deep-grid{grid-template-columns:repeat(3,1fr);}
-  }
+  /* Branch map, under the comparison */
+  .pv-branch{max-width:640px;margin:8px auto 44px;text-align:center;}
+  .pv-branch h3{font-family:'Newsreader',serif;font-size:26px;font-weight:500;line-height:1.25;margin:0 0 10px;}
+  .pv-branch > p{font-size:15px;line-height:1.6;color:${mkCharcoalSoft};margin:0 auto;max-width:520px;}
+  .pv-branch-map{position:relative;height:320px;max-width:560px;margin:18px auto 0;}
+  .pv-branch-ring{position:absolute;left:10%;right:10%;top:10%;bottom:10%;border:1.5px dashed rgba(38,36,32,0.18);border-radius:50%;}
+  .pv-branch-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:132px;height:132px;border-radius:50%;
+    background:${mkCharcoal};color:${mkCream};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+  .pv-branch-core b{font-family:'Newsreader',serif;font-weight:500;font-size:19px;line-height:1.15;}
+  .pv-branch-core span{font-size:11.5px;color:#C9C4B8;}
+  .pv-branch-node{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);white-space:nowrap;
+    display:flex;align-items:center;gap:8px;background:${mkCard};border:1px solid ${mkLine};border-radius:999px;padding:8px 14px;font-size:14px;color:${mkCharcoal};}
+  .pv-branch-node i{width:10px;height:10px;border-radius:50%;background:var(--c);flex-shrink:0;}
+
   @media(max-width:860px){
-    .pv-hero-card{margin:-40px 0 0;max-width:none;}
-    .pv-deep-grid{grid-template-columns:1fr 1fr;}
     .pv-cadence{grid-template-columns:1fr;gap:18px;margin-top:36px;}
   }
   @media(max-width:640px){
-    .pv-hook-section,.pv-deep-section,.pv-practice-section{padding-bottom:60px;}
-    .pv-deep-grid{grid-template-columns:1fr;}
+    .pv-hook-section,.pv-report-section,.pv-practice-section{padding-bottom:60px;}
+    .pv-report-hold{min-height:540px;}
     .pv-closing{font-size:16px;}
+    .pv-branch h3{font-size:22px;}
+    .pv-branch-map{height:280px;}
+    .pv-branch-ring{left:17%;right:17%;}
+    .pv-branch-node{left:var(--xm);padding:6px 10px;font-size:12.5px;gap:6px;}
+    .pv-branch-node i{width:8px;height:8px;}
+    .pv-branch-core{width:104px;height:104px;}
+    .pv-branch-core b{font-size:16px;}
   }
 `
 
 // Mounts its children once the placeholder is within ~600px of the
 // viewport, so below-the-fold visuals don't load with the first paint.
-function WhenNear({ minHeight, children }: { minHeight: number; children: React.ReactNode }) {
+function WhenNear({ className, children }: { className: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [near, setNear] = useState(false)
   useEffect(() => {
@@ -181,7 +136,7 @@ function WhenNear({ minHeight, children }: { minHeight: number; children: React.
     io.observe(el)
     return () => io.disconnect()
   }, [])
-  return <div ref={ref} style={{ minHeight }}>{near ? children : null}</div>
+  return <div ref={ref} className={className}>{near ? children : null}</div>
 }
 
 export default function PreviewLandingClient() {
@@ -199,7 +154,7 @@ export default function PreviewLandingClient() {
       <style dangerouslySetInnerHTML={{ __html: landingCSS + previewCSS }} />
       <div style={{ background:mkCream, color:mkCharcoal, fontFamily:sans }}>
 
-        {/* ── HERO (modified: subhead + one example pattern card) ───── */}
+        {/* ── HERO (original, new subhead only) ─────────────────────── */}
         <section className="hero">
           <div className="hero-inner">
             <div>
@@ -207,15 +162,7 @@ export default function PreviewLandingClient() {
               <p>See the patterns behind how you think, feel and act, then keep working with them, so your choices fit who you are.</p>
               <HeroCta welcomeBack={welcomeBack} startedUnfinished={startedUnfinished} />
             </div>
-            <div className="pv-hero-visual">
-              <HeroBlobs />
-              <div className="pv-hero-card">
-                <span className="pv-tag">Example</span>
-                <div className="pv-word">{HERO_EXAMPLE.traitWord}</div>
-                <p>{HERO_EXAMPLE.content?.trait_quote}</p>
-                <p>{firstSentence(HERO_EXAMPLE.content?.where_it_shows_up ?? "")}</p>
-              </div>
-            </div>
+            <HeroBlobs />
           </div>
         </section>
 
@@ -232,7 +179,7 @@ export default function PreviewLandingClient() {
           </div>
         </section>
 
-        {/* ── WHAT YOU GET (modified: real excerpts) ────────────────── */}
+        {/* ── WHAT YOU GET (original content, as on `/`) ────────────── */}
         <section className="bento-section">
           <div className="wrap">
             <div className="section-head">
@@ -244,15 +191,7 @@ export default function PreviewLandingClient() {
               <div className="bento-card" style={{ display:'flex', flexDirection:'column' }}>
                 <div className="mk-eyebrow">YOUR PATTERNS</div>
                 <h3>Your patterns, made visible</h3>
-                <div className="pv-excerpts">
-                  <span className="pv-tag" style={{ alignSelf:'flex-start' }}>Example</span>
-                  {BENTO_EXAMPLES.map(f => (
-                    <div key={f.traitWord} className="pv-excerpt">
-                      <div className="pv-excerpt-word">{f.traitWord}</div>
-                      <p>{f.content?.trait_quote}</p>
-                    </div>
-                  ))}
-                </div>
+                <p>Each of your 30 facets gets a word and a description, so you see specific patterns instead of one label.</p>
                 <Link href="/report/sample" className="bento-example-link">See an example report</Link>
                 <div className="bento-cluster-canvas-wrap">
                   <BentoCluster />
@@ -266,13 +205,7 @@ export default function PreviewLandingClient() {
                   <div className="bento-orbit-wrap">
                     <OrbitVisual />
                   </div>
-                  <div className="pv-excerpts">
-                    <span className="pv-tag" style={{ alignSelf:'flex-start' }}>Example</span>
-                    <div className="pv-excerpt">
-                      <div className="pv-excerpt-word">{SAMPLE_ENVIRONMENT_CONTENT.tags[0]}</div>
-                      <p>{SAMPLE_ENVIRONMENT_CONTENT.trait_quote}</p>
-                    </div>
-                  </div>
+                  <p style={{ marginTop:16 }}>The settings, structures, and contexts where you naturally do your best work.</p>
                 </div>
                 <div className="bento-card">
                   <div className="mk-eyebrow">How you connect</div>
@@ -280,8 +213,6 @@ export default function PreviewLandingClient() {
                   <div className="bento-connect-wrap">
                     <ConnectVisual />
                   </div>
-                  {/* TODO(owner): no stored relationships excerpt exists to
-                      quote, so this keeps the current description. */}
                   <p style={{ marginTop:14 }}>Your attachment pattern: how you handle closeness and distance in the relationships that matter most.</p>
                 </div>
               </div>
@@ -291,17 +222,7 @@ export default function PreviewLandingClient() {
               <div className="bento-card">
                 <div className="mk-eyebrow">What gives you energy</div>
                 <h3>The fuel behind your best days</h3>
-                <span className="pv-tag" style={{ marginTop:10 }}>Example</span>
-                <div className="pv-energy-pair">
-                  <div className="pv-excerpt">
-                    <div className="pv-excerpt-word">{CATEGORY_LABELS.competence_fuel}</div>
-                    <span>fuel</span>
-                  </div>
-                  <div className="pv-excerpt">
-                    <div className="pv-excerpt-word">{CATEGORY_LABELS.autonomy_drain}</div>
-                    <span>drain</span>
-                  </div>
-                </div>
+                <p>Specific activities, environments, and interactions that restore rather than deplete you.</p>
               </div>
             </div>
 
@@ -311,26 +232,18 @@ export default function PreviewLandingClient() {
           </div>
         </section>
 
-        {/* ── DEEP-DIVES (new) ──────────────────────────────────────── */}
-        <section className="pv-deep-section">
+        {/* ── YOUR FULL REPORT (new) ────────────────────────────────── */}
+        {/* TODO(owner): heading copy is a placeholder, not from the spec. */}
+        <section className="pv-report-section">
           <div className="wrap">
             <div className="section-head">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Go deeper where it matters</div>
-              <h2>Most assessments end at the report. Yours points to what to explore next.</h2>
-              <p>Working style, relationships, energy, environment, direction. Bearing suggests where to start, based on your results.</p>
+              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Your full report</div>
+              <h2>Every pattern, explained.</h2>
             </div>
-            <div className="pv-deep-grid">
-              {DEEP_DIVES.map(d => (
-                <div key={d.name} className="pv-deep-card">
-                  <div className="pv-deep-body">
-                    <h3>{d.name}</h3>
-                    {d.note && <p className="pv-deep-note">{d.note}</p>}
-                    <p className="pv-deep-finding">{d.finding}</p>
-                  </div>
-                  <span className="pv-tag">Example</span>
-                </div>
-              ))}
-            </div>
+            <WhenNear className="pv-report-hold">
+              <SampleReportPreview />
+            </WhenNear>
+            <Link href="/report/sample" className="pv-report-link">See the full sample report</Link>
           </div>
         </section>
 
@@ -343,7 +256,7 @@ export default function PreviewLandingClient() {
               <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
             </div>
 
-            <WhenNear minHeight={PRACTICE_ROW_HEIGHT}>
+            <WhenNear className="pv-practice-hold">
               <PracticePhoneScreens />
             </WhenNear>
 
@@ -363,7 +276,7 @@ export default function PreviewLandingClient() {
           </div>
         </section>
 
-        {/* ── WHY IT'S DIFFERENT (modified: one row added) ──────────── */}
+        {/* ── WHY IT'S DIFFERENT (one row added + branch map) ───────── */}
         <section className="usp-section">
           <div className="wrap">
             <div className="section-head">
@@ -411,14 +324,34 @@ export default function PreviewLandingClient() {
               </div>
             </div>
 
+            <div className="pv-branch">
+              <h3>Most assessments end at the report. Yours points to what to explore next.</h3>
+              <p>Working style, relationships, energy, environment, direction. Bearing suggests where to start, based on your results.</p>
+              <div className="pv-branch-map" role="img" aria-label="Your main report in the center, with five deeper assessments around it: working style, relationships, energy, environment and direction.">
+                <div className="pv-branch-ring" />
+                <div className="pv-branch-core">
+                  <b>Your report</b>
+                  <span>30 facets</span>
+                </div>
+                {BRANCHES.map(b => (
+                  <div
+                    key={b.name}
+                    className="pv-branch-node"
+                    style={{ ['--x' as string]: `${b.x}%`, ['--xm' as string]: `${b.xm}%`, ['--y' as string]: `${b.y}%`, ['--c' as string]: b.color }}
+                  >
+                    <i />{b.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <p className="mk-microcopy" style={{ textAlign:'center', marginTop:22 }}>
               Built on the IPIP-NEO-120, a public-domain Big Five inventory from published research (Johnson, 2014).
             </p>
           </div>
         </section>
 
-        {/* ── HOW IT WORKS (modified: step 3 wording; the pill list moved
-            out into the Deep-dives cards above) ───────────────────── */}
+        {/* ── HOW IT WORKS (modified: step 3 wording) ───────────────── */}
         <section id="how-it-works" className="how">
           <div className="section-head">
             <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>How it works</div>
