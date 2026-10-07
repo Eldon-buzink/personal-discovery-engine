@@ -8,7 +8,7 @@ import AuthModal from '@/components/known/AuthModal'
 import PaywallModal from '@/components/known/PaywallModal'
 import BandSpectrum from '@/components/known/BandSpectrum'
 import { createClient } from '@/lib/supabase/client'
-import { claimMiniAssessmentResult } from '@/lib/known/miniAssessmentClaim'
+import { claimMiniAssessmentResult } from '@/app/actions/miniAssessment'
 import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_DISPLAY_LABEL,
@@ -107,8 +107,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
 
     setIsActivating(true)
     setActivateError(null)
-    const supabase = createClient()
-    const result = await claimMiniAssessmentResult(supabase, userId, resultId!)
+    const result = await claimMiniAssessmentResult(resultId!)
 
     if (result.ok) {
       router.push('/practice')
@@ -117,7 +116,7 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
     } else if (result.reason === 'at-cap') {
       router.push('/practice?notice=at-cap')
     } else {
-      console.error('[MiniAssessmentResult] activate error:', result.message)
+      console.error('[MiniAssessmentResult] activate error:', result.reason === 'error' ? result.message : result.reason)
       setActivateError('Something went wrong — try again in a moment.')
       setIsActivating(false)
     }

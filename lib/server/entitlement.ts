@@ -1,10 +1,9 @@
 import 'server-only'
 
-import { createHmac, createHash, timingSafeEqual } from 'node:crypto'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { REVEAL_CAP } from '@/lib/known/paywall'
 import { facetTraitWords } from '@/lib/known/scoring'
+import { readSignedCookie, writeSignedCookie } from './signedCookie'
 
 // Server-side paywall. The client still decides what to *show* (lock
 // screens, CTAs), but generating report text is only allowed here when the
@@ -29,30 +28,12 @@ export async function isPaidUser(userId: string): Promise<boolean> {
 }
 
 const COOKIE = 'bearing_free_reveals'
-const ONE_YEAR = 60 * 60 * 24 * 365
-
-// HMAC key derived from a server-only secret that's already configured, so
-// no new env var is needed and the cookie can't be forged in the browser.
-function signingKey(): Buffer {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!secret) throw new Error('Server misconfigured: missing signing secret')
-  return createHash('sha256').update(`bearing-free-reveals:${secret}`).digest()
-}
-
-function sign(payload: string): string {
-  return createHmac('sha256', signingKey()).update(payload).digest('base64url')
-}
 
 function readFreeReveals(): string[] {
-  const raw = cookies().get(COOKIE)?.value
+  const raw = readSignedCookie(COOKIE, 'free-reveals')
   if (!raw) return []
-  const [payload, mac] = raw.split('.')
-  if (!payload || !mac) return []
-  const expected = Buffer.from(sign(payload))
-  const given = Buffer.from(mac)
-  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return []
   try {
-    const list = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+    const list = JSON.parse(raw)
     if (!Array.isArray(list)) return []
     return Array.from(new Set(list.filter((f): f is string => typeof f === 'string' && facetTraitWords(f) !== null))).slice(0, REVEAL_CAP)
   } catch {
@@ -61,14 +42,7 @@ function readFreeReveals(): string[] {
 }
 
 function writeFreeReveals(facets: string[]): void {
-  const payload = Buffer.from(JSON.stringify(facets)).toString('base64url')
-  cookies().set(COOKIE, `${payload}.${sign(payload)}`, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: ONE_YEAR,
-  })
+  writeSignedCookie(COOKIE, 'free-reveals', JSON.stringify(facets))
 }
 
 // True when an unpaid caller may get ring-1 text for this facet: it's one

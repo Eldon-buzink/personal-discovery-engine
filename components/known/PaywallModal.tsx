@@ -15,6 +15,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import { createClient } from '@/lib/supabase/client'
 import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
+import { claimAnonymousSession, saveAnonymousSession } from '@/app/actions/anonymousSession'
 import { fetchIsPaid } from '@/lib/known/paywall'
 
 declare global {
@@ -315,13 +316,8 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       const raw = localStorage.getItem('known_session')
       const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
 
-      const { data, error } = await supabase
-        .from('anonymous_sessions')
-        .insert({ responses: session })
-        .select('id')
-        .single()
-      if (error) throw error
-      if (data?.id) localStorage.setItem('known_pending_session_id', data.id as string)
+      const { id } = await saveAnonymousSession(session)
+      localStorage.setItem('known_pending_session_id', id)
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
@@ -359,11 +355,8 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       if (error) throw error
       if (!data.user) throw new Error('verifyOtp succeeded but returned no user')
 
-      const sessionId = localStorage.getItem('known_pending_session_id')
-      if (sessionId) {
-        await supabase.from('anonymous_sessions').update({ claimed_by: data.user.id }).eq('id', sessionId)
-        localStorage.removeItem('known_pending_session_id')
-      }
+      const { claimed } = await claimAnonymousSession()
+      if (claimed) localStorage.removeItem('known_pending_session_id')
 
       setLocalUserId(data.user.id)
       onAuthenticated(data.user.id)

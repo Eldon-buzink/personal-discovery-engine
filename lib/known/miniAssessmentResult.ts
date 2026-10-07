@@ -5,9 +5,9 @@
  * the raw 6-item responses — so the practice side (Practice home's card
  * copy, facet detail's result block) can show the actual per-user read
  * instead of generic facet copy. Both `band` and `responses` are already
- * persisted at quiz-submission time (see app/mini-assessment/[facet]/
- * page.tsx's insert) and claimed_by is set once the result is attached to
- * an account (lib/known/miniAssessmentClaim.ts) — this never needs the
+ * persisted at quiz-submission time (see app/actions/miniAssessment.ts's
+ * submitMiniAssessment) and claimed_by is set once the result is attached to
+ * an account (claimMiniAssessmentResult, same file) — this never needs the
  * result page's own sessionStorage copy, which is browser-local and
  * doesn't survive a new device or a cleared cache.
  */

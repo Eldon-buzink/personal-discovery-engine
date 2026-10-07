@@ -3,9 +3,9 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { PENDING_MINI_ASSESSMENT_ID_KEY } from '@/components/known/AuthModal'
-import { claimMiniAssessmentResult } from '@/lib/known/miniAssessmentClaim'
+import { claimAnonymousSession } from '@/app/actions/anonymousSession'
+import { claimMiniAssessmentResult } from '@/app/actions/miniAssessment'
 
 export default function ClaimPage() {
   const router = useRouter()
@@ -29,53 +29,30 @@ export default function ClaimPage() {
       let atCapNotice = false
 
       if (user) {
-        const sessionId = localStorage.getItem('known_pending_session_id')
-        console.log('[claim] pending session id:', sessionId)
-
-        if (sessionId) {
-          const { data: claimedRow, error: updateError } = await supabase
-            .from('anonymous_sessions')
-            .update({ claimed_by: user.id })
-            .eq('id', sessionId)
-            .select('responses')
-            .single()
-
-          if (updateError) {
-            console.error('[claim] update error:', updateError.message)
-          } else {
-            console.log('[claim] session claimed')
-            localStorage.removeItem('known_pending_session_id')
-
-            // Backfill user_facet_reveals for every facet revealed while
-            // this session was still anonymous — the common case, since
-            // most reveals happen before an account exists at all (see
-            // app/assessment/page.tsx's triggerReveal for the other,
-            // already-authenticated case this doesn't cover).
-            const revealedFacets = claimedRow?.responses?.revealedFacets
-            if (Array.isArray(revealedFacets) && revealedFacets.length > 0) {
-              recordFacetReveals(revealedFacets).catch((err) =>
-                console.error('[claim] recordFacetReveals error:', err)
-              )
-            }
-          }
-        } else {
-          console.warn('[claim] no known_pending_session_id in localStorage')
+        // The saved progress is identified by a signed cookie the server set
+        // when it was saved, not by anything in localStorage. The server
+        // also records the facets revealed while the session was anonymous.
+        try {
+          const { claimed } = await claimAnonymousSession()
+          if (claimed) localStorage.removeItem('known_pending_session_id')
+        } catch (err) {
+          console.error('[claim] claim session error:', err instanceof Error ? err.message : 'unknown error')
         }
 
         // Mini-assessment signup gate (AuthModal's 'mini-assessment-signup'
         // context) — convert the claimed result into a facet_activation.
-        // Shared with the mini-assessment result screen's own
-        // already-authenticated path (no AuthModal needed there at all) via
-        // lib/known/miniAssessmentClaim.ts, so the two can't drift.
+        // Same server action as the result screen's already-signed-in path,
+        // so the two can't drift; it only succeeds from the browser that
+        // submitted the result.
         const miniAssessmentId = localStorage.getItem(PENDING_MINI_ASSESSMENT_ID_KEY)
         if (miniAssessmentId) {
           localStorage.removeItem(PENDING_MINI_ASSESSMENT_ID_KEY)
-          const result = await claimMiniAssessmentResult(supabase, user.id, miniAssessmentId)
+          const result = await claimMiniAssessmentResult(miniAssessmentId)
 
           if (!result.ok) {
             if (result.reason === 'already-active') alreadyActiveNotice = true
             else if (result.reason === 'at-cap') atCapNotice = true
-            else console.error('[claim] mini-assessment claim error:', result.message)
+            else console.error('[claim] mini-assessment claim error:', result.reason === 'error' ? result.message : result.reason)
           }
         }
       }

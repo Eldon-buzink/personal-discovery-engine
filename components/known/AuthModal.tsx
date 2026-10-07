@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { saveAnonymousSession } from '@/app/actions/anonymousSession'
 import { POST_AUTH_REOPEN_KEY, POST_AUTH_PATH_KEY } from '@/components/known/PaywallModal'
 
 // 'code' is the main path: the user types the 6-digit code from the email
@@ -110,8 +111,6 @@ export default function AuthModal({
 
     setIsLoading(true)
     try {
-      const supabase = createClient()
-
       if (isMiniAssessment) {
         // No assessment session to persist here — just leave a breadcrumb
         // to what app/auth/claim/page.tsx should claim once auth resolves.
@@ -128,19 +127,11 @@ export default function AuthModal({
         // The responses jsonb column holds the entire session so it can be restored later
         const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
 
-        console.log('[AuthModal] inserting session to anonymous_sessions, responses:', session.responses?.length ?? 0)
-        const { data, error } = await supabase
-          .from('anonymous_sessions')
-          .insert({ responses: session })
-          .select('id')
-          .single()
-
-        if (error) throw error
-        console.log('[AuthModal] insert ok, row id:', data?.id)
-
-        if (data?.id) {
-          localStorage.setItem('known_pending_session_id', data.id as string)
-        }
+        // Saved server-side; the server remembers this browser's row in a
+        // signed cookie for the claim. The id is kept locally only as the
+        // report text's assessment id.
+        const { id } = await saveAnonymousSession(session)
+        localStorage.setItem('known_pending_session_id', id)
       }
 
       await sendCode(email)
@@ -149,7 +140,7 @@ export default function AuthModal({
       setView('code')
       onSuccess()
     } catch (err) {
-      console.error('[AuthModal] handleSubmit error:', err)
+      console.error('[AuthModal] handleSubmit error:', err instanceof Error ? err.message : 'unknown error')
       flashError()
     } finally {
       setIsLoading(false)
