@@ -204,13 +204,10 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
   const fetchClientSecret = useCallback(async () => {
     if (!effectiveUserId) throw new Error('createCheckoutSession called with no userId')
-    // {CHECKOUT_SESSION_ID} is a Stripe-substituted placeholder, filled in
-    // with the real session id on redirect-back — not a template literal
-    // interpolation. Existing query params are dropped rather than
-    // preserved, so there's no ambiguity about which session_id wins if the
-    // page was already loaded with an unrelated one.
-    const returnUrl = `${window.location.origin}${window.location.pathname}?session_id={CHECKOUT_SESSION_ID}`
-    const { clientSecret, sessionId } = await createCheckoutSession(effectiveUserId, returnUrl)
+    // The server builds the full return URL (allowed origin + this path +
+    // ?session_id={CHECKOUT_SESSION_ID}) and takes the buyer from the
+    // session cookie — only the current path is sent.
+    const { clientSecret, sessionId } = await createCheckoutSession(window.location.pathname)
     sessionIdRef.current = sessionId
     return clientSecret
   }, [effectiveUserId])

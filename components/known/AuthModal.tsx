@@ -134,7 +134,7 @@ export default function AuthModal({
         }
       }
 
-      console.log('[AuthModal] calling signInWithOtp for', email)
+      console.log('[AuthModal] calling signInWithOtp')
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },

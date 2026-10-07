@@ -1,7 +1,8 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeClient } from '@/lib/stripe'
+import { getSessionUser } from '@/lib/supabase/server'
+import { isSafePath, requestOrigin } from '@/lib/server/siteOrigin'
 
 export interface CheckoutSessionResult {
   clientSecret: string
@@ -26,23 +27,33 @@ export interface CheckoutSessionResult {
 // the Dashboard — verified directly). 'if_required' keeps card payments
 // exactly as before (never redirects) and only sends a redirect-requiring
 // method's customer away, back to returnUrl on completion.
-export async function createCheckoutSession(userId: string, returnUrl: string): Promise<CheckoutSessionResult> {
-  // Prefill the email so Stripe's own form doesn't ask for it a second time
-  // right after the user already gave it during sign-in. Looked up
-  // server-side (not trusted from the client) since this is the same email
-  // Supabase Auth already has on file for this user.
-  const admin = createAdminClient()
-  const { data: userData } = await admin.auth.admin.getUserById(userId)
-  const customerEmail = userData?.user?.email
+// The buyer is the signed-in caller (session cookie), never an argument: a
+// server action is a public endpoint, so a userId parameter would let anyone
+// create a session for someone else's account and see that account's email
+// prefilled on Stripe's page. The return URL is built here from an allowed
+// origin plus a same-site path — the client only says which page it's on.
+export async function createCheckoutSession(returnPath: string): Promise<CheckoutSessionResult> {
+  const user = await getSessionUser()
+  if (!user) throw new Error('Not signed in')
+
+  const origin = requestOrigin()
+  if (!origin || !isSafePath(returnPath)) throw new Error('Invalid return path')
+  // Existing query params are dropped so there's no ambiguity about which
+  // session_id wins on the way back. {CHECKOUT_SESSION_ID} is substituted
+  // by Stripe, not here.
+  const path = returnPath.split('?')[0]
+  const returnUrl = `${origin}${path}?session_id={CHECKOUT_SESSION_ID}`
 
   const session = await getStripeClient().checkout.sessions.create({
     ui_mode: 'embedded_page',
     mode: 'payment',
     redirect_on_completion: 'if_required',
     return_url: returnUrl,
-    customer_email: customerEmail,
+    // Same email Supabase Auth already has for this user, so Stripe's own
+    // form doesn't ask for it again.
+    customer_email: user.email,
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-    metadata: { userId },
+    metadata: { userId: user.id },
     allow_promotion_codes: true,
   })
 

@@ -22,7 +22,7 @@ export default function ClaimPage() {
       if (userError) {
         console.error('[claim] getUser error:', userError.message)
       } else {
-        console.log('[claim] user:', user?.id ?? 'null (not authenticated)')
+        console.log('[claim] authenticated:', !!user)
       }
 
       let alreadyActiveNotice = false
@@ -43,7 +43,7 @@ export default function ClaimPage() {
           if (updateError) {
             console.error('[claim] update error:', updateError.message)
           } else {
-            console.log('[claim] claimed_by set to', user.id)
+            console.log('[claim] session claimed')
             localStorage.removeItem('known_pending_session_id')
 
             // Backfill user_facet_reveals for every facet revealed while
@@ -53,7 +53,7 @@ export default function ClaimPage() {
             // already-authenticated case this doesn't cover).
             const revealedFacets = claimedRow?.responses?.revealedFacets
             if (Array.isArray(revealedFacets) && revealedFacets.length > 0) {
-              recordFacetReveals(user.id, revealedFacets).catch((err) =>
+              recordFacetReveals(revealedFacets).catch((err) =>
                 console.error('[claim] recordFacetReveals error:', err)
               )
             }

@@ -554,7 +554,7 @@ export default function ReportPage() {
   function handleGatedNav(href: string) {
     // TEMPORARY — diagnosing a production report of the sticky bar bypassing
     // the paywall for an authenticated, unpaid user. Remove once resolved.
-    console.log('[handleGatedNav] href:', href, 'isLocked:', isLocked, 'isPaid:', isPaid, 'isAuthenticated:', isAuthenticated, 'userId:', userId, 'ring1Entries.length:', ring1Entries.length)
+    console.log('[handleGatedNav] href:', href, 'isLocked:', isLocked, 'isPaid:', isPaid, 'isAuthenticated:', isAuthenticated, 'ring1Entries.length:', ring1Entries.length)
     if (!isLocked) {
       router.push(href)
       return

@@ -2,6 +2,10 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getSessionUser } from '@/lib/supabase/server'
+import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
+import { requestIp } from '@/lib/server/siteOrigin'
+import { parsePatternCopyRequest } from '@/lib/server/patternCopyInput'
 import type { PatternContent } from '@/lib/known/types'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
@@ -324,6 +328,13 @@ function fallbackContent(
   return base
 }
 
+// Per caller, per 10 minutes. A paid user's full report generates up to 30
+// facets plus five branches in one sitting, so signed-in callers get room
+// for that; anonymous callers only ever need a handful (the free reveals).
+const RATE_WINDOW_SECONDS = 600
+const RATE_MAX_SIGNED_IN = 80
+const RATE_MAX_ANONYMOUS = 20
+
 export async function generatePatternCopy(
   facetName: string,
   traitWord: string,
@@ -332,27 +343,38 @@ export async function generatePatternCopy(
   branch?: string,
   strongConditions?: { label: string; traitWord: string; score: number }[]
 ): Promise<PatternContent> {
-  console.log('[generatePatternCopy] called with:', { facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions })
+  // Server actions are public endpoints: everything below is checked here,
+  // not trusted from the calling page.
+  const req = parsePatternCopyRequest(facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions)
+  if (!req) throw new Error('Invalid request')
+
+  const user = await getSessionUser()
+  const allowed = await checkRateLimit(
+    rateLimitKey('pattern-copy', user?.id ?? null, requestIp()),
+    RATE_WINDOW_SECONDS,
+    user ? RATE_MAX_SIGNED_IN : RATE_MAX_ANONYMOUS
+  )
+  if (!allowed) throw new Error('Too many requests')
+
+  const reqBranch = req.kind === 'branch' ? req.branch : undefined
+  const reqConditions = req.kind === 'branch' ? req.strongConditions : undefined
   let content: PatternContent
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    console.log('[generatePatternCopy] calling Anthropic...')
-
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1536,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(facetName, traitWord, scoreDirection, branch, strongConditions) }],
+      messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
     })
 
     const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
     const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
     content = JSON.parse(jsonText) as PatternContent
-    console.log('[generatePatternCopy] success:', content)
   } catch (err) {
-    console.error('[generatePatternCopy] generation failed:', err)
-    content = fallbackContent(facetName, traitWord, branch, strongConditions)
+    console.error('[generatePatternCopy] generation failed:', err instanceof Error ? err.message : 'unknown error')
+    content = fallbackContent(req.facetName, req.traitWord, reqBranch, reqConditions)
   }
 
   // Persist to Supabase — fire-and-forget. Content is already final at this point;
@@ -367,16 +389,16 @@ export async function generatePatternCopy(
   // that switched this write to service-role (see supabase/migrations).
   const supabase = createAdminClient()
   supabase.from('report_content').insert({
-    assessment_id: assessmentId ?? null,
-    facet: facetName,
-    trait_word: traitWord,
-    score_direction: scoreDirection,
+    assessment_id: req.assessmentId,
+    facet: req.facetName,
+    trait_word: req.traitWord,
+    score_direction: req.scoreDirection,
     trait_quote: content.trait_quote,
     where_it_shows_up: content.where_it_shows_up,
     tags: content.tags,
     go_deeper: content.go_deeper,
     worth_trying: content.worth_trying,
-  }).then(undefined, (dbErr) => console.error('[generatePatternCopy] db insert failed:', dbErr))
+  }).then(undefined, (dbErr) => console.error('[generatePatternCopy] db insert failed:', (dbErr as { message?: string } | null)?.message ?? 'unknown error'))
 
   return content
 }

@@ -122,11 +122,11 @@ export async function POST(request: NextRequest) {
       .upsert({ id: userId, is_paid: true, paid_at: new Date().toISOString() })
 
     if (error) {
-      console.error('[stripe webhook] failed to mark user paid:', error.message, 'userId:', userId)
+      console.error('[stripe webhook] failed to mark user paid:', error.message, 'session:', session.id)
       return NextResponse.json({ error: 'Failed to update paid status' }, { status: 500 })
     }
 
-    console.log('[stripe webhook] user marked paid:', userId, 'session:', session.id)
+    console.log('[stripe webhook] user marked paid, session:', session.id)
 
     const email = session.customer_details?.email ?? session.customer_email
     if (email) {
