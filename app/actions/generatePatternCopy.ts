@@ -6,6 +6,7 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
 import { parsePatternCopyRequest } from '@/lib/server/patternCopyInput'
+import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
@@ -355,6 +356,14 @@ export async function generatePatternCopy(
     user ? RATE_MAX_SIGNED_IN : RATE_MAX_ANONYMOUS
   )
   if (!allowed) throw new Error('Too many requests')
+
+  // Paywall, enforced here and not only in the UI: branch content needs a
+  // paid account; ring-1 text beyond the free reveals needs one too.
+  const paid = user ? await isPaidUser(user.id) : false
+  if (!paid) {
+    if (req.kind === 'branch') throw new Error('Payment required')
+    if (!claimFreeReveal(req.facetName)) throw new Error('Payment required')
+  }
 
   const reqBranch = req.kind === 'branch' ? req.branch : undefined
   const reqConditions = req.kind === 'branch' ? req.strongConditions : undefined
