@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import SiteFooter from '@/components/known/SiteFooter'
 
-// Deliberately minimal chrome for ad-traffic landing pages: wordmark only,
-// no site nav or footer, so the single CTA is the only way forward.
+// Ad-traffic landing pages: wordmark-only header (no site nav), so the
+// quick check stays the main way forward; the site footer sits below the
+// page like on every other marketing page.
 export default function StartLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-cream">
@@ -11,6 +13,7 @@ export default function StartLayout({ children }: { children: React.ReactNode })
         </Link>
       </header>
       {children}
+      <SiteFooter />
     </div>
   )
 }

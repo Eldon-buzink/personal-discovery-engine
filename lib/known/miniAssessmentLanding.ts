@@ -114,6 +114,20 @@ export interface SoundFamiliarCopy {
 // own first-statement preview card, right above this section — except for
 // Values, where item 0 is one of only 3 straight-keyed items and leaving it
 // out would mean only 2 straight items for this section's required 3.
+// "Your practice" headline per page — what tracking this one facet looks
+// like after the quick check. The body line under it is built from the
+// facet's real check-in question (lib/known/checkInOptions.ts), so it can't
+// drift from what the check-in actually asks.
+export const LANDING_PRACTICE_HEADLINE: Record<MiniAssessmentSlug, string> = {
+  discipline: 'Keep noticing when you push through, and when you drift.',
+  anxiety: 'Keep noticing how uncertainty actually sits with you.',
+  values: 'Keep noticing which rules you keep, and which you question.',
+}
+
+export function landingPracticeBody(displayLabel: string, checkInQuestion: string): string {
+  return `After the quick check, you can add ${displayLabel} to your evening check-ins. One question a day: “${checkInQuestion}” Over the weeks, your own answers show how it actually plays out.`
+}
+
 export const LANDING_SOUND_FAMILIAR: Record<MiniAssessmentSlug, SoundFamiliarCopy> = {
   discipline: {
     subtitle: 'You know what you should be doing. That part was never the problem.',
