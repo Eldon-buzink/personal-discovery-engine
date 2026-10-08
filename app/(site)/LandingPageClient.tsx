@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
 import {
   USER_SEED as SHARED_USER_SEED,
   hashSeed as sharedHashSeed,
@@ -808,14 +809,17 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState(false)
 
-  async function handleMagicLink() {
+  // Welcome-back sign-in: the same 6-digit code screen as AuthModal and
+  // the paywall (EmailCodeStep), inline in the hero, so sign-in finishes in
+  // this browser; the link in the email is the fallback. A failed send now
+  // shows as an error instead of a false "check your email".
+  async function handleSendCode() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200); return
     }
     setEmailLoading(true)
     try {
-      const supabase = createClient()
-      await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } })
+      await sendSignInCode(email)
       setEmailSent(true)
     } catch {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200)
@@ -834,28 +838,22 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
         Welcome back — pick up where you left off.
       </p>
       {emailSent ? (
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%', background: '#3D6B5C', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'blobReveal 0.35s ease both',
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <p style={{ fontSize:14, color:mkCharcoalSoft, lineHeight:1.6, margin:0 }}>Check your email for the sign-in link.</p>
-        </div>
+        <EmailCodeStep
+          variant="inline"
+          email={email}
+          onVerified={() => router.push('/auth/claim')}
+          onChangeEmail={() => { setEmailSent(false); setEmail('') }}
+        />
       ) : (
         <div style={{ display:'flex', gap:10, maxWidth:440 }}>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleMagicLink() }}
+            onKeyDown={e => { if (e.key === 'Enter') handleSendCode() }}
             placeholder="Your email address"
             style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, fontSize:14, fontFamily:sans, background:'white', outline:'none', color:mkCharcoal }}
           />
-          <button className="mk-btn" onClick={handleMagicLink} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
-            {emailLoading ? 'Sending…' : 'Send me a link'}
+          <button className="mk-btn" onClick={handleSendCode} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
+            {emailLoading ? 'Sending…' : 'Email me a code'}
           </button>
         </div>
       )}
