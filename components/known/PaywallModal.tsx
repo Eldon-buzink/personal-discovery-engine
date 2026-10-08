@@ -12,7 +12,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // auto-preload behavior.
 import { loadStripe } from '@stripe/stripe-js/pure'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
-import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
+import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
 import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
 import { claimAnonymousSession, saveAnonymousSession } from '@/app/actions/anonymousSession'
@@ -34,20 +35,15 @@ declare global {
  * Always opens on the payment view (pricing + USP bullets, pulled verbatim
  * from app/(site)/pricing/page.tsx) regardless of auth state.
  *
- * ── LOGIN: LINK IS ACTIVE, CODE IS DORMANT ─────────────────────────────────
- * The ideal flow is a typed 6-digit code entered right in this modal
- * (verifyOtp) instead of a clicked email link — no tab-switch/redirect round
- * trip. That requires a custom Supabase email template with a {{ .Token }}
- * placeholder, which Supabase's free tier blocks entirely (styled or bare)
- * unless a custom SMTP provider is configured. That's deferred until a real
- * domain exists for launch (see project notes, 2026-07-19), so:
- *   - 'confirm' (magic link) is the reachable, working path today.
- *   - 'otp' (typed code) and handleVerifyCode() are fully built and left in
- *     place, just never navigated to — flip handleSendLink's setView target
- *     from 'confirm' to 'otp' once the template is unblocked.
- * The POST_AUTH_REOPEN_KEY/POST_AUTH_PATH_KEY mechanism below exists only to
- * soften the link-click round trip (resume straight into checkout on
- * return) — it's irrelevant once the code path is reactivated.
+ * ── LOGIN: 6-DIGIT CODE, LINK AS FALLBACK ───────────────────────────────
+ * Sign-in uses the shared EmailCodeStep: the user types the 6-digit code
+ * from the email right here (verifyOtp) and goes straight to checkout, in
+ * the same browser. That matters for ad traffic in Instagram/Pinterest
+ * in-app browsers, where a magic link would open in a different browser.
+ * Needs {{ .Token }} in the Supabase email template (custom SMTP on the
+ * free plan). The email still carries the link: POST_AUTH_REOPEN_KEY/
+ * POST_AUTH_PATH_KEY below let a link click resume straight into checkout
+ * via /auth/claim; they're cleared when the code is used instead.
  *
  * Payment status is never set from anything that happens in this component.
  * confirmPayment() runs the same logic regardless of how a session gets to
@@ -105,7 +101,7 @@ function getStripePromise() {
   return _stripePromise
 }
 
-type PaywallView = 'payment' | 'login' | 'confirm' | 'otp' | 'checkout'
+type PaywallView = 'payment' | 'login' | 'otp' | 'checkout'
 type PaymentState = 'idle' | 'confirming' | 'confirmed' | 'delayed' | 'failed'
 
 export interface PaywallModalProps {
@@ -155,7 +151,6 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
   const [view, setView] = useState<PaywallView>('payment')
   const [email, setEmail] = useState('')
   const [submittedEmail, setSubmittedEmail] = useState('')
-  const [otpCode, setOtpCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [inputError, setInputError] = useState(false)
   // No server-side account lookup — this just flips the copy on the login
@@ -181,7 +176,6 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
   // comment above).
   useEffect(() => {
     if (isOpen) {
-      setOtpCode('')
       if (resumeSessionId) {
         setView('checkout')
         confirmPayment(resumeSessionId)
@@ -301,72 +295,50 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
     setView(effectiveIsAuthenticated ? 'checkout' : 'login')
   }
 
-  // Active path today: sends the magic link (the default Supabase template
-  // only renders {{ .ConfirmationURL }}, no code) and lands on 'confirm'.
-  // Once a custom template with {{ .Token }} exists, point this at 'otp'
-  // instead to reactivate the inline-code path built below.
-  async function handleSendLink() {
+  // Saves the in-progress session (so it can be claimed after sign-in),
+  // sends the email with the 6-digit code (and the fallback link), and shows
+  // the code screen.
+  async function handleSendCode() {
     if (!isValidEmail(email)) {
       flashError()
       return
     }
     setIsLoading(true)
     try {
-      const supabase = createClient()
       const raw = localStorage.getItem('known_session')
       const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
 
       const { id } = await saveAnonymousSession(session)
       localStorage.setItem('known_pending_session_id', id)
 
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      })
-      if (otpError) throw otpError
+      await sendSignInCode(email)
 
-      // Only mark "resume into checkout on return" once the email actually
-      // sent — an invalid address or a failed request shouldn't leave a
-      // stale flag that fires on some unrelated future sign-in.
+      // Only for the fallback link: if the user clicks it instead of typing
+      // the code, /auth/claim resumes straight into checkout. Set once the
+      // email actually sent, so a failed request leaves no stale flag.
       localStorage.setItem(POST_AUTH_REOPEN_KEY, '1')
       localStorage.setItem(POST_AUTH_PATH_KEY, window.location.pathname)
 
       setSubmittedEmail(email)
-      setView('confirm')
+      setView('otp')
     } catch (err) {
-      console.error('[PaywallModal] send link error:', err)
+      console.error('[PaywallModal] send code error:', err instanceof Error ? err.message : 'unknown error')
       flashError()
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Dormant — not navigated to from any active view right now (see file
-  // header). Fully wired for when the email template is unblocked.
-  async function handleVerifyCode() {
-    if (otpCode.trim().length < 6) {
-      flashError()
-      return
-    }
-    setIsLoading(true)
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.verifyOtp({ email, token: otpCode.trim(), type: 'email' })
-      if (error) throw error
-      if (!data.user) throw new Error('verifyOtp succeeded but returned no user')
-
-      const { claimed } = await claimAnonymousSession()
-      if (claimed) localStorage.removeItem('known_pending_session_id')
-
-      setLocalUserId(data.user.id)
-      onAuthenticated(data.user.id)
-      setView('checkout')
-    } catch (err) {
-      console.error('[PaywallModal] verify code error:', err)
-      flashError()
-    } finally {
-      setIsLoading(false)
-    }
+  // Code accepted: the session cookie is set in this browser. Claim the
+  // saved progress, drop the link-only resume flags, go to checkout.
+  async function handleCodeVerified(user: User) {
+    const { claimed } = await claimAnonymousSession()
+    if (claimed) localStorage.removeItem('known_pending_session_id')
+    localStorage.removeItem(POST_AUTH_REOPEN_KEY)
+    localStorage.removeItem(POST_AUTH_PATH_KEY)
+    setLocalUserId(user.id)
+    onAuthenticated(user.id)
+    setView('checkout')
   }
 
   const isCheckout = view === 'checkout'
@@ -446,14 +418,14 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
             </p>
             <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}>
               {isReturning
-                ? "Enter your email and we'll send you a link to get back in."
+                ? "Enter your email and we'll send you a code to get back in."
                 : "Leave your email and we'll get you set up — then you can unlock the full report."}
             </p>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSendLink() }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSendCode() }}
               placeholder="Your email address"
               className="w-full font-sans text-charcoal bg-white outline-none"
               style={{
@@ -463,15 +435,15 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
               }}
             />
             <button
-              onClick={handleSendLink}
+              onClick={handleSendCode}
               disabled={isLoading}
               className="w-full font-sans font-medium text-cream bg-charcoal"
               style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
             >
-              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in link' : 'Continue →'}
+              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in code' : 'Continue →'}
             </button>
             <p className="font-sans text-muted text-center" style={{ fontSize: 12, marginBottom: 16 }}>
-              No password needed. We&apos;ll send a link.
+              No password needed. We&apos;ll email you a 6-digit code.
             </p>
             <button
               onClick={() => setIsReturning((v) => !v)}
@@ -487,81 +459,12 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
           </>
         )}
 
-        {view === 'confirm' && (
-          <>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%', background: '#3D6B5C',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px', animation: 'blobReveal 0.35s ease both',
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 14 }}>
-              Check your email
-            </p>
-            <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}>
-              We sent a link to <span className="font-medium text-charcoal">{submittedEmail}</span>.
-              {isReturning ? ' Click it to sign back in, then come back here to unlock the rest.' : ' Click it, then come back here to unlock the rest.'}
-            </p>
-            <button onClick={onClose} className="font-sans text-muted underline text-center w-full" style={{ fontSize: 12.5 }}>
-              Close
-            </button>
-          </>
-        )}
-
-        {/* Dormant — see file header. Not reachable from any active button
-            right now; kept fully wired for when the email template is
-            unblocked (custom SMTP or plan upgrade). */}
         {view === 'otp' && (
-          <>
-            <p className="font-sans font-semibold uppercase text-muted text-center" style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}>
-              Check your email
-            </p>
-            <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 12 }}>
-              Enter your code
-            </p>
-            <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}>
-              We sent a 6-digit code to <span className="font-medium text-charcoal">{email}</span>. Type it below to continue — you don&apos;t need to leave this page.
-            </p>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyCode() }}
-              placeholder="000000"
-              className="w-full font-sans text-charcoal bg-white outline-none text-center"
-              style={{
-                fontSize: 22, letterSpacing: '0.3em', padding: '14px 16px', borderRadius: 10,
-                border: `1.5px solid ${inputError ? 'hsl(8, 60%, 55%)' : '#E5E1D5'}`,
-                marginBottom: 12, transition: 'border-color 0.15s',
-              }}
-            />
-            <button
-              onClick={handleVerifyCode}
-              disabled={isLoading}
-              className="w-full font-sans font-medium text-cream bg-charcoal"
-              style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
-            >
-              {isLoading ? 'Verifying…' : 'Verify and continue →'}
-            </button>
-            <button
-              onClick={handleSendLink}
-              disabled={isLoading}
-              className="font-sans text-muted underline text-center w-full"
-              style={{ fontSize: 12.5, marginBottom: 16 }}
-            >
-              Resend code
-            </button>
-            <div className="w-full h-px bg-line" style={{ marginBottom: 16 }} />
-            <button onClick={() => setView('login')} className="font-sans text-muted underline text-center w-full" style={{ fontSize: 12.5 }}>
-              Use a different email
-            </button>
-          </>
+          <EmailCodeStep
+            email={submittedEmail}
+            onVerified={handleCodeVerified}
+            onChangeEmail={() => setView('login')}
+          />
         )}
 
         {view === 'checkout' && (
