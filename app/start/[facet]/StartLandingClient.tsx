@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   hashSeed,
@@ -16,18 +17,24 @@ import { fetchIsPaid } from '@/lib/known/paywall'
 import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_DISPLAY_LABEL,
-  MINI_ASSESSMENT_ITEMS,
   type MiniAssessmentSlug,
 } from '@/lib/known/miniAssessmentScoring'
-import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
+import { getCheckInPrompt } from '@/lib/known/checkInOptions'
 import {
   LANDING_COPY,
   LANDING_SHARED,
   LANDING_SOUND_FAMILIAR,
+  LANDING_PRACTICE_HEADLINE,
+  landingPracticeBody,
   landingReassurance,
-  preAnswerStorageKey,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
+import WhenNear from '@/app/(site)/landing/WhenNear'
+import { practiceFixtureFor } from '@/app/(site)/landing/landingPracticeFixture'
+import WhyDifferentSection from '@/app/(site)/landing/WhyDifferentSection'
+import FaqSection from '@/app/(site)/landing/FaqSection'
+import { compareCSS, practiceCSS, faqCSS, finalCSS } from '@/app/(site)/landing/sectionStyles'
+import FullAssessmentPreview from '../FullAssessmentPreview'
 import { START_LANDING_CSS, mkCream, mkCharcoal, mkTeal, mkRose, mkPeriwinkle, sans, serif } from '../startLandingShared'
 
 // ─── Hero blob cluster ──────────────────────────────────────────────────────
@@ -41,6 +48,10 @@ const HERO_VW = 520, HERO_VH = 500
 const GENERIC_WORDS = ['Work', 'Relationships', 'Personal'] as const
 
 interface HeroBlobSpec { word: string; hueOff: number; cx: number; cy: number; r: number; active: boolean }
+
+// The home page's "Your practice" phone screens, lazy-loaded (below the
+// fold), shown with this page's facet.
+const PracticePhoneScreens = dynamic(() => import('@/app/(site)/landing/PracticePhoneScreens'), { ssr: false })
 
 function heroBlobSpecs(activeWord: string): HeroBlobSpec[] {
   return [
@@ -170,52 +181,7 @@ function ProblemTrioVisual() {
   )
 }
 
-function ProblemSingleVisual() {
-  return (
-    <div className="problem-visual">
-      <div style={{ position: 'relative', width: 48, height: 48 }}>
-        <div className="final-glow" style={{ width: 48, height: 48, top: 0, left: 0, background: mkPeriwinkle, filter: 'blur(9px)' }} />
-      </div>
-    </div>
-  )
-}
-
-const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual, ProblemSingleVisual]
-
-// Part C6: tapping a dot stores that answer (1-5) for the quiz page to pick
-// up (see preAnswerStorageKey / the quiz page's eligibility effect) and
-// marks the dot selected — it does NOT navigate on its own. The person
-// still clicks "Start the quick check" when ready; this only means
-// question 1 is already answered once they do. Doesn't touch
-// scoreMiniAssessment or the result-row insert — the quiz page just starts
-// one question further in, with one response pre-filled.
-function FirstStatementPreview({ slug }: { slug: MiniAssessmentSlug }) {
-  const [selected, setSelected] = useState<number | null>(null)
-
-  function handleSelect(value: number) {
-    setSelected(value)
-    try {
-      sessionStorage.setItem(preAnswerStorageKey(slug), String(value))
-    } catch {
-      // Best-effort only — the quiz page falls back to a normal empty
-      // start if this never made it to storage.
-    }
-  }
-
-  return (
-    <div className="start-preview-dots">
-      {[1, 2, 3, 4, 5].map((value) => (
-        <button
-          key={value}
-          type="button"
-          aria-label={`${value} out of 5`}
-          aria-pressed={selected === value}
-          onClick={() => handleSelect(value)}
-        />
-      ))}
-    </div>
-  )
-}
+const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual]
 
 export default function StartLandingClient({ slug, angle }: { slug: MiniAssessmentSlug; angle: LandingAngle }) {
   const router = useRouter()
@@ -223,10 +189,9 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
   const label = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
   const copy = LANDING_COPY[slug][angle]
   const soundFamiliar = LANDING_SOUND_FAMILIAR[slug]
-  const items = MINI_ASSESSMENT_ITEMS[facet]
-  const firstItem = items[0].text
   const checkInPrompt = getCheckInPrompt(facet)
   const quizHref = `/mini-assessment/${slug}`
+  const practiceFixture = useMemo(() => practiceFixtureFor(facet), [facet])
 
   // Mirrors the quiz page's own is_paid gate (app/mini-assessment/[facet]/
   // page.tsx) but non-blocking: that page holds render until the check
@@ -242,9 +207,14 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
     })
   }, [router])
 
+  // Page order (owner's spec): hero, Sound familiar?, Why it's different,
+  // Your practice, FAQ, Free preview, footer (from app/start/layout.tsx).
+  // Hero, Sound familiar? and Your practice are written for this page's
+  // facet; Why it's different, FAQ and Free preview are the same on every
+  // page (shared with the home page, except the full-assessment preview).
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: START_LANDING_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: START_LANDING_CSS + compareCSS + practiceCSS + faqCSS + finalCSS }} />
       <div style={{ background: mkCream, color: mkCharcoal, fontFamily: sans }}>
         <section className="hero">
           <div className="hero-inner">
@@ -268,24 +238,6 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
           </div>
         </section>
 
-        {/* First-statement preview — the real first quiz item, sitting
-            right under the hero with no section gap above it (Part C5).
-            Tappable (Part C6): rating it here pre-fills question 1 for
-            when the person clicks through to the quiz. */}
-        <section className="start-preview-section">
-          <div className="wrap">
-            <div className="start-preview-card">
-              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>{LANDING_SHARED.previewLabel}</p>
-              <p className="start-preview-text">{firstItem}</p>
-              <div className="start-preview-scale">
-                <span>{LANDING_SHARED.previewScaleLabels[0]}</span>
-                <FirstStatementPreview slug={slug} />
-                <span>{LANDING_SHARED.previewScaleLabels[1]}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="problem-section">
           <div className="wrap">
             <h2 className="problem-heading">Sound familiar?</h2>
@@ -297,7 +249,7 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
                   <div className="step" key={card.title}>
                     <Visual />
                     <div className="problem-title">{card.title}</div>
-                    <div className="problem-line">“{items[card.itemIndex].text}”</div>
+                    <div className="problem-line">“{card.line}”</div>
                   </div>
                 )
               })}
@@ -308,39 +260,48 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
           </div>
         </section>
 
-        {/* "What you get" — Part C4: a preview of the band vocabulary this
-            facet uses (not a result — nothing is scored yet) plus the real
-            check-in question/options tomorrow would ask, from the same
-            source the check-in screen itself reads. */}
-        <section className="get-section">
+        <WhyDifferentSection />
+
+        {/* Your practice, for this facet: what "Add to your daily
+            check-ins" leads to after the result. Phone screens run over
+            practiceFixtureFor(facet); the line under the headline quotes
+            this facet's real check-in question. Nothing about free vs paid. */}
+        <section className="practice-section">
           <div className="wrap">
             <div className="section-head">
-              <h2>What you&apos;ll get</h2>
+              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>Your practice</p>
+              <h2>{LANDING_PRACTICE_HEADLINE[slug]}</h2>
+              <p>{landingPracticeBody(label, checkInPrompt.question)}</p>
             </div>
-            <div className="get-card">
-              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>Where you might land</p>
-              <div className="get-bands">
-                {(['low', 'mid', 'high'] as const).map((band) => (
-                  <span key={band} className="get-band-word">{checkInOptionWord(facet, band)}</span>
-                ))}
-              </div>
-              <p className="mk-eyebrow" style={{ marginBottom: 10 }}>Tomorrow&apos;s check-in looks like this</p>
-              <p className="get-checkin-question">{checkInPrompt.question}</p>
-              {checkInPrompt.options.map((option) => (
-                <div key={option.id} className="get-checkin-option">{option.label}</div>
-              ))}
+
+            <WhenNear className="practice-hold">
+              <PracticePhoneScreens fixture={practiceFixture} />
+            </WhenNear>
+
+            <div className="practice-cadence">
+              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
+              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
+              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
+            </div>
+
+            <p className="practice-closing">
+              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
+            </p>
+
+            <div style={{ textAlign: 'center', marginTop: 32 }}>
+              <Link href={quizHref}>
+                <button className="mk-btn">{LANDING_SHARED.cta}</button>
+              </Link>
+              <p className="mk-microcopy" style={{ margin: '14px auto 0', maxWidth: 420 }}>
+                {LANDING_SHARED.honesty}
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="wrap" style={{ textAlign: 'center', paddingBottom: 72 }}>
-          <Link href={quizHref}>
-            <button className="mk-btn">{LANDING_SHARED.cta}</button>
-          </Link>
-          <p className="mk-microcopy" style={{ margin: '16px auto 0', maxWidth: 420 }}>
-            {LANDING_SHARED.honesty}
-          </p>
-        </section>
+        <FaqSection />
+
+        <FullAssessmentPreview />
       </div>
     </>
   )

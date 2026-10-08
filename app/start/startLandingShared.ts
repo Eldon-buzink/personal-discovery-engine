@@ -7,8 +7,9 @@
  * the home page's design system. Only the subset of classes these shorter
  * pages actually use (hero, mk-btn/eyebrow/microcopy, section-head,
  * how-steps/step, the "Sound familiar?" problem section) is carried over —
- * the bento/compare/faq/final-cta CSS from the home page has no counterpart
- * here.
+ * the sections shared with the home page ("Why it's different", "Your
+ * practice", FAQ, the final card) bring their own CSS from
+ * app/(site)/landing/sectionStyles.ts.
  */
 
 export const mkCream = '#F7F4ED'
@@ -52,8 +53,8 @@ export const START_LANDING_CSS = `
   .start-preview-dots button[aria-pressed="true"]{background:${mkCharcoal};border-color:${mkCharcoal};}
 
   /* "Sound familiar?" — ported from the home page's Problem section
-     (same classes, same visuals), subtitle + 4 cards (3 real items + 1
-     reverse-keyed) swapped per facet. */
+     (same classes, same visuals): subtitle + three cards in one row,
+     centered like the home page's, written per facet. */
   .problem-section{padding:8px 0 56px;}
   .problem-heading{font-family:Newsreader,serif;font-size:30px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
   .problem-subtitle{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:10px 0 0;text-align:left;}
@@ -61,7 +62,8 @@ export const START_LANDING_CSS = `
   .problem-title{font-family:Newsreader,serif;font-size:22px;font-weight:500;line-height:1.2;margin:0 0 8px;}
   .problem-line{font-family:Newsreader,serif;font-style:italic;font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   .final-glow{position:absolute;border-radius:50%;opacity:0.55;z-index:0;}
-  .sound-familiar-grid{max-width:900px;margin:32px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+  .sound-familiar-grid{max-width:1056px;margin:32px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .problem-section .step{text-align:center;}
 
   .how-steps{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
   .step{border:1px solid ${mkLine};border-radius:18px;padding:24px 20px;background:${mkCard};text-align:left;}
@@ -78,6 +80,8 @@ export const START_LANDING_CSS = `
   .get-checkin-question{font-size:16px;line-height:1.4;margin:0 0 12px;}
   .get-checkin-option{font-size:13px;color:${mkCharcoalSoft};line-height:1.5;padding:8px 12px;background:#ffffff;border:1px solid ${mkLine};border-radius:8px;margin-bottom:8px;}
 
+  .section-head p{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:12px 0 0;}
+
   @media(max-width:860px){
     .hero-inner{grid-template-columns:1fr;}
     .hero h1{font-size:34px;}
@@ -93,6 +97,9 @@ export const START_LANDING_CSS = `
       display:grid;grid-template-columns:56px 1fr;column-gap:14px;align-items:start;text-align:left;
     }
     .problem-section .problem-visual{grid-column:1;grid-row:1 / span 2;width:56px;height:56px;margin-bottom:0;justify-content:flex-start;}
+    /* The visuals are up to ~105px wide; scale them to fit the 56px column
+       so they don't run under the title. */
+    .problem-section .problem-visual > div{transform:scale(0.55);transform-origin:left center;}
     .problem-section .problem-title{grid-column:2;grid-row:1;font-size:18px;}
     .problem-section .problem-line{grid-column:2;grid-row:2;}
   }
