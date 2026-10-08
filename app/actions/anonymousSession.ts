@@ -15,8 +15,8 @@ import { recordFacetReveals } from './recordFacetReveals'
 const MAX_SESSION_BYTES = 200_000
 
 // Saves the whole local session (answers, question order, revealed facets,
-// generated pattern text) before the user signs in. Returns the row id,
-// which the client still uses as report_content's assessment_id.
+// generated pattern text) before the user signs in. Returns the row id
+// (the client keeps it as known_pending_session_id).
 export async function saveAnonymousSession(session: unknown): Promise<{ id: string }> {
   const allowed = await checkRateLimit(rateLimitKey('anon-session', null, requestIp()), 600, 10)
   if (!allowed) throw new Error('Too many requests')

@@ -1,7 +1,6 @@
 'use server'
 
 import Anthropic from '@anthropic-ai/sdk'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
@@ -386,28 +385,10 @@ export async function generatePatternCopy(
     content = fallbackContent(req.facetName, req.traitWord, reqBranch, reqConditions)
   }
 
-  // Persist to Supabase — fire-and-forget. Content is already final at this point;
-  // the UI doesn't need to wait on this write, and failures here are non-critical
-  // (already just logged, never surfaced to the user).
-  //
-  // Service-role client, not the anon key: this table has no legitimate reason
-  // for anon/authenticated access (nothing in the app ever reads report_content
-  // back — the report renders from the localStorage-cached copy instead), so
-  // the anon INSERT/SELECT policies that existed for it were pure unnecessary
-  // exposure, flagged by Supabase's security advisor. Dropped in the same pass
-  // that switched this write to service-role (see supabase/migrations).
-  const supabase = createAdminClient()
-  supabase.from('report_content').insert({
-    assessment_id: req.assessmentId,
-    facet: req.facetName,
-    trait_word: req.traitWord,
-    score_direction: req.scoreDirection,
-    trait_quote: content.trait_quote,
-    where_it_shows_up: content.where_it_shows_up,
-    tags: content.tags,
-    go_deeper: content.go_deeper,
-    worth_trying: content.worth_trying,
-  }).then(undefined, (dbErr) => console.error('[generatePatternCopy] db insert failed:', (dbErr as { message?: string } | null)?.message ?? 'unknown error'))
-
+  // Not stored server-side: the report renders from the browser's own
+  // cached copy, and nothing has ever read public.report_content back, so
+  // writing every generated text there only kept an unused copy. The table
+  // and its existing rows are left in place (see supabase/migrations).
+  // assessmentId is still accepted and validated so callers don't change.
   return content
 }
