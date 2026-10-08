@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { CONSENT_CHANGED_EVENT, isPageViewExcluded, readConsent, type ConsentValue } from '@/lib/consent'
+import { CONSENT_CHANGED_EVENT, isAdTrackingExcluded, readConsent, type ConsentValue } from '@/lib/consent'
 
 // Meta Pixel, loaded only after the visitor allows ad measurement (see
 // ConsentBanner). Until then no request goes to Meta at all.
 //
 // Once loaded:
 //   - PageView is sent by this component on each page change, except for
-//     the pages in isPageViewExcluded (mini-assessment, /start landing,
-//     report, practice), which never get one.
+//     the pages in isAdTrackingExcluded (mini-assessment, /start landing,
+//     report, practice, blog), which never get one.
 //   - Meta's own automatic tracking is switched off: disablePushState stops
 //     it sending a PageView on every client-side navigation (which would
 //     include the excluded pages), and autoConfig=false stops automatic
@@ -70,7 +70,7 @@ export default function MetaPixel() {
     }
     const fbq = loadPixel(PIXEL_ID)
     fbq('consent', 'grant')
-    if (pathname && !isPageViewExcluded(pathname)) fbq('track', 'PageView')
+    if (pathname && !isAdTrackingExcluded(pathname)) fbq('track', 'PageView')
   }, [consent, pathname])
 
   return null

@@ -6,6 +6,11 @@ import { getStripeClient } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 
+// Server-side conversion events never carry the page the purchase came
+// from (it could be /report or a practice page): they always name the
+// homepage as their source.
+const NEUTRAL_EVENT_SOURCE_URL = 'https://www.getbearing.me/'
+
 function sha256(value: string): string {
   return createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
 }
@@ -28,6 +33,7 @@ async function sendMetaPurchase(session: Stripe.Checkout.Session, email: string)
           event_time: Math.floor(Date.now() / 1000),
           event_id: session.id,
           action_source: 'website',
+          event_source_url: NEUTRAL_EVENT_SOURCE_URL,
           user_data: { em: [sha256(email)] },
           custom_data: { value: 49.00, currency: 'EUR' },
         }],
@@ -54,6 +60,7 @@ async function sendPinterestCheckout(session: Stripe.Checkout.Session, email: st
         data: [{
           event_name: 'checkout',
           action_source: 'web',
+          event_source_url: NEUTRAL_EVENT_SOURCE_URL,
           event_time: Math.floor(Date.now() / 1000),
           event_id: session.id,
           user_data: { em: [sha256(email)] },
