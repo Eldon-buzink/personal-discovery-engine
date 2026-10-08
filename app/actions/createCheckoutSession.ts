@@ -3,6 +3,7 @@
 import { getStripeClient } from '@/lib/stripe'
 import { getSessionUser } from '@/lib/supabase/server'
 import { isSafePath, requestOrigin } from '@/lib/server/siteOrigin'
+import { hasAdConsent } from '@/lib/server/consent'
 
 export interface CheckoutSessionResult {
   clientSecret: string
@@ -53,7 +54,10 @@ export async function createCheckoutSession(returnPath: string): Promise<Checkou
     // form doesn't ask for it again.
     customer_email: user.email,
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-    metadata: { userId: user.id },
+    // The webhook has no browser cookies, so the buyer's ad-measurement
+    // choice travels with the session: conversion events are sent only for
+    // 'granted' (see app/api/webhooks/stripe/route.ts).
+    metadata: { userId: user.id, adConsent: hasAdConsent() ? 'granted' : 'denied' },
     allow_promotion_codes: true,
   })
 

@@ -128,8 +128,14 @@ export async function POST(request: NextRequest) {
 
     console.log('[stripe webhook] user marked paid, session:', session.id)
 
+    // Meta/Pinterest purchase events only when the buyer allowed ad
+    // measurement at checkout (metadata set by createCheckoutSession).
+    // Sessions without the field (created before consent existed) count
+    // as no.
     const email = session.customer_details?.email ?? session.customer_email
-    if (email) {
+    if (session.metadata?.adConsent !== 'granted') {
+      console.log('[stripe webhook] no ad-measurement consent, skipping Meta/Pinterest conversion events. session:', session.id)
+    } else if (email) {
       await Promise.all([sendMetaPurchase(session, email), sendPinterestCheckout(session, email)])
     } else {
       console.warn('[stripe webhook] no email on session, skipping Meta/Pinterest conversion events. session:', session.id)
