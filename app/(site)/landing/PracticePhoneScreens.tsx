@@ -37,7 +37,7 @@ import { computeDistribution, parseCheckInDate } from '@/lib/known/weekSummary'
 import { compareStartToNowFromOptions, formatStartVsNow } from '@/lib/known/startVsNow'
 import { selectRecentNotes } from '@/lib/known/checkInNotes'
 import { formatWeekHeadline, formatDistribution } from '@/lib/known/reportCopy'
-import { landingPracticeFixture, materializeFixture, type LandingPracticeFixture } from './landingPracticeFixture'
+import { landingPracticeFixture, materializeFixture } from './landingPracticeFixture'
 
 // Phone screens are laid out at a real phone width and scaled down, so
 // type sizes match the app exactly instead of being re-guessed small.
@@ -101,14 +101,8 @@ function Eyebrow({ children, size = 11 }: { children: React.ReactNode; size?: nu
 // the pp-* classes) and, with `standalone`, as a static crop elsewhere on the
 // landing page — standalone uses its own class and inline styles so the
 // phone row's CSS (scale, rewind-for-animation) never applies to it.
-export function CheckInScreen({
-  standalone = false,
-  fixture = landingPracticeFixture,
-}: {
-  standalone?: boolean
-  fixture?: LandingPracticeFixture
-}) {
-  const fx = fixture
+export function CheckInScreen({ standalone = false }: { standalone?: boolean }) {
+  const fx = landingPracticeFixture
   const prompt = getCheckInPrompt(fx.facetId)
   const label = facetDisplayLabel(fx.facetId)
   const optionStyle = (selected: boolean): React.CSSProperties =>
@@ -157,10 +151,8 @@ export function CheckInScreen({
   )
 }
 
-// fixture: the Self-Discipline example by default (home page); the
-// mini-assessment landing pages pass practiceFixtureFor(their facet).
-export default function PracticePhoneScreens({ fixture = landingPracticeFixture }: { fixture?: LandingPracticeFixture }) {
-  const fx = fixture
+export default function PracticePhoneScreens() {
+  const fx = landingPracticeFixture
   const data = useMemo(() => {
     const m = materializeFixture(fx)
     const prompt = getCheckInPrompt(fx.facetId)
@@ -270,7 +262,7 @@ export default function PracticePhoneScreens({ fixture = landingPracticeFixture 
         <div className="pp-col">
           <div className="pp-frame" aria-hidden="true">
             <span className="pp-example">Example</span>
-            <CheckInScreen fixture={fx} />
+            <CheckInScreen />
           </div>
           <p className="pp-caption"><b>Daily check-in</b></p>
         </div>

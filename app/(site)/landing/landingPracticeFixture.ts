@@ -54,31 +54,6 @@ export const landingPracticeFixture: LandingPracticeFixture = {
   today: { day: 27, option: 'high' },
 }
 
-// A neutral fixture for any other facet (used by the mini-assessment
-// landing pages, one per facet): days mostly land on the middle option, so
-// the recap reads "Mostly matches your starting result". Deliberately no
-// drift — showing an Anxiety or Values check-in moving toward either end
-// would imply something the product doesn't claim. No example notes for
-// these facets, so the recap's "What you wrote" block stays hidden, as it
-// does in the real report when there are none.
-function steadyFixture(facetId: string): LandingPracticeFixture {
-  const pattern: CheckInOptionId[] = ['mid', 'low', 'mid', 'mid', 'mid', 'high', 'mid', 'high', 'mid', 'mid', 'low', 'mid']
-  const days = [1, 3, 5, 8, 10, 12, 15, 17, 19, 22, 24, 26]
-  return {
-    facetId,
-    directional: true,
-    startBand: 'mid',
-    checkIns: days.map((day, i) => ({ day, option: pattern[i] })),
-    today: { day: 27, option: 'mid' },
-  }
-}
-
-// The practice example for a facet: the Self-Discipline story used on the
-// home page, or the neutral fixture above for any other facet.
-export function practiceFixtureFor(facetId: string): LandingPracticeFixture {
-  return facetId === landingPracticeFixture.facetId ? landingPracticeFixture : steadyFixture(facetId)
-}
-
 export interface MaterializedFixture {
   periodStartedAt: string
   now: Date
