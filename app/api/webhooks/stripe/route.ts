@@ -3,45 +3,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeClient } from '@/lib/stripe'
+import { buildMetaPurchaseEvent, NEUTRAL_EVENT_SOURCE_URL } from '@/lib/ads/adMatch'
 
 export const runtime = 'nodejs'
-
-// Server-side conversion events never carry the page the purchase came
-// from (it could be /report or a practice page): they always name the
-// homepage as their source.
-const NEUTRAL_EVENT_SOURCE_URL = 'https://www.getbearing.me/'
 
 function sha256(value: string): string {
   return createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
 }
 
-// event_id is the Stripe session id — the same value the client passes as
-// eventID for the mirrored browser-side Purchase event (see PaywallModal's
-// confirmPayment), so Meta collapses the two into one event.
+// The only Purchase sent to Meta (the browser Purchase was dropped so the
+// page address never leaves the site). Built by lib/ads/adMatch.ts from the
+// session metadata: consent-gated, homepage as event_source_url, hashed
+// email plus — when checkout had them — _fbp/_fbc, IP and user agent.
+// event_id is the Stripe session id.
 async function sendMetaPurchase(session: Stripe.Checkout.Session, email: string) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID
   const token = process.env.META_CONVERSIONS_API_TOKEN
   if (!pixelId || !token) return
+  const event = buildMetaPurchaseEvent(session.id, email, session.metadata, Math.floor(Date.now() / 1000))
+  if (!event) return
 
   try {
     const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        data: [{
-          event_name: 'Purchase',
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: session.id,
-          action_source: 'website',
-          event_source_url: NEUTRAL_EVENT_SOURCE_URL,
-          user_data: { em: [sha256(email)] },
-          custom_data: { value: 49.00, currency: 'EUR' },
-        }],
-      }),
+      body: JSON.stringify({ data: [event] }),
     })
     if (!res.ok) console.error('[stripe webhook] Meta CAPI failed:', res.status, await res.text())
   } catch (err) {
-    console.error('[stripe webhook] Meta CAPI request failed:', err)
+    console.error('[stripe webhook] Meta CAPI request failed:', err instanceof Error ? err.message : 'unknown error')
   }
 }
 

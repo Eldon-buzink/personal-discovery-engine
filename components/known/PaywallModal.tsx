@@ -14,7 +14,6 @@ import { loadStripe } from '@stripe/stripe-js/pure'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import type { User } from '@supabase/supabase-js'
 import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
-import { trackMetaEvent } from '@/lib/consent'
 import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
 import { claimAnonymousSession, saveAnonymousSession } from '@/app/actions/anonymousSession'
@@ -244,12 +243,9 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
     setPaymentState('confirmed')
 
-    // Meta Pixel Purchase — same event_id (Stripe session id) as the
-    // server-side Conversions API call in the Stripe webhook, so Meta
-    // dedupes the browser and server copies into one event.
-    if (sessionId) {
-      trackMetaEvent('Purchase', { value: 49.00, currency: 'EUR' }, { eventID: sessionId })
-    }
+    // No browser Purchase event: the only Purchase sent to Meta is the
+    // consent-gated server one from the Stripe webhook (lib/ads/adMatch.ts),
+    // so the page address never leaves the site.
 
     // Real gate — see file header. Generous window: this poll routinely
     // succeeding within a couple seconds is the point of the fast check

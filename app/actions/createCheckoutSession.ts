@@ -2,8 +2,10 @@
 
 import { getStripeClient } from '@/lib/stripe'
 import { getSessionUser } from '@/lib/supabase/server'
-import { isSafePath, requestOrigin } from '@/lib/server/siteOrigin'
+import { cookies, headers } from 'next/headers'
+import { isSafePath, requestIp, requestOrigin } from '@/lib/server/siteOrigin'
 import { hasAdConsent } from '@/lib/server/consent'
+import { adMatchMetadata } from '@/lib/ads/adMatch'
 
 export interface CheckoutSessionResult {
   clientSecret: string
@@ -55,9 +57,19 @@ export async function createCheckoutSession(returnPath: string): Promise<Checkou
     customer_email: user.email,
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     // The webhook has no browser cookies, so the buyer's ad-measurement
-    // choice travels with the session: conversion events are sent only for
-    // 'granted' (see app/api/webhooks/stripe/route.ts).
-    metadata: { userId: user.id, adConsent: hasAdConsent() ? 'granted' : 'denied' },
+    // choice travels with the session, and — only with consent — Meta's
+    // _fbp/_fbc cookies plus IP and user agent for the server Purchase
+    // (lib/ads/adMatch.ts; see app/api/webhooks/stripe/route.ts).
+    metadata: {
+      userId: user.id,
+      ...adMatchMetadata({
+        consent: hasAdConsent(),
+        fbp: cookies().get('_fbp')?.value,
+        fbc: cookies().get('_fbc')?.value,
+        ip: requestIp(),
+        userAgent: headers().get('user-agent'),
+      }),
+    },
     allow_promotion_codes: true,
   })
 
