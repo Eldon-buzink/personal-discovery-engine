@@ -95,25 +95,11 @@ export function landingReassurance(displayLabel: string): string {
 
 export interface SoundFamiliarCard {
   title: string
-  // Index into MINI_ASSESSMENT_ITEMS[facet] — resolved to the real item
-  // text where this is rendered, never retyped here, so the quote can't
-  // drift from the quiz. 3 straight-keyed items + 1 reverse-keyed item
-  // per facet, so both ends of the trait are represented.
-  itemIndex: number
+  // First-person line in the visitor's own words — what it feels like
+  // before they'd look for a quick check like this one.
+  line: string
 }
 
-export interface SoundFamiliarCopy {
-  subtitle: string
-  cards: [SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard]
-}
-
-// "Sound familiar?" section — ported from the home page's Problem section
-// (reference/landing-copy-deck.md §2). Titles are editorial framing (not
-// factual claims); the quotes themselves are real quiz items by index.
-// Avoids index 0 where possible — that item is already shown in the hero's
-// own first-statement preview card, right above this section — except for
-// Values, where item 0 is one of only 3 straight-keyed items and leaving it
-// out would mean only 2 straight items for this section's required 3.
 // "Your practice" headline per page — what tracking this one facet looks
 // like after the quick check. The body line under it is built from the
 // facet's real check-in question (lib/known/checkInOptions.ts), so it can't
@@ -128,32 +114,38 @@ export function landingPracticeBody(displayLabel: string, checkInQuestion: strin
   return `After the quick check, you can add ${displayLabel} to your evening check-ins. One question a day: “${checkInQuestion}” Over the weeks, your own answers show how it actually plays out.`
 }
 
+// "Sound familiar?" on each /start/{facet} page: three cards in one row,
+// written from what someone feels when this facet is on their mind, ending
+// on the question the quick check actually helps with. No diagnosis, no
+// promise of change.
+export interface SoundFamiliarCopy {
+  subtitle: string
+  cards: [SoundFamiliarCard, SoundFamiliarCard, SoundFamiliarCard]
+}
+
 export const LANDING_SOUND_FAMILIAR: Record<MiniAssessmentSlug, SoundFamiliarCopy> = {
   discipline: {
-    subtitle: 'You know what you should be doing. That part was never the problem.',
+    subtitle: 'You know what you want to get done. Somewhere between starting and finishing, it slips.',
     cards: [
-      { title: 'Starting is the hard part.', itemIndex: 1 }, // straight: "I get started on things right away..."
-      { title: 'Follow-through, when it matters.', itemIndex: 3 }, // straight: "Once I commit to something, I follow through on it."
-      { title: 'Pushing through the boring part.', itemIndex: 5 }, // straight: "I can push through boredom to get a job done."
-      { title: 'And sometimes, starting is genuinely hard.', itemIndex: 2 }, // reverse: "I have a hard time making myself..."
+      { title: 'Busy, but not moving.', line: 'I\u2019m busy all day, and the thing that matters still isn\u2019t done.' },
+      { title: 'Strong starts, quiet stops.', line: 'I start with real energy, then it fades once it gets boring.' },
+      { title: 'Is it really discipline?', line: 'I can\u2019t tell if I lack discipline or just push myself the wrong way.' },
     ],
   },
   anxiety: {
-    subtitle: 'Nothing is actually wrong right now. That doesn’t always settle it.',
+    subtitle: 'Nothing is actually wrong right now. Your mind doesn\u2019t always agree.',
     cards: [
-      { title: 'The what-ifs pile up.', itemIndex: 3 }, // straight: "I tend to expect the worst in uncertain situations."
-      { title: 'Small things can feel bigger.', itemIndex: 1 }, // straight: "Small problems can make me feel tense..."
-      { title: 'It shows up in the body, not just the thoughts.', itemIndex: 5 }, // straight: "I notice physical tension..."
-      { title: 'And sometimes, it just doesn’t take hold.', itemIndex: 2 }, // reverse: "I generally feel calm and relaxed..."
+      { title: 'The what-ifs pile up.', line: 'I play out how things could go wrong before anything has happened.' },
+      { title: 'Hard to switch off.', line: 'Even on a quiet evening, part of me is still on alert.' },
+      { title: 'Is this just me?', line: 'I can\u2019t tell if I worry more than most people, or about the same.' },
     ],
   },
   values: {
-    subtitle: 'You respect where things came from. You still notice what doesn’t add up.',
+    subtitle: 'You grew up with certain rules. You\u2019re not sure which ones are still yours.',
     cards: [
-      { title: 'Questioning what no longer fits.', itemIndex: 0 }, // straight: "I'm willing to question traditions..."
-      { title: 'Old rules, new questions.', itemIndex: 2 }, // straight: "I often reconsider beliefs I was raised with."
-      { title: 'Comfortable standing apart.', itemIndex: 4 }, // straight: "I'm comfortable holding views that differ..."
-      { title: 'And sometimes, change can feel like betrayal.', itemIndex: 5 }, // reverse: "I feel loyalty to the values I was taught..."
+      { title: 'Some rules don\u2019t fit anymore.', line: 'Things I used to take for granted don\u2019t sit right with me now.' },
+      { title: 'Keeping the peace.', line: 'I go along with how things are done, even when I\u2019d do it differently.' },
+      { title: 'Where do I actually stand?', line: 'I can\u2019t tell how much of what I believe is mine, and how much I inherited.' },
     ],
   },
 }

@@ -17,7 +17,6 @@ import { fetchIsPaid } from '@/lib/known/paywall'
 import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_DISPLAY_LABEL,
-  MINI_ASSESSMENT_ITEMS,
   type MiniAssessmentSlug,
 } from '@/lib/known/miniAssessmentScoring'
 import { getCheckInPrompt } from '@/lib/known/checkInOptions'
@@ -182,17 +181,7 @@ function ProblemTrioVisual() {
   )
 }
 
-function ProblemSingleVisual() {
-  return (
-    <div className="problem-visual">
-      <div style={{ position: 'relative', width: 48, height: 48 }}>
-        <div className="final-glow" style={{ width: 48, height: 48, top: 0, left: 0, background: mkPeriwinkle, filter: 'blur(9px)' }} />
-      </div>
-    </div>
-  )
-}
-
-const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual, ProblemSingleVisual]
+const PROBLEM_VISUALS = [ProblemCirclesVisual, ProblemBlobRingVisual, ProblemTrioVisual]
 
 export default function StartLandingClient({ slug, angle }: { slug: MiniAssessmentSlug; angle: LandingAngle }) {
   const router = useRouter()
@@ -200,7 +189,6 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
   const label = MINI_ASSESSMENT_DISPLAY_LABEL[facet]
   const copy = LANDING_COPY[slug][angle]
   const soundFamiliar = LANDING_SOUND_FAMILIAR[slug]
-  const items = MINI_ASSESSMENT_ITEMS[facet]
   const checkInPrompt = getCheckInPrompt(facet)
   const quizHref = `/mini-assessment/${slug}`
   const practiceFixture = useMemo(() => practiceFixtureFor(facet), [facet])
@@ -261,7 +249,7 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
                   <div className="step" key={card.title}>
                     <Visual />
                     <div className="problem-title">{card.title}</div>
-                    <div className="problem-line">“{items[card.itemIndex].text}”</div>
+                    <div className="problem-line">“{card.line}”</div>
                   </div>
                 )
               })}
