@@ -6,7 +6,8 @@
  * same mk* values, same class names, so this stays visually identical to
  * the home page's design system. Only the subset of classes these shorter
  * pages actually use (hero, mk-btn/eyebrow/microcopy, section-head,
- * how-steps/step, the "Sound familiar?" problem section) is carried over —
+ * how-steps/step, the "Sound familiar?" problem section, "Your practice")
+ * is carried over —
  * the bento/compare/faq/final-cta CSS from the home page has no counterpart
  * here.
  */
@@ -78,7 +79,19 @@ export const START_LANDING_CSS = `
   .get-checkin-question{font-size:16px;line-height:1.4;margin:0 0 12px;}
   .get-checkin-option{font-size:13px;color:${mkCharcoalSoft};line-height:1.5;padding:8px 12px;background:#ffffff;border:1px solid ${mkLine};border-radius:8px;margin-bottom:8px;}
 
+  /* "Your practice" — the home page's section (phone screens + cadence),
+     shown for this page's facet. */
+  .section-head p{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:12px 0 0;}
+  .practice-section{padding:8px 0 64px;}
+  .practice-hold{min-height:600px;}
+  .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:40px auto 0;}
+  .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
+  .practice-cadence b{display:block;font-family:Newsreader,serif;font-weight:500;font-size:20px;margin-bottom:6px;}
+  .practice-cadence p{font-size:15px;line-height:1.6;color:${mkCharcoalSoft};margin:0;}
+  .practice-closing{font-family:Newsreader,serif;font-style:italic;font-size:17px;line-height:1.5;text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:36px auto 0;}
+
   @media(max-width:860px){
+    .practice-cadence{grid-template-columns:1fr;gap:18px;margin-top:32px;}
     .hero-inner{grid-template-columns:1fr;}
     .hero h1{font-size:34px;}
     .how-steps{grid-template-columns:1fr;}
