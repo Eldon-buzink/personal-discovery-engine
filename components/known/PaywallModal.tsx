@@ -14,6 +14,7 @@ import { loadStripe } from '@stripe/stripe-js/pure'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import type { User } from '@supabase/supabase-js'
 import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
+import { trackMetaEvent } from '@/lib/consent'
 import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
 import { claimAnonymousSession, saveAnonymousSession } from '@/app/actions/anonymousSession'
@@ -247,7 +248,7 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
     // server-side Conversions API call in the Stripe webhook, so Meta
     // dedupes the browser and server copies into one event.
     if (sessionId) {
-      window.fbq?.('track', 'Purchase', { value: 49.00, currency: 'EUR' }, { eventID: sessionId })
+      trackMetaEvent('Purchase', { value: 49.00, currency: 'EUR' }, { eventID: sessionId })
     }
 
     // Real gate — see file header. Generous window: this poll routinely
