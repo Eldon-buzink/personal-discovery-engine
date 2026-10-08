@@ -16,6 +16,7 @@ import {
   registerBlobTask,
 } from '@/lib/blobs'
 import FaqAccordion, { type FaqAccordionItem } from './FaqAccordion'
+import WhenNear from './landing/WhenNear'
 
 // "Your practice" phone frames (app/(site)/landing/): loaded only when the
 // section is near the viewport; WhenNear reserves their height meanwhile.
@@ -899,23 +900,6 @@ export const FAQ_ITEMS: FaqAccordionItem[] = [
     answer: "No. Bearing describes patterns in how you answered a questionnaire. It isn't therapy, a diagnosis or a substitute for professional support.",
   },
 ]
-// Mounts its children once the placeholder is within ~600px of the
-// viewport, so below-the-fold visuals don't load with the first paint.
-function WhenNear({ className, children }: { className: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [near, setNear] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) { setNear(true); io.disconnect() }
-    }, { rootMargin: '600px 0px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-  return <div ref={ref} className={className}>{near ? children : null}</div>
-}
-
 // ─── Shared sections ──────────────────────────────────────────────────────────
 // Extracted from LandingPageClient so the noindex preview at
 // app/(site)/preview-landing/ can import the sections it keeps as-is

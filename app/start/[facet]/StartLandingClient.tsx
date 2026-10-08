@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -28,6 +29,8 @@ import {
   preAnswerStorageKey,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
+import WhenNear from '@/app/(site)/landing/WhenNear'
+import { practiceFixtureFor } from '@/app/(site)/landing/landingPracticeFixture'
 import { START_LANDING_CSS, mkCream, mkCharcoal, mkTeal, mkRose, mkPeriwinkle, sans, serif } from '../startLandingShared'
 
 // ─── Hero blob cluster ──────────────────────────────────────────────────────
@@ -41,6 +44,10 @@ const HERO_VW = 520, HERO_VH = 500
 const GENERIC_WORDS = ['Work', 'Relationships', 'Personal'] as const
 
 interface HeroBlobSpec { word: string; hueOff: number; cx: number; cy: number; r: number; active: boolean }
+
+// The home page's "Your practice" phone screens, lazy-loaded (below the
+// fold), shown with this page's facet.
+const PracticePhoneScreens = dynamic(() => import('@/app/(site)/landing/PracticePhoneScreens'), { ssr: false })
 
 function heroBlobSpecs(activeWord: string): HeroBlobSpec[] {
   return [
@@ -227,6 +234,7 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
   const firstItem = items[0].text
   const checkInPrompt = getCheckInPrompt(facet)
   const quizHref = `/mini-assessment/${slug}`
+  const practiceFixture = useMemo(() => practiceFixtureFor(facet), [facet])
 
   // Mirrors the quiz page's own is_paid gate (app/mini-assessment/[facet]/
   // page.tsx) but non-blocking: that page holds render until the check
@@ -330,6 +338,34 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
                 <div key={option.id} className="get-checkin-option">{option.label}</div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* "Your practice" from the home page: what "Add to your daily
+            check-ins" leads to after the result. Same phone screens, run
+            over a neutral fixture for this facet (see practiceFixtureFor).
+            Nothing about free vs paid. */}
+        <section className="practice-section">
+          <div className="wrap">
+            <div className="section-head">
+              <p className="mk-eyebrow" style={{ marginBottom: 12 }}>Your practice</p>
+              <h2>Insight sticks when you keep noticing.</h2>
+              <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
+            </div>
+
+            <WhenNear className="practice-hold">
+              <PracticePhoneScreens fixture={practiceFixture} />
+            </WhenNear>
+
+            <div className="practice-cadence">
+              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
+              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
+              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
+            </div>
+
+            <p className="practice-closing">
+              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
+            </p>
           </div>
         </section>
 
