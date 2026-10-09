@@ -16,7 +16,6 @@ import { DOMAIN_LABELS } from '@/lib/known/traitOrder'
 
 const gray = '#8C8A83'
 const charcoalSoft = '#56534D'
-const charcoal = '#262420'
 const cream = '#F7F4ED'
 const line = '#E5E1D5'
 const coral = '#D85A30'
@@ -27,8 +26,6 @@ export interface CarouselTrait {
   key: string
   traitWord: string
   hue: number
-  /** 0 … 2, see traitStrength(). Drives scrubber tick height. */
-  strength: number
   /** Big Five domain, or null when the trait isn't a Ring 1 facet. */
   domain: string | null
 }
@@ -41,6 +38,11 @@ const ORDINALS = [
   'twenty-ninth', 'thirtieth',
 ]
 
+/** "This trait is part of Openness", or null when the trait has no domain. */
+export function domainNote(domain: string | null): string | null {
+  return domain ? `This trait is part of ${DOMAIN_LABELS[domain] ?? domain}` : null
+}
+
 /** Subtitle under a Ring 1 trait name, by the order it was revealed in. */
 export function patternSubtitle(hueOffset: number): string {
   const word = ORDINALS[hueOffset]
@@ -50,7 +52,6 @@ export function patternSubtitle(hueOffset: number): string {
 const VIEW = 240
 const R = 82
 const IRREGULARITY = 0.3
-const MOST_PRONOUNCED = 5
 const SMOOTH_MAX_STEPS = 3
 
 // Scale and opacity by distance from the centre, in slides. Rest positions:
@@ -67,7 +68,7 @@ function opacityAt(d: number): number {
 }
 
 const css = `
-  .tc{--slide:132px;--blob:240px;--strip:262px;}
+  .tc{--slide:132px;--blob:240px;--strip:240px;margin-top:10px;}
   @media(max-width:560px){.tc{--slide:104px;--blob:196px;--strip:212px;}}
   .tc-strip{position:relative;display:flex;align-items:center;height:var(--strip);overflow-x:auto;overflow-y:hidden;
     scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -22px;
@@ -92,26 +93,21 @@ const css = `
     cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;}
   .tc-arrow:disabled{opacity:.35;cursor:default;}
   .tc-count{font-family:${sans};font-size:12px;color:${gray};min-width:58px;text-align:center;margin:0;}
-  .tc-scrub{display:flex;align-items:flex-start;justify-content:center;gap:10px;margin:14px auto 0;max-width:420px;}
-  .tc-scrub-group{display:flex;flex-direction:column;align-items:stretch;}
-  .tc-ticks{display:flex;align-items:flex-end;height:30px;}
-  .tc-tick{flex:0 0 auto;width:11px;height:30px;border:0;background:none;padding:0;cursor:pointer;
-    display:flex;align-items:flex-end;justify-content:center;border-radius:3px;}
-  .tc-tick span{display:block;width:3px;border-radius:2px;background:#CFCABD;transition:background .15s ease;}
-  .tc-tick:hover span{background:${gray};}
-  .tc-tick[aria-current="true"] span{background:${coral};}
-  @media(max-width:560px){.tc-scrub{gap:8px;}.tc-tick{width:9px;}}
-  .tc-top-label{margin-top:6px;border:0;border-top:1px solid #CFCABD;background:none;padding:5px 0 0;cursor:pointer;
-    font-family:${sans};font-size:11px;color:${gray};white-space:nowrap;}
-  .tc-top-label:hover{color:${charcoal};}
-  .tc-arrow:focus-visible,.tc-tick:focus-visible,.tc-top-label:focus-visible,.tc-rel:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
-  .tc-related{margin-top:30px;text-align:center;}
-  .tc-related-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;margin-top:10px;}
-  .tc-rel{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;padding:4px;cursor:pointer;border-radius:10px;}
-  .tc-rel svg{width:44px;height:44px;overflow:visible;transition:transform .2s ease;}
+  .tc-arrow:focus-visible,.tc-rel:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
+  .tc{--rel:84px;}
+  @media(max-width:560px){.tc{--rel:76px;}}
+  .tc-rel-row{position:relative;z-index:150;display:flex;justify-content:center;gap:2px;height:var(--rel);pointer-events:none;
+    animation:tc-fade .35s ease both;}
+  .tc-rel-row.above{margin-bottom:calc(var(--rel) * -0.42);}
+  .tc-rel-row.below{margin-top:calc(var(--rel) * -0.42);}
+  @keyframes tc-fade{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:none;}}
+  .tc-rel{position:relative;width:var(--rel);height:var(--rel);border:0;background:none;padding:0;cursor:pointer;
+    pointer-events:auto;border-radius:50%;-webkit-tap-highlight-color:transparent;}
+  .tc-rel svg{display:block;width:100%;height:100%;overflow:visible;transition:transform .2s ease;}
   .tc-rel:hover svg{transform:scale(1.08);}
-  .tc-rel span{font-family:${serif};font-style:italic;font-size:13.5px;color:${charcoalSoft};}
-  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-tick span{transition:none;}}
+  .tc-rel-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+    font-family:${serif};font-style:italic;font-weight:500;font-size:12px;line-height:1.15;padding:0 4px;pointer-events:none;}
+  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg{transition:none;}.tc-rel-row{animation:none;}}
 `
 
 function useReducedMotion(): boolean {
@@ -135,7 +131,7 @@ export function TraitCarousel({
   traits: CarouselTrait[]
   activeIdx: number
   onSelect: (i: number) => void
-  /** The selected trait's detail; rendered between the controls and the related row. */
+  /** The selected trait's detail; rendered under the controls. */
   children?: ReactNode
 }) {
   const uid = useId().replace(/:/g, '')
@@ -151,7 +147,7 @@ export function TraitCarousel({
     [profiles],
   )
   const smallPaths = useMemo(
-    () => profiles.map((p) => generateAnimatedBlobPath(30, 30, 20, p, IRREGULARITY, 0)),
+    () => profiles.map((p) => generateAnimatedBlobPath(30, 30, 23, p, IRREGULARITY, 0)),
     [profiles],
   )
 
@@ -164,7 +160,7 @@ export function TraitCarousel({
   const activeRef = useRef(activeIdx)
   activeRef.current = activeIdx
   // Set while the strip moves itself to a selection made elsewhere (arrows,
-  // ticks, related blobs), so the slides it passes don't become the selection.
+  // related blobs), so the slides it passes don't become the selection.
   const targetRef = useRef<number | null>(null)
   const targetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -322,18 +318,19 @@ export function TraitCarousel({
   const related = active.domain
     ? traits.map((t, i) => ({ t, i })).filter(({ t, i }) => i !== activeIdx && t.domain === active.domain)
     : []
-  const showScrubber = count > MOST_PRONOUNCED
-  const tick = (i: number) => (
-    <button
-      key={traits[i].key}
-      type="button"
-      className="tc-tick"
-      aria-label={traits[i].traitWord}
-      aria-current={i === activeIdx}
-      onClick={() => select(i)}
-    >
-      <span style={{ height: 6 + traits[i].strength * 9 }} />
-    </button>
+  const above = related.slice(0, Math.ceil(related.length / 2))
+  const below = related.slice(above.length)
+  const relRow = (items: typeof related, where: 'above' | 'below') => (
+    <div key={`${where}-${activeIdx}`} className={`tc-rel-row ${where}`}>
+      {items.map(({ t, i }) => (
+        <button key={t.key} type="button" className="tc-rel" aria-label={t.traitWord} onClick={() => select(i)}>
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <path d={smallPaths[i]} fill={`url(#tc-s-${uid}-${i})`} opacity={0.62} filter={`url(#tc-blur-sm-${uid})`} />
+          </svg>
+          <span className="tc-label tc-rel-label" aria-hidden="true" style={{ color: `hsl(${t.hue},45%,24%)` }}>{t.traitWord}</span>
+        </button>
+      ))}
+    </div>
   )
 
   return (
@@ -364,6 +361,8 @@ export function TraitCarousel({
           ))}
         </defs>
       </svg>
+
+      {above.length > 0 && relRow(above, 'above')}
 
       <div
         ref={stripRef}
@@ -411,6 +410,8 @@ export function TraitCarousel({
         ))}
       </div>
 
+      {below.length > 0 && relRow(below, 'below')}
+
       {count > 1 && (
         <div className="tc-controls">
           <button type="button" className="tc-arrow" aria-label="Previous trait" disabled={activeIdx === 0} onClick={() => select(activeIdx - 1)}>←</button>
@@ -419,35 +420,8 @@ export function TraitCarousel({
         </div>
       )}
 
-      {showScrubber && (
-        <div className="tc-scrub">
-          <div className="tc-scrub-group">
-            <div className="tc-ticks">{traits.slice(0, MOST_PRONOUNCED).map((_, i) => tick(i))}</div>
-            <button type="button" className="tc-top-label" onClick={() => select(0)}>Most pronounced</button>
-          </div>
-          <div className="tc-ticks">{traits.slice(MOST_PRONOUNCED).map((_, j) => tick(j + MOST_PRONOUNCED))}</div>
-        </div>
-      )}
-
       {children}
 
-      {related.length > 0 && active.domain && (
-        <div className="tc-related">
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, margin: 0 }}>
-            Also in {DOMAIN_LABELS[active.domain] ?? active.domain}
-          </p>
-          <div className="tc-related-row">
-            {related.map(({ t, i }) => (
-              <button key={t.key} type="button" className="tc-rel" onClick={() => select(i)}>
-                <svg viewBox="0 0 60 60" aria-hidden="true">
-                  <path d={smallPaths[i]} fill={`url(#tc-s-${uid}-${i})`} opacity={0.7} filter={`url(#tc-blur-sm-${uid})`} />
-                </svg>
-                <span>{t.traitWord}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

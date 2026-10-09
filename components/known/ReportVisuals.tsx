@@ -311,6 +311,7 @@ export function OrbitCluster({
 export function UnlockedContent({
   traitWord, content, hue,
   subtitle = 'Your first pattern',
+  subtitleNote,
   source = 'From your assessment',
   hideQuote = false,
 }: {
@@ -318,6 +319,8 @@ export function UnlockedContent({
   content: PatternContent
   hue: number
   subtitle?: string
+  // Second line under the subtitle, e.g. "This trait is part of Openness".
+  subtitleNote?: string
   source?: string
   // Skips title/subtitle/trait_quote/"Where this shows up"+where_it_shows_up — for
   // branches (currently: Energy) where that narrative is already shown per-item
@@ -340,9 +343,14 @@ export function UnlockedContent({
             {traitWord}
           </h2>
 
-          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
+          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 4 : 22, textAlign: 'center' }}>
             {subtitle}
           </p>
+          {subtitleNote && (
+            <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
+              {subtitleNote}
+            </p>
+          )}
 
           <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
             <p style={{

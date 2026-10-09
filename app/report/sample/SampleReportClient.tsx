@@ -80,7 +80,6 @@ const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
   key: f.facet,
   traitWord: f.traitWord,
   hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
-  strength: 0,
   domain: null,
 }))
 
@@ -134,7 +133,7 @@ export default function SampleReportClient() {
             </p>
 
             <TraitCarousel traits={SAMPLE_TRAITS} activeIdx={activeIdx} onSelect={setActiveIdx}>
-              <div style={{ marginTop: 26 }}>
+              <div style={{ marginTop: 12 }}>
                 <UnlockedContent
                   traitWord={activeFacet.traitWord}
                   content={activeFacet.content!}

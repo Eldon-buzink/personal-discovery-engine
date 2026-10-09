@@ -22,7 +22,7 @@ import type { DirectionAccordionItem } from '@/components/known/DirectionAccordi
 import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
-import { TraitCarousel, patternSubtitle } from '@/components/known/TraitCarousel'
+import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import {
@@ -535,7 +535,6 @@ export default function ReportPage() {
         key: f.facet,
         traitWord: f.traitWord,
         hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
-        strength: traitStrength(facetScores[f.facet]),
         domain: domainOf(f.facet),
       }
     }),
@@ -843,13 +842,14 @@ export default function ReportPage() {
             {isUnlocked ? (
               <>
                 <TraitCarousel traits={carouselTraits} activeIdx={safeIdx} onSelect={setActiveIdx}>
-                  <div style={{ marginTop: 26 }}>
+                  <div style={{ marginTop: 12 }}>
                     {activeFacet?.content ? (
                       <UnlockedContent
                         traitWord={activeFacet.traitWord}
                         content={activeFacet.content}
                         hue={activeHue}
                         subtitle={patternSubtitle(activeFacet.hueOffset)}
+                        subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
                       />
                     ) : (
                       <PatternLoadingState
