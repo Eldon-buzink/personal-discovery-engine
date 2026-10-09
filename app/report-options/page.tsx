@@ -163,6 +163,72 @@ function OptionA() {
   )
 }
 
+// ── A+. Filter: top five or one domain → pills → cluster ───────────────────
+
+const filterCSS = `
+  .opt-filter{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin:0 -22px;padding-left:22px;padding-right:22px;}
+  .opt-filter::-webkit-scrollbar{display:none;}
+  .opt-chip{flex:0 0 auto;border:1px solid ${line};background:transparent;border-radius:999px;padding:7px 14px;
+    font-family:${sans};font-size:13px;color:${charcoalSoft};cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}
+  .opt-chip:hover{border-color:#CFCABD;}
+  .opt-chip[aria-pressed="true"]{background:${charcoal};border-color:${charcoal};color:${cream};}
+  .opt-chip:focus-visible,.opt-pill:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
+  @media(min-width:600px){.opt-filter{justify-content:center;flex-wrap:wrap;margin:0;padding-left:2px;padding-right:2px;}}
+`
+
+const GROUPS: { key: string; label: string; traits: Trait[] }[] = [
+  { key: 'top', label: 'Top 5', traits: TOP5 },
+  ...BY_DOMAIN.map(({ domain, traits }) => ({
+    key: domain,
+    label: DOMAIN_LABEL[domain],
+    traits: [...traits].sort((a, b) => pronounced(b) - pronounced(a)),
+  })),
+]
+
+function pillRadius(t: Trait): string {
+  const h = hashSeed(t.traitWord)
+  return `${48 + (h % 14)}% ${52 - (h % 9)}% ${50 + (h % 11)}% ${46 + (h % 8)}% / ${55 + (h % 10)}% ${45 + (h % 12)}% ${58 - (h % 9)}% ${44 + (h % 10)}%`
+}
+
+function OptionFiltered() {
+  const [groupKey, setGroupKey] = useState('top')
+  const [activeIdx, setActiveIdx] = useState(0)
+  const group = GROUPS.find((g) => g.key === groupKey)!
+  const selected = group.traits[Math.min(activeIdx, group.traits.length - 1)]
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: pillCSS + filterCSS }} />
+      <div className="opt-filter" role="group" aria-label="Show traits">
+        {GROUPS.map((g) => (
+          <button
+            key={g.key}
+            className="opt-chip"
+            aria-pressed={g.key === groupKey}
+            onClick={() => { setGroupKey(g.key); setActiveIdx(0) }}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 4, margin: '16px 0 4px' }}>
+        {group.traits.map((t, i) => (
+          <button
+            key={t.facet}
+            className="opt-pill"
+            aria-pressed={selected === t}
+            onClick={() => setActiveIdx(i)}
+            style={{ ['--h' as string]: String(t.hue), ['--r' as string]: pillRadius(t) }}
+          >
+            {t.traitWord}
+          </button>
+        ))}
+      </div>
+      <InteractiveCluster key={groupKey} facets={group.traits} activeIdx={activeIdx} onSelect={setActiveIdx} />
+      <Detail t={selected} />
+    </>
+  )
+}
+
 // ── B. One small cluster per domain ──────────────────────────────────────────
 
 function OptionB() {
@@ -305,10 +371,15 @@ export default function ReportOptionsPage() {
           &ldquo;Who you are&rdquo; with 30 traits
         </h1>
         <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, margin: 0 }}>
-          Four ways to show all 30 traits. Trait words come from the real scoring code on sample scores; colours use the
+          Ways to show all 30 traits; the newest (A+) is first. Trait words come from the real scoring code on sample scores; colours use the
           real per-trait hues. Domain names are working labels. Everything is clickable.
         </p>
       </div>
+
+      <OptionFrame letter="A+" title="Top five or one domain, with a filter"
+        pitch="Option A with a filter: Top 5 (the most pronounced) or one domain at a time. The chosen group's traits sit as pills under the filter; the cluster below shows the same group. Pills and blobs both select a trait.">
+        <OptionFiltered />
+      </OptionFrame>
 
       <OptionFrame letter="A" title="Your top five, then all thirty as words"
         pitch="The existing cluster, kept to the five most pronounced traits (furthest from average). Below it, every trait as a tappable word, grouped by domain. Bold words are the five in the cluster.">
