@@ -41,7 +41,7 @@ const curatedHues = [
   { hue: 205 }, { hue: 235 }, { hue: 290 }, { hue: 335 },
 ]
 
-function hashSeed(str: string): number {
+export function hashSeed(str: string): number {
   let h = 0
   for (let i = 0; i < str.length; i++) {
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
@@ -69,9 +69,9 @@ function seededRandom(seed: number) {
   }
 }
 
-interface MotionPoint { phase: number; freq: number; ampScale: number }
+export interface MotionPoint { phase: number; freq: number; ampScale: number }
 
-function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
+export function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
   const rand = seededRandom(seed)
   const profile: MotionPoint[] = []
   for (let i = 0; i < points; i++) {
@@ -82,7 +82,7 @@ function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
 
 interface Pt { x: number; y: number }
 
-function generateAnimatedBlobPath(
+export function generateAnimatedBlobPath(
   cx: number, cy: number, baseRadius: number,
   profile: MotionPoint[], irregularity: number, t: number,
 ): string {

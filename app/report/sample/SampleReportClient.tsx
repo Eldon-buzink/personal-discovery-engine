@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import type { PatternContent } from '@/lib/known/types'
-import { FacetEntry, InteractiveCluster, OrbitCluster, OrbitCondition, UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
+import { FacetEntry, OrbitCluster, OrbitCondition, UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
+import { TraitCarousel, patternSubtitle } from '@/components/known/TraitCarousel'
+import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 
@@ -72,6 +74,16 @@ const SAMPLE_FACETS: FacetEntry[] = [
   },
 ]
 
+// Sample traits keep their listed order (no scores) and aren't Ring 1
+// facets, so the carousel shows no related row for them.
+const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
+  key: f.facet,
+  traitWord: f.traitWord,
+  hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
+  strength: 0,
+  domain: null,
+}))
+
 const ENV_CONDITIONS: OrbitCondition[] = [
   { traitWord: 'Deep work', hue: userCuratedHue('env-pattern-deep-work', 0) },
   { traitWord: 'Async', hue: userCuratedHue('env-pattern-async', 0) },
@@ -121,15 +133,16 @@ export default function SampleReportClient() {
               Who you are
             </p>
 
-            <InteractiveCluster facets={SAMPLE_FACETS} activeIdx={activeIdx} onSelect={setActiveIdx} />
-
-            <div style={{ marginTop: 28 }}>
-              <UnlockedContent
-                traitWord={activeFacet.traitWord}
-                content={activeFacet.content!}
-                hue={activeHue}
-              />
-            </div>
+            <TraitCarousel traits={SAMPLE_TRAITS} activeIdx={activeIdx} onSelect={setActiveIdx}>
+              <div style={{ marginTop: 26 }}>
+                <UnlockedContent
+                  traitWord={activeFacet.traitWord}
+                  content={activeFacet.content!}
+                  hue={activeHue}
+                  subtitle={patternSubtitle(activeFacet.hueOffset)}
+                />
+              </div>
+            </TraitCarousel>
           </section>
 
           {/* ── Where you thrive ─────────────────────────── */}

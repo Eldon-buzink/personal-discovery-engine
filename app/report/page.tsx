@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
@@ -22,8 +22,11 @@ import type { DirectionAccordionItem } from '@/components/known/DirectionAccordi
 import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
+import { TraitCarousel, patternSubtitle } from '@/components/known/TraitCarousel'
+import type { CarouselTrait } from '@/components/known/TraitCarousel'
+import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import {
-  FacetEntry, OrbitCondition, InteractiveCluster, OrbitCluster, UnlockedContent, userCuratedHue,
+  FacetEntry, OrbitCondition, OrbitCluster, UnlockedContent, userCuratedHue,
 } from '@/components/known/ReportVisuals'
 
 // ── Local types ────────────────────────────────────────────────────────────────
@@ -358,7 +361,9 @@ export default function ReportPage() {
   const [facets, setFacets] = useState<FacetEntry[]>([])
   const [totalAnswered, setTotalAnswered] = useState(0)
   const [ring1Complete, setRing1Complete] = useState(false)
+  // activeIdx is a position in strength order (strongest first), not an index into facets.
   const [activeIdx, setActiveIdx] = useState(0)
+  const [facetScores, setFacetScores] = useState<Record<string, number | null>>({})
 
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook).
@@ -470,6 +475,7 @@ export default function ReportPage() {
       return { facet, traitWord, hueOffset: idx, content: pc?.content ?? null }
     })
     setFacets(initial)
+    setFacetScores(Object.fromEntries(facetNames.map((f) => [f, computeFacetScore(f, answeredMap)])))
   }, [])
 
   // Generate content for any ring-1 facets that arrived with null content
@@ -513,8 +519,31 @@ export default function ReportPage() {
   }, [facets])
 
   const isUnlocked = facets.length > 0
+  // Strongest first: distance from the middle of the answer scale, ties in
+  // reveal order. Keyed on facet names so content arriving later doesn't
+  // reshuffle or rebuild the strip.
+  const facetKey = facets.map((f) => `${f.facet}:${f.traitWord}`).join('|')
+  const strengthOrder = useMemo(
+    () => orderByStrength(facets, (f) => traitStrength(facetScores[f.facet])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [facetKey, facetScores],
+  )
+  const carouselTraits: CarouselTrait[] = useMemo(
+    () => strengthOrder.map((i) => {
+      const f = facets[i]
+      return {
+        key: f.facet,
+        traitWord: f.traitWord,
+        hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
+        strength: traitStrength(facetScores[f.facet]),
+        domain: domainOf(f.facet),
+      }
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [strengthOrder],
+  )
   const safeIdx = Math.min(activeIdx, Math.max(0, facets.length - 1))
-  const activeFacet = facets[safeIdx] ?? null
+  const activeFacet = facets[strengthOrder[safeIdx]] ?? null
   const hasContent = facets[0]?.content != null
   const activeHue = activeFacet
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
@@ -813,22 +842,23 @@ export default function ReportPage() {
 
             {isUnlocked ? (
               <>
-                <InteractiveCluster facets={facets} activeIdx={safeIdx} onSelect={setActiveIdx} />
-
-                <div style={{ marginTop: 28 }}>
-                  {activeFacet?.content ? (
-                    <UnlockedContent
-                      traitWord={activeFacet.traitWord}
-                      content={activeFacet.content}
-                      hue={activeHue}
-                    />
-                  ) : (
-                    <PatternLoadingState
-                      traitWord={activeFacet?.traitWord ?? ''}
-                      isLoading={true}
-                    />
-                  )}
-                </div>
+                <TraitCarousel traits={carouselTraits} activeIdx={safeIdx} onSelect={setActiveIdx}>
+                  <div style={{ marginTop: 26 }}>
+                    {activeFacet?.content ? (
+                      <UnlockedContent
+                        traitWord={activeFacet.traitWord}
+                        content={activeFacet.content}
+                        hue={activeHue}
+                        subtitle={patternSubtitle(activeFacet.hueOffset)}
+                      />
+                    ) : (
+                      <PatternLoadingState
+                        traitWord={activeFacet?.traitWord ?? ''}
+                        isLoading={true}
+                      />
+                    )}
+                  </div>
+                </TraitCarousel>
               </>
             ) : (
               <EmptyReportState />
