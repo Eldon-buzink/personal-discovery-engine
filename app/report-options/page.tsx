@@ -185,11 +185,6 @@ const GROUPS: { key: string; label: string; traits: Trait[] }[] = [
   })),
 ]
 
-function pillRadius(t: Trait): string {
-  const h = hashSeed(t.traitWord)
-  return `${48 + (h % 14)}% ${52 - (h % 9)}% ${50 + (h % 11)}% ${46 + (h % 8)}% / ${55 + (h % 10)}% ${45 + (h % 12)}% ${58 - (h % 9)}% ${44 + (h % 10)}%`
-}
-
 function OptionFiltered() {
   const [groupKey, setGroupKey] = useState('top')
   const [activeIdx, setActiveIdx] = useState(0)
@@ -197,8 +192,9 @@ function OptionFiltered() {
   const selected = group.traits[Math.min(activeIdx, group.traits.length - 1)]
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: pillCSS + filterCSS }} />
-      <div className="opt-filter" role="group" aria-label="Show traits">
+      <style dangerouslySetInnerHTML={{ __html: filterCSS }} />
+      <InteractiveCluster key={groupKey} facets={group.traits} activeIdx={activeIdx} onSelect={setActiveIdx} />
+      <div className="opt-filter" style={{ marginTop: 8 }} role="group" aria-label="Show traits">
         {GROUPS.map((g) => (
           <button
             key={g.key}
@@ -210,20 +206,6 @@ function OptionFiltered() {
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 4, margin: '16px 0 4px' }}>
-        {group.traits.map((t, i) => (
-          <button
-            key={t.facet}
-            className="opt-pill"
-            aria-pressed={selected === t}
-            onClick={() => setActiveIdx(i)}
-            style={{ ['--h' as string]: String(t.hue), ['--r' as string]: pillRadius(t) }}
-          >
-            {t.traitWord}
-          </button>
-        ))}
-      </div>
-      <InteractiveCluster key={groupKey} facets={group.traits} activeIdx={activeIdx} onSelect={setActiveIdx} />
       <Detail t={selected} />
     </>
   )
@@ -377,7 +359,7 @@ export default function ReportOptionsPage() {
       </div>
 
       <OptionFrame letter="A+" title="Top five or one domain, with a filter"
-        pitch="Option A with a filter: Top 5 (the most pronounced) or one domain at a time. The chosen group's traits sit as pills under the filter; the cluster below shows the same group. Pills and blobs both select a trait.">
+        pitch="Option A with a filter under the cluster: Top 5 (the most pronounced) or one domain at a time. Tap a blob to select a trait.">
         <OptionFiltered />
       </OptionFrame>
 
