@@ -995,6 +995,7 @@ export default function AssessmentPage() {
         ) : currentQuestion ? (
           <div style={{ opacity: questionOpacity, transition: 'opacity 0.35s ease' }}>
             <QuestionCard
+              topOffset={56}
               key={currentIndex}
               questionNumber={currentIndex + 1}
               totalQuestions={TOTAL}

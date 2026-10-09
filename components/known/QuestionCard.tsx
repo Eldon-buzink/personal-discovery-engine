@@ -13,6 +13,9 @@ export interface QuestionCardProps {
   onNext: (answer: string) => void
   centered?: boolean
   scaleLabels?: [string, string]
+  // Height of a fixed header above the card. The card fills the rest of the
+  // screen, so the page isn't taller than the window and can't drift.
+  topOffset?: number
 }
 
 export default function QuestionCard({
@@ -24,6 +27,7 @@ export default function QuestionCard({
   onNext,
   centered = true,
   scaleLabels = ['Strongly disagree', 'Strongly agree'],
+  topOffset = 0,
 }: QuestionCardProps) {
   const [answer, setAnswer] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -47,7 +51,10 @@ export default function QuestionCard({
   }
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center px-6 py-12">
+    <div
+      className="bg-cream flex flex-col items-center px-6 py-12"
+      style={{ minHeight: `calc(100vh - ${topOffset}px)` }}
+    >
       {/* Progress */}
       <span className="font-sans text-[11px] text-muted">
         {questionNumber} of {totalQuestions}

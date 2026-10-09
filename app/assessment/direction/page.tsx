@@ -301,6 +301,7 @@ export default function DirectionPage() {
         <TopBar answeredCount={answers.size} />
         <div style={{ paddingTop: 52 }}>
           <QuestionCard
+            topOffset={52}
             key={currentQ}
             questionNumber={currentQ + 1}
             totalQuestions={TOTAL_Q}
