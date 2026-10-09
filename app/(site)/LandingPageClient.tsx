@@ -231,7 +231,7 @@ ${compareCSS}${practiceCSS}${faqCSS}${finalCSS}
 // Static 4-blob composition (Deliberate active + 3 fixed satellites,
 // continuously wobbling, never swapping which one is "active") — matches
 // reference/bearing-landing-v6_2.html exactly. Renders as JSX with refs for
-// the per-frame `d` update (InteractiveCluster's pattern on the report page),
+// the per-frame `d` update (the report page's blob pattern),
 // not the mockup's own raw document.createElementNS tree-building.
 //
 // Sizing: the mockup's .hero-blob-wrap is `width:100%;aspect-ratio:520/500`

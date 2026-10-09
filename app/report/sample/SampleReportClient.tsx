@@ -11,7 +11,7 @@ import SiteFooter from '@/components/known/SiteFooter'
 
 // Static example report shown behind the landing page's "See an example
 // report" CTA. Reuses the real report page's presentational components
-// (InteractiveCluster/UnlockedContent/OrbitCluster, shared via
+// (TraitCarousel/UnlockedContent/OrbitCluster, shared via
 // components/known/ReportVisuals.tsx) so the sample stays visually
 // identical to a real one — but with fixed illustrative content instead of
 // localStorage/Supabase-backed data, no paywall, and everything unlocked.

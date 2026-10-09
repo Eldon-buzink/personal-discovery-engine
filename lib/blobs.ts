@@ -5,7 +5,7 @@
 // same generateAnimatedBlobPath), just converted from raw DOM manipulation
 // to idiomatic React: components render the SVG/label structure as JSX and
 // use refs only for the per-frame `d` attribute update, the same pattern
-// InteractiveCluster/OrbitCluster already use on the report page.
+// TraitCarousel/OrbitCluster already use on the report page.
 //
 // This module is deliberately just the low-level math + a shared animation
 // clock, not a full "cluster" component — each section (hero, bento, demo)
