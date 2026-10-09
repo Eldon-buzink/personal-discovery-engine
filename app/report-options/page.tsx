@@ -3,7 +3,7 @@
 // Design comparison only — four candidate layouts for "Who you are" with 30
 // traits, on sample scores. Not linked from anywhere; not for merging.
 
-import { CSSProperties, useMemo, useState } from 'react'
+import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FacetEntry,
   InteractiveCluster,
@@ -211,6 +211,171 @@ function OptionFiltered() {
   )
 }
 
+// ── F. Horizontal trait carousel ─────────────────────────────────────────────
+
+const ALL_RANKED = [...TRAITS].sort((a, b) => pronounced(b) - pronounced(a))
+const SLIDE_W = 132
+const CBLOB = 240
+
+function CarouselBlob({ t, active }: { t: Trait; active: boolean }) {
+  const id = `cb-${t.facet.replace(/\W/g, '')}`
+  const pathRef = useRef<SVGPathElement>(null)
+  const profile = useMemo(() => buildPointMotionProfile(hashSeed(t.traitWord + '-shape'), 9), [t.traitWord])
+  useEffect(() => {
+    if (!active || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let raf: number
+    let start: number | null = null
+    const tick = (now: number) => {
+      if (start === null) start = now
+      pathRef.current?.setAttribute('d', generateAnimatedBlobPath(120, 120, 82, profile, 0.3, (now - start) / 1000))
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [active, profile])
+  return (
+    <svg viewBox="0 0 240 240" width={CBLOB} height={CBLOB} style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
+      <defs>
+        <filter id={`${id}-f`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="11" /></filter>
+        <radialGradient id={`${id}-g`} cx="45%" cy="40%" r="70%">
+          <stop offset="0%" stopColor={`hsl(${t.hue},80%,62%)`} stopOpacity="1" />
+          <stop offset="45%" stopColor={`hsl(${t.hue},78%,60%)`} stopOpacity="0.88" />
+          <stop offset="75%" stopColor={`hsl(${t.hue},70%,68%)`} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={`hsl(${t.hue},60%,80%)`} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <path ref={pathRef} d={generateAnimatedBlobPath(120, 120, 82, profile, 0.3, 0)} fill={`url(#${id}-g)`} filter={`url(#${id}-f)`} />
+    </svg>
+  )
+}
+
+const carouselCSS = `
+  .opt-car{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:280px;align-items:center;
+    padding:0 calc(50% + 22px - ${SLIDE_W / 2}px);margin:0 -22px;cursor:grab;outline:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22%,#000 78%,transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 22%,#000 78%,transparent 100%);}
+  .opt-car::-webkit-scrollbar{display:none;}
+  .opt-car.dragging{cursor:grabbing;scroll-snap-type:none;}
+  .opt-slide{flex:0 0 ${SLIDE_W}px;height:100%;scroll-snap-align:center;position:relative;border:0;background:none;padding:0;cursor:pointer;}
+  .opt-slide-inner{position:absolute;left:50%;top:50%;width:${CBLOB}px;height:${CBLOB}px;margin:-${CBLOB / 2}px 0 0 -${CBLOB / 2}px;
+    display:flex;align-items:center;justify-content:center;will-change:transform,opacity;}
+  .opt-slide-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:${serif};font-style:italic;font-weight:500;font-size:22px;pointer-events:none;}
+  .opt-arrow{width:36px;height:36px;border-radius:50%;border:1px solid ${line};background:${cream};color:${charcoalSoft};
+    cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .opt-arrow:disabled{opacity:.35;cursor:default;}
+  .opt-arrow:focus-visible,.opt-car:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
+`
+
+function OptionCarousel() {
+  const scroller = useRef<HTMLDivElement>(null)
+  const inners = useRef<(HTMLDivElement | null)[]>([])
+  const [active, setActive] = useState(0)
+  const activeRef = useRef(0)
+  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null)
+  const justDragged = useRef(false)
+
+  // Scale and fade each blob by its distance from the centre: the middle one
+  // full size, direct neighbours about half, further ones fading out.
+  const paint = useCallback(() => {
+    const el = scroller.current
+    if (!el) return
+    const mid = el.scrollLeft + el.clientWidth / 2
+    let best = 0
+    let bestD = Infinity
+    inners.current.forEach((inner, i) => {
+      const slide = inner?.parentElement
+      if (!inner || !slide) return
+      const d = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - mid) / SLIDE_W
+      if (d < bestD) { bestD = d; best = i }
+      const scale = d <= 1 ? 1 - 0.52 * d : Math.max(0.3, 0.48 - 0.18 * (d - 1))
+      inner.style.transform = `scale(${scale})`
+      inner.style.opacity = String(d <= 1 ? 1 - 0.25 * d : Math.max(0, 0.75 - 0.45 * (d - 1)))
+      inner.style.zIndex = String(100 - Math.round(d * 10))
+    })
+    activeRef.current = best
+    setActive(best)
+  }, [])
+
+  useEffect(() => { paint() }, [paint])
+
+  function goTo(i: number) {
+    const el = scroller.current
+    const slide = inners.current[i]?.parentElement
+    if (!el || !slide) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollTo({ left: slide.offsetLeft - (el.clientWidth - slide.offsetWidth) / 2, behavior: reduce ? 'auto' : 'smooth' })
+  }
+
+  // Mouse drag (touch and trackpads scroll natively).
+  function onPointerDown(e: React.PointerEvent) {
+    if (e.pointerType !== 'mouse' || !scroller.current) return
+    drag.current = { x: e.clientX, left: scroller.current.scrollLeft, moved: false }
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    const d = drag.current
+    const el = scroller.current
+    if (!d || !el) return
+    if (Math.abs(e.clientX - d.x) > 4) { d.moved = true; el.classList.add('dragging') }
+    el.scrollLeft = d.left - (e.clientX - d.x)
+  }
+  function onPointerUp() {
+    const el = scroller.current
+    if (!drag.current || !el) return
+    const moved = drag.current.moved
+    drag.current = null
+    el.classList.remove('dragging')
+    if (moved) {
+      justDragged.current = true
+      setTimeout(() => { justDragged.current = false }, 0)
+      requestAnimationFrame(() => goTo(activeRef.current))
+    }
+  }
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: carouselCSS }} />
+      <div
+        ref={scroller}
+        className="opt-car"
+        tabIndex={0}
+        role="group"
+        aria-label="Your traits"
+        onScroll={paint}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.min(ALL_RANKED.length - 1, active + 1)) }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.max(0, active - 1)) }
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+      >
+        {ALL_RANKED.map((t, i) => (
+          <button
+            key={t.facet}
+            className="opt-slide"
+            tabIndex={-1}
+            aria-label={t.traitWord}
+            onClick={() => { if (!justDragged.current) goTo(i) }}
+          >
+            <div ref={(el) => { inners.current[i] = el }} className="opt-slide-inner">
+              <CarouselBlob t={t} active={i === active} />
+              <span className="opt-slide-label" style={{ color: `hsl(${t.hue},45%,24%)` }}>{t.traitWord}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 4 }}>
+        <button className="opt-arrow" aria-label="Previous trait" disabled={active === 0} onClick={() => goTo(active - 1)}>←</button>
+        <span style={{ fontFamily: sans, fontSize: 12, color: gray, minWidth: 56, textAlign: 'center' }}>{active + 1} of {ALL_RANKED.length}</span>
+        <button className="opt-arrow" aria-label="Next trait" disabled={active === ALL_RANKED.length - 1} onClick={() => goTo(active + 1)}>→</button>
+      </div>
+      <Detail t={ALL_RANKED[active]} />
+    </>
+  )
+}
+
 // ── B. One small cluster per domain ──────────────────────────────────────────
 
 function OptionB() {
@@ -353,10 +518,15 @@ export default function ReportOptionsPage() {
           &ldquo;Who you are&rdquo; with 30 traits
         </h1>
         <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, margin: 0 }}>
-          Ways to show all 30 traits; the newest (A+) is first. Trait words come from the real scoring code on sample scores; colours use the
+          Ways to show all 30 traits; the newest (F) is first. Trait words come from the real scoring code on sample scores; colours use the
           real per-trait hues. Domain names are working labels. Everything is clickable.
         </p>
       </div>
+
+      <OptionFrame letter="F" title="Scroll through your traits"
+        pitch="One trait large in the middle, its neighbours smaller on either side. Swipe, drag, use the arrows or the arrow keys to move through all 30, most pronounced first.">
+        <OptionCarousel />
+      </OptionFrame>
 
       <OptionFrame letter="A+" title="Top five or one domain, with a filter"
         pitch="Option A with a filter under the cluster: Top 5 (the most pronounced) or one domain at a time. Tap a blob to select a trait.">
