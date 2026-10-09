@@ -22,8 +22,10 @@ import type { DirectionAccordionItem } from '@/components/known/DirectionAccordi
 import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
+import { TraitHeroPalette, patternSubtitle } from '@/components/known/TraitPalette'
 import {
   FacetEntry, OrbitCondition, InteractiveCluster, OrbitCluster, UnlockedContent, userCuratedHue,
+  CLUSTER_SLOT_COUNT,
 } from '@/components/known/ReportVisuals'
 
 // ── Local types ────────────────────────────────────────────────────────────────
@@ -813,7 +815,11 @@ export default function ReportPage() {
 
             {isUnlocked ? (
               <>
-                <InteractiveCluster facets={facets} activeIdx={safeIdx} onSelect={setActiveIdx} />
+                {facets.length > CLUSTER_SLOT_COUNT ? (
+                  <TraitHeroPalette facets={facets} activeIdx={safeIdx} onSelect={setActiveIdx} />
+                ) : (
+                  <InteractiveCluster facets={facets} activeIdx={safeIdx} onSelect={setActiveIdx} />
+                )}
 
                 <div style={{ marginTop: 28 }}>
                   {activeFacet?.content ? (
@@ -821,6 +827,8 @@ export default function ReportPage() {
                       traitWord={activeFacet.traitWord}
                       content={activeFacet.content}
                       hue={activeHue}
+                      subtitle={patternSubtitle(activeFacet.hueOffset)}
+                      hideHeader={facets.length > CLUSTER_SLOT_COUNT}
                     />
                   ) : (
                     <PatternLoadingState

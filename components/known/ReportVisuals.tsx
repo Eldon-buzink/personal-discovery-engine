@@ -41,7 +41,7 @@ const curatedHues = [
   { hue: 205 }, { hue: 235 }, { hue: 290 }, { hue: 335 },
 ]
 
-function hashSeed(str: string): number {
+export function hashSeed(str: string): number {
   let h = 0
   for (let i = 0; i < str.length; i++) {
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
@@ -69,9 +69,9 @@ function seededRandom(seed: number) {
   }
 }
 
-interface MotionPoint { phase: number; freq: number; ampScale: number }
+export interface MotionPoint { phase: number; freq: number; ampScale: number }
 
-function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
+export function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
   const rand = seededRandom(seed)
   const profile: MotionPoint[] = []
   for (let i = 0; i < points; i++) {
@@ -82,7 +82,7 @@ function buildPointMotionProfile(seed: number, points: number): MotionPoint[] {
 
 interface Pt { x: number; y: number }
 
-function generateAnimatedBlobPath(
+export function generateAnimatedBlobPath(
   cx: number, cy: number, baseRadius: number,
   profile: MotionPoint[], irregularity: number, t: number,
 ): string {
@@ -144,6 +144,9 @@ const CLUSTER_OFFSETS = [
   { dx: -144, dy:  65 },
   { dx:  140, dy:  65 },
 ]
+
+// Above this many traits the report uses TraitHeroPalette instead.
+export const CLUSTER_SLOT_COUNT = 5
 
 // CLUSTER_OFFSETS only has 5 fixed slots (1 center + 4 satellites), sized
 // and hand-placed for exactly that count. A paid user who keeps going past
@@ -546,6 +549,7 @@ export function UnlockedContent({
   subtitle = 'Your first pattern',
   source = 'From your assessment',
   hideQuote = false,
+  hideHeader = false,
 }: {
   traitWord: string
   content: PatternContent
@@ -557,11 +561,16 @@ export function UnlockedContent({
   // elsewhere on the page, so trait_quote/where_it_shows_up would be a duplicate.
   // tags/go_deeper/worth_trying aren't duplicated anywhere, so they still render.
   hideQuote?: boolean
+  // Skips only title/subtitle/trait_quote/source — for the 30-trait hero, which
+  // already shows those next to the blob. "Where this shows up" still renders.
+  hideHeader?: boolean
 }) {
   return (
     <div style={{ textAlign: 'center' }}>
       {!hideQuote && (
         <>
+          {!hideHeader && (
+            <>
           <h2 style={{
             fontFamily: serif,
             fontSize: 25,
@@ -593,6 +602,8 @@ export function UnlockedContent({
           <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
             {source}
           </p>
+            </>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
