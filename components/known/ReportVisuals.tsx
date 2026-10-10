@@ -392,7 +392,7 @@ export function UnlockedContent({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '8px 0 10px' }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
           <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
-            In short
+            {hideQuote ? 'Characteristics' : `Characteristics of ${traitWord}`}
           </p>
         </div>
       )}
