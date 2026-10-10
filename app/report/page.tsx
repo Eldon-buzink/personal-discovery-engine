@@ -850,6 +850,7 @@ export default function ReportPage() {
                         hue={activeHue}
                         subtitle={patternSubtitle(activeFacet.hueOffset)}
                         subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
+                        source={null}
                       />
                     ) : (
                       <PatternLoadingState

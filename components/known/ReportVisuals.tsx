@@ -321,7 +321,8 @@ export function UnlockedContent({
   subtitle?: string
   // Second line under the subtitle, e.g. "This trait is part of Openness".
   subtitleNote?: string
-  source?: string
+  // Where the pattern came from, under the quote. null hides it.
+  source?: string | null
   // Skips title/subtitle/trait_quote/"Where this shows up"+where_it_shows_up — for
   // branches (currently: Energy) where that narrative is already shown per-item
   // elsewhere on the page, so trait_quote/where_it_shows_up would be a duplicate.
@@ -337,19 +338,20 @@ export function UnlockedContent({
             fontSize: 25,
             fontWeight: 600,
             color: charcoal,
-            margin: '0 0 6px',
+            margin: '0 0 2px',
             textAlign: 'center',
           }}>
             {traitWord}
           </h2>
 
-          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 4 : 22, textAlign: 'center' }}>
+          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
             {subtitle}
           </p>
+          {/* 2. The domain as a pill, same design as the tags */}
           {subtitleNote && (
-            <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
-              {subtitleNote}
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+              <TagPill label={subtitleNote} hue={hue} />
+            </div>
           )}
 
           <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
@@ -365,9 +367,11 @@ export function UnlockedContent({
             </p>
           </div>
 
-          <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
-            {source}
-          </p>
+          {source && (
+            <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
+              {source}
+            </p>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
@@ -384,6 +388,14 @@ export function UnlockedContent({
         </>
       )}
 
+      {content.tags.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '8px 0 10px' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
+          <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+            In short
+          </p>
+        </div>
+      )}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 26px' }}>
         {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
       </div>
