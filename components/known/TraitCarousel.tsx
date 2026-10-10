@@ -98,9 +98,9 @@ const css = `
   @media(max-width:560px){.tc{--rel:64px;}}
   .tc-stage{position:relative;}
   .tc-links{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:140;}
-  .tc-links path{fill:none;stroke:#C4BFB3;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:0.1 5;
+  .tc-links path{fill:none;stroke:#A8A296;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:0.1 4.5;
     opacity:0;animation:tc-links-in .5s ease .12s forwards;}
-  @keyframes tc-links-in{to{opacity:.9;}}
+  @keyframes tc-links-in{to{opacity:1;}}
   .tc-rel-row{position:relative;z-index:150;display:flex;justify-content:center;gap:2px;height:var(--rel);pointer-events:none;
     animation:tc-fade .35s ease both;}
   .tc-rel-row.above{margin-bottom:calc(var(--rel) * -0.42);}
@@ -114,7 +114,7 @@ const css = `
   .tc-rel:hover .tc-rel-label,.tc-rel:focus-visible .tc-rel-label{opacity:1;}
   .tc-rel-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
     font-family:${serif};font-style:italic;font-weight:500;font-size:11px;line-height:1.15;padding:0 2px;pointer-events:none;}
-  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-rel .tc-rel-label{transition:none;}.tc-rel-row,.tc-links path{animation:none;}.tc-links path{opacity:.9;}}
+  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-rel .tc-rel-label{transition:none;}.tc-rel-row,.tc-links path{animation:none;}.tc-links path{opacity:1;}}
 `
 
 function useReducedMotion(): boolean {
