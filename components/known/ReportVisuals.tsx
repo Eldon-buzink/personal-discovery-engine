@@ -116,11 +116,10 @@ export function TagPill({ label, hue = 8 }: { label: string; hue?: number }) {
     <span style={{
       fontFamily: sans,
       fontSize: 12.5,
-      padding: '5px 12px',
-      borderRadius: 14,
-      border: `1px solid hsl(${hue},40%,75%)`,
+      padding: '4px 11px',
+      borderRadius: 999,
+      background: `hsla(${hue},60%,70%,0.16)`,
       color: charcoalSoft,
-      background: 'white',
       whiteSpace: 'nowrap' as const,
     }}>
       {label}
@@ -308,6 +307,18 @@ export function OrbitCluster({
 
 // ── Unlocked content ─────────────────────────────────────────────────────────
 
+// Small uppercase heading for a section of the trait detail.
+function SectionLabel({ children, hue }: { children: string; hue: number }) {
+  return (
+    <p style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: sans, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, color: gray, margin: '0 0 8px' }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,55%)`, flexShrink: 0 }} />
+      {children}
+    </p>
+  )
+}
+
+const bodyText = { fontFamily: sans, fontSize: 15, lineHeight: 1.7, color: charcoalSoft, margin: 0, textAlign: 'left' as const }
+
 export function UnlockedContent({
   traitWord, content, hue,
   subtitle = 'Your first pattern',
@@ -321,97 +332,66 @@ export function UnlockedContent({
   subtitle?: string
   // Second line under the subtitle, e.g. "This trait is part of Openness".
   subtitleNote?: string
-  source?: string
+  // Where the pattern came from, shown with the meta lines. null hides it.
+  source?: string | null
   // Skips title/subtitle/trait_quote/"Where this shows up"+where_it_shows_up — for
   // branches (currently: Energy) where that narrative is already shown per-item
   // elsewhere on the page, so trait_quote/where_it_shows_up would be a duplicate.
   // tags/go_deeper/worth_trying aren't duplicated anywhere, so they still render.
   hideQuote?: boolean
 }) {
+  // Reading order: name, meta, the quote as the lead, a short rule, then
+  // sections with clear headings in a left-aligned reading column, ending
+  // on the one thing to try.
+  const meta = [subtitle, subtitleNote, source].filter(Boolean) as string[]
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div>
       {!hideQuote && (
-        <>
-          <h2 style={{
-            fontFamily: serif,
-            fontSize: 25,
-            fontWeight: 600,
-            color: charcoal,
-            margin: '0 0 6px',
-            textAlign: 'center',
-          }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontFamily: serif, fontSize: 26, fontWeight: 600, color: charcoal, margin: '0 0 6px', textAlign: 'center' }}>
             {traitWord}
           </h2>
+          {meta.map((m) => (
+            <p key={m} style={{ fontFamily: sans, fontSize: 13, lineHeight: 1.5, color: gray, margin: 0, textAlign: 'center' }}>{m}</p>
+          ))}
 
-          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 4 : 22, textAlign: 'center' }}>
-            {subtitle}
-          </p>
-          {subtitleNote && (
-            <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: 22, textAlign: 'center' }}>
-              {subtitleNote}
-            </p>
-          )}
-
-          <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
-            <p style={{
-              fontFamily: serif,
-              fontStyle: 'italic',
-              fontSize: 17,
-              lineHeight: 1.5,
-              color: charcoalSoft,
-              textAlign: 'center',
-            }}>
-              {content.trait_quote}
-            </p>
-          </div>
-
-          <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
-            {source}
+          <p style={{
+            fontFamily: serif, fontStyle: 'italic', fontSize: 'clamp(18px, 4.6vw, 20px)', lineHeight: 1.45, color: charcoal,
+            maxWidth: 460, margin: '22px auto 0', textAlign: 'center',
+          }}>
+            {content.trait_quote}
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-            <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
-              Where this shows up
-            </p>
-          </div>
-
-          <div style={{ maxWidth: 420, margin: '0 auto', marginBottom: 16 }}>
-            <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
-              {content.where_it_shows_up}
-            </p>
-          </div>
-        </>
+          <div aria-hidden="true" style={{ width: 32, height: 2, borderRadius: 2, background: `hsl(${hue},55%,62%)`, margin: '26px auto 30px', opacity: 0.7 }} />
+        </div>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 26px' }}>
-        {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
-      </div>
+      <div style={{ maxWidth: 460, margin: '0 auto', textAlign: 'left' }}>
+        {!hideQuote && (
+          <section style={{ marginBottom: 14 }}>
+            <SectionLabel hue={hue}>Where this shows up</SectionLabel>
+            <p style={bodyText}>{content.where_it_shows_up}</p>
+          </section>
+        )}
 
-      <div className="report-cards-row" style={{ maxWidth: 500, margin: '0 auto 8px' }}>
-        <div style={{
-          flex: 1, background: 'white', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
-          display: 'flex', flexDirection: 'column', textAlign: 'left',
-        }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
-            Go deeper
-          </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: '0 0 14px', textAlign: 'left' }}>
-            {content.go_deeper}
-          </p>
-        </div>
+        {content.tags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 28 }}>
+            {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
+          </div>
+        )}
 
-        <div style={{
-          flex: 1, background: '#F3F1EB', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
-          display: 'flex', flexDirection: 'column', textAlign: 'left',
+        <section style={{ marginBottom: 24 }}>
+          <SectionLabel hue={hue}>Go deeper</SectionLabel>
+          <p style={bodyText}>{content.go_deeper}</p>
+        </section>
+
+        <section style={{
+          background: `hsla(${hue},55%,62%,0.08)`, borderLeft: `3px solid hsl(${hue},55%,62%)`,
+          borderRadius: 10, padding: '16px 18px', marginBottom: 8,
         }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
-            Worth trying
-          </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: 0, textAlign: 'left' }}>
-            {content.worth_trying}
-          </p>
-        </div>
+          <SectionLabel hue={hue}>Worth trying</SectionLabel>
+          <p style={{ ...bodyText, color: charcoal }}>{content.worth_trying}</p>
+        </section>
       </div>
     </div>
   )
