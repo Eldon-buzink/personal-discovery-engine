@@ -72,14 +72,12 @@ const NAV_LINKS_SIGNED_IN = [
   { label: 'Blog',     href: '/blog'     },
 ]
 
-// In the account menu (signed in only).
-const ACCOUNT_LINKS = [
-  { label: 'Manage practice', href: '/practice/manage' },
-]
+// In the account menu (signed in only). Managing the practice lives on the
+// practice page itself (Edit on the Active list).
+const ACCOUNT_LINKS: { label: string; href: string }[] = []
 
 function isActivePath(pathname: string | null, href: string): boolean {
   if (!pathname) return false
-  if (href === '/practice') return pathname === '/practice' || (pathname.startsWith('/practice/') && !pathname.startsWith('/practice/manage'))
   return pathname === href || pathname.startsWith(href + '/')
 }
 

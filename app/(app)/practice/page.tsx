@@ -270,19 +270,6 @@ export default function PracticeHomePage() {
               Pick a trait · Check in daily · Weekly read, 4-week report, quarterly review
             </p>
           </div>
-          {/* A 3-line hamburger here used to just navigate straight to
-              /practice/manage — no actual menu behind it — which reads as a
-              mobile-nav convention gone wrong on desktop (an icon implying
-              a dropdown that never opens). Plain text matches the
-              quarterly-review link right below and is unambiguous at any
-              width. */}
-          <Link
-            href="/practice/manage"
-            className="font-sans"
-            style={{ fontSize: 13, color: '#8a8375', textDecoration: 'underline', marginTop: 4, flexShrink: 0 }}
-          >
-            Manage
-          </Link>
         </div>
 
         {notice && (
@@ -304,9 +291,16 @@ export default function PracticeHomePage() {
         )}
 
         {active.length > 0 && <div style={{ marginBottom: 28 }}>
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-            Active
-          </p>
+          {/* Choosing which traits are active is editing this list, so the
+              action sits on the list's own heading. */}
+          <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
+            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em' }}>
+              Active
+            </p>
+            <Link href="/practice/manage" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
+              Edit
+            </Link>
+          </div>
 
           {(
             <div className="flex flex-col gap-3">
@@ -429,6 +423,56 @@ export default function PracticeHomePage() {
           )}
         </div>}
 
+        {data.activations.length > 0 && (
+          <div style={{ marginBottom: 28 }}>
+            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+              Your reviews
+            </p>
+            <div className="flex flex-col gap-2">
+              {active.map((a) => {
+                const ready = weeklyInsights.get(a.id)?.summary.qualifies ?? false
+                return (
+                  <Link
+                    key={a.id}
+                    href={`/practice/${a.id}/report`}
+                    style={{
+                      padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                        {facetDisplayLabel(a.facet_id)}
+                      </div>
+                      <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: ready ? directionalAccent : '#8a8375' }}>
+                        {ready ? 'Your weekly read is ready' : 'Weekly read and 4-week report'}
+                      </div>
+                    </div>
+                    <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+                  </Link>
+                )
+              })}
+              <Link
+                href="/practice/quarterly"
+                style={{
+                  padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                }}
+              >
+                <div>
+                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                    This quarter&apos;s review
+                  </div>
+                  <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: '#8a8375' }}>
+                    All your traits, over 90 days
+                  </div>
+                </div>
+                <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div>
           <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
             {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet active'}
@@ -486,16 +530,6 @@ export default function PracticeHomePage() {
           )}
         </div>
 
-        {/* Moved down from top-of-page (review feedback): a once-a-quarter
-            link doesn't earn permanent second-item billing above Active,
-            the thing people actually open this page for daily. Quiet
-            footer placement matches quarterly/recap's own bottom-link
-            convention instead of competing with the daily surface. */}
-        <div style={{ marginTop: 32, textAlign: 'center' }}>
-          <Link href="/practice/quarterly" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
-            This quarter&apos;s review
-          </Link>
-        </div>
       </div>
     </div>
   )
