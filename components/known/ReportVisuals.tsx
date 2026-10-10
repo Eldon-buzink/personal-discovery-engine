@@ -388,19 +388,7 @@ export function UnlockedContent({
         </>
       )}
 
-      {content.tags.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '8px 0 10px' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-          <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
-            {hideQuote ? 'Your characteristics' : `Your ${traitWord} characteristics`}
-          </p>
-        </div>
-      )}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 26px' }}>
-        {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
-      </div>
-
-      <div className="report-cards-row" style={{ maxWidth: 500, margin: '0 auto 8px' }}>
+      <div className="report-cards-row" style={{ maxWidth: 500, margin: '10px auto 8px' }}>
         <div style={{
           flex: 1, background: 'white', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
           display: 'flex', flexDirection: 'column', textAlign: 'left',
@@ -424,6 +412,18 @@ export function UnlockedContent({
             {content.worth_trying}
           </p>
         </div>
+      </div>
+
+      {content.tags.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '26px 0 10px' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
+          <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+            {hideQuote ? 'Your characteristics' : `Your ${traitWord} characteristics`}
+          </p>
+        </div>
+      )}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 8px' }}>
+        {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
       </div>
     </div>
   )
