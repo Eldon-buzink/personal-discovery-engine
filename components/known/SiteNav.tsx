@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 
 // SiteNav mounts on every page, including static blog/marketing pages that
 // never open the paywall — PaywallModal pulls in the Stripe Elements SDK
@@ -65,10 +65,31 @@ const NAV_LINKS = [
   { label: 'Blog',    href: '/blog'    },
 ]
 
+// Signed in: the user's own places first, Blog kept.
+const NAV_LINKS_SIGNED_IN = [
+  { label: 'Report',   href: '/report'   },
+  { label: 'Practice', href: '/practice' },
+  { label: 'Blog',     href: '/blog'     },
+]
+
+// In the account menu (signed in only).
+const ACCOUNT_LINKS = [
+  { label: 'Manage practice', href: '/practice/manage' },
+]
+
+function isActivePath(pathname: string | null, href: string): boolean {
+  if (!pathname) return false
+  if (href === '/practice') return pathname === '/practice' || (pathname.startsWith('/practice/') && !pathname.startsWith('/practice/manage'))
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SiteNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef<HTMLDivElement>(null)
   const [ctaState, setCtaState] = useState<CtaState>('start')
   const [traitCount, setTraitCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -93,10 +114,33 @@ export default function SiteNav() {
     })
   }, [pathname])
 
-  // Close mobile menu on route change
-  useEffect(() => { setMenuOpen(false) }, [pathname])
+  // Close menus on route change
+  useEffect(() => { setMenuOpen(false); setAccountOpen(false) }, [pathname])
 
+  // Account menu: close on outside click or Escape
+  useEffect(() => {
+    if (!accountOpen) return
+    const onDown = (e: MouseEvent) => { if (!accountRef.current?.contains(e.target as Node)) setAccountOpen(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAccountOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [accountOpen])
+
+  async function signOut() {
+    const { createClient } = await import('@/lib/supabase/client')
+    await createClient().auth.signOut()
+    setIsAuthenticated(false)
+    setUserId(null)
+    setAccountOpen(false)
+    setMenuOpen(false)
+    router.push('/')
+  }
+
+  const links = isAuthenticated ? NAV_LINKS_SIGNED_IN : NAV_LINKS
   const cta = CTA_MAP[ctaState]
+  // Signed in, "View your report" duplicates the Report link.
+  const showCta = !(isAuthenticated && ctaState === 'report')
 
   return (
     <>
@@ -108,9 +152,12 @@ export default function SiteNav() {
         .sn-link { opacity: 0.6; transition: opacity 0.15s; }
         .sn-link:hover { opacity: 1; }
         .sn-link-active { opacity: 1; font-weight: 500; }
+        .sn-menu-item:hover { background: rgba(28,28,26,0.05); }
+        .sn-account button:focus-visible, .sn-menu-item:focus-visible { outline: 2px solid #D85A30; outline-offset: 2px; }
         @media (max-width: 768px) {
           .sn-links { display: none !important; }
           .sn-cta-wrap { display: none !important; }
+          .sn-account { display: none !important; }
           .sn-hamburger { display: flex !important; }
           .sn-mobile { display: flex; }
         }
@@ -136,10 +183,11 @@ export default function SiteNav() {
 
         {/* Desktop: links centred via absolute */}
         <div className="sn-links" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          {NAV_LINKS.map(l => (
+          {links.map(l => (
             <Link
               key={l.href} href={l.href}
-              className={`sn-link${pathname === l.href ? ' sn-link-active' : ''}`}
+              aria-current={isActivePath(pathname, l.href) ? 'page' : undefined}
+              className={`sn-link${isActivePath(pathname, l.href) ? ' sn-link-active' : ''}`}
               style={{ fontFamily: sans, fontSize: 14, color: charcoal, textDecoration: 'none' }}
             >
               {l.label}
@@ -149,7 +197,7 @@ export default function SiteNav() {
 
         {/* Desktop CTA + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="sn-cta-wrap">
+          {showCta && <div className="sn-cta-wrap">
             {cta.href ? (
               <Link href={cta.href} style={{ textDecoration: 'none' }}>
                 <button style={{
@@ -172,7 +220,44 @@ export default function SiteNav() {
                 {cta.label}
               </button>
             )}
-          </div>
+          </div>}
+
+          {isAuthenticated && (
+            <div ref={accountRef} className="sn-account" style={{ position: 'relative' }}>
+              <button
+                onClick={() => setAccountOpen(v => !v)}
+                aria-label="Account"
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
+                style={{
+                  width: 36, height: 36, borderRadius: '50%', border: `1px solid ${c12}`, background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: charcoal,
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="12" cy="8.5" r="3.5" />
+                  <path d="M5 19.5c1.4-3.2 4-4.8 7-4.8s5.6 1.6 7 4.8" />
+                </svg>
+              </button>
+              {accountOpen && (
+                <div role="menu" style={{
+                  position: 'absolute', right: 0, top: 44, minWidth: 190, background: cream,
+                  border: `1px solid ${c12}`, borderRadius: 12, padding: 6, boxShadow: '0 12px 30px rgba(28,28,26,0.10)',
+                }}>
+                  {ACCOUNT_LINKS.map(l => (
+                    <Link key={l.href} href={l.href} role="menuitem" className="sn-menu-item"
+                      style={{ display: 'block', fontFamily: sans, fontSize: 14, color: charcoal, textDecoration: 'none', padding: '9px 12px', borderRadius: 8 }}>
+                      {l.label}
+                    </Link>
+                  ))}
+                  <button role="menuitem" onClick={signOut} className="sn-menu-item"
+                    style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: sans, fontSize: 14, color: charcoal, background: 'none', border: 'none', padding: '9px 12px', borderRadius: 8, cursor: 'pointer' }}>
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             className="sn-hamburger"
@@ -210,19 +295,29 @@ export default function SiteNav() {
           padding: '4px 36px 24px',
           flexDirection: 'column',
         }}>
-          {NAV_LINKS.map(l => (
+          {[...links, ...(isAuthenticated ? ACCOUNT_LINKS : [])].map(l => (
             <Link
               key={l.href} href={l.href}
               onClick={() => setMenuOpen(false)}
+              aria-current={isActivePath(pathname, l.href) ? 'page' : undefined}
               style={{
                 fontFamily: sans, fontSize: 16, color: charcoal, textDecoration: 'none',
-                padding: '14px 0', borderBottom: `1px solid ${c12}`, display: 'block', opacity: 0.75,
+                padding: '14px 0', borderBottom: `1px solid ${c12}`, display: 'block',
+                opacity: isActivePath(pathname, l.href) ? 1 : 0.75, fontWeight: isActivePath(pathname, l.href) ? 500 : 400,
               }}
             >
               {l.label}
             </Link>
           ))}
-          <div style={{ paddingTop: 20 }}>
+          {isAuthenticated && (
+            <button onClick={signOut} style={{
+              fontFamily: sans, fontSize: 16, color: charcoal, textAlign: 'left', background: 'none', border: 'none',
+              padding: '14px 0', borderBottom: `1px solid ${c12}`, display: 'block', width: '100%', opacity: 0.75, cursor: 'pointer',
+            }}>
+              Sign out
+            </button>
+          )}
+          {showCta && <div style={{ paddingTop: 20 }}>
             {cta.href ? (
               <Link href={cta.href} onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none' }}>
                 <button style={{
@@ -245,7 +340,7 @@ export default function SiteNav() {
                 {cta.label}
               </button>
             )}
-          </div>
+          </div>}
         </div>
       )}
 
