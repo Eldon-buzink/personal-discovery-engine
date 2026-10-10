@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
 import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
@@ -12,6 +12,10 @@ import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
+import AuthModal from '@/components/known/AuthModal'
+import { activateFacet } from '@/lib/known/facetActivationClient'
+import { fetchPracticeData, isActive } from '@/lib/known/practiceData'
+import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
 import EnergyFieldVisual from '@/components/known/EnergyFieldVisual'
 import type { EnergyFieldItem } from '@/components/known/EnergyFieldVisual'
@@ -164,6 +168,96 @@ function Ring1CompleteCard() {
       <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
         {"You've answered all 120 questions. Your full pattern is mapped."}
       </p>
+    </div>
+  )
+}
+
+// "Put it into practice": adds the trait selected in "Who you are" to the
+// user's practice, through the same activateFacet the practice pages use, so
+// the ACTIVE_FACET_CAP rule can't diverge. Signed out, it asks them to save
+// their progress first (practice needs an account); no other gating.
+type PracticeState =
+  | { kind: 'loading' }
+  | { kind: 'signedOut' }
+  | { kind: 'canAdd'; hasPractice: boolean }
+  | { kind: 'adding' }
+  | { kind: 'active'; activationId: string }
+  | { kind: 'full' }
+  | { kind: 'error' }
+
+function PracticeCard({ facet, traitWord, userId }: { facet: string; traitWord: string; userId: string | null }) {
+  const [state, setState] = useState<PracticeState>({ kind: 'loading' })
+  const [authOpen, setAuthOpen] = useState(false)
+
+  const refresh = useCallback(async () => {
+    if (!userId) { setState({ kind: 'signedOut' }); return }
+    try {
+      const data = await fetchPracticeData(createClient(), userId)
+      const active = data.activations.filter(isActive)
+      const mine = active.find((a) => a.facet_id === facet)
+      if (mine) setState({ kind: 'active', activationId: mine.id })
+      else if (active.length >= ACTIVE_FACET_CAP) setState({ kind: 'full' })
+      else setState({ kind: 'canAdd', hasPractice: active.length > 0 })
+    } catch {
+      setState({ kind: 'error' })
+    }
+  }, [facet, userId])
+
+  useEffect(() => { refresh() }, [refresh])
+
+  async function add() {
+    if (!userId) { setAuthOpen(true); return }
+    setState({ kind: 'adding' })
+    const result = await activateFacet(createClient(), userId, facet, 'base_assessment')
+    if (!result.ok && result.reason === 'error') { setState({ kind: 'error' }); return }
+    await refresh()
+  }
+
+  const buttonStyle = { display: 'inline-block', background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', textDecoration: 'none' }
+  const button = (label: string, onClick: () => void, disabled = false) => (
+    <button onClick={onClick} disabled={disabled} style={{ ...buttonStyle, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.6 : 1 }}>
+      {label}
+    </button>
+  )
+  const buttonLink = (href: string, label: string) => <Link href={href} style={buttonStyle}>{label}</Link>
+  const link = (href: string, label: string) => (
+    <Link href={href} style={{ fontFamily: sans, fontSize: 12.5, color: charcoalSoft, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+      {label}
+    </Link>
+  )
+
+  return (
+    <div style={{ background: 'white', border: `1px solid ${line}`, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
+      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: charcoal, margin: 0, lineHeight: 1.3 }}>
+        Put it into practice
+      </p>
+      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoalSoft, marginTop: 8 }}>
+        {state.kind === 'active'
+          ? `${traitWord} is in your practice.`
+          : state.kind === 'full'
+          ? `Your practice is full (${ACTIVE_FACET_CAP} of ${ACTIVE_FACET_CAP}). Swap one out to add ${traitWord}.`
+          : `Check in on ${traitWord} for a moment each day and see how it shows up in your week.`}
+      </p>
+      {state.kind === 'error' && (
+        <p style={{ fontFamily: sans, fontSize: 12.5, color: '#B4482A', marginTop: 6 }}>
+          That didn&apos;t work. Try again in a moment.
+        </p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 16 }}>
+        {state.kind === 'active' && buttonLink(`/practice/${state.activationId}`, 'Open in your practice →')}
+        {state.kind === 'full' && buttonLink('/practice/manage', 'Manage your practice →')}
+        {(state.kind === 'canAdd' || state.kind === 'signedOut' || state.kind === 'error') && button(`Add ${traitWord} to your practice →`, add)}
+        {state.kind === 'adding' && button('Adding…', () => {}, true)}
+        {state.kind === 'loading' && button(`Add ${traitWord} to your practice →`, () => {}, true)}
+        {state.kind === 'canAdd' && state.hasPractice && link('/practice', 'Go to your practice')}
+      </div>
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => setAuthOpen(false)}
+        context="save-progress"
+        returnPath="/report"
+      />
     </div>
   )
 }
@@ -879,6 +973,10 @@ export default function ReportPage() {
             <>
               <WhatsnextDivider />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {activeFacet && (
+                  <PracticeCard facet={activeFacet.facet} traitWord={activeFacet.traitWord} userId={userId} />
+                )}
+
                 {ring1Complete ? (
                   <Ring1CompleteCard />
                 ) : (
