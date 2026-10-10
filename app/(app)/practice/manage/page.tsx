@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { NAV_H } from '@/components/known/SiteNav'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
@@ -129,7 +130,7 @@ export default function ManagePracticePage() {
       {/* Centers the whole screen in the same max-w-md column every other
           practice screen uses — see the check-in page's identical comment
           for why. No-op below 448px. */}
-      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: `calc(100vh - ${NAV_H}px)` }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
           Manage your practice

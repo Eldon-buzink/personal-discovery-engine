@@ -20,6 +20,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { NAV_H } from '@/components/known/SiteNav'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
@@ -28,9 +29,11 @@ import { checkInOptionWord } from '@/lib/known/checkInOptions'
 import { computeFacetMilestone } from '@/lib/known/quarterlyReview'
 import { computePeriodWindow, type PeriodWindow } from '@/lib/known/periodWindow'
 import { isActive, type ActivationRow } from '@/lib/known/practiceData'
+import { directionalAccent } from '@/lib/known/practiceTokens'
 import { COMPARISON_MIN_CHECKINS, MILESTONE_WINDOW_DAYS } from '@/lib/known/practiceConfig'
 
 interface FacetMilestoneRow {
+  activationId: string
   facetId: string
   checkInCount: number
   statusText: string
@@ -87,11 +90,11 @@ export default function MilestoneReviewPage() {
             else if (milestone.lean.type === 'tie') statusText = 'an even split, no clear lean'
           }
 
-          return { facetId: a.facet_id, checkInCount: milestone.checkInCount, statusText, periodStartedAt: openPeriod.started_at }
+          return { activationId: a.id, facetId: a.facet_id, checkInCount: milestone.checkInCount, statusText, periodStartedAt: openPeriod.started_at }
         })
       )
 
-      setRows(computed.map(({ facetId, checkInCount, statusText }) => ({ facetId, checkInCount, statusText })))
+      setRows(computed.map(({ activationId, facetId, checkInCount, statusText }) => ({ activationId, facetId, checkInCount, statusText })))
       setTotalCount(computed.reduce((sum, r) => sum + r.checkInCount, 0))
 
       if (computed.length > 0) {
@@ -123,7 +126,7 @@ export default function MilestoneReviewPage() {
       {/* Centers the whole screen in the same max-w-md column every other
           practice screen uses — see the check-in page's identical comment
           for why. No-op below 448px. */}
-      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: `calc(100vh - ${NAV_H}px)` }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
           {windowEyebrow}
@@ -157,6 +160,16 @@ export default function MilestoneReviewPage() {
                 <div className="font-sans text-muted" style={{ fontSize: 12 }}>
                   {r.checkInCount} check-in{r.checkInCount === 1 ? '' : 's'} · {r.statusText}
                 </div>
+                {/* This page is "Reviews" in the nav — the one entry for
+                    every cadence — so each pattern links on to its own
+                    weekly / recent-weeks report from here. */}
+                <Link
+                  href={`/practice/${r.activationId}/report`}
+                  className="font-sans"
+                  style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}
+                >
+                  Weekly report
+                </Link>
               </div>
             ))
           )}

@@ -224,28 +224,16 @@ export default function PracticeHomePage() {
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center px-6 py-12">
       <div className="w-full max-w-md">
-        <div className="flex items-start justify-between gap-3" style={{ marginBottom: 24 }}>
-          <div>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 4 }}>
-              Your practice
-            </p>
-            <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
-              What you&apos;re noticing
-            </h1>
-          </div>
-          {/* A 3-line hamburger here used to just navigate straight to
-              /practice/manage — no actual menu behind it — which reads as a
-              mobile-nav convention gone wrong on desktop (an icon implying
-              a dropdown that never opens). Plain text matches the
-              quarterly-review link right below and is unambiguous at any
-              width. */}
-          <Link
-            href="/practice/manage"
-            className="font-sans"
-            style={{ fontSize: 13, color: '#8a8375', textDecoration: 'underline', marginTop: 4, flexShrink: 0 }}
-          >
-            Manage
-          </Link>
+        {/* Manage and the review used to be loose links here (Manage top
+            right, the review as a footer link) — they're in the site nav now,
+            alongside Practice, so this page is just the daily surface. */}
+        <div style={{ marginBottom: 24 }}>
+          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 4 }}>
+            Your practice
+          </p>
+          <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
+            What you&apos;re noticing
+          </h1>
         </div>
 
         {notice && (
@@ -452,16 +440,6 @@ export default function PracticeHomePage() {
           )}
         </div>
 
-        {/* Moved down from top-of-page (review feedback): a once-a-quarter
-            link doesn't earn permanent second-item billing above Active,
-            the thing people actually open this page for daily. Quiet
-            footer placement matches quarterly/recap's own bottom-link
-            convention instead of competing with the daily surface. */}
-        <div style={{ marginTop: 32, textAlign: 'center' }}>
-          <Link href="/practice/quarterly" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
-            This quarter&apos;s review
-          </Link>
-        </div>
       </div>
     </div>
   )

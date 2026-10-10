@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { NAV_H } from '@/components/known/SiteNav'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
@@ -194,7 +195,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
           identical to before. The inner flex-col + minHeight keeps the
           existing sticky-bottom-button-bar structure working exactly as
           it did when this div was the root. */}
-      <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
+      <div className="w-full max-w-md flex flex-col" style={{ minHeight: `calc(100vh - ${NAV_H}px)` }}>
       <div className="flex-1 flex flex-col" style={{ padding: '48px 28px 0 28px', gap: 28, overflowY: 'auto' }}>
         <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
           ← Your practice

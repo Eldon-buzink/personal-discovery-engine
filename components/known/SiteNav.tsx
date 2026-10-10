@@ -65,6 +65,27 @@ const NAV_LINKS = [
   { label: 'Blog',    href: '/blog'    },
 ]
 
+// Signed-in users get their practice instead of the marketing links. Manage
+// and the review used to be loose text links on the practice home; they're
+// regular destinations now. "Reviews" is the 90-day review, which links on to
+// each pattern's own weekly/recent-weeks report — one entry for every cadence
+// rather than a nav item per period.
+const PRACTICE_LINKS = [
+  { label: 'Practice', href: '/practice'           },
+  { label: 'Reviews',  href: '/practice/quarterly' },
+  { label: 'Manage',   href: '/practice/manage'    },
+]
+
+function isActiveLink(pathname: string, href: string): boolean {
+  if (href === '/practice') {
+    return pathname === '/practice' || (
+      pathname.startsWith('/practice/') &&
+      !PRACTICE_LINKS.some(l => l.href !== '/practice' && pathname.startsWith(l.href))
+    )
+  }
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SiteNav() {
@@ -72,7 +93,9 @@ export default function SiteNav() {
   const [ctaState, setCtaState] = useState<CtaState>('start')
   const [traitCount, setTraitCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  // The practice area is signed-in only, so start there in the signed-in
+  // state rather than flashing the marketing links until the session loads.
+  const [isAuthenticated, setIsAuthenticated] = useState(() => pathname.startsWith('/practice'))
   const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
 
@@ -97,6 +120,10 @@ export default function SiteNav() {
   useEffect(() => { setMenuOpen(false) }, [pathname])
 
   const cta = CTA_MAP[ctaState]
+  const links = isAuthenticated ? PRACTICE_LINKS : NAV_LINKS
+  // Inside the practice area the assessment CTA is noise — the links are the
+  // navigation there.
+  const showCta = !(isAuthenticated && pathname.startsWith('/practice'))
 
   return (
     <>
@@ -136,10 +163,10 @@ export default function SiteNav() {
 
         {/* Desktop: links centred via absolute */}
         <div className="sn-links" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          {NAV_LINKS.map(l => (
+          {links.map(l => (
             <Link
               key={l.href} href={l.href}
-              className={`sn-link${pathname === l.href ? ' sn-link-active' : ''}`}
+              className={`sn-link${isActiveLink(pathname, l.href) ? ' sn-link-active' : ''}`}
               style={{ fontFamily: sans, fontSize: 14, color: charcoal, textDecoration: 'none' }}
             >
               {l.label}
@@ -149,7 +176,7 @@ export default function SiteNav() {
 
         {/* Desktop CTA + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="sn-cta-wrap">
+          {showCta && <div className="sn-cta-wrap">
             {cta.href ? (
               <Link href={cta.href} style={{ textDecoration: 'none' }}>
                 <button style={{
@@ -172,7 +199,7 @@ export default function SiteNav() {
                 {cta.label}
               </button>
             )}
-          </div>
+          </div>}
 
           <button
             className="sn-hamburger"
@@ -210,19 +237,21 @@ export default function SiteNav() {
           padding: '4px 36px 24px',
           flexDirection: 'column',
         }}>
-          {NAV_LINKS.map(l => (
+          {links.map(l => (
             <Link
               key={l.href} href={l.href}
               onClick={() => setMenuOpen(false)}
               style={{
                 fontFamily: sans, fontSize: 16, color: charcoal, textDecoration: 'none',
-                padding: '14px 0', borderBottom: `1px solid ${c12}`, display: 'block', opacity: 0.75,
+                padding: '14px 0', borderBottom: `1px solid ${c12}`, display: 'block',
+                opacity: isActiveLink(pathname, l.href) ? 1 : 0.75,
+                fontWeight: isActiveLink(pathname, l.href) ? 500 : 400,
               }}
             >
               {l.label}
             </Link>
           ))}
-          <div style={{ paddingTop: 20 }}>
+          {showCta && <div style={{ paddingTop: 20 }}>
             {cta.href ? (
               <Link href={cta.href} onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none' }}>
                 <button style={{
@@ -245,7 +274,7 @@ export default function SiteNav() {
                 {cta.label}
               </button>
             )}
-          </div>
+          </div>}
         </div>
       )}
 
