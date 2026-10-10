@@ -139,7 +139,6 @@ export default function SampleReportClient() {
                   content={activeFacet.content!}
                   hue={activeHue}
                   subtitle={patternSubtitle(activeFacet.hueOffset)}
-                  source={null}
                 />
               </div>
             </TraitCarousel>
