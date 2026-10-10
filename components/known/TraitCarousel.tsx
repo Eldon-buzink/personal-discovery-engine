@@ -94,8 +94,13 @@ const css = `
   .tc-arrow:disabled{opacity:.35;cursor:default;}
   .tc-count{font-family:${sans};font-size:12px;color:${gray};min-width:58px;text-align:center;margin:0;}
   .tc-arrow:focus-visible,.tc-rel:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
-  .tc{--rel:84px;}
-  @media(max-width:560px){.tc{--rel:76px;}}
+  .tc{--rel:72px;}
+  @media(max-width:560px){.tc{--rel:64px;}}
+  .tc-stage{position:relative;}
+  .tc-links{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:140;}
+  .tc-links path{fill:none;stroke-width:1.5;stroke-linecap:round;opacity:.5;
+    stroke-dasharray:1;stroke-dashoffset:1;animation:tc-draw .55s ease .12s forwards;}
+  @keyframes tc-draw{to{stroke-dashoffset:0;}}
   .tc-rel-row{position:relative;z-index:150;display:flex;justify-content:center;gap:2px;height:var(--rel);pointer-events:none;
     animation:tc-fade .35s ease both;}
   .tc-rel-row.above{margin-bottom:calc(var(--rel) * -0.42);}
@@ -103,11 +108,13 @@ const css = `
   @keyframes tc-fade{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:none;}}
   .tc-rel{position:relative;width:var(--rel);height:var(--rel);border:0;background:none;padding:0;cursor:pointer;
     pointer-events:auto;border-radius:50%;-webkit-tap-highlight-color:transparent;}
-  .tc-rel svg{display:block;width:100%;height:100%;overflow:visible;transition:transform .2s ease;}
-  .tc-rel:hover svg{transform:scale(1.08);}
+  .tc-rel svg{display:block;width:100%;height:100%;overflow:visible;opacity:.5;transition:transform .2s ease,opacity .2s ease;}
+  .tc-rel:hover svg,.tc-rel:focus-visible svg{transform:scale(1.08);opacity:.9;}
+  .tc-rel .tc-rel-label{opacity:.75;transition:opacity .2s ease;}
+  .tc-rel:hover .tc-rel-label,.tc-rel:focus-visible .tc-rel-label{opacity:1;}
   .tc-rel-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:${serif};font-style:italic;font-weight:500;font-size:12px;line-height:1.15;padding:0 4px;pointer-events:none;}
-  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg{transition:none;}.tc-rel-row{animation:none;}}
+    font-family:${serif};font-style:italic;font-weight:500;font-size:11px;line-height:1.15;padding:0 2px;pointer-events:none;}
+  @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-rel .tc-rel-label{transition:none;}.tc-rel-row,.tc-links path{animation:none;stroke-dashoffset:0;}}
 `
 
 function useReducedMotion(): boolean {
@@ -313,6 +320,56 @@ export function TraitCarousel({
     select(keys[e.key], true)
   }
 
+  // ── Lines from the selected blob to its related blobs ──────────────────────
+  // Measured from layout offsets (not bounding boxes), so the rows' fade-in
+  // scale doesn't skew them.
+  const stageRef = useRef<HTMLDivElement>(null)
+  const relBtnRefs = useRef(new Map<string, HTMLButtonElement>())
+  const [links, setLinks] = useState<{ key: string; d: string }[]>([])
+  const activeDomain = traits[activeIdx]?.domain ?? null
+  const relatedKey = activeDomain
+    ? traits.filter((t, i) => i !== activeIdx && t.domain === activeDomain).map((t) => t.key).join('|')
+    : ''
+  const measureLinks = useCallback(() => {
+    const strip = stripRef.current
+    const keys = relatedKey ? relatedKey.split('|') : []
+    if (!strip || !keys.length) { setLinks([]); return }
+    const hx = strip.offsetLeft + strip.offsetWidth / 2
+    const hy = strip.offsetTop + strip.offsetHeight / 2
+    const blob = (slideRefs.current[activeIdx]?.querySelector('.tc-inner') as HTMLElement | null)?.offsetWidth ?? VIEW
+    const heroR = (blob * R) / VIEW
+    const next: { key: string; d: string }[] = []
+    for (const key of keys) {
+      const btn = relBtnRefs.current.get(key)
+      const row = btn?.parentElement
+      if (!btn || !row) continue
+      const cx = row.offsetLeft + btn.offsetLeft + btn.offsetWidth / 2
+      const cy = row.offsetTop + btn.offsetTop + btn.offsetHeight / 2
+      const dx = cx - hx
+      const dy = cy - hy
+      const len = Math.hypot(dx, dy)
+      if (len < heroR) continue
+      const ux = dx / len
+      const uy = dy / len
+      const relR = (btn.offsetWidth * 23) / 60
+      const x1 = hx + ux * heroR
+      const y1 = hy + uy * heroR
+      const x2 = cx - ux * relR * 0.8
+      const y2 = cy - uy * relR * 0.8
+      // A slight outward bow so the lines read as organic, not a diagram.
+      const bow = 10 * (dx >= 0 ? 1 : -1)
+      const qx = (x1 + x2) / 2 - uy * bow
+      const qy = (y1 + y2) / 2 + ux * bow
+      next.push({ key, d: `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}` })
+    }
+    setLinks(next)
+  }, [activeIdx, relatedKey])
+  useLayoutEffect(() => { measureLinks() }, [measureLinks])
+  useEffect(() => {
+    window.addEventListener('resize', measureLinks)
+    return () => window.removeEventListener('resize', measureLinks)
+  }, [measureLinks])
+
   const active = traits[activeIdx]
   if (!active) return null
   const related = active.domain
@@ -323,11 +380,18 @@ export function TraitCarousel({
   const relRow = (items: typeof related, where: 'above' | 'below') => (
     <div key={`${where}-${activeIdx}`} className={`tc-rel-row ${where}`}>
       {items.map(({ t, i }) => (
-        <button key={t.key} type="button" className="tc-rel" aria-label={t.traitWord} onClick={() => select(i)}>
+        <button
+          key={t.key}
+          ref={(el) => { if (el) relBtnRefs.current.set(t.key, el); else relBtnRefs.current.delete(t.key) }}
+          type="button"
+          className="tc-rel"
+          aria-label={t.traitWord}
+          onClick={() => select(i)}
+        >
           <svg viewBox="0 0 60 60" aria-hidden="true">
-            <path d={smallPaths[i]} fill={`url(#tc-s-${uid}-${i})`} opacity={0.62} filter={`url(#tc-blur-sm-${uid})`} />
+            <path d={smallPaths[i]} fill={`url(#tc-s-${uid}-${i})`} filter={`url(#tc-blur-sm-${uid})`} />
           </svg>
-          <span className="tc-label tc-rel-label" aria-hidden="true" style={{ color: `hsl(${t.hue},45%,24%)` }}>{t.traitWord}</span>
+          <span className="tc-label tc-rel-label" aria-hidden="true" style={{ color: `hsl(${t.hue},25%,30%)` }}>{t.traitWord}</span>
         </button>
       ))}
     </div>
@@ -361,6 +425,13 @@ export function TraitCarousel({
           ))}
         </defs>
       </svg>
+
+      <div ref={stageRef} className="tc-stage">
+      {links.length > 0 && (
+        <svg key={`links-${activeIdx}`} className="tc-links" aria-hidden="true">
+          {links.map((l) => <path key={l.key} d={l.d} pathLength={1} stroke={`hsl(${active.hue},55%,56%)`} />)}
+        </svg>
+      )}
 
       {above.length > 0 && relRow(above, 'above')}
 
@@ -411,6 +482,7 @@ export function TraitCarousel({
       </div>
 
       {below.length > 0 && relRow(below, 'below')}
+      </div>
 
       {count > 1 && (
         <div className="tc-controls">
