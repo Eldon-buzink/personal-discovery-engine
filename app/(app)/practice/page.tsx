@@ -212,41 +212,6 @@ export default function PracticeHomePage() {
     )
   }
 
-  if (nudgeTarget) {
-    // Nudge.dc.html — event-triggered (no check-ins in
-    // LOW_ENGAGEMENT_NUDGE_THRESHOLD_DAYS), computed lazily right here on
-    // load, never pushed. Non-gamified copy: no streak language, no guilt.
-    return (
-      <div className="min-h-screen bg-cream flex flex-col justify-center px-7" style={{ gap: 20 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
-          A quick check
-        </p>
-        <p className="font-serif font-medium text-charcoal" style={{ fontSize: 22, lineHeight: 1.4 }}>
-          {facetDisplayLabel(nudgeTarget.facetId)} hasn&apos;t been landing lately.
-        </p>
-        <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.55 }}>
-          No pressure either way — just checking if this is still the right one to keep active.
-        </p>
-        <div className="flex flex-col" style={{ gap: 10, paddingTop: 8 }}>
-          <button
-            onClick={handleKeepNudgedFacetActive}
-            className="font-sans font-medium"
-            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
-          >
-            Keep it active
-          </button>
-          <Link
-            href="/practice/manage"
-            className="font-sans text-charcoal-soft"
-            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, border: '1px solid #DAD3C3', fontSize: 14 }}
-          >
-            Swap it for something else
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   const active = activeActivations(data)
   const candidates = orderByStrength(candidateFacetIds(data), (f) => reportTraits.strength.get(f) ?? 0)
     .map((i) => candidateFacetIds(data)[i])
@@ -281,6 +246,47 @@ export default function PracticeHomePage() {
             </p>
           </div>
         </div>
+
+        {nudgeTarget && (
+          // Nudge.dc.html — event-triggered (no check-ins in
+          // LOW_ENGAGEMENT_NUDGE_THRESHOLD_DAYS), computed lazily on load,
+          // never pushed. Non-gamified copy: no streak language, no guilt.
+          // A card at the top of the page, not a full-screen takeover: the
+          // takeover hid the whole practice (check-ins, reviews) until it
+          // was answered, and ignored this column on desktop.
+          <div
+            style={{
+              marginBottom: 24, padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5',
+              display: 'flex', flexDirection: 'column', gap: 8,
+            }}
+          >
+            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.04em' }}>
+              A quick check
+            </p>
+            <p className="font-serif font-medium text-charcoal" style={{ fontSize: 18, lineHeight: 1.4 }}>
+              {facetDisplayLabel(nudgeTarget.facetId)} hasn&apos;t been landing lately.
+            </p>
+            <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.55 }}>
+              No pressure either way — just checking if this is still the right one to keep active.
+            </p>
+            <div className="flex" style={{ gap: 10, paddingTop: 6 }}>
+              <button
+                onClick={handleKeepNudgedFacetActive}
+                className="font-sans font-medium"
+                style={{ flex: 1, textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+              >
+                Keep it active
+              </button>
+              <Link
+                href="/practice/manage"
+                className="font-sans text-charcoal-soft"
+                style={{ flex: 1, textAlign: 'center', padding: 11, borderRadius: 8, border: '1px solid #DAD3C3', fontSize: 14 }}
+              >
+                Swap it
+              </Link>
+            </div>
+          </div>
+        )}
 
         {notice && (
           <p
