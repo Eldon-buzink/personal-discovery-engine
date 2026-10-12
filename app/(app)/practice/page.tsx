@@ -23,6 +23,7 @@ import { formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/week
 import { formatStageCompact, type StageResult } from '@/lib/known/practiceStage'
 import { isLowEngagement } from '@/lib/known/engagement'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
+import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
 import { REVIEW_CADENCES, REVIEW_COPY, computeReviewProgress, formatReviewProgress, type TraitReviewInput } from '@/lib/known/reviewProgress'
 
 // Card copy for a directional active pattern used to be the same static
@@ -306,15 +307,71 @@ export default function PracticeHomePage() {
           </p>
         )}
 
+        {active.length > 0 && (() => {
+          // One check-in for the day, stepping through every trait in it
+          // (/practice/checkin), instead of a "Check in today" button per
+          // trait card. Three states: not started, part done, done.
+          const doneCount = active.filter((a) => checkedInToday.has(a.id)).length
+          const allDone = doneCount === active.length
+          return (
+            <div
+              style={{
+                marginBottom: 28, padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5',
+                display: 'flex', flexDirection: 'column', gap: 12,
+              }}
+            >
+              <div>
+                <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.3 }}>
+                  Today&apos;s check-in
+                </p>
+                <p className="font-sans text-muted" style={{ fontSize: 12.5, marginTop: 4 }}>
+                  {allDone
+                    ? `All ${active.length} trait${active.length === 1 ? '' : 's'} logged for today.`
+                    : doneCount > 0
+                      ? `${doneCount} of ${active.length} done`
+                      : `${active.length} trait${active.length === 1 ? '' : 's'} · about a minute`}
+                </p>
+              </div>
+              {allDone ? (
+                <div
+                  className="font-sans font-medium"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    padding: 13, borderRadius: 10, border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 14,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Checked in today
+                </div>
+              ) : (
+                <Link
+                  href="/practice/checkin"
+                  className="font-sans font-medium"
+                  style={{ display: 'block', textAlign: 'center', padding: 13, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+                >
+                  {doneCount > 0 ? 'Continue' : 'Start today’s check-in'}
+                </Link>
+              )}
+            </div>
+          )
+        })()}
+
         {active.length > 0 && <div style={{ marginBottom: 28 }}>
-          {/* Choosing which traits are active is editing this list, so the
-              action sits on the list's own heading. */}
-          <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
+          {/* These are the traits today's check-in walks through, so the
+              list says so — and changing it is a real button on the
+              heading, not a small underlined "Edit". */}
+          <div className="flex items-center justify-between" style={{ marginBottom: 10, gap: 12 }}>
             <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em' }}>
-              Active
+              In your check-in · {active.length} of {ACTIVE_FACET_CAP}
             </p>
-            <Link href="/practice/manage" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
-              Edit
+            <Link
+              href="/practice/manage"
+              className="font-sans text-charcoal-soft"
+              style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 8, border: '1px solid #DAD3C3', background: '#FFFFFF', fontSize: 13 }}
+            >
+              Change traits
             </Link>
           </div>
 
@@ -359,58 +416,26 @@ export default function PracticeHomePage() {
                         {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
                     </Link>
-                    {checkedInToday.has(a.id) ? (
-                      // Round 5 feedback: this used to always show the dark
-                      // "Check in today" button, even right after the user
-                      // had just checked in — no way to tell it had worked.
-                      // A distinct, non-clickable confirmed state (checking
-                      // back in again today isn't a thing the product
-                      // supports — check_ins is one row per day) closes
-                      // that loop.
-                      <div
-                        className="font-sans font-medium"
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                          textAlign: 'center', padding: 11, borderRadius: 8,
-                          border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 14,
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Checked in today
-                      </div>
-                    ) : (
-                      <Link
-                        href={`/practice/${a.id}/checkin`}
-                        className="font-sans font-medium"
-                        style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
-                      >
-                        Check in today
-                      </Link>
-                    )}
-                    {/* Review feedback: weekly progress only ever showed up
-                        on a facet's own detail page — the homepage, where
-                        people actually land day to day, said nothing about
-                        it. Same quiet, count-based copy as facet detail;
-                        silent when there's nothing yet to report. */}
-                    {weeklyQualifies ? (
-                      <Link
-                        href="/practice/reviews/weekly"
-                        className="font-sans"
-                        style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}
-                      >
-                        Your weekly read is ready
-                      </Link>
-                    ) : (
-                      weeklyProgress && (
-                        <p className="font-sans text-muted" style={{ fontSize: 12, textAlign: 'center' }}>
-                          {weeklyProgress}
-                        </p>
-                      )
+                    {/* Checking in happens once for all traits (Today's
+                        check-in above), so the card has no button of its
+                        own — just a quiet status line. Weekly progress
+                        stays: same count-based copy as facet detail, silent
+                        when there's nothing yet to report. */}
+                    {(checkedInToday.has(a.id) || weeklyQualifies || weeklyProgress) && (
+                      <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.45 }}>
+                        {checkedInToday.has(a.id) && 'Checked in today'}
+                        {checkedInToday.has(a.id) && (weeklyQualifies || weeklyProgress) && ' · '}
+                        {weeklyQualifies ? (
+                          <Link href="/practice/reviews/weekly" style={{ color: directionalAccent, textDecoration: 'underline' }}>
+                            Weekly review ready
+                          </Link>
+                        ) : (
+                          weeklyProgress
+                        )}
+                      </p>
                     )}
                     {showBadge && (
-                      <p className="font-sans" style={{ fontSize: 12, lineHeight: 1.45, color: '#8a5a3d', textAlign: 'center' }}>
+                      <p className="font-sans" style={{ fontSize: 12, lineHeight: 1.45, color: '#8a5a3d', paddingTop: 8, borderTop: `1px solid ${directionalAccent}4d` }}>
                         Based on the mini-assessment. The full assessment (€49) gives a complete read.
                       </p>
                     )}
@@ -467,7 +492,7 @@ export default function PracticeHomePage() {
 
         <div>
           <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-            {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet active'}
+            {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet in your check-in'}
           </p>
 
           {candidateMessage && (
