@@ -24,6 +24,7 @@ import { formatStageCompact, type StageResult } from '@/lib/known/practiceStage'
 import { isLowEngagement } from '@/lib/known/engagement'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
+import StickyBar, { STICKY_BAR_SPACE } from '@/components/known/StickyBar'
 import { REVIEW_CADENCES, REVIEW_COPY, computeReviewProgress, formatReviewProgress, type TraitReviewInput } from '@/lib/known/reviewProgress'
 
 // Card copy for a directional active pattern used to be the same static
@@ -216,6 +217,21 @@ export default function PracticeHomePage() {
   const active = activeActivations(data)
   const candidates = orderByStrength(candidateFacetIds(data), (f) => reportTraits.strength.get(f) ?? 0)
     .map((i) => candidateFacetIds(data)[i])
+  // One check-in for the day, stepping through every trait in it
+  // (/practice/checkin), as a sticky bottom bar — the same bar the report
+  // uses — instead of a "Check in today" button per trait card. Gone once
+  // every trait is logged for today; the cards then each say so.
+  const doneCount = active.filter((a) => checkedInToday.has(a.id)).length
+  const checkInBar =
+    active.length === 0 || doneCount === active.length
+      ? null
+      : {
+          leftText: doneCount > 0
+            ? `Today's check-in · ${doneCount} of ${active.length} done`
+            : `Today's check-in · ${active.length} trait${active.length === 1 ? '' : 's'}, about a minute`,
+          rightLabel: doneCount > 0 ? 'Continue →' : 'Start check-in →',
+          onSelect: () => router.push('/practice/checkin'),
+        }
   const reviewInputs: TraitReviewInput[] = active.flatMap((a) => {
     const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
     if (!openPeriod) return []
@@ -228,7 +244,11 @@ export default function PracticeHomePage() {
   const shownCandidates = showAllCandidates ? candidates : candidates.slice(0, CANDIDATES_SHOWN)
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center px-6 py-12">
+    <div
+      className="min-h-screen bg-cream flex flex-col items-center px-6 py-12"
+      style={checkInBar ? { paddingBottom: STICKY_BAR_SPACE } : undefined}
+    >
+      {checkInBar && <StickyBar {...checkInBar} />}
       <div className="w-full max-w-md">
         <div className="flex items-start justify-between gap-3" style={{ marginBottom: 24 }}>
           <div>
@@ -306,57 +326,6 @@ export default function PracticeHomePage() {
             {facetDisplayLabel(justActivatedFacet)} added. {practicePurposeCopy(false)}
           </p>
         )}
-
-        {active.length > 0 && (() => {
-          // One check-in for the day, stepping through every trait in it
-          // (/practice/checkin), instead of a "Check in today" button per
-          // trait card. Three states: not started, part done, done.
-          const doneCount = active.filter((a) => checkedInToday.has(a.id)).length
-          const allDone = doneCount === active.length
-          return (
-            <div
-              style={{
-                marginBottom: 28, padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5',
-                display: 'flex', flexDirection: 'column', gap: 12,
-              }}
-            >
-              <div>
-                <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.3 }}>
-                  Today&apos;s check-in
-                </p>
-                <p className="font-sans text-muted" style={{ fontSize: 12.5, marginTop: 4 }}>
-                  {allDone
-                    ? `All ${active.length} trait${active.length === 1 ? '' : 's'} logged for today.`
-                    : doneCount > 0
-                      ? `${doneCount} of ${active.length} done`
-                      : `${active.length} trait${active.length === 1 ? '' : 's'} · about a minute`}
-                </p>
-              </div>
-              {allDone ? (
-                <div
-                  className="font-sans font-medium"
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                    padding: 13, borderRadius: 10, border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 14,
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Checked in today
-                </div>
-              ) : (
-                <Link
-                  href="/practice/checkin"
-                  className="font-sans font-medium"
-                  style={{ display: 'block', textAlign: 'center', padding: 13, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
-                >
-                  {doneCount > 0 ? 'Continue' : 'Start today’s check-in'}
-                </Link>
-              )}
-            </div>
-          )
-        })()}
 
         {active.length > 0 && <div style={{ marginBottom: 28 }}>
           {/* These are the traits today's check-in walks through, so the

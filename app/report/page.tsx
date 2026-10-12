@@ -23,6 +23,7 @@ import type { DirectionAccordionItem } from '@/components/known/DirectionAccordi
 import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
+import StickyBar from '@/components/known/StickyBar'
 import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
@@ -56,21 +57,12 @@ const serif = 'var(--font-newsreader), serif'
 
 // ── Responsive CSS ────────────────────────────────────────────────────────────
 // "Go deeper"/"Worth trying" side-by-side on narrow screens squeezes each
-// card too narrow to read comfortably; the sticky bar's fixed height doesn't
-// leave room for leftText to wrap on narrow screens, so the button gets
-// pushed out of the bar. Both stack vertically below 560px.
+// card too narrow to read comfortably, so they stack below 560px. (The
+// sticky bar's own responsive rules live with it in StickyBar.)
 const reportCSS = `
   .report-cards-row{display:flex;gap:12px;}
-  .report-sticky-bar{
-    position:fixed;bottom:0;left:0;right:0;min-height:64px;background:${cream};
-    border-top:1px solid ${line};z-index:100;display:flex;align-items:center;
-    justify-content:space-between;padding:14px 28px;gap:16px;
-  }
   @media(max-width:560px){
     .report-cards-row{flex-direction:column;}
-    .report-sticky-bar{flex-direction:column;align-items:flex-start;padding:16px 20px;gap:10px;}
-    .report-sticky-bar .rsb-cta{width:100%;}
-    .report-sticky-bar .rsb-cta button{width:100%;}
   }
 `
 
@@ -272,40 +264,6 @@ function BranchSuggestionCard({
             {ctaLabel}
           </button>
         </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Sticky bottom bar ─────────────────────────────────────────────────────────
-
-function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; rightLabel: string; onSelect: () => void }) {
-  return (
-    <div className="report-sticky-bar">
-      <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: charcoalSoft, margin: 0, flex: 1, minWidth: 0 }}>
-        {leftText}
-      </p>
-      <div
-        className="rsb-cta"
-        onClick={onSelect}
-        style={{
-          flexShrink: 0,
-          padding: 2,
-          borderRadius: 100,
-          background: 'linear-gradient(135deg, hsl(175,65%,55%), hsl(205,65%,60%), hsl(235,60%,65%), hsl(290,55%,60%), hsl(8,65%,60%), hsl(35,70%,58%))',
-          backgroundSize: '300% 300%',
-          animation: 'gradientRotate 4s ease infinite',
-          boxShadow: '0 0 20px 2px hsla(175,65%,55%,0.25), 0 0 40px 4px hsla(205,65%,60%,0.15)',
-          cursor: 'pointer',
-        }}
-      >
-        <button style={{
-          fontFamily: sans, fontSize: 13, fontWeight: 500, color: charcoal,
-          padding: '10px 20px', border: 'none', borderRadius: 100,
-          background: cream, cursor: 'pointer',
-        }}>
-          {rightLabel}
-        </button>
       </div>
     </div>
   )
