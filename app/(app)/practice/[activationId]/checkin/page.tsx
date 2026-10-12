@@ -15,10 +15,10 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent } from '@/lib/known/practiceTokens'
-import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
-import { todayLocalDateString } from '@/lib/known/checkInDate'
-import { practicePurposeCopy } from '@/lib/known/practicePurpose'
-import { detectUnlockMoment, formatUnlockMoment, type UnlockMoment } from '@/lib/known/checkInUnlock'
+import { checkInOptionWord } from '@/lib/known/checkInOptions'
+import { formatUnlockMoment, type UnlockMoment } from '@/lib/known/checkInUnlock'
+import { saveCheckIn, unlockHref } from '@/lib/known/saveCheckIn'
+import CheckInQuestion from '@/components/known/CheckInQuestion'
 
 export default function CheckInPage({ params }: { params: { activationId: string } }) {
   const router = useRouter()
@@ -88,35 +88,15 @@ export default function CheckInPage({ params }: { params: { activationId: string
     if (!userId || !selected) return
     setIsSaving(true)
 
-    const today = todayLocalDateString()
-    const supabase = createClient()
-    const { error } = await supabase.from('check_ins').upsert(
-      {
-        user_id: userId,
-        facet_activation_id: activationId,
-        check_in_date: today,
-        response_option: selected,
-        note: note.trim() || null,
-      },
-      { onConflict: 'facet_activation_id,check_in_date' }
-    )
-
-    if (error) {
-      console.error('[CheckIn] save error:', error.message)
+    const result = await saveCheckIn(createClient(), {
+      userId, activationId, option: selected, note, existingCheckIns, periodStartedAt,
+    })
+    if (!result.ok) {
+      console.error('[CheckIn] save error:', result.message)
       setIsSaving(false)
       return
     }
-
-    // Only a genuinely NEW day's check-in can "unlock" something — editing
-    // a check-in that already existed for today isn't a new data point, so
-    // it never re-triggers this (it already fired, if it was going to, the
-    // first time today's check-in was saved).
-    const alreadyCheckedInToday = existingCheckIns.some((c) => c.check_in_date === today)
-    let moment: UnlockMoment = null
-    if (!alreadyCheckedInToday && periodStartedAt) {
-      const afterCheckIns = [...existingCheckIns, { check_in_date: today, response_option: selected }]
-      moment = detectUnlockMoment(existingCheckIns, afterCheckIns, periodStartedAt)
-    }
+    const moment = result.moment
     setUnlockMoment(moment)
 
     // Round 5 feedback: saving used to redirect to /practice with zero
@@ -171,7 +151,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
                 {formatUnlockMoment(unlockMoment)}
               </p>
               <Link
-                href={`/practice/reviews/monthly#${activationId}`}
+                href={unlockHref(unlockMoment, activationId)}
                 className="font-sans font-medium"
                 style={{ display: 'inline-block', marginTop: 14, padding: '11px 20px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
               >
@@ -184,7 +164,6 @@ export default function CheckInPage({ params }: { params: { activationId: string
     )
   }
 
-  const prompt = getCheckInPrompt(facetId)
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center" style={{ position: 'relative' }}>
@@ -207,62 +186,15 @@ export default function CheckInPage({ params }: { params: { activationId: string
           </p>
         </div>
 
-        <div>
-          <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 28, lineHeight: 1.25, marginBottom: 12 }}>
-            {facetDisplayLabel(facetId)}
-          </h1>
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.55 }}>
-            {prompt.question}
-          </p>
-          {/* Review feedback: this screen had zero framing of what a
-              check-in is for, despite being the highest-frequency screen in
-              the product. Mechanism, not momentum — no streaks, no counts,
-              no "keep it up". First visit gets the full purpose line
-              (Part 1 — same wording as facet detail and the activation
-              banner); every return visit gets a shorter mechanism-only
-              reminder so it doesn't repeat the pitch daily. */}
-          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
-            {isFirstCheckIn ? practicePurposeCopy(directional) : 'This becomes part of your report — not a score, just a record of what you noticed.'}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2.5">
-          {prompt.options.map((o) => {
-            const isSelected = selected === o.id
-            return (
-              <button
-                key={o.id}
-                onClick={() => setSelected(o.id)}
-                className="font-sans text-charcoal"
-                style={{
-                  textAlign: 'left', width: '100%', boxSizing: 'border-box', padding: '16px 18px',
-                  borderRadius: 12, cursor: 'pointer',
-                  border: `1.5px solid ${isSelected ? directionalAccent : '#DAD3C3'}`,
-                  background: isSelected ? '#FBEEE8' : '#FFFFFF',
-                }}
-              >
-                <span style={{ fontSize: 15, lineHeight: 1.4 }}>{o.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        <div>
-          <label htmlFor="note" className="font-sans text-charcoal-soft" style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
-            Anything else worth noting? (optional)
-          </label>
-          <textarea
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="A line or two is plenty"
-            className="font-sans text-charcoal"
-            style={{
-              width: '100%', boxSizing: 'border-box', minHeight: 64, padding: '12px 14px',
-              borderRadius: 10, border: '1px solid #DAD3C3', background: '#FFFFFF', fontSize: 14, resize: 'none',
-            }}
-          />
-        </div>
+        <CheckInQuestion
+          facetId={facetId}
+          directional={directional}
+          isFirstCheckIn={isFirstCheckIn}
+          selected={selected}
+          onSelect={setSelected}
+          note={note}
+          onNoteChange={setNote}
+        />
       </div>
 
       <div
