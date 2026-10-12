@@ -336,52 +336,29 @@ export default function PracticeHomePage() {
                       background: showBadge ? directionalSoft : '#FFFFFF',
                     }}
                   >
-                    {/* Review feedback: this used to be a solid-fill orange
-                        pill — the loudest thing on the card, competing with
-                        the facet name itself for the first thing a reader's
-                        eye lands on. A plain uppercase label matches how
-                        every other eyebrow in this app reads ("ACTIVE",
-                        "YOUR PROGRESS") — still distinguishable by color,
-                        no longer shouting. The card's own tinted
-                        background/border already carries the primary
-                        "this one's directional" signal. */}
-                    {showBadge && (
-                      <p
-                        className="font-sans font-semibold uppercase"
-                        style={{ fontSize: 11, letterSpacing: '0.04em', color: directionalAccent }}
-                      >
-                        Directional · from mini-assessment
-                      </p>
-                    )}
-                    <Link href={`/practice/${a.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {/* The small dot that used to sit next to every active
-                          facet's name — directional or not — is gone: it
-                          never carried information distinct from the badge
-                          above and the card's own tint/border, just an
-                          unexplained mark (review feedback). */}
-                      <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>
+                    {/* Hierarchy (review feedback): the trait name reads
+                        first; where it came from and where it stands share
+                        one quiet line under it (this used to be an orange
+                        eyebrow above the name, with the stage below the
+                        description); then the description; then the
+                        check-in. The unlock note sits under the check-in
+                        rather than between the content and the action. The
+                        card's tint/border still carries "directional". */}
+                    <Link href={`/practice/${a.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.3 }}>
                         {facetDisplayLabel(a.facet_id)}
                       </span>
-                      <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>
-                        {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
-                      </p>
-                      {/* Compact ladder (rework Part 2) — same stage this
-                          facet's detail page shows, one line, so the card
-                          itself says where things stand without a click. */}
-                      {stageLine && (
+                      {(showBadge || stageLine) && (
                         <p className="font-sans text-muted" style={{ fontSize: 12 }}>
+                          {showBadge && <span style={{ color: directionalAccent, fontWeight: 500 }}>Directional</span>}
+                          {showBadge && stageLine && ' · '}
                           {stageLine}
                         </p>
                       )}
-                    </Link>
-                    {showBadge && (
-                      <p
-                        className="font-sans"
-                        style={{ fontSize: 12, color: '#8a5a3d', paddingTop: 8, borderTop: `1px solid ${directionalAccent}4d` }}
-                      >
-                        Unlock the full assessment (€49) for a complete, non-directional read on this pattern.
+                      <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
+                        {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
-                    )}
+                    </Link>
                     {checkedInToday.has(a.id) ? (
                       // Round 5 feedback: this used to always show the dark
                       // "Check in today" button, even right after the user
@@ -431,6 +408,11 @@ export default function PracticeHomePage() {
                           {weeklyProgress}
                         </p>
                       )
+                    )}
+                    {showBadge && (
+                      <p className="font-sans" style={{ fontSize: 12, lineHeight: 1.45, color: '#8a5a3d', textAlign: 'center' }}>
+                        Based on the mini-assessment. The full assessment (€49) gives a complete read.
+                      </p>
                     )}
                   </div>
                 )
