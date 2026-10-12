@@ -2,7 +2,7 @@
  * lib/known/quarterlyReview.ts
  *
  * Per-facet milestone read for the practice-wide milestone page
- * (app/(app)/practice/quarterly) — rework Part 4. Used to be anchored to
+ * (app/(app)/practice/reviews/quarterly) — rework Part 4. Used to be anchored to
  * the calendar quarter; now anchored to MILESTONE_WINDOW_DAYS (90) since
  * each facet's own current activation period started, same
  * lib/known/periodWindow.ts mechanism the facet report's 4-week window

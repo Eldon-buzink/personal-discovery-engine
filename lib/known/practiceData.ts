@@ -182,3 +182,45 @@ export function candidateFacetIds(data: PracticeData): string[] {
   const activeIds = new Set(activeActivations(data).map((a) => a.facet_id))
   return Array.from(data.revealedFacetIds).filter((f) => !activeIds.has(f))
 }
+
+export interface ActiveTraitCheckIns {
+  activationId: string
+  facetId: string
+  directional: boolean
+  periodStartedAt: string
+  // Every check-in for this activation; the review computations scope them
+  // to the current period themselves.
+  checkIns: (CheckInForTrend & { note: string | null })[]
+}
+
+// The weekly/monthly/quarterly review pages each show every active trait for
+// one window — one query for all of their check-ins, same shape as
+// fetchStages, rather than one page per trait.
+export async function fetchActiveTraitCheckIns(supabase: SupabaseClient, userId: string): Promise<ActiveTraitCheckIns[]> {
+  const { activations } = await fetchPracticeData(supabase, userId)
+  const active = activations.filter(isActive)
+  if (active.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('facet_activation_id, check_in_date, response_option, note')
+    .eq('user_id', userId)
+    .in('facet_activation_id', active.map((a) => a.id))
+
+  if (error) throw new Error(error.message)
+
+  const byActivation = new Map<string, ActiveTraitCheckIns['checkIns']>()
+  for (const row of (data ?? []) as { facet_activation_id: string; check_in_date: string; response_option: string; note: string | null }[]) {
+    const arr = byActivation.get(row.facet_activation_id) ?? []
+    arr.push({ check_in_date: row.check_in_date, response_option: row.response_option, note: row.note })
+    byActivation.set(row.facet_activation_id, arr)
+  }
+
+  return active.map((a) => ({
+    activationId: a.id,
+    facetId: a.facet_id,
+    directional: a.directional,
+    periodStartedAt: a.facet_activation_periods.find((p) => p.ended_at === null)!.started_at,
+    checkIns: byActivation.get(a.id) ?? [],
+  }))
+}

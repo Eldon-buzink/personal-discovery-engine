@@ -171,11 +171,11 @@ export default function CheckInPage({ params }: { params: { activationId: string
                 {formatUnlockMoment(unlockMoment)}
               </p>
               <Link
-                href={`/practice/${activationId}/report`}
+                href={`/practice/reviews/monthly#${activationId}`}
                 className="font-sans font-medium"
                 style={{ display: 'inline-block', marginTop: 14, padding: '11px 20px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
               >
-                See your report
+                See your review
               </Link>
             </>
           )}

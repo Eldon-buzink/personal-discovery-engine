@@ -23,6 +23,7 @@ import { formatWeeklyProgress, type WeeklyInsightResult } from '@/lib/known/week
 import { formatStageCompact, type StageResult } from '@/lib/known/practiceStage'
 import { isLowEngagement } from '@/lib/known/engagement'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
+import { REVIEW_CADENCES, REVIEW_COPY, computeReviewProgress, formatReviewProgress, type TraitReviewInput } from '@/lib/known/reviewProgress'
 
 // Card copy for a directional active pattern used to be the same static
 // FACET_DESCRIPTIONS line every user with that facet sees, regardless of
@@ -249,6 +250,15 @@ export default function PracticeHomePage() {
   const active = activeActivations(data)
   const candidates = orderByStrength(candidateFacetIds(data), (f) => reportTraits.strength.get(f) ?? 0)
     .map((i) => candidateFacetIds(data)[i])
+  const reviewInputs: TraitReviewInput[] = active.flatMap((a) => {
+    const openPeriod = a.facet_activation_periods.find((p) => p.ended_at === null)
+    if (!openPeriod) return []
+    return [{
+      checkInsThisWeek: weeklyInsights.get(a.id)?.summary.checkInCount ?? 0,
+      checkInsInReportWindow: stages.get(a.id)?.reportWindowCheckInCount ?? 0,
+      periodStartedAt: openPeriod.started_at,
+    }]
+  })
   const shownCandidates = showAllCandidates ? candidates : candidates.slice(0, CANDIDATES_SHOWN)
 
   return (
@@ -267,7 +277,7 @@ export default function PracticeHomePage() {
               them for a moment each day, and see how they move over the weeks.
             </p>
             <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5, marginTop: 8 }}>
-              Pick a trait · Check in daily · Weekly read, 4-week report, quarterly review
+              Pick a trait · Check in daily · Weekly, monthly and quarterly reviews
             </p>
           </div>
         </div>
@@ -403,7 +413,7 @@ export default function PracticeHomePage() {
                         silent when there's nothing yet to report. */}
                     {weeklyQualifies ? (
                       <Link
-                        href={`/practice/${a.id}/report`}
+                        href="/practice/reviews/weekly"
                         className="font-sans"
                         style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}
                       >
@@ -428,47 +438,41 @@ export default function PracticeHomePage() {
             <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
               Your reviews
             </p>
-            <div className="flex flex-col gap-2">
-              {active.map((a) => {
-                const ready = weeklyInsights.get(a.id)?.summary.qualifies ?? false
+            {/* One card per cadence, each opening a page with every active
+                trait — not a card per trait. Progress is plain text, never a
+                bar (same no-gamification rule as the stage ladder). */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+              {REVIEW_CADENCES.map((cadence) => {
+                const progress = computeReviewProgress(cadence, reviewInputs)
+                const progressLine = formatReviewProgress(cadence, progress)
+                const ready = progress.total > 0 && progress.readyCount > 0
                 return (
                   <Link
-                    key={a.id}
-                    href={`/practice/${a.id}/report`}
+                    key={cadence}
+                    href={REVIEW_COPY[cadence].href}
                     style={{
-                      padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                      padding: '14px 12px', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 6,
+                      background: ready ? directionalSoft : '#FFFFFF',
+                      border: ready ? `1.5px solid ${directionalAccent}` : '1px solid #DAD3C3',
                     }}
                   >
-                    <div>
-                      <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
-                        {facetDisplayLabel(a.facet_id)}
-                      </div>
-                      <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: ready ? directionalAccent : '#8a8375' }}>
-                        {ready ? 'Your weekly read is ready' : 'Weekly read and 4-week report'}
-                      </div>
-                    </div>
-                    <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+                    <span className="font-serif font-medium text-charcoal" style={{ fontSize: 16 }}>
+                      {REVIEW_COPY[cadence].title}
+                    </span>
+                    <span className="font-sans text-muted" style={{ fontSize: 11.5, lineHeight: 1.4 }}>
+                      {REVIEW_COPY[cadence].description}
+                    </span>
+                    {progressLine && (
+                      <span
+                        className="font-sans"
+                        style={{ marginTop: 'auto', paddingTop: 6, fontSize: 11.5, lineHeight: 1.35, fontWeight: 500, color: ready ? directionalAccent : '#4a463e' }}
+                      >
+                        {progressLine}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
-              <Link
-                href="/practice/quarterly"
-                style={{
-                  padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                }}
-              >
-                <div>
-                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
-                    This quarter&apos;s review
-                  </div>
-                  <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: '#8a8375' }}>
-                    All your traits, over 90 days
-                  </div>
-                </div>
-                <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
-              </Link>
             </div>
           </div>
         )}
