@@ -19,7 +19,8 @@ import { PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, has
 export const RING1_TARGET_WORDS = 70
 export const RING1_RETRY_WORDS = 90
 const TAG_COUNT = 3
-// Tags: over 3 words is soft (shorten it), over 4 is hard.
+// Tags: 2-3 words. One word or over 3 is soft (retry note), over 4 is hard.
+const TAG_SOFT_MIN_WORDS = 2
 const TAG_SOFT_MAX_WORDS = 3
 const TAG_HARD_MAX_WORDS = 4
 
@@ -33,7 +34,7 @@ export const RING1_CARD_SCHEMA = {
   properties: {
     trait_quote: { type: 'string', description: '1-2 sentences, second person, present tense.' },
     body: { type: 'string', description: '2-3 sentences of prose: where it shows up, what it gives, what it costs.' },
-    tags: { type: 'array', items: { type: 'string', description: 'Short behavioural tag, max 3 words.' } },
+    tags: { type: 'array', items: { type: 'string', description: 'Natural 2-3 word phrase.' } },
   },
   required: ['trait_quote', 'body', 'tags'],
   additionalProperties: false,
@@ -63,6 +64,7 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
     const n = countWords(t)
     if (n > TAG_HARD_MAX_WORDS) return { ok: false, reason: `tag over ${TAG_HARD_MAX_WORDS} words` }
     if (n > TAG_SOFT_MAX_WORDS) violations.push(`Tag '${t.trim()}' has ${n} words: shorten to ${TAG_SOFT_MAX_WORDS}.`)
+    if (n < TAG_SOFT_MIN_WORDS) violations.push(`Tag '${t.trim()}' has 1 word: use 2-3 words.`)
   }
   const card: Ring1Card = { trait_quote: trait_quote.trim(), body: body.trim(), tags: tags.map((t: string) => t.trim()) }
   const text = `${card.trait_quote} ${card.body}`

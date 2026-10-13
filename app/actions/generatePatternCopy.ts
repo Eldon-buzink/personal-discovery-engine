@@ -163,7 +163,7 @@ Orderliness, low
 {"trait_quote": "Plans feel like a starting point to you, not a promise.", "body": "You tend to adapt quickly when things change. It can also leave small loose ends that other people notice before you do. It often shows when a project needs steady upkeep instead of a burst of energy.", "tags": ["Adapts fast", "Loose ends", "Burst worker"]}
 
 Anxiety, mid
-{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "body": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day. It can also make it hard to tell, in the moment, which kind of worry you're feeling.", "tags": ["Selective worry", "Stays alert", "Varies"]}`
+{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "body": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day. It can also make it hard to tell, in the moment, which kind of worry you're feeling.", "tags": ["Selective worry", "Stays alert", "Varies by day"]}`
 
 function buildRing1Prompt(
   facetName: string,
@@ -188,7 +188,7 @@ ${evidenceBlock}
 Write:
 - trait_quote: 1-2 sentences. Second person ("you"), present tense. A behaviour or inner experience the reader would recognise. Do not use the words "${facetName}" or any domain name (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).
 - body: 2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.
-- tags: exactly 3 short behavioural tags, max 3 words each.
+- tags: exactly 3 tags, 2-3 words each. Natural phrases someone would say about themselves, not participle fragments or abstract nouns.
 
 Rules:
 - trait_quote and body together: about 70 words at most.
@@ -200,7 +200,13 @@ Rules:
 - Keep sentences under about 18 words, one idea per sentence.
 - At most one "tends to" or "can" per sentence.
 - No semicolons or em-dashes. No abstract nouns where a verb works.
-- Never write "the payoff", "the cost" or "the price" as labels.
+- Never write "the payoff", "the cost" or "the price" as labels. Never start a sentence with "The trade is", "The trade-off is", "The cost is", "The price is", "The payoff is", "The upside is" or "The downside is".
+- Every sentence must describe this facet's behaviour as described above. Add no other traits or outcomes.
+- No abstract nouns or invented phrases (like "naive harm" or "withheld certainty"). Say what the person does or feels.
+- If a sentence could just as well be about a different facet, rewrite it so it is clearly about this one.
+
+Tags, good (natural, 2-3 words): "Finishes what you start", "Slow to trust", "Speaks up early", "Needs quiet time", "Plans ahead", "Easy to approach".
+Tags, bad (fragments or abstractions, never like these): "Finishes what begins", "Withheld certainty", "Cautious openness", "Starts without drag", "Mix and settle", "Selective explorer".
 
 ${RING1_EXAMPLES}
 

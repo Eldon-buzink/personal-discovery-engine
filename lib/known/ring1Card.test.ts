@@ -66,6 +66,12 @@ test('soft: a four-word tag names the tag', () => {
   if (r.ok) assert.deepEqual(r.violations, ["Tag 'X Y Z W' has 4 words: shorten to 3."])
 })
 
+test('soft: a one-word tag asks for 2-3 words', () => {
+  const r = checkRing1Card({ ...card, tags: ['Adapts fast', 'Loose ends', 'Varies'] })
+  assert.equal(r.ok, true)
+  if (r.ok) assert.deepEqual(r.violations, ["Tag 'Varies' has 1 word: use 2-3 words."])
+})
+
 test('soft: over the word limit says how long it is', () => {
   const body = Array.from({ length: 6 }, () => sentenceOf(16)).join(' ')
   const r = checkRing1Card({ ...card, body })
