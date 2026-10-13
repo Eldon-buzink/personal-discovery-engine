@@ -3,10 +3,8 @@ import assert from 'node:assert/strict'
 import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import {
-  checkRing1Card, checkRing1CardText, hasLongSentence, pickBetterCard, ring1CardWords, ring1ContentsAfter, ring1Sentences,
-  RING1_MAX_SENTENCE_WORDS, RING1_RETRY_WORDS,
-} from './ring1Card'
+import { checkRing1Card, checkRing1CardText, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
+import { HARD_SENTENCE_WORDS, SOFT_SENTENCE_WORDS } from './copyChecks'
 import { UnlockedContent } from '../../components/known/ReportVisuals'
 import type { PatternContent, PatternContentEntry } from './types'
 
@@ -16,74 +14,65 @@ const card = {
   tags: ['Adapts fast', 'Loose ends', 'Burst worker'],
 }
 
-// ── Schema validation ────────────────────────────────────────────────────────
+// ── Hard rules: the attempt can't be used ───────────────────────────────────
 
-test('a well-formed card passes, trimmed, within budget', () => {
+const sentenceOf = (n: number) => Array.from({ length: n }, (_, i) => (i === 0 ? 'You' : 'word')).join(' ') + '.'
+
+test('a well-formed card passes with no violations, trimmed', () => {
   const r = checkRing1Card({ ...card, trait_quote: `  ${card.trait_quote}  ` })
   assert.equal(r.ok, true)
   if (r.ok) {
     assert.equal(r.card.trait_quote, card.trait_quote)
-    assert.equal(r.overBudget, false)
+    assert.deepEqual(r.violations, [])
   }
 })
 
-test('missing or empty fields fail', () => {
+test('hard: missing or empty fields, bad JSON', () => {
   assert.equal(checkRing1Card(null).ok, false)
   assert.equal(checkRing1Card({ ...card, trait_quote: '' }).ok, false)
   assert.equal(checkRing1Card({ trait_quote: card.trait_quote, tags: card.tags }).ok, false)
   assert.equal(checkRing1Card({ ...card, body: 42 }).ok, false)
-})
-
-test('structured-output text: valid JSON is checked, anything else fails', () => {
-  assert.equal(checkRing1CardText(JSON.stringify(card)).ok, true)
-  assert.equal(checkRing1CardText('').ok, false)
   assert.equal(checkRing1CardText('Sure! Here is the card:').ok, false)
+  assert.equal(checkRing1CardText(JSON.stringify(card)).ok, true)
 })
 
-test('tags must be exactly three, each at most three words', () => {
+test('hard: tags not exactly three, a tag over four words, an empty tag', () => {
   assert.equal(checkRing1Card({ ...card, tags: ['One', 'Two'] }).ok, false)
   assert.equal(checkRing1Card({ ...card, tags: ['One', 'Two', 'Three', 'Four'] }).ok, false)
-  assert.equal(checkRing1Card({ ...card, tags: ['One', 'Two', 'far too many words here'] }).ok, false)
+  assert.equal(checkRing1Card({ ...card, tags: ['One', 'Two', 'one two three four five'] }).ok, false)
   assert.equal(checkRing1Card({ ...card, tags: ['One', 'Two', ' '] }).ok, false)
 })
 
-test('over the word budget is valid but flagged for a retry', () => {
-  const long = Array.from({ length: RING1_RETRY_WORDS }, () => 'word').join(' ')
-  const r = checkRing1Card({ ...card, body: long })
+test(`hard: a sentence over ${HARD_SENTENCE_WORDS} words, or a labelled payoff/cost`, () => {
+  assert.equal(checkRing1Card({ ...card, body: sentenceOf(HARD_SENTENCE_WORDS + 1) }).ok, false)
+  assert.equal(checkRing1Card({ ...card, body: 'The cost is real. It shows at work.' }).ok, false)
+  assert.equal(checkRing1Card({ ...card, body: sentenceOf(HARD_SENTENCE_WORDS) }).ok, true)
+})
+
+// ── Soft rules: usable, retried with a note naming what failed ─────────────
+
+test(`soft: a sentence over ${SOFT_SENTENCE_WORDS} words names the sentence and its length`, () => {
+  const r = checkRing1Card({ ...card, body: `Short one. ${sentenceOf(31)}` })
+  assert.equal(r.ok, true)
+  if (r.ok) assert.deepEqual(r.violations, ['Sentence 3 is 31 words: split it.'])
+  const atLimit = checkRing1Card({ ...card, body: sentenceOf(SOFT_SENTENCE_WORDS) })
+  assert.equal(atLimit.ok && atLimit.violations.length, 0)
+})
+
+test('soft: a four-word tag names the tag', () => {
+  const r = checkRing1Card({ ...card, tags: ['Adapts fast', 'Loose ends', 'X Y Z W'] })
+  assert.equal(r.ok, true)
+  if (r.ok) assert.deepEqual(r.violations, ["Tag 'X Y Z W' has 4 words: shorten to 3."])
+})
+
+test('soft: over the word limit says how long it is', () => {
+  const body = Array.from({ length: 6 }, () => sentenceOf(16)).join(' ')
+  const r = checkRing1Card({ ...card, body })
   assert.equal(r.ok, true)
   if (r.ok) {
-    assert.equal(r.overBudget, true)
-    assert.ok(ring1CardWords(r.card) > RING1_RETRY_WORDS)
+    assert.ok(r.words > RING1_RETRY_WORDS)
+    assert.deepEqual(r.violations, [`The quote and body are ${r.words} words together: cut to about 70.`])
   }
-})
-
-// ── Readability: long sentences ─────────────────────────────────────────────
-
-const longSentence = Array.from({ length: RING1_MAX_SENTENCE_WORDS + 1 }, (_, i) => (i === 0 ? 'You' : 'word')).join(' ') + '.'
-
-test('sentences are split on . ! ? across quote and body', () => {
-  assert.deepEqual(ring1Sentences({ trait_quote: 'One here. Two here!', body: 'Three here? Four.' }), ['One here.', 'Two here!', 'Three here?', 'Four.'])
-})
-
-test('a sentence over the limit marks the card tooLong; at the limit it does not', () => {
-  const atLimit = Array.from({ length: RING1_MAX_SENTENCE_WORDS }, () => 'word').join(' ') + '.'
-  assert.equal(hasLongSentence({ trait_quote: atLimit, body: 'Short.' }), false)
-  assert.equal(hasLongSentence({ trait_quote: 'Short.', body: longSentence }), true)
-  const r = checkRing1Card({ ...card, body: longSentence })
-  assert.equal(r.ok && r.tooLong, true)
-  const fine = checkRing1Card(card)
-  assert.equal(fine.ok && fine.tooLong, false)
-})
-
-test('pickBetterCard prefers no long sentence, then fewer words', () => {
-  const long = { ...card, body: longSentence }
-  const longer = { ...card, body: card.body + ' And one more short sentence here.' }
-  // A card with a long sentence loses to one without, whatever the word counts.
-  assert.equal(pickBetterCard(long, longer), longer)
-  assert.equal(pickBetterCard(longer, long), longer)
-  // Neither has a long sentence: fewer words wins; a tie keeps the first.
-  assert.equal(pickBetterCard(longer, card), card)
-  assert.equal(pickBetterCard(card, { ...card }), card)
 })
 
 // ── A failed card is never saved ─────────────────────────────────────────────

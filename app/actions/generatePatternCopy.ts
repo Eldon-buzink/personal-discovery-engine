@@ -14,9 +14,9 @@ import type { PatternContent } from '@/lib/known/types'
 import {
   RING1_CARD_SCHEMA,
   checkRing1CardText,
-  pickBetterCard,
   type Ring1Card,
 } from '@/lib/known/ring1Card'
+import { betterAttempt, retryFeedback } from '@/lib/known/copyChecks'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
 // One-line descriptions of what each facet actually measures behaviorally.
@@ -499,28 +499,58 @@ export async function generatePatternCopy(
 // as if it were real.
 export type Ring1CopyResult = { content: PatternContent } | { content: null; failed: true }
 
-async function requestRing1Card(
+type Checked<T> = { ok: true; value: T; violations: string[]; words: number } | { ok: false; reason: string }
+
+// Two attempts with structured output on RING1_MODEL (structured output
+// rather than a forced tool call: newer models reject forced tool_choice).
+// - A hard failure (or a failed call) retries the original prompt.
+// - Soft violations retry once with the model's own answer and a note naming
+//   exactly what failed; the better attempt is kept (fewest violations, then
+//   fewest words). A soft violation alone never leaves the result empty.
+// Returns null only when neither attempt is usable.
+async function generateWithRetry<T>(
   anthropic: Anthropic,
-  req: { facetName: string; traitWord: string; scoreDirection: 'high' | 'mid' | 'low' },
-  evidence: EvidenceItem[]
-) {
-  // Structured output rather than a forced tool call: newer models (Sonnet
-  // 5.5) reject forced tool_choice, and this keeps RING1_MODEL swappable. Room in
-  // max_tokens for models that think by default.
-  const message = await anthropic.messages.create({
-    model: RING1_MODEL,
-    max_tokens: 4096,
-    system: RING1_SYSTEM_PROMPT,
-    output_config: { format: { type: 'json_schema', schema: RING1_CARD_SCHEMA } },
-    messages: [{ role: 'user', content: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection, evidence) }],
-  })
-  // A refusal or a cut-off answer may not match the schema: count it as a
-  // failed attempt.
-  if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
-    return { ok: false as const, reason: `stop_reason ${message.stop_reason}` }
+  request: { system: string; prompt: string; schema: Record<string, unknown>; maxTokens: number; temperature?: number },
+  check: (text: string) => Checked<T>,
+  logTag: string
+): Promise<T | null> {
+  const first: Anthropic.MessageParam = { role: 'user', content: request.prompt }
+  let messages: Anthropic.MessageParam[] = [first]
+  let best: { value: T; violations: string[]; words: number } | null = null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: RING1_MODEL,
+        max_tokens: request.maxTokens,
+        system: request.system,
+        ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
+        output_config: { format: { type: 'json_schema', schema: request.schema } },
+        messages,
+      })
+      // A refusal or a cut-off answer may not match the schema.
+      if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
+        console.error(`[${logTag}] stop_reason:`, message.stop_reason)
+        messages = [first]
+        continue
+      }
+      const block = message.content.find((b) => b.type === 'text')
+      const text = block && block.type === 'text' ? block.text : ''
+      const c = check(text)
+      if (!c.ok) {
+        console.error(`[${logTag}] rejected:`, c.reason)
+        messages = [first]
+        continue
+      }
+      const usable = { value: c.value, violations: c.violations, words: c.words }
+      best = best ? betterAttempt(best, usable) : usable
+      if (usable.violations.length === 0) break
+      messages = [first, { role: 'assistant', content: text }, { role: 'user', content: retryFeedback(usable.violations) }]
+    } catch (err) {
+      console.error(`[${logTag}] generation failed:`, describeError(err))
+      messages = [first]
+    }
   }
-  const text = message.content.find((b) => b.type === 'text')
-  return checkRing1CardText(text && text.type === 'text' ? text.text : '')
+  return best ? best.value : null
 }
 
 export async function generateRing1Copy(
@@ -539,26 +569,22 @@ export async function generateRing1Copy(
   // if the request carried answers.
   const evidence = evidenceFor(req.facetName, parsedAnswers)
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  // Two attempts. A failed call or an invalid card uses up an attempt; a
-  // valid card that is over the word budget or has a sentence over
-  // RING1_MAX_SENTENCE_WORDS is kept but tried once more, and the better of
-  // the two is used (no long sentence first, then fewer words).
-  let best: Ring1Card | null = null
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const check = await requestRing1Card(anthropic, req, evidence)
-      if (!check.ok) {
-        console.error('[generateRing1Copy] invalid card:', check.reason)
-        continue
-      }
-      best = best ? pickBetterCard(best, check.card) : check.card
-      if (!check.overBudget && !check.tooLong) break
-    } catch (err) {
-      console.error('[generateRing1Copy] generation failed:', describeError(err))
-    }
-  }
-  return best ? { content: best } : { content: null, failed: true }
+  const card = await generateWithRetry<Ring1Card>(
+    new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }),
+    {
+      system: RING1_SYSTEM_PROMPT,
+      prompt: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection, evidence),
+      schema: RING1_CARD_SCHEMA,
+      // Room for models that think by default.
+      maxTokens: 4096,
+    },
+    (text) => {
+      const c = checkRing1CardText(text)
+      return c.ok ? { ok: true, value: c.card, violations: c.violations, words: c.words } : c
+    },
+    'generateRing1Copy'
+  )
+  return card ? { content: card } : { content: null, failed: true }
 }
 
 // ── Relationship insights (Ring 1 traits) ────────────────────────────────────
@@ -648,28 +674,20 @@ export async function generateRelationshipInsight(
   const paid = user ? await isPaidUser(user.id) : false
   if (!paid && !req.relationship.signals.every((s) => isFreeRevealed(s.facet))) throw new Error('Payment required')
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const message = await anthropic.messages.create({
-        model: RING1_MODEL,
-        max_tokens: 2048,
-        system: RELATIONSHIP_SYSTEM_PROMPT,
-        ...(acceptsTemperature(RING1_MODEL) ? { temperature: RELATIONSHIP_TEMPERATURE } : {}),
-        output_config: { format: { type: 'json_schema', schema: RELATIONSHIP_INSIGHT_SCHEMA } },
-        messages: [{ role: 'user', content: buildRelationshipPrompt(req) }],
-      })
-      if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
-        console.error('[generateRelationshipInsight] stop_reason:', message.stop_reason)
-        continue
-      }
-      const text = message.content.find((b) => b.type === 'text')
-      const check = checkInsightText(text && text.type === 'text' ? text.text : '')
-      if (check.ok) return { insight: check.insight }
-      console.error('[generateRelationshipInsight] rejected:', check.reason)
-    } catch (err) {
-      console.error('[generateRelationshipInsight] generation failed:', describeError(err))
-    }
-  }
-  return { insight: null, failed: true }
+  const insight = await generateWithRetry<string>(
+    new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }),
+    {
+      system: RELATIONSHIP_SYSTEM_PROMPT,
+      prompt: buildRelationshipPrompt(req),
+      schema: RELATIONSHIP_INSIGHT_SCHEMA,
+      maxTokens: 2048,
+      temperature: acceptsTemperature(RING1_MODEL) ? RELATIONSHIP_TEMPERATURE : undefined,
+    },
+    (text) => {
+      const c = checkInsightText(text)
+      return c.ok ? { ok: true, value: c.insight, violations: c.violations, words: c.words } : c
+    },
+    'generateRelationshipInsight'
+  )
+  return insight ? { insight } : { insight: null, failed: true }
 }

@@ -4,20 +4,24 @@
  * Shape and checks for a Ring 1 trait card (trait_quote, body, tags) — what
  * generateRing1Copy asks the model for (structured output constrained by
  * RING1_CARD_SCHEMA) and validates before anything is shown or saved.
- * Pure, so it can be unit-tested without the model.
+ * Soft rules (sentence over 28 words, card over RING1_RETRY_WORDS, a tag
+ * over 3 words) are returned as retry notes; hard rules (shape, tags not
+ * exactly 3, a tag over 4 words, a sentence over 35, labelled payoff/cost)
+ * fail the attempt. See lib/known/copyChecks.ts. Pure, so it can be
+ * unit-tested without the model.
  */
 
 import type { PatternContent, PatternContentEntry } from './types'
+import { checkSentenceLengths, countWords, hasLabelledTradeoff } from './copyChecks'
 
-// trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS the
-// card is regenerated once.
+// trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS is a
+// soft violation (retried once with a note, never dropped).
 export const RING1_TARGET_WORDS = 70
 export const RING1_RETRY_WORDS = 90
-// Readability: any sentence in trait_quote + body longer than this marks the
-// card tooLong, which is retried once like an over-budget card.
-export const RING1_MAX_SENTENCE_WORDS = 24
 const TAG_COUNT = 3
-const TAG_MAX_WORDS = 3
+// Tags: over 3 words is soft (shorten it), over 4 is hard.
+const TAG_SOFT_MAX_WORDS = 3
+const TAG_HARD_MAX_WORDS = 4
 
 // JSON schema for structured output (output_config.format) — the response
 // is guaranteed to be JSON of this shape, so there's nothing to strip. Works
@@ -37,47 +41,38 @@ export const RING1_CARD_SCHEMA = {
 
 export type Ring1Card = Required<Pick<PatternContent, 'trait_quote' | 'body' | 'tags'>>
 
-const words = (s: string) => s.split(/\s+/).filter(Boolean).length
-
 export function ring1CardWords(card: Pick<Ring1Card, 'trait_quote' | 'body'>): number {
-  return words(card.trait_quote) + words(card.body)
+  return countWords(card.trait_quote) + countWords(card.body)
 }
 
-// Sentences of trait_quote + body: split after . ! or ? followed by space.
-export function ring1Sentences(card: Pick<Ring1Card, 'trait_quote' | 'body'>): string[] {
-  return `${card.trait_quote} ${card.body}`.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)
-}
-
-export function hasLongSentence(card: Pick<Ring1Card, 'trait_quote' | 'body'>): boolean {
-  return ring1Sentences(card).some((s) => words(s) > RING1_MAX_SENTENCE_WORDS)
-}
-
-// The better of two valid cards: one without a long sentence wins; otherwise
-// (both or neither) the one with fewer words. Ties keep the first.
-export function pickBetterCard(a: Ring1Card, b: Ring1Card): Ring1Card {
-  const longA = hasLongSentence(a), longB = hasLongSentence(b)
-  if (longA !== longB) return longA ? b : a
-  return ring1CardWords(b) < ring1CardWords(a) ? b : a
-}
-
+// ok: usable, with any soft violations listed (as retry notes).
+// not ok: a hard failure — this attempt can't be shown.
 export type Ring1CardCheck =
-  | { ok: true; card: Ring1Card; overBudget: boolean; tooLong: boolean }
+  | { ok: true; card: Ring1Card; violations: string[]; words: number }
   | { ok: false; reason: string }
 
-// Validates the model's output. Structure problems fail outright; length
-// only flags overBudget / tooLong (the caller retries once on either).
 export function checkRing1Card(input: unknown): Ring1CardCheck {
   if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
   const { trait_quote, body, tags } = input as Record<string, unknown>
   if (typeof trait_quote !== 'string' || !trait_quote.trim()) return { ok: false, reason: 'trait_quote missing' }
   if (typeof body !== 'string' || !body.trim()) return { ok: false, reason: 'body missing' }
   if (!Array.isArray(tags) || tags.length !== TAG_COUNT) return { ok: false, reason: `tags must be exactly ${TAG_COUNT}` }
+  const violations: string[] = []
   for (const t of tags) {
     if (typeof t !== 'string' || !t.trim()) return { ok: false, reason: 'empty tag' }
-    if (words(t) > TAG_MAX_WORDS) return { ok: false, reason: `tag over ${TAG_MAX_WORDS} words` }
+    const n = countWords(t)
+    if (n > TAG_HARD_MAX_WORDS) return { ok: false, reason: `tag over ${TAG_HARD_MAX_WORDS} words` }
+    if (n > TAG_SOFT_MAX_WORDS) violations.push(`Tag '${t.trim()}' has ${n} words: shorten to ${TAG_SOFT_MAX_WORDS}.`)
   }
   const card: Ring1Card = { trait_quote: trait_quote.trim(), body: body.trim(), tags: tags.map((t: string) => t.trim()) }
-  return { ok: true, card, overBudget: ring1CardWords(card) > RING1_RETRY_WORDS, tooLong: hasLongSentence(card) }
+  const text = `${card.trait_quote} ${card.body}`
+  if (hasLabelledTradeoff(text)) return { ok: false, reason: 'labelled payoff/cost' }
+  const lengths = checkSentenceLengths(text)
+  if (lengths.hardFail) return { ok: false, reason: lengths.hardFail }
+  violations.unshift(...lengths.soft)
+  const words = ring1CardWords(card)
+  if (words > RING1_RETRY_WORDS) violations.push(`The quote and body are ${words} words together: cut to about ${RING1_TARGET_WORDS}.`)
+  return { ok: true, card, violations, words }
 }
 
 // The structured-output text → a checked card. Unparseable JSON fails the

@@ -23,11 +23,22 @@ test('no instructions from the banned list', () => {
   assert.equal(checkInsight({ insight: 'You tend to stay trying-free and entry-level calm. That keeps things steady. What gets in the way?' }).ok, true)
 })
 
-test('no sentence over 24 words, no labelled payoff/cost, sane length', () => {
-  const long = Array.from({ length: 25 }, () => 'word').join(' ') + '.'
-  assert.equal(checkInsight({ insight: `${long} What gets in the way?` }).ok, false)
+test('hard: a sentence over 35 words, a labelled payoff/cost', () => {
+  const long = Array.from({ length: 36 }, () => 'word').join(' ') + '.'
+  assert.equal(checkInsight({ insight: `${long} You tend to plan. What gets in the way?` }).ok, false)
   assert.equal(checkInsight({ insight: 'The cost is real. You tend to plan. What gets in the way?' }).ok, false)
-  assert.equal(checkInsight({ insight: 'What gets in the way?' }).ok, false)
+})
+
+test('soft: a sentence over 28 words, too few sentences, too long — usable, with notes', () => {
+  const s30 = Array.from({ length: 30 }, () => 'word').join(' ') + '.'
+  const r = checkInsight({ insight: `${s30} You tend to plan. What gets in the way?` })
+  assert.equal(r.ok, true)
+  if (r.ok) assert.deepEqual(r.violations, ['Sentence 1 is 30 words: split it.'])
+  const short = checkInsight({ insight: 'What gets in the way?' })
+  assert.equal(short.ok, true)
+  if (short.ok) assert.deepEqual(short.violations, ['Write 2-3 sentences before the closing question.'])
+  const good = checkInsight({ insight: 'You tend to plan. It keeps things steady. What gets in the way?' })
+  assert.equal(good.ok && good.violations.length, 0)
 })
 
 test('JSON text in, anything else fails', () => {

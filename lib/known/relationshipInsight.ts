@@ -4,7 +4,15 @@
  * Output shape and checks for a relationship insight (generateRelationshipInsight).
  * Pure, so it can be unit-tested without the model. The insight must be a few
  * plain sentences ending in one reflective question, with no instructions.
+ *
+ * Soft rules (retried once with a note, never dropped): a sentence over 28
+ * words, over INSIGHT_MAX_WORDS in total, too few sentences before the
+ * question. Hard rules (nothing shown after the retry): bad shape, not ending
+ * in exactly one question, banned phrases, labelled payoff/cost, a sentence
+ * over 35 words. See lib/known/copyChecks.ts.
  */
+
+import { checkSentenceLengths, countWords, hasLabelledTradeoff, splitSentences } from './copyChecks'
 
 // Structured output (output_config.format) schema: {"insight": string}.
 export const RELATIONSHIP_INSIGHT_SCHEMA = {
@@ -14,37 +22,38 @@ export const RELATIONSHIP_INSIGHT_SCHEMA = {
   additionalProperties: false,
 }
 
-export const INSIGHT_MAX_SENTENCE_WORDS = 24
-// The prompt asks for about 65; this is the hard limit in code.
+// The prompt asks for about 65; over this is a soft violation.
 export const INSIGHT_MAX_WORDS = 85
-const MIN_SENTENCES = 2
-const MAX_SENTENCES = 5
+const MIN_SENTENCES = 3 // 2 statements + the question
 
 // Instructions the text must not contain (whole words / phrases, any case).
 export const INSIGHT_BANNED = ['try', 'should', 'consider', 'make sure', 'remember to']
 
-const words = (s: string) => s.split(/\s+/).filter(Boolean).length
-const sentencesOf = (t: string) => t.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)
-
-export type InsightCheck = { ok: true; insight: string } | { ok: false; reason: string }
+export type InsightCheck =
+  | { ok: true; insight: string; violations: string[]; words: number }
+  | { ok: false; reason: string }
 
 export function checkInsight(input: unknown): InsightCheck {
   if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
   const raw = (input as Record<string, unknown>).insight
   if (typeof raw !== 'string' || !raw.trim()) return { ok: false, reason: 'insight missing' }
   const insight = raw.trim().replace(/\s+/g, ' ')
-  const sentences = sentencesOf(insight)
-  if (sentences.length < MIN_SENTENCES || sentences.length > MAX_SENTENCES) return { ok: false, reason: 'sentence count' }
+  const sentences = splitSentences(insight)
   if (!sentences[sentences.length - 1].includes('?')) return { ok: false, reason: 'does not end in a question' }
   if (sentences.slice(0, -1).some((s) => s.includes('?'))) return { ok: false, reason: 'more than one question' }
-  if (sentences.some((s) => words(s) > INSIGHT_MAX_SENTENCE_WORDS)) return { ok: false, reason: 'sentence too long' }
-  if (words(insight) > INSIGHT_MAX_WORDS) return { ok: false, reason: 'too long' }
   const lower = insight.toLowerCase()
   for (const b of INSIGHT_BANNED) {
     if (new RegExp(`\\b${b.replace(' ', '\\s+')}\\b`).test(lower)) return { ok: false, reason: `banned phrase "${b}"` }
   }
-  if (/\bthe (payoff|cost|price)\b/.test(lower)) return { ok: false, reason: 'labelled payoff/cost' }
-  return { ok: true, insight }
+  if (hasLabelledTradeoff(insight)) return { ok: false, reason: 'labelled payoff/cost' }
+  const lengths = checkSentenceLengths(insight)
+  if (lengths.hardFail) return { ok: false, reason: lengths.hardFail }
+
+  const violations = [...lengths.soft]
+  const words = countWords(insight)
+  if (words > INSIGHT_MAX_WORDS) violations.push(`The note is ${words} words: cut to about 65.`)
+  if (sentences.length < MIN_SENTENCES) violations.push('Write 2-3 sentences before the closing question.')
+  return { ok: true, insight, violations, words }
 }
 
 export function checkInsightText(text: string): InsightCheck {
