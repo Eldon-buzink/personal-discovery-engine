@@ -42,11 +42,11 @@ export interface TensionGrounding {
 // the engine, so the report and the server check follow it together.
 export const CURATED_TENSIONS_ONLY = true
 
-// Report side only (when raw facet scores are known): a tension needs the
-// high facet clearly high. The server check is direction-based and doesn't
-// use this. (There is no matching low-side rule: facet scores are averages
-// of 4 answers, so a low direction (< 2.5) is already 2.25 or less.)
-export const TENSION_HIGH_MIN_SCORE = 3.75
+// Report side only (when raw facet scores are known): the high facet's score
+// minus the low facet's score must be at least this. The server check is
+// direction-based and doesn't use it. (Directions alone give high >= 3.5 and
+// low <= 2.25, since facet scores are averages of 4 answers.)
+export const TENSION_MIN_SCORE_GAP = 1.5
 
 // Facets never used in any relationship (theme or tension).
 export const RELATIONSHIP_EXCLUDED_FACETS: readonly string[] = ['Depression']

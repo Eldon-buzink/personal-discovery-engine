@@ -14,7 +14,7 @@
  * - Tensions: two revealed facets in the same domain, one high and one low,
  *   curated pairs only (CURATED_TENSIONS_ONLY). When raw scores are passed
  *   (the report does; the server check doesn't), the high facet must score
- *   at least TENSION_HIGH_MIN_SCORE.
+ *   at least TENSION_MIN_SCORE_GAP above the low one.
  * - Facets in RELATIONSHIP_EXCLUDED_FACETS are ignored entirely.
  * - Priority: more met signals first; ties go to themes (in definition order)
  *   before tensions (curated table order, then remaining pairs in domain
@@ -25,7 +25,7 @@ import { DOMAIN_FACETS } from './ring1-questions'
 import {
   CURATED_TENSIONS_ONLY,
   RELATIONSHIP_EXCLUDED_FACETS,
-  TENSION_HIGH_MIN_SCORE,
+  TENSION_MIN_SCORE_GAP,
   TENSION_GROUNDINGS,
   ACTIVE_THEMES,
   type RelationshipSignal,
@@ -86,7 +86,11 @@ const met = (signals: Map<string, FiredSignal>, s: RelationshipSignal) => {
 export function evaluateRelationships(traits: RevealedTrait[], themes: ThemeDefinition[] = ACTIVE_THEMES): FiredRelationship[] {
   const signals = signalsOf(traits)
   const scores = new Map(traits.map((t) => [t.facet, t.score]))
-  const clearHigh = (f: string) => { const s = scores.get(f); return s === undefined || s === null || s >= TENSION_HIGH_MIN_SCORE }
+  // Without both scores (the server check) only directions matter.
+  const clearGap = (high: string, low: string) => {
+    const h = scores.get(high), l = scores.get(low)
+    return h === undefined || h === null || l === undefined || l === null || h - l >= TENSION_MIN_SCORE_GAP
+  }
   const candidates: { rel: Omit<FiredRelationship, 'rank'>; metCount: number; kindOrder: number; index: number }[] = []
 
   themes.forEach((theme, index) => {
@@ -110,7 +114,7 @@ export function evaluateRelationships(traits: RevealedTrait[], themes: ThemeDefi
         if (!h || !l || high === low) continue
         const ci = curatedIndex(high, low)
         if (CURATED_TENSIONS_ONLY && ci < 0) continue
-        if (!clearHigh(high)) continue
+        if (!clearGap(high, low)) continue
         candidates.push({
           rel: {
             id: tensionId(high, low),

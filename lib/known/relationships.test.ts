@@ -53,13 +53,14 @@ test('curated tensions only: grounded pairs fire, other same-domain pairs do not
   assert.deepEqual(ids([t('Trust', 'high'), t('Modesty', 'low')]), [])
 })
 
-test('with scores, a tension needs a clear high (>= 3.75)', () => {
+test('with scores, a tension needs a score gap of at least 1.5', () => {
   const pair = (hi: number, lo: number) => ids([
     { facet: 'Imagination', traitWord: 'Imaginative', direction: 'high', score: hi },
     { facet: 'Intellect', traitWord: 'Concrete', direction: 'low', score: lo },
   ])
   assert.deepEqual(pair(3.75, 2.25), [tensionId('Imagination', 'Intellect')])
-  assert.deepEqual(pair(3.5, 1.0), [])
+  assert.deepEqual(pair(3.5, 2.0), [tensionId('Imagination', 'Intellect')])
+  assert.deepEqual(pair(3.5, 2.25), [])
   // Without scores (the server check) only directions matter.
   assert.deepEqual(ids([t('Imagination', 'high'), t('Intellect', 'low')]), [tensionId('Imagination', 'Intellect')])
 })
