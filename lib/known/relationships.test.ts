@@ -38,12 +38,35 @@ test('tensions: same domain, opposite sides only', () => {
   assert.deepEqual(ids([t('Gregariousness', 'high'), t('Friendliness', 'mid')]), [])
 })
 
-test('curated tensions carry their grounding line; other same-domain pairs fire without one', () => {
+test('curated tensions only: grounded pairs fire, other same-domain pairs do not', () => {
   const [curated] = evaluateRelationships([t('Imagination', 'high'), t('Intellect', 'low')])
   assert.equal(curated.grounding, 'Rich inner world, less pull toward abstract debate.')
-  const [other] = evaluateRelationships([t('Trust', 'high'), t('Modesty', 'low')])
-  assert.equal(other.id, tensionId('Trust', 'Modesty'))
-  assert.equal(other.grounding, undefined)
+  assert.deepEqual(ids([t('Trust', 'high'), t('Modesty', 'low')]), [])
+})
+
+test('with scores, a tension needs a clear high (>= 3.75) and a clear low (<= 2.25)', () => {
+  const pair = (hi: number, lo: number) => ids([
+    { facet: 'Imagination', traitWord: 'Imaginative', direction: 'high', score: hi },
+    { facet: 'Intellect', traitWord: 'Concrete', direction: 'low', score: lo },
+  ])
+  assert.deepEqual(pair(3.75, 2.25), [tensionId('Imagination', 'Intellect')])
+  assert.deepEqual(pair(3.5, 2.0), [])
+  assert.deepEqual(pair(4.0, 2.5), [])
+  // Without scores (the server check) only directions matter.
+  assert.deepEqual(ids([t('Imagination', 'high'), t('Intellect', 'low')]), [tensionId('Imagination', 'Intellect')])
+})
+
+test('maxRelationships caps how many relationships are used, by rank', () => {
+  const traits = [
+    t('Cooperation', 'low'), t('Liberalism', 'high'), t('Assertiveness', 'high'), // self_direction
+    t('Imagination', 'high'), t('Intellect', 'high'), t('Adventurousness', 'high'), // wide_ranging_mind
+    t('Gregariousness', 'high'), t('Friendliness', 'low'), // tension
+  ]
+  const all = new Set(Array.from(winningRelationships(traits).values()).map((r) => r.id))
+  const two = new Set(Array.from(winningRelationships(traits, 2).values()).map((r) => r.id))
+  assert.equal(all.size, 3)
+  // wide_ranging_mind has 4 met signals here (Liberalism is in both themes), so it ranks first.
+  assert.deepEqual(Array.from(two).sort(), ['self_direction', 'wide_ranging_mind'])
 })
 
 test('Depression is never part of a relationship', () => {

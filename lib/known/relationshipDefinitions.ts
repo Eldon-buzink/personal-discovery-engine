@@ -10,9 +10,9 @@
  *
  * Themes fire when every `requires` signal is met and at least `min` of
  * `signals` are. Tensions fire when two revealed facets in the same domain
- * point opposite ways (one high, one low); the grounding lines below cover
- * the pairs we've written for, and any other same-domain pair is grounded
- * with both facets' behavioural descriptions instead.
+ * point opposite ways (one high, one low). With CURATED_TENSIONS_ONLY, only
+ * the pairs in TENSION_GROUNDINGS count; otherwise any other same-domain pair
+ * is grounded with both facets' behavioural descriptions instead.
  */
 
 export type SignalDirection = 'high' | 'low'
@@ -37,6 +37,16 @@ export interface TensionGrounding {
   low: string
   line: string
 }
+
+// Only the curated pairs in TENSION_GROUNDINGS count as tensions. Read by
+// the engine, so the report and the server check follow it together.
+export const CURATED_TENSIONS_ONLY = true
+
+// Report side only (when raw facet scores are known): a tension needs the
+// high facet clearly high and the low facet clearly low. The server check
+// is direction-based and doesn't use these.
+export const TENSION_HIGH_MIN_SCORE = 3.75
+export const TENSION_LOW_MAX_SCORE = 2.25
 
 // Facets never used in any relationship (theme or tension).
 export const RELATIONSHIP_EXCLUDED_FACETS: readonly string[] = ['Depression']

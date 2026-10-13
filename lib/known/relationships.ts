@@ -10,7 +10,11 @@
  *   counts, and unrevealed facets never count (callers pass revealed Ring 1
  *   entries only).
  * - Themes: every `requires` signal met, plus at least `min` of `signals`.
- * - Tensions: two revealed facets in the same domain, one high and one low.
+ * - Tensions: two revealed facets in the same domain, one high and one low,
+ *   curated pairs only (CURATED_TENSIONS_ONLY). When raw scores are passed
+ *   (the report does; the server check doesn't), the high facet must score
+ *   at least TENSION_HIGH_MIN_SCORE and the low one at most
+ *   TENSION_LOW_MAX_SCORE.
  * - Facets in RELATIONSHIP_EXCLUDED_FACETS are ignored entirely.
  * - Priority: more met signals first; ties go to themes (in definition order)
  *   before tensions (curated table order, then remaining pairs in domain
@@ -19,7 +23,10 @@
 
 import { DOMAIN_FACETS } from './ring1-questions'
 import {
+  CURATED_TENSIONS_ONLY,
   RELATIONSHIP_EXCLUDED_FACETS,
+  TENSION_HIGH_MIN_SCORE,
+  TENSION_LOW_MAX_SCORE,
   TENSION_GROUNDINGS,
   THEMES,
   type RelationshipSignal,
@@ -30,6 +37,8 @@ export interface RevealedTrait {
   facet: string
   traitWord: string
   direction: 'high' | 'mid' | 'low'
+  // Raw facet score (1–5), when known. Only used for the tension thresholds.
+  score?: number | null
 }
 
 export interface FiredSignal extends RelationshipSignal {
@@ -75,6 +84,9 @@ const met = (signals: Map<string, FiredSignal>, s: RelationshipSignal) => {
 // Every relationship that fires, highest priority first.
 export function evaluateRelationships(traits: RevealedTrait[]): FiredRelationship[] {
   const signals = signalsOf(traits)
+  const scores = new Map(traits.map((t) => [t.facet, t.score]))
+  const clearHigh = (f: string) => { const s = scores.get(f); return s === undefined || s === null || s >= TENSION_HIGH_MIN_SCORE }
+  const clearLow = (f: string) => { const s = scores.get(f); return s === undefined || s === null || s <= TENSION_LOW_MAX_SCORE }
   const candidates: { rel: Omit<FiredRelationship, 'rank'>; metCount: number; kindOrder: number; index: number }[] = []
 
   THEMES.forEach((theme, index) => {
@@ -97,6 +109,8 @@ export function evaluateRelationships(traits: RevealedTrait[]): FiredRelationshi
         const l = met(signals, { facet: low, direction: 'low' })
         if (!h || !l || high === low) continue
         const ci = curatedIndex(high, low)
+        if (CURATED_TENSIONS_ONLY && ci < 0) continue
+        if (!clearHigh(high) || !clearLow(low)) continue
         candidates.push({
           rel: {
             id: tensionId(high, low),
@@ -117,10 +131,17 @@ export function evaluateRelationships(traits: RevealedTrait[]): FiredRelationshi
 }
 
 // Each trait's single relationship: the highest-priority one it is part of.
-export function winningRelationships(traits: RevealedTrait[]): Map<string, FiredRelationship> {
+// With maxRelationships, at most that many relationships are used (by rank);
+// a relationship only counts if it is the winner for at least one trait.
+export function winningRelationships(traits: RevealedTrait[], maxRelationships = Infinity): Map<string, FiredRelationship> {
   const winners = new Map<string, FiredRelationship>()
+  let used = 0
   for (const rel of evaluateRelationships(traits)) {
-    for (const s of rel.signals) if (!winners.has(s.facet)) winners.set(s.facet, rel)
+    if (used >= maxRelationships) break
+    const free = rel.signals.filter((s) => !winners.has(s.facet))
+    if (free.length === 0) continue
+    for (const s of free) winners.set(s.facet, rel)
+    used++
   }
   return winners
 }

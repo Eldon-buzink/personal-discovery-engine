@@ -51,9 +51,9 @@ interface StoredSession {
 
 interface CachedInsight { id: string; signature: string; text: string }
 
-// Relationship insights: background requests per report load, most met
-// signals first; and attempts per signature per browser-tab session.
-const MAX_INSIGHT_REQUESTS = 8
+// Relationship insights: at most this many relationships per report (by
+// rank), and attempts per signature per browser-tab session.
+const MAX_INSIGHT_REQUESTS = 5
 const MAX_INSIGHT_ATTEMPTS = 2
 const INSIGHT_ATTEMPTS_KEY = 'known_relationship_insight_attempts'
 
@@ -563,13 +563,15 @@ export default function ReportPage() {
   // their stored direction; the engine decides which relationships fire and
   // which one each trait shows.
   const relWinners = useMemo(
-    () => winningRelationships(ring1Entries.map((e) => ({ facet: e.facet, traitWord: e.traitWord, direction: e.scoreDirection }))),
-    [ring1Entries]
+    () => winningRelationships(
+      ring1Entries.map((e) => ({ facet: e.facet, traitWord: e.traitWord, direction: e.scoreDirection, score: facetScores[e.facet] })),
+      MAX_INSIGHT_REQUESTS
+    ),
+    [ring1Entries, facetScores]
   )
   useEffect(() => {
     const unique = Array.from(new Map(Array.from(relWinners.values()).map((r) => [r.id, r])).values())
-      .sort((a, b) => b.signals.length - a.signals.length || a.rank - b.rank)
-      .slice(0, MAX_INSIGHT_REQUESTS)
+      .sort((a, b) => a.rank - b.rank)
     const attempts = readInsightAttempts()
     for (const rel of unique) {
       const signature = relationshipSignature(rel)
