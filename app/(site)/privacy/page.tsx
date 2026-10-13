@@ -23,7 +23,7 @@ const c80      = 'rgba(28,28,26,0.8)'
 const sans     = 'var(--font-inter), system-ui, sans-serif'
 const serif    = 'var(--font-newsreader), Georgia, serif'
 
-const LAST_UPDATED = 'July 23, 2026'
+const LAST_UPDATED = 'October 13, 2026'
 
 const h2Style: CSSProperties = {
   fontFamily: serif, fontSize: 22, fontWeight: 500, color: charcoal,
@@ -144,10 +144,19 @@ export default function PrivacyPage() {
               your card or bank account number.
             </li>
             <li style={liStyle}>
-              <strong>Anthropic</strong> (Claude API) — generates the written narrative in
-              your report. We send Anthropic your <em>derived</em> trait scores (e.g. a
-              trait name and a high/mid/low direction) — not your literal question-by-
-              question answers, and not your name or email.
+              <strong>Anthropic</strong> (Claude API): writes the short descriptions in your
+              report. For each trait we send Anthropic the trait name, whether your answers
+              leaned high, low or in the middle, and up to two of your answers on that trait
+              (the statement and whether you agreed or disagreed). We never send your name,
+              email, account or session identifiers, or your IP address, and we don&apos;t
+              send your answers to other traits in the same request. For some sensitive
+              traits (currently low mood) we send no answers at all. For the optional
+              sections we send your results, not your answers. For the short notes about how
+              your traits relate, we send trait names, your word for each trait, and whether
+              each leaned high or low, never your answers, name, email or account details.
+              Anthropic handles this data under its own terms:{' '}
+              {/* TODO: link to Anthropic's privacy policy (URL to be confirmed, not guessed). */}
+              <span style={placeholder}>[link to Anthropic&apos;s privacy policy]</span>.
             </li>
           </ul>
           <p style={pStyle}>

@@ -20,7 +20,7 @@ export const FAQ_ITEMS: FaqAccordionItem[] = [
   },
   {
     question: 'Is it just AI telling me what I want to hear?',
-    answer: "No. Your scores come from the same fixed questionnaire for everyone. AI only writes the explanation of each pattern from your results, and it can't change your scores.",
+    answer: "No. Your scores come from the same fixed questionnaire for everyone. An AI model (Claude, by Anthropic) only writes the explanation of each pattern from your results and a couple of your answers for that pattern, and it can't change your scores.",
   },
   {
     question: 'Do I need an account?',
