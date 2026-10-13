@@ -80,7 +80,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Composed — It barely rattled me.' },
       { id: 'mid', label: 'Adaptive — I felt it, and adjusted.' },
-      { id: 'high', label: 'Easily overloaded — It knocked me off balance.' },
+      { id: 'high', label: 'Overload-prone — It knocked me off balance.' },
     ],
   },
 

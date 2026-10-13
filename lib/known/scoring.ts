@@ -48,7 +48,7 @@ const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = 
   Depression:          { low: 'Light',         mid: 'Even',        high: 'Subdued'      },
   'Self-Consciousness':{ low: 'At ease',         mid: 'Aware',    high: 'Self-monitoring'       },
   Immoderation:        { low: 'Restrained',        mid: 'Easygoing',      high: 'Impulse-led'     },
-  Vulnerability:       { low: 'Composed',       mid: 'Adaptive',      high: 'Easily overloaded'       },
+  Vulnerability:       { low: 'Composed',       mid: 'Adaptive',      high: 'Overload-prone'       },
 
   // Extraversion
   Friendliness:        { low: 'Slow to warm',        mid: 'Warm',          high: 'Quick to warm'       },
