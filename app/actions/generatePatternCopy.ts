@@ -123,6 +123,62 @@ const SYSTEM_PROMPT =
   'The tone is warm, direct, and precise — never clinical, never flattering, never vague. ' +
   "Write as if you're a sharp friend who actually understands psychology, not a therapist or a fortune cookie."
 
+// ── Ring 1 trait cards ───────────────────────────────────────────────────────
+// Separate from SYSTEM_PROMPT / SCORE_DIRECTION_DESCRIPTIONS above, which the
+// branch cards keep using unchanged. Ring 1 cards describe; they never advise.
+
+const RING1_SYSTEM_PROMPT =
+  'You write short descriptions for Bearing, a personality product based on IPIP-NEO-120. ' +
+  "You describe patterns in a person's answers. You do not advise, diagnose, praise or predict. " +
+  'Use plain, warm, precise language, like a smart friend. Speak to the reader as "you". ' +
+  'Use "tends to" and "often" for anything that depends on the situation. Never tell the reader what to do. ' +
+  'No clinical or diagnostic words. Every pattern has a payoff and a price; mention both naturally in the same breath, ' +
+  'without labelling them. Avoid any sentence that would be true of almost anyone.'
+
+// Four items per facet can't support "strongly and consistently" or
+// "situationally" — this only says which way the answers lean.
+const RING1_SCORE_DIRECTION: Record<'high' | 'mid' | 'low', string> = {
+  high: 'Their answers lean clearly toward this trait.',
+  mid: "Their answers sit in the middle: a mix of both ends. Do NOT claim they are 'situational'. Describe the range and acknowledge it may vary.",
+  low: 'Their answers lean clearly toward the opposite of this trait.',
+}
+
+const RING1_EXAMPLES = `Examples (three different shapes — match the quality, not the wording):
+
+Cautiousness, high
+{"trait_quote": "You sit with a decision longer than most people around you, because you want to know what you're committing to.", "body": "That patience tends to make your choices hold up, and it can cost you the moments when waiting was the riskier move. It often shows when everyone else is ready to decide and you're still asking one more question.", "tags": ["Weighs it first", "Hard to rush", "Commits late"]}
+
+Orderliness, low
+{"trait_quote": "Plans feel like a starting point to you, not a contract.", "body": "That tends to make you quick to adapt when things change, and it can leave small loose ends that other people notice before you do. It often shows when a project needs steady upkeep rather than a burst of effort.", "tags": ["Adapts fast", "Loose ends", "Burst worker"]}
+
+Anxiety, mid
+{"trait_quote": "Worry shows up for you when something seems to matter, and mostly stays in the background when it doesn't.", "body": "Your answers sit in the middle here, which can mean the amount varies a lot from one situation to the next. That tends to keep you alert without running your day, and it can make it harder to tell in the moment which kind of worry you're in.", "tags": ["Selective worry", "Stays alert", "Varies"]}`
+
+function buildRing1Prompt(facetName: string, traitWord: string, scoreDirection: 'high' | 'mid' | 'low'): string {
+  const behavioralContext = FACET_BEHAVIORAL_CONTEXT[facetName] ?? `The ${facetName} facet of personality`
+  return `Facet: ${facetName}. ${RING1_SCORE_DIRECTION[scoreDirection]}
+
+What ${facetName} measures: ${behavioralContext}.
+
+Their trait word is "${traitWord}".
+
+Write:
+- trait_quote: 1-2 sentences. Second person ("you"), present tense. A behaviour or inner experience the reader would recognise. Do not use the words "${facetName}" or any domain name (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).
+- body: 2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.
+- tags: exactly 3 short behavioural tags, max 3 words each.
+
+Rules:
+- trait_quote and body together: about 70 words at most.
+- Do not begin every trait_quote with "You tend to". Vary sentence openings.
+- Situations are framed as tendencies ("it often shows up when…"), never as events that happened.
+- Self-check: if a sentence would fit most people, rewrite it more specifically.
+- No imperatives ("try", "consider", "notice", "make sure"), no advice.
+
+${RING1_EXAMPLES}
+
+Return JSON only, no markdown: {"trait_quote": "...", "body": "...", "tags": ["...", "...", "..."]}`
+}
+
 function buildUserPrompt(
   facetName: string,
   traitWord: string,
@@ -276,23 +332,7 @@ Write the following copy and return as JSON only, no markdown:
 }`
   }
 
-  const behavioralContext = FACET_BEHAVIORAL_CONTEXT[facetName] ?? `The ${facetName} facet of personality`
-  const directionDesc = SCORE_DIRECTION_DESCRIPTIONS[scoreDirection](facetName)
-
-  return `${directionDesc}.
-
-What ${facetName} actually measures: ${behavioralContext}.
-
-Their trait word is "${traitWord}".
-
-Write the following copy and return as JSON only, no markdown:
-{
-  "trait_quote": "1-2 sentences. Second person ('you'), present tense. A behaviour or inner experience the reader would recognise in themselves. Do not use the words '${facetName}' or any IPIP domain names (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).",
-  "body": "2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.",
-  "tags": ["3 short behavioral tags", "max 3 words each", "what this looks like in action"]
-}
-
-Keep trait_quote and body together under about 70 words.`
+  return buildRing1Prompt(facetName, traitWord, scoreDirection)
 }
 
 function fallbackContent(
@@ -384,7 +424,7 @@ export async function generatePatternCopy(
       const message = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1536,
-        system: SYSTEM_PROMPT,
+        system: req.kind === 'ring1' ? RING1_SYSTEM_PROMPT : SYSTEM_PROMPT,
         messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
       })
 
