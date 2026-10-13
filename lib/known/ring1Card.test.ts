@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { checkRing1Card, checkRing1CardText, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
+import { checkRing1Card, checkRing1CardText, finishRing1Card, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
 import { HARD_SENTENCE_WORDS, SOFT_SENTENCE_WORDS } from './copyChecks'
 import { UnlockedContent } from '../../components/known/ReportVisuals'
 import type { PatternContent, PatternContentEntry } from './types'
@@ -46,6 +46,7 @@ test('hard: tags not exactly three, a tag over four words, an empty tag', () => 
 test(`hard: a sentence over ${HARD_SENTENCE_WORDS} words, or a labelled payoff/cost`, () => {
   assert.equal(checkRing1Card({ ...card, body: sentenceOf(HARD_SENTENCE_WORDS + 1) }).ok, false)
   assert.equal(checkRing1Card({ ...card, body: 'The cost is real. It shows at work.' }).ok, false)
+  assert.equal(checkRing1Card({ ...card, body: 'You move fast, at the cost of some detail. It shows at work.' }).ok, true)
   assert.equal(checkRing1Card({ ...card, body: sentenceOf(HARD_SENTENCE_WORDS) }).ok, true)
 })
 
@@ -72,6 +73,15 @@ test('soft: over the word limit says how long it is', () => {
   if (r.ok) {
     assert.ok(r.words > RING1_RETRY_WORDS)
     assert.deepEqual(r.violations, [`The quote and body are ${r.words} words together: cut to about 70.`])
+  }
+})
+
+test('soft: an em-dash or semicolon asks for two sentences, and is fixed in code if it stays', () => {
+  const r = checkRing1Card({ ...card, body: 'You adapt fast—that helps. It can leave loose ends; others notice.' })
+  assert.equal(r.ok, true)
+  if (r.ok) {
+    assert.deepEqual(r.violations, ['Remove the em-dash/semicolon, use two sentences.'])
+    assert.equal(finishRing1Card(r.card).body, 'You adapt fast, that helps. It can leave loose ends. Others notice.')
   }
 })
 

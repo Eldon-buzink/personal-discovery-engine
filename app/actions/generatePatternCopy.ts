@@ -8,12 +8,13 @@ import { parsePatternCopyRequest, parseRing1Answers, type PatternCopyRequest } f
 import { evidenceFor, type EvidenceItem, type FacetAnswer } from '@/lib/known/ring1Evidence'
 import { claimFreeReveal, isFreeRevealed, isPaidUser } from '@/lib/server/entitlement'
 import { parseRelationshipRequest, type RelationshipRequest } from '@/lib/server/relationshipInput'
-import { RELATIONSHIP_INSIGHT_SCHEMA, checkInsightText } from '@/lib/known/relationshipInsight'
+import { RELATIONSHIP_INSIGHT_SCHEMA, checkInsightText, finishInsight } from '@/lib/known/relationshipInsight'
 import type { FiredSignal } from '@/lib/known/relationships'
 import type { PatternContent } from '@/lib/known/types'
 import {
   RING1_CARD_SCHEMA,
   checkRing1CardText,
+  finishRing1Card,
   type Ring1Card,
 } from '@/lib/known/ring1Card'
 import { betterAttempt, retryFeedback } from '@/lib/known/copyChecks'
@@ -584,7 +585,7 @@ export async function generateRing1Copy(
     },
     'generateRing1Copy'
   )
-  return card ? { content: card } : { content: null, failed: true }
+  return card ? { content: finishRing1Card(card) } : { content: null, failed: true }
 }
 
 // ── Relationship insights (Ring 1 traits) ────────────────────────────────────
@@ -689,5 +690,5 @@ export async function generateRelationshipInsight(
     },
     'generateRelationshipInsight'
   )
-  return insight ? { insight } : { insight: null, failed: true }
+  return insight ? { insight: finishInsight(insight) } : { insight: null, failed: true }
 }

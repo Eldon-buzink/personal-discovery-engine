@@ -5,14 +5,14 @@
  * generateRing1Copy asks the model for (structured output constrained by
  * RING1_CARD_SCHEMA) and validates before anything is shown or saved.
  * Soft rules (sentence over 28 words, card over RING1_RETRY_WORDS, a tag
- * over 3 words) are returned as retry notes; hard rules (shape, tags not
+ * over 3 words, an em-dash or semicolon) are returned as retry notes; hard rules (shape, tags not
  * exactly 3, a tag over 4 words, a sentence over 35, labelled payoff/cost)
  * fail the attempt. See lib/known/copyChecks.ts. Pure, so it can be
  * unit-tested without the model.
  */
 
 import type { PatternContent, PatternContentEntry } from './types'
-import { checkSentenceLengths, countWords, hasLabelledTradeoff } from './copyChecks'
+import { PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
 
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS is a
 // soft violation (retried once with a note, never dropped).
@@ -72,7 +72,14 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
   violations.unshift(...lengths.soft)
   const words = ring1CardWords(card)
   if (words > RING1_RETRY_WORDS) violations.push(`The quote and body are ${words} words together: cut to about ${RING1_TARGET_WORDS}.`)
+  if (hasDashOrSemicolon(text)) violations.push(PUNCTUATION_NOTE)
   return { ok: true, card, violations, words }
+}
+
+// Applied to the card that is finally kept: any em-dash or semicolon left
+// after the retry is replaced rather than failing the card.
+export function finishRing1Card(card: Ring1Card): Ring1Card {
+  return { ...card, trait_quote: fixPunctuation(card.trait_quote), body: fixPunctuation(card.body) }
 }
 
 // The structured-output text → a checked card. Unparseable JSON fails the

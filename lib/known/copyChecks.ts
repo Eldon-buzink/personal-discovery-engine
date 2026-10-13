@@ -20,8 +20,25 @@ export function splitSentences(text: string): string[] {
   return text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)
 }
 
-// "the payoff / the cost / the price" used as labels.
-export const hasLabelledTradeoff = (text: string) => /\bthe (payoff|cost|price)\b/i.test(text)
+// A sentence that opens with a trade-off label ("The cost is …", "The trade-off
+// is …"). Only the label-style opening counts: "at the cost of" is fine.
+const TRADEOFF_LABEL = /^["'“‘(]*the (trade|trade-off|tradeoff|cost|price|payoff|upside|downside) is\b/i
+export const hasLabelledTradeoff = (text: string) => splitSentences(text).some((s) => TRADEOFF_LABEL.test(s))
+
+// Em-dashes (and spaced en-dashes used as dashes) and semicolons: soft — the
+// retry note asks for two sentences; anything left is fixed in code.
+const DASH = /\s*(—|\s–\s)\s*/g
+export const PUNCTUATION_NOTE = 'Remove the em-dash/semicolon, use two sentences.'
+export const hasDashOrSemicolon = (text: string) => /—|\s–\s|;/.test(text)
+
+// Last resort after the retry: em-dash → comma, semicolon → period (and the
+// next letter capitalised).
+export function fixPunctuation(text: string): string {
+  return text
+    .replace(DASH, ', ')
+    .replace(/\s*;\s*(\w)/g, (_, c: string) => `. ${c.toUpperCase()}`)
+    .replace(/\s*;\s*$/, '.')
+}
 
 export interface SentenceLengths {
   soft: string[] // follow-up notes, e.g. "Sentence 2 is 31 words: split it."

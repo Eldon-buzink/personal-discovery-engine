@@ -7,12 +7,13 @@
  *
  * Soft rules (retried once with a note, never dropped): a sentence over 28
  * words, over INSIGHT_MAX_WORDS in total, too few sentences before the
- * question. Hard rules (nothing shown after the retry): bad shape, not ending
- * in exactly one question, banned phrases, labelled payoff/cost, a sentence
- * over 35 words. See lib/known/copyChecks.ts.
+ * question, an em-dash or semicolon (fixed in code if it survives the
+ * retry). Hard rules (nothing shown after the retry): bad shape, not ending
+ * in exactly one question, banned phrases, a sentence opening with a
+ * trade-off label ("The cost is …"), a sentence over 35 words. See lib/known/copyChecks.ts.
  */
 
-import { checkSentenceLengths, countWords, hasLabelledTradeoff, splitSentences } from './copyChecks'
+import { PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff, splitSentences } from './copyChecks'
 
 // Structured output (output_config.format) schema: {"insight": string}.
 export const RELATIONSHIP_INSIGHT_SCHEMA = {
@@ -53,8 +54,12 @@ export function checkInsight(input: unknown): InsightCheck {
   const words = countWords(insight)
   if (words > INSIGHT_MAX_WORDS) violations.push(`The note is ${words} words: cut to about 65.`)
   if (sentences.length < MIN_SENTENCES) violations.push('Write 2-3 sentences before the closing question.')
+  if (hasDashOrSemicolon(insight)) violations.push(PUNCTUATION_NOTE)
   return { ok: true, insight, violations, words }
 }
+
+// Applied to the insight that is finally kept (see finishRing1Card).
+export const finishInsight = (insight: string) => fixPunctuation(insight)
 
 export function checkInsightText(text: string): InsightCheck {
   try {

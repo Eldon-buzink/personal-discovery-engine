@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { betterAttempt, checkSentenceLengths, retryFeedback, splitSentences } from './copyChecks'
+import { betterAttempt, checkSentenceLengths, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff, retryFeedback, splitSentences } from './copyChecks'
 
 test('sentences split on . ! ?', () => {
   assert.deepEqual(splitSentences('One here. Two here! Three? Four.'), ['One here.', 'Two here!', 'Three?', 'Four.'])
@@ -26,4 +26,21 @@ test('retry feedback names exactly the violations', () => {
   const msg = retryFeedback(['Sentence 2 is 31 words: split it.', "Tag 'X Y Z W' has 4 words: shorten to 3."])
   assert.ok(msg.includes('- Sentence 2 is 31 words: split it.'))
   assert.ok(msg.includes("- Tag 'X Y Z W' has 4 words: shorten to 3."))
+})
+
+test('trade-off labels: only a sentence opening with the label fails', () => {
+  for (const bad of ['The trade is that you rush.', 'The trade-off is real.', 'The cost is time.', 'The price is high.', 'The payoff is calm.', 'The upside is speed.', 'The downside is noise.', 'You plan well. The cost is time.'])
+    assert.equal(hasLabelledTradeoff(bad), true, bad)
+  for (const ok of ['You move fast, at the cost of some detail.', 'It comes at the price of rest.', 'You notice the cost of waiting.', 'The plan is solid.'])
+    assert.equal(hasLabelledTradeoff(ok), false, ok)
+})
+
+test('em-dashes and semicolons are detected and fixed in code', () => {
+  assert.equal(hasDashOrSemicolon('You plan ahead—it helps.'), true)
+  assert.equal(hasDashOrSemicolon('You plan ahead; it helps.'), true)
+  assert.equal(hasDashOrSemicolon('A well-known, self-made plan.'), false)
+  assert.equal(fixPunctuation('You plan ahead—it helps.'), 'You plan ahead, it helps.')
+  assert.equal(fixPunctuation('You plan ahead — it helps.'), 'You plan ahead, it helps.')
+  assert.equal(fixPunctuation('You plan ahead; it helps.'), 'You plan ahead. It helps.')
+  assert.equal(fixPunctuation('Twelve-week plan.'), 'Twelve-week plan.')
 })
