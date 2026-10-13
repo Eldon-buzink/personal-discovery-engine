@@ -11,7 +11,8 @@ import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
-import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
+import { ring1ContentsAfter } from '@/lib/known/ring1Card'
 import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { REVEAL_CAP, fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
@@ -202,8 +203,10 @@ function PatternDetectedScreen({
     animationDelay: `${delay}ms`,
   })
 
-  const { traitWord, answeredCount, content } = record
-  const isLoading = content === null
+  const { traitWord, answeredCount, content, copyFailed } = record
+  // A failed card must never block the assessment: the buttons show as
+  // soon as the copy is in OR has failed.
+  const isLoading = content === null && !copyFailed
 
   return (
     <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 py-12">
@@ -267,6 +270,10 @@ function PatternDetectedScreen({
         <div style={{ width: '100%', minHeight: 420 }}>
           {isLoading ? (
             <FindingPatternLoader />
+          ) : content === null ? (
+            <p className="font-sans text-[14px] leading-[1.6] text-muted text-center mt-8" style={f(0)}>
+              We couldn&apos;t write this one just now. Your result is saved and we&apos;ll try again on your report.
+            </p>
           ) : (
             <>
               {/* Quote */}
@@ -647,17 +654,24 @@ export default function AssessmentPage() {
       setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content: cachedContent } : r)))
     } else {
       const assessmentId = localStorage.getItem('known_pending_session_id')
-      generatePatternCopy(facet, traitWord, dir, assessmentId)
-        .then((content: PatternContent) => {
+      // On failure nothing is saved: the record shows a neutral line and its
+      // content stays null in the session, so the report generates it later.
+      const markFailed = () => {
+        setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, copyFailed: true } : r)))
+        setActiveToast((cur) => (cur?.facet === facet ? { ...cur, copyFailed: true } : cur))
+        setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, copyFailed: true } : r)))
+      }
+      generateRing1Copy(facet, traitWord, dir, assessmentId)
+        .then(({ content }) => {
+          const s = loadSession()
+          const patternContents = ring1ContentsAfter(s.patternContents ?? [], { facet, traitWord, scoreDirection: dir }, content)
+          if (!content || !patternContents) return markFailed()
           setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, content } : r)))
           setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
           setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
-          const s = loadSession()
-          const existing = s.patternContents ?? []
-          const newEntry: PatternContentEntry = { facet, traitWord, scoreDirection: dir, content }
-          saveSession({ ...s, patternContents: [...existing.filter((e) => e.facet !== facet), newEntry] })
+          saveSession({ ...s, patternContents })
         })
-        .catch(() => {})
+        .catch(markFailed)
     }
   }
 

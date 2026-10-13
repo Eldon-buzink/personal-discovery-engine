@@ -23,6 +23,9 @@ export interface PatternContent {
   // the mid-assessment teaser blob — distinct from trait_quote's full sentence,
   // since every other branch's teaser word comes from a deterministic label, not AI.
   teaserWord?: string
+  // Set on branch fallback text (generation failed) so it can be told apart
+  // from real copy. Ring 1 never stores fallback text.
+  fallback?: boolean
 }
 
 export interface PatternContentEntry {
@@ -46,4 +49,8 @@ export interface CompletedFacetRecord {
   hueOffset: number
   answeredCount: number
   content: PatternContent | null  // null while AI is generating
+  // UI only, never saved: the card couldn't be written. The screen shows a
+  // neutral line and lets the user move on; content stays null so the
+  // report tries again.
+  copyFailed?: boolean
 }

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
-import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
+import { ring1ContentsAfter } from '@/lib/known/ring1Card'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
 import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
@@ -76,15 +77,34 @@ const reportCSS = `
 
 // ── Loading / empty states ────────────────────────────────────────────────────
 
-function PatternLoadingState({ traitWord, isLoading }: { traitWord: string; isLoading: boolean }) {
+function PatternLoadingState({ traitWord, isLoading, failed = false, onRetry }: {
+  traitWord: string
+  isLoading: boolean
+  // Ring 1 only: generating the card failed (after the server's own retry).
+  failed?: boolean
+  onRetry?: () => void
+}) {
   return (
     <div style={{ textAlign: 'center', marginTop: 28 }}>
       <h2 style={{ fontFamily: serif, fontSize: 25, fontWeight: 600, color: charcoal, margin: '0 0 12px' }}>
         {traitWord}
       </h2>
       <p style={{ fontFamily: sans, fontSize: 13.5, color: gray, lineHeight: 1.6 }}>
-        {isLoading ? 'Loading your pattern…' : 'Still loading your pattern. Try refreshing in a moment.'}
+        {failed
+          ? "We couldn't write this one just now. Your result is saved and we'll try again on your report."
+          : isLoading ? 'Loading your pattern…' : 'Still loading your pattern. Try refreshing in a moment.'}
       </p>
+      {failed && onRetry && (
+        <button
+          onClick={onRetry}
+          style={{
+            marginTop: 14, padding: '9px 20px', borderRadius: 100, border: `1px solid ${line}`,
+            background: 'white', color: charcoal, fontFamily: sans, fontSize: 13.5, cursor: 'pointer',
+          }}
+        >
+          Retry
+        </button>
+      )}
     </div>
   )
 }
@@ -515,7 +535,7 @@ export default function ReportPage() {
   // (dev-shortcut path, or user left assessment before AI finished).
   const contentFetchRef = useRef(new Set<string>())
   useEffect(() => {
-    const needsContent = facets.filter(f => f.content === null && !contentFetchRef.current.has(f.facet))
+    const needsContent = facets.filter(f => f.content === null && !f.copyFailed && !contentFetchRef.current.has(f.facet))
     if (needsContent.length === 0) return
 
     const raw = localStorage.getItem('known_session')
@@ -532,24 +552,28 @@ export default function ReportPage() {
       const score = computeFacetScore(entry.facet, answeredMap) ?? 3.0
       const dir: 'high' | 'mid' | 'low' = score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low'
 
-      generatePatternCopy(entry.facet, entry.traitWord, dir, assessmentId)
-        .then((content) => {
-          setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, content } : f))
-          // Persist so future page loads don't regenerate
+      // On failure nothing is saved; the card shows a neutral line with Retry.
+      const markFailed = () =>
+        setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, copyFailed: true } : f))
+      generateRing1Copy(entry.facet, entry.traitWord, dir, assessmentId)
+        .then(({ content }) => {
+          // Persist so future page loads don't regenerate — real content only.
           const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')
           const pcs = Array.isArray(s.patternContents) ? s.patternContents : []
-          const newEntry: PatternContentEntry = { facet: entry.facet, traitWord: entry.traitWord, scoreDirection: dir, content }
-          localStorage.setItem('known_session', JSON.stringify({
-            ...s,
-            patternContents: [
-              ...pcs.filter((e) => !(e.facet === entry.facet && !e.branch)),
-              newEntry,
-            ],
-          }))
+          const patternContents = ring1ContentsAfter(pcs, { facet: entry.facet, traitWord: entry.traitWord, scoreDirection: dir }, content)
+          if (!content || !patternContents) return markFailed()
+          setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, content } : f))
+          localStorage.setItem('known_session', JSON.stringify({ ...s, patternContents }))
         })
-        .catch(() => {})
+        .catch(markFailed)
     }
   }, [facets])
+
+  // Clears the failure so the effect above generates this card again.
+  function retryCopy(facet: string) {
+    contentFetchRef.current.delete(facet)
+    setFacets((prev) => prev.map((f) => f.facet === facet ? { ...f, copyFailed: false } : f))
+  }
 
   const isUnlocked = facets.length > 0
   // Strongest first: distance from the middle of the answer scale, ties in
@@ -892,6 +916,8 @@ export default function ReportPage() {
                       <PatternLoadingState
                         traitWord={activeFacet?.traitWord ?? ''}
                         isLoading={true}
+                        failed={activeFacet?.copyFailed}
+                        onRetry={() => activeFacet && retryCopy(activeFacet.facet)}
                       />
                     )}
                   </div>

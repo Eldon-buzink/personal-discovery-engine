@@ -4,9 +4,16 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
-import { parsePatternCopyRequest } from '@/lib/server/patternCopyInput'
+import { parsePatternCopyRequest, type PatternCopyRequest } from '@/lib/server/patternCopyInput'
 import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
+import {
+  RING1_CARD_SCHEMA,
+  RING1_CARD_TOOL_NAME,
+  checkRing1Card,
+  ring1CardWords,
+  type Ring1Card,
+} from '@/lib/known/ring1Card'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
 // One-line descriptions of what each facet actually measures behaviorally.
@@ -335,18 +342,22 @@ Write the following copy and return as JSON only, no markdown:
   return buildRing1Prompt(facetName, traitWord, scoreDirection)
 }
 
+// Branch cards only. Neutral on purpose: no claim about the person or the
+// facet, since nothing was actually generated. Marked `fallback` so it can be
+// told apart from real copy. (Ring 1 never falls back — generateRing1Copy
+// reports a failure instead and the page shows a neutral line.)
 function fallbackContent(
-  facetName: string,
   traitWord: string,
   branch?: string,
   strongConditions?: { label: string; traitWord: string; score: number }[]
 ): PatternContent {
   const base: PatternContent = {
-    trait_quote: `You showed a clear signal in the ${facetName} dimension of your personality. This pattern shapes more of your daily life than you might expect.`,
-    where_it_shows_up: `It tends to surface when decisions require sustained attention or deliberate pacing. Most visible in how you handle competing demands on your time and energy.`,
-    tags: [traitWord, facetName, 'Signal found'],
-    go_deeper: `Every trait carries a shadow: the same quality that serves you in some contexts can work against you in others. There's more nuance underneath this pattern worth exploring.`,
-    worth_trying: `This week, notice one moment where this pattern shows up in a decision you're making. Just observe it — no need to change anything yet.`,
+    trait_quote: `Your answers in this section point to "${traitWord}".`,
+    where_it_shows_up: `We couldn't write the full description just now.`,
+    tags: [traitWord],
+    go_deeper: `The rest of this section's description will appear here when it's ready.`,
+    worth_trying: `The rest of this section's description will appear here when it's ready.`,
+    fallback: true,
   }
 
   if (
@@ -356,8 +367,8 @@ function fallbackContent(
   ) {
     base.items = strongConditions!.map((c) => ({
       ...(branch === 'direction' ? { word: c.traitWord } : {}),
-      quote: `${c.traitWord} showed up as a clear signal in how you answered.`,
-      evidence: `This is one of the more consistent patterns in your responses — worth noticing where it shows up in an actual day.`,
+      quote: `${c.traitWord} came through in how you answered.`,
+      evidence: `We couldn't write more about this one just now.`,
     }))
   }
 
@@ -368,12 +379,8 @@ function fallbackContent(
   return base
 }
 
-// Ring 1 cards: trait_quote + body target about 70 words; over this, retry once.
-const RING1_RETRY_WORDS = 95
-
-function ring1WordCount(c: PatternContent): number {
-  return `${c.trait_quote ?? ''} ${c.body ?? ''}`.split(/\s+/).filter(Boolean).length
-}
+// One place for the model name; branch and Ring 1 copy use the same model.
+const MODEL = 'claude-haiku-4-5-20251001'
 
 // Per caller, per 10 minutes. A paid user's full report generates up to 30
 // facets plus five branches in one sitting, so signed-in callers get room
@@ -382,16 +389,17 @@ const RATE_WINDOW_SECONDS = 600
 const RATE_MAX_SIGNED_IN = 80
 const RATE_MAX_ANONYMOUS = 20
 
-export async function generatePatternCopy(
-  facetName: string,
-  traitWord: string,
-  scoreDirection: 'high' | 'mid' | 'low',
-  assessmentId: string | null,
-  branch?: string,
-  strongConditions?: { label: string; traitWord: string; score: number }[]
-): Promise<PatternContent> {
-  // Server actions are public endpoints: everything below is checked here,
-  // not trusted from the calling page.
+// Server actions are public endpoints: everything is checked here, not
+// trusted from the calling page. Throws on an invalid request, the rate
+// limit, or the paywall.
+async function authorize(
+  facetName: unknown,
+  traitWord: unknown,
+  scoreDirection: unknown,
+  assessmentId: unknown,
+  branch: unknown,
+  strongConditions: unknown
+): Promise<PatternCopyRequest> {
   const req = parsePatternCopyRequest(facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions)
   if (!req) throw new Error('Invalid request')
 
@@ -410,32 +418,39 @@ export async function generatePatternCopy(
     if (req.kind === 'branch') throw new Error('Payment required')
     if (!claimFreeReveal(req.facetName)) throw new Error('Payment required')
   }
+  return req
+}
 
-  const reqBranch = req.kind === 'branch' ? req.branch : undefined
-  const reqConditions = req.kind === 'branch' ? req.strongConditions : undefined
+// ── Branch cards ─────────────────────────────────────────────────────────────
+
+export async function generatePatternCopy(
+  facetName: string,
+  traitWord: string,
+  scoreDirection: 'high' | 'mid' | 'low',
+  assessmentId: string | null,
+  branch?: string,
+  strongConditions?: { label: string; traitWord: string; score: number }[]
+): Promise<PatternContent> {
+  const req = await authorize(facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions)
+  // Ring 1 cards go through generateRing1Copy (no fallback text).
+  if (req.kind !== 'branch') throw new Error('Invalid request')
+
   let content: PatternContent
-
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    // Ring 1 cards have a length budget: one more attempt if the first comes
-    // back over RING1_RETRY_WORDS (the second is used either way).
-    let attempt = 0
-    do {
-      const message = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1536,
-        system: req.kind === 'ring1' ? RING1_SYSTEM_PROMPT : SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
-      })
+    const message = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 1536,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, req.branch, req.strongConditions) }],
+    })
 
-      const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
-      const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
-      content = JSON.parse(jsonText) as PatternContent
-      attempt++
-    } while (req.kind === 'ring1' && attempt < 2 && ring1WordCount(content) > RING1_RETRY_WORDS)
+    const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
+    const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
+    content = JSON.parse(jsonText) as PatternContent
   } catch (err) {
     console.error('[generatePatternCopy] generation failed:', err instanceof Error ? err.message : 'unknown error')
-    content = fallbackContent(req.facetName, req.traitWord, reqBranch, reqConditions)
+    content = fallbackContent(req.traitWord, req.branch, req.strongConditions)
   }
 
   // Not stored server-side: the report renders from the browser's own
@@ -444,4 +459,62 @@ export async function generatePatternCopy(
   // and its existing rows are left in place (see supabase/migrations).
   // assessmentId is still accepted and validated so callers don't change.
   return content
+}
+
+// ── Ring 1 trait cards ───────────────────────────────────────────────────────
+
+// `content: null` means the card couldn't be written (after one retry). The
+// caller shows a neutral line, saves nothing, and leaves the trait's content
+// null so the report tries again later — no fallback text is ever presented
+// as if it were real.
+export type Ring1CopyResult = { content: PatternContent } | { content: null; failed: true }
+
+async function requestRing1Card(
+  anthropic: Anthropic,
+  req: { facetName: string; traitWord: string; scoreDirection: 'high' | 'mid' | 'low' }
+) {
+  const message = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: RING1_SYSTEM_PROMPT,
+    tools: [{
+      name: RING1_CARD_TOOL_NAME,
+      description: 'Return the trait card.',
+      input_schema: RING1_CARD_SCHEMA as unknown as Anthropic.Tool.InputSchema,
+    }],
+    tool_choice: { type: 'tool', name: RING1_CARD_TOOL_NAME },
+    messages: [{ role: 'user', content: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection) }],
+  })
+  const block = message.content.find((b) => b.type === 'tool_use')
+  return checkRing1Card(block && block.type === 'tool_use' ? block.input : null)
+}
+
+export async function generateRing1Copy(
+  facetName: string,
+  traitWord: string,
+  scoreDirection: 'high' | 'mid' | 'low',
+  assessmentId: string | null
+): Promise<Ring1CopyResult> {
+  const req = await authorize(facetName, traitWord, scoreDirection, assessmentId, undefined, undefined)
+  if (req.kind !== 'ring1') throw new Error('Invalid request')
+
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  // Two attempts. A failed call or an invalid card uses up an attempt; a
+  // valid card over the word budget is kept but tried once more, and the
+  // shorter of the two is used.
+  let best: Ring1Card | null = null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const check = await requestRing1Card(anthropic, req)
+      if (!check.ok) {
+        console.error('[generateRing1Copy] invalid card:', check.reason)
+        continue
+      }
+      if (!best || ring1CardWords(check.card) < ring1CardWords(best)) best = check.card
+      if (!check.overBudget) break
+    } catch (err) {
+      console.error('[generateRing1Copy] generation failed:', err instanceof Error ? err.message : 'unknown error')
+    }
+  }
+  return best ? { content: best } : { content: null, failed: true }
 }

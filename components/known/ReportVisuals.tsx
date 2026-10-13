@@ -30,6 +30,9 @@ export interface FacetEntry {
   traitWord: string
   hueOffset: number
   content: PatternContent | null
+  // Report UI only, never saved: generating this card failed. Shows a
+  // neutral line with Retry; content stays null.
+  copyFailed?: boolean
 }
 
 export interface OrbitCondition { traitWord: string; hue: number }
