@@ -39,6 +39,38 @@ browser's `known_session`. A failed generation is not stored at all.
 message, which can quote request or response text), and fixed validation
 reasons ("tag over 3 words"). No item text or answer values.
 
+## Relationship insights (`generateRelationshipInsight`)
+
+Short notes on a Ring 1 card about how several of the person's revealed traits
+relate (lib/known/relationshipDefinitions.ts). Verified the same way on
+2026-10-13 with the local capture server.
+
+**Browser → our server:** the relationship id and, for each contributing
+trait, the facet name, its direction (high or low) and its trait word. All
+checked server-side (`lib/server/relationshipInput.ts`): the relationship
+must fire from exactly those signals, and each trait word must be the
+facet's real word for that direction.
+
+**Our server → Anthropic** (one `POST /v1/messages` per attempt, at most two):
+- Body: `model`, `max_tokens`, `system` (fixed text), `temperature` (Haiku
+  4.5 only), `output_config` (fixed schema), and one user message with the
+  relationship's fixed description (what it tends to give and cost, or the
+  tension line), each contributing facet's name, direction, trait word and
+  fixed behavioural description, plus fixed rules and examples.
+- Headers: as for Ring 1 cards.
+
+**Not sent:** any answers or item text (not even for the facets involved),
+name, email, user id, account or session ids, IP address, the free-reveal
+cookie.
+
+**Stored:** only in the browser, in `known_session.relationshipInsights`
+(relationship id, the facet:direction signature, the text). Failures are
+never stored. An attempt counter per signature lives in `sessionStorage`
+(`known_relationship_insight_attempts`).
+
+**Logged:** error kind / HTTP status, or a fixed rejection reason ("sentence
+too long"). Never the text.
+
 ## Branch cards (`generatePatternCopy`)
 
 Branch name, the result labels and scores (e.g. "Having a say", 4.2 of 5) and
