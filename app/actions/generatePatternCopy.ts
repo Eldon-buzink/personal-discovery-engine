@@ -391,8 +391,10 @@ function fallbackContent(
   return base
 }
 
-// One place for the model name; branch and Ring 1 copy use the same model.
+// Model names, one place each. Ring 1 has its own so it can move
+// independently of the branch cards.
 const MODEL = 'claude-haiku-4-5-20251001'
+const RING1_MODEL = 'claude-haiku-4-5-20251001'
 
 // Per caller, per 10 minutes. A paid user's full report generates up to 30
 // facets plus five branches in one sitting, so signed-in callers get room
@@ -487,10 +489,10 @@ async function requestRing1Card(
   evidence: EvidenceItem[]
 ) {
   // Structured output rather than a forced tool call: newer models (Sonnet
-  // 5.5) reject forced tool_choice, and this keeps MODEL swappable. Room in
+  // 5.5) reject forced tool_choice, and this keeps RING1_MODEL swappable. Room in
   // max_tokens for models that think by default.
   const message = await anthropic.messages.create({
-    model: MODEL,
+    model: RING1_MODEL,
     max_tokens: 4096,
     system: RING1_SYSTEM_PROMPT,
     output_config: { format: { type: 'json_schema', schema: RING1_CARD_SCHEMA } },

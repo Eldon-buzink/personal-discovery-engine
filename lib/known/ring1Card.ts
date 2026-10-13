@@ -12,7 +12,7 @@ import type { PatternContent, PatternContentEntry } from './types'
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS the
 // card is regenerated once.
 export const RING1_TARGET_WORDS = 70
-export const RING1_RETRY_WORDS = 95
+export const RING1_RETRY_WORDS = 85
 const TAG_COUNT = 3
 const TAG_MAX_WORDS = 3
 
