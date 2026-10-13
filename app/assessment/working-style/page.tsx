@@ -251,6 +251,11 @@ export default function WorkingStylePage() {
       setResult(r)
       setRevealStage(stageIdx)
       setScreen('pattern')
+      // Move past the boundary question so "Keep going" opens the next axis's
+      // first question — without this it re-showed the question just
+      // answered, and answering it fired the same reveal again (a loop).
+      // The final reveal has no "Keep going".
+      if (!isFinal) setCurrentQ(nextQ)
 
       if (isFinal) {
         const cached = session.patternContents?.find(e => e.branch === 'working_style')

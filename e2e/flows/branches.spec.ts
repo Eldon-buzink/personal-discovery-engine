@@ -1,4 +1,5 @@
 import { test, expect, answerDotScale, readSession } from './support'
+import { RING1_SEED } from './fixtures'
 
 // The five paid branches, start to finish: intro → every question → pattern
 // screen. Branch pages have no paid gate of their own (that lives on the
@@ -14,19 +15,6 @@ import { test, expect, answerDotScale, readSession } from './support'
 
 const ANSWER_PATTERN = [4, 2, 5, 3, 1]
 
-// One revealed Ring 1 trait (Anxiety, items 1–4 answered 4).
-const RING1_SEED = {
-  questionOrder: Array.from({ length: 120 }, (_, i) => i + 1),
-  responses: [1, 2, 3, 4].map((id) => ({ questionId: id, value: 4, answeredAt: '2026-10-01T10:00:00.000Z' })),
-  patternShown: { facet: 'Anxiety', traitWord: 'Watchful', answeredAt: '2026-10-01T10:00:00.000Z' },
-  revealedFacets: ['Anxiety'],
-  patternContents: [{
-    facet: 'Anxiety',
-    traitWord: 'Watchful',
-    scoreDirection: 'high',
-    content: { trait_quote: 'E2E.', where_it_shows_up: 'E2E.', tags: ['E2E'], go_deeper: 'E2E.', worth_trying: 'E2E.' },
-  }],
-}
 
 interface BranchCase {
   route: string
@@ -44,7 +32,8 @@ const BRANCHES: BranchCase[] = [
 
 // Recorded from the current code (2026-10-13) — see the header comment.
 // working_style's value was recorded by reloading at each axis reveal (the
-// in-app workaround for the bug below).
+// workaround for the reveal loop fixed in fix-working-style-loop); the fixed
+// flow produces the same result.
 const EXPECTED: Record<BranchCase['key'], { questions: number; traitWord: string }> = {
   energy: { questions: 24, traitWord: 'Having a say' },
   environment: { questions: 15, traitWord: 'Low interruption' },
@@ -55,13 +44,6 @@ const EXPECTED: Record<BranchCase['key'], { questions: number; traitWord: string
 
 for (const b of BRANCHES) {
   test(`branch ${b.key}: intro → all questions → pattern, saved to known_session`, async ({ page }) => {
-    // Known bug (found by this test, not fixed here — test-only change): after
-    // an axis reveal, working-style doesn't advance currentQ, so "Keep going"
-    // shows the question just answered and answering it repeats the same
-    // reveal — users loop at question 7 until they reload. Marked as expected
-    // to fail so the suite stays green; Playwright reports it once it passes,
-    // which is the cue to remove this line.
-    test.fail(b.key === 'working_style', 'Known bug: working-style loops at the first axis reveal')
 
     // Real users reach a branch from the report, so they already have Ring 1
     // results; the report only shows branch sections alongside those.
