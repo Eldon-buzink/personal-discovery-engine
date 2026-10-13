@@ -7,6 +7,7 @@ import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
 import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
 import { ring1ContentsAfter } from '@/lib/known/ring1Card'
+import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
 import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
@@ -555,7 +556,7 @@ export default function ReportPage() {
       // On failure nothing is saved; the card shows a neutral line with Retry.
       const markFailed = () =>
         setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, copyFailed: true } : f))
-      generateRing1Copy(entry.facet, entry.traitWord, dir, assessmentId)
+      generateRing1Copy(entry.facet, entry.traitWord, dir, assessmentId, facetAnswers(entry.facet, answeredMap))
         .then(({ content }) => {
           // Persist so future page loads don't regenerate — real content only.
           const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')

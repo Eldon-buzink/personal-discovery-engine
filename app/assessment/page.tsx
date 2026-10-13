@@ -13,6 +13,7 @@ import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ri
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
 import { ring1ContentsAfter } from '@/lib/known/ring1Card'
+import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { REVEAL_CAP, fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
@@ -661,7 +662,8 @@ export default function AssessmentPage() {
         setActiveToast((cur) => (cur?.facet === facet ? { ...cur, copyFailed: true } : cur))
         setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, copyFailed: true } : r)))
       }
-      generateRing1Copy(facet, traitWord, dir, assessmentId)
+      const answers = facetAnswers(facet, new Map(session.responses.map((r) => [r.questionId, r.value])))
+      generateRing1Copy(facet, traitWord, dir, assessmentId, answers)
         .then(({ content }) => {
           const s = loadSession()
           const patternContents = ring1ContentsAfter(s.patternContents ?? [], { facet, traitWord, scoreDirection: dir }, content)

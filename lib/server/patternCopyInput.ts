@@ -1,6 +1,8 @@
 import 'server-only'
 
 import { facetTraitWords } from '@/lib/known/scoring'
+import { FACET_QUESTIONS } from '@/lib/known/ring1-questions'
+import type { FacetAnswer } from '@/lib/known/ring1Evidence'
 
 // Validation for generatePatternCopy's arguments. They arrive from the
 // browser and are interpolated into the model prompt, so anything outside
@@ -89,4 +91,26 @@ export function parsePatternCopyRequest(
     assessmentId: id,
     strongConditions: conditions,
   }
+}
+
+// Optional evidence for a Ring 1 card: the facet's own answers as ids and
+// values only (the server looks up the item text). Every id must belong to
+// that facet, values must be whole numbers 1–5, no duplicates. Anything
+// else rejects the request rather than being silently dropped.
+export function parseRing1Answers(facetName: string, answers: unknown): FacetAnswer[] | null {
+  if (answers === undefined || answers === null) return []
+  if (!Array.isArray(answers)) return null
+  const facetIds = new Set((FACET_QUESTIONS.get(facetName) ?? []).map((q) => q.id))
+  if (answers.length > facetIds.size) return null
+  const seen = new Set<number>()
+  const out: FacetAnswer[] = []
+  for (const a of answers) {
+    if (!a || typeof a !== 'object') return null
+    const { questionId, value } = a as Record<string, unknown>
+    if (typeof questionId !== 'number' || !facetIds.has(questionId) || seen.has(questionId)) return null
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 5) return null
+    seen.add(questionId)
+    out.push({ questionId, value })
+  }
+  return out
 }

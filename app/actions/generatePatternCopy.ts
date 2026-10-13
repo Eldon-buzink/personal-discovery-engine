@@ -4,7 +4,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
-import { parsePatternCopyRequest, type PatternCopyRequest } from '@/lib/server/patternCopyInput'
+import { parsePatternCopyRequest, parseRing1Answers, type PatternCopyRequest } from '@/lib/server/patternCopyInput'
+import { strongestAnswers, type EvidenceItem, type FacetAnswer } from '@/lib/known/ring1Evidence'
 import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
 import {
@@ -161,14 +162,26 @@ Orderliness, low
 Anxiety, mid
 {"trait_quote": "Worry shows up for you when something seems to matter, and mostly stays in the background when it doesn't.", "body": "Your answers sit in the middle here, which can mean the amount varies a lot from one situation to the next. That tends to keep you alert without running your day, and it can make it harder to tell in the moment which kind of worry you're in.", "tags": ["Selective worry", "Stays alert", "Varies"]}`
 
-function buildRing1Prompt(facetName: string, traitWord: string, scoreDirection: 'high' | 'mid' | 'low'): string {
+function buildRing1Prompt(
+  facetName: string,
+  traitWord: string,
+  scoreDirection: 'high' | 'mid' | 'low',
+  evidence: EvidenceItem[] = []
+): string {
   const behavioralContext = FACET_BEHAVIORAL_CONTEXT[facetName] ?? `The ${facetName} facet of personality`
+  // The person's own most strongly held answers (item text from the
+  // question list, never from the browser), so the card builds on what
+  // they said instead of inventing specifics.
+  const evidenceBlock = evidence.length === 0 ? '' :
+    `\nTheir most strongly held answers on this facet:\n` +
+    evidence.map((e) => `- They ${e.direction === 'agree' ? 'agreed' : 'disagreed'} with: "${e.text}"`).join('\n') +
+    `\nBuild on these where they fit. Do not quote them verbatim or mention that they come from their answers.\n`
   return `Facet: ${facetName}. ${RING1_SCORE_DIRECTION[scoreDirection]}
 
 What ${facetName} measures: ${behavioralContext}.
 
 Their trait word is "${traitWord}".
-
+${evidenceBlock}
 Write:
 - trait_quote: 1-2 sentences. Second person ("you"), present tense. A behaviour or inner experience the reader would recognise. Do not use the words "${facetName}" or any domain name (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).
 - body: 2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.
@@ -471,7 +484,8 @@ export type Ring1CopyResult = { content: PatternContent } | { content: null; fai
 
 async function requestRing1Card(
   anthropic: Anthropic,
-  req: { facetName: string; traitWord: string; scoreDirection: 'high' | 'mid' | 'low' }
+  req: { facetName: string; traitWord: string; scoreDirection: 'high' | 'mid' | 'low' },
+  evidence: EvidenceItem[]
 ) {
   const message = await anthropic.messages.create({
     model: MODEL,
@@ -483,7 +497,7 @@ async function requestRing1Card(
       input_schema: RING1_CARD_SCHEMA as unknown as Anthropic.Tool.InputSchema,
     }],
     tool_choice: { type: 'tool', name: RING1_CARD_TOOL_NAME },
-    messages: [{ role: 'user', content: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection) }],
+    messages: [{ role: 'user', content: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection, evidence) }],
   })
   const block = message.content.find((b) => b.type === 'tool_use')
   return checkRing1Card(block && block.type === 'tool_use' ? block.input : null)
@@ -493,10 +507,15 @@ export async function generateRing1Copy(
   facetName: string,
   traitWord: string,
   scoreDirection: 'high' | 'mid' | 'low',
-  assessmentId: string | null
+  assessmentId: string | null,
+  // This facet's answers (ids and values) — optional evidence for the card.
+  answers?: FacetAnswer[]
 ): Promise<Ring1CopyResult> {
   const req = await authorize(facetName, traitWord, scoreDirection, assessmentId, undefined, undefined)
   if (req.kind !== 'ring1') throw new Error('Invalid request')
+  const parsedAnswers = parseRing1Answers(req.facetName, answers)
+  if (!parsedAnswers) throw new Error('Invalid request')
+  const evidence = strongestAnswers(parsedAnswers)
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   // Two attempts. A failed call or an invalid card uses up an attempt; a
@@ -505,7 +524,7 @@ export async function generateRing1Copy(
   let best: Ring1Card | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const check = await requestRing1Card(anthropic, req)
+      const check = await requestRing1Card(anthropic, req, evidence)
       if (!check.ok) {
         console.error('[generateRing1Copy] invalid card:', check.reason)
         continue
