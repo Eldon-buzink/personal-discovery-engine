@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
-import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
+import { generateRing1Copy, generateRelationshipInsight } from '@/app/actions/generatePatternCopy'
+import { evidenceSentence, relationshipSignature, winningRelationships, type FiredRelationship } from '@/lib/known/relationships'
 import { ring1ContentsAfter } from '@/lib/known/ring1Card'
 import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
@@ -43,6 +44,24 @@ interface StoredSession {
   revealedFacets?: string[]
   patternContents?: PatternContentEntry[]
   branchResponses?: { environment?: { answers: unknown[]; completed?: boolean } }
+  // Generated relationship insights, reused while `signature` (the
+  // contributing facet:direction pairs) still matches. Failures never stored.
+  relationshipInsights?: CachedInsight[]
+}
+
+interface CachedInsight { id: string; signature: string; text: string }
+
+// Relationship insights: background requests per report load, most met
+// signals first; and attempts per signature per browser-tab session.
+const MAX_INSIGHT_REQUESTS = 8
+const MAX_INSIGHT_ATTEMPTS = 2
+const INSIGHT_ATTEMPTS_KEY = 'known_relationship_insight_attempts'
+
+function readInsightAttempts(): Record<string, number> {
+  try { return JSON.parse(sessionStorage.getItem(INSIGHT_ATTEMPTS_KEY) ?? '{}') } catch { return {} }
+}
+function writeInsightAttempts(a: Record<string, number>) {
+  try { sessionStorage.setItem(INSIGHT_ATTEMPTS_KEY, JSON.stringify(a)) } catch {}
 }
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -468,6 +487,8 @@ export default function ReportPage() {
   const [wsEntry, setWsEntry] = useState<PatternContentEntry | null>(null)
   const [dirEntry, setDirEntry] = useState<PatternContentEntry | null>(null)
   const [ring1Entries, setRing1Entries] = useState<PatternContentEntry[]>([])
+  const [relInsights, setRelInsights] = useState<CachedInsight[]>([])
+  const relRequestedRef = useRef(new Set<string>())
 
   const [entryCream, setEntryCream] = useState(0)
 
@@ -506,6 +527,7 @@ export default function ReportPage() {
     setWsEntry(wsPc)
     setDirEntry(dirPc)
     setRing1Entries(ring1Pcs)
+    setRelInsights(Array.isArray(session.relationshipInsights) ? session.relationshipInsights : [])
 
     let facetNames: string[] = []
     if (ring1Pcs.length > 0) {
@@ -535,6 +557,45 @@ export default function ReportPage() {
   // Generate content for any ring-1 facets that arrived with null content
   // (dev-shortcut path, or user left assessment before AI finished).
   const contentFetchRef = useRef(new Set<string>())
+
+  // ── Relationship insights ───────────────────────────────────────────────
+  // Revealed Ring 1 traits (patternContents entries without a branch) with
+  // their stored direction; the engine decides which relationships fire and
+  // which one each trait shows.
+  const relWinners = useMemo(
+    () => winningRelationships(ring1Entries.map((e) => ({ facet: e.facet, traitWord: e.traitWord, direction: e.scoreDirection }))),
+    [ring1Entries]
+  )
+  useEffect(() => {
+    const unique = Array.from(new Map(Array.from(relWinners.values()).map((r) => [r.id, r])).values())
+      .sort((a, b) => b.signals.length - a.signals.length || a.rank - b.rank)
+      .slice(0, MAX_INSIGHT_REQUESTS)
+    const attempts = readInsightAttempts()
+    for (const rel of unique) {
+      const signature = relationshipSignature(rel)
+      if (relInsights.some((c) => c.id === rel.id && c.signature === signature)) continue
+      const key = `${rel.id}|${signature}`
+      if ((attempts[key] ?? 0) >= MAX_INSIGHT_ATTEMPTS || relRequestedRef.current.has(key)) continue
+      relRequestedRef.current.add(key)
+      attempts[key] = (attempts[key] ?? 0) + 1
+      generateRelationshipInsight(rel.id, rel.signals.map(({ facet, direction, traitWord }) => ({ facet, direction, traitWord })))
+        .then(({ insight }) => {
+          if (!insight) return
+          const entry: CachedInsight = { id: rel.id, signature, text: insight }
+          setRelInsights((prev) => [...prev.filter((c) => c.id !== rel.id), entry])
+          try {
+            const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')
+            const list = Array.isArray(s.relationshipInsights) ? s.relationshipInsights : []
+            localStorage.setItem('known_session', JSON.stringify({ ...s, relationshipInsights: [...list.filter((c) => c.id !== rel.id), entry] }))
+          } catch {}
+        })
+        .catch(() => {})
+    }
+    writeInsightAttempts(attempts)
+    // relInsights is read for the cache check only; requests are keyed by
+    // relRequestedRef, so a new cached entry doesn't re-run anything.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relWinners])
   useEffect(() => {
     const needsContent = facets.filter(f => f.content === null && !f.copyFailed && !contentFetchRef.current.has(f.facet))
     if (needsContent.length === 0) return
@@ -602,6 +663,14 @@ export default function ReportPage() {
   const safeIdx = Math.min(activeIdx, Math.max(0, facets.length - 1))
   const activeFacet = facets[strengthOrder[safeIdx]] ?? null
   const hasContent = facets[0]?.content != null
+  // The selected trait's insight, when its relationship has a cached text
+  // for the current signals; the evidence sentence is built in code.
+  const activeRel: FiredRelationship | undefined = activeFacet ? relWinners.get(activeFacet.facet) : undefined
+  const activeInsightText = activeRel
+    ? relInsights.find((c) => c.id === activeRel.id && c.signature === relationshipSignature(activeRel))?.text
+    : undefined
+  const activeInsight = activeRel && activeInsightText ? `${activeInsightText} ${evidenceSentence(activeRel)}` : undefined
+
   const activeHue = activeFacet
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
@@ -912,6 +981,7 @@ export default function ReportPage() {
                         subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
                         source={null}
                         variant="ring1"
+                        insight={activeInsight}
                       />
                     ) : (
                       <PatternLoadingState

@@ -378,7 +378,7 @@ export function UnlockedContent({
         )}
 
         {insight && (
-          <div style={{ maxWidth: 420, margin: '14px auto 0' }}>
+          <div key={insight} style={{ maxWidth: 420, margin: '14px auto 0', animation: 'fadeIn 0.6s ease both' }}>
             <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.65, color: gray, textAlign: 'center' }}>
               {insight}
             </p>
