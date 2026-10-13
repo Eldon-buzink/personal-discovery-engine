@@ -92,6 +92,7 @@ test('new content renders quote, body and tags', () => {
   assert.ok(html.includes('quick to adapt'))
   for (const t of card.tags) assert.ok(html.includes(t))
   assert.ok(!html.includes('Go deeper') && !html.includes('Worth trying'))
+  assert.ok(html.includes('How it tends to show up') && !html.includes('characteristics'))
 })
 
 test('old cached content (5 fields, no body) renders without Go deeper / Worth trying', () => {
