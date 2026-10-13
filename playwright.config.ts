@@ -13,6 +13,10 @@ const BASE_URL = process.env.BASE_URL
 
 export default defineConfig({
   testDir: './e2e',
+  // e2e/flows/ has its own config (playwright.flows.config.ts) that starts
+  // an isolated server with every external service disabled — never run
+  // those specs against this config's server, which uses real keys.
+  testIgnore: 'flows/**',
   fullyParallel: true,
   reporter: 'list',
   use: {
