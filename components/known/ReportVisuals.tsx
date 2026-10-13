@@ -314,6 +314,8 @@ export function UnlockedContent({
   subtitleNote,
   source = 'From your assessment',
   hideQuote = false,
+  variant = 'branch',
+  insight,
 }: {
   traitWord: string
   content: PatternContent
@@ -328,7 +330,75 @@ export function UnlockedContent({
   // elsewhere on the page, so trait_quote/where_it_shows_up would be a duplicate.
   // tags/go_deeper/worth_trying aren't duplicated anywhere, so they still render.
   hideQuote?: boolean
+  // 'ring1': the short trait card — quote, body, tags. No "Where this shows
+  // up" heading and no Go deeper / Worth trying (content cached before `body`
+  // existed shows its where_it_shows_up as the body). 'branch': unchanged.
+  variant?: 'ring1' | 'branch'
+  // Ring 1 only, optional: a short muted paragraph between body and tags
+  // (e.g. how this trait relates to another). Nothing renders when absent.
+  insight?: string
 }) {
+  if (variant === 'ring1') {
+    const body = content.body ?? content.where_it_shows_up
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ fontFamily: serif, fontSize: 25, fontWeight: 600, color: charcoal, margin: '0 0 2px', textAlign: 'center' }}>
+          {traitWord}
+        </h2>
+        <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
+          {subtitle}
+        </p>
+        {subtitleNote && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+            <TagPill label={subtitleNote} hue={hue} />
+          </div>
+        )}
+
+        <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
+          <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.5, color: charcoalSoft, textAlign: 'center' }}>
+            {content.trait_quote}
+          </p>
+        </div>
+
+        {source && (
+          <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 20px', textAlign: 'center' }}>
+            {source}
+          </p>
+        )}
+
+        {body && (
+          <div style={{ maxWidth: 420, margin: '0 auto 8px' }}>
+            <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
+              {body}
+            </p>
+          </div>
+        )}
+
+        {insight && (
+          <div style={{ maxWidth: 420, margin: '14px auto 0' }}>
+            <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.65, color: gray, textAlign: 'center' }}>
+              {insight}
+            </p>
+          </div>
+        )}
+
+        {content.tags.length > 0 && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '26px 0 10px' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
+              <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+                {`Your ${traitWord} characteristics`}
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 7, margin: '0 0 8px' }}>
+              {content.tags.map((t) => <TagPill key={t} label={t} hue={hue} />)}
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div style={{ textAlign: 'center' }}>
       {!hideQuote && (

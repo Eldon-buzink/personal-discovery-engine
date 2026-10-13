@@ -1,9 +1,16 @@
 export interface PatternContent {
   trait_quote: string
-  where_it_shows_up: string
+  // Ring 1 cards: 2–3 sentences of prose — where the pattern shows up, what it
+  // gives, what it costs. Replaces where_it_shows_up/go_deeper/worth_trying
+  // for Ring 1. Absent on branch content and on Ring 1 content cached before
+  // this format existed (those still render from where_it_shows_up).
+  body?: string
+  // Branch cards, and Ring 1 content cached before `body` existed.
+  where_it_shows_up?: string
   tags: string[]
-  go_deeper: string
-  worth_trying: string
+  // Branch cards only (and old cached Ring 1 content, which no longer shows them).
+  go_deeper?: string
+  worth_trying?: string
   // Multi-item branches only (Energy, Working Style, Direction): per-item content,
   // positionally matched to strongConditions. Energy: fuel[0], fuel[1], drain[0],
   // drain[1]. Working Style: the 3 axes (structure, independence, directness).

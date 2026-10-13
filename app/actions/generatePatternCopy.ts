@@ -287,12 +287,12 @@ Their trait word is "${traitWord}".
 
 Write the following copy and return as JSON only, no markdown:
 {
-  "trait_quote": "A 1-2 sentence behavioral observation. First person, present tense. Must describe a specific behavior or internal experience the user would immediately recognize in themselves — NOT a restatement of the facet name or domain. Do not use the words '${facetName}' or any IPIP domain names (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness). Focus on what this actually looks like day-to-day. Example for high Cautiousness: 'You tend to sit with a decision longer than most people around you. It's not hesitation — it's that you genuinely want to understand what you're committing to before you do.'",
-  "where_it_shows_up": "2-3 sentences naming a concrete, specific real-world situation where this trait is most visible — a meeting, a conversation, a decision moment. Behavioral and specific, not abstract. Do not name the facet directly.",
-  "tags": ["3 short behavioral tags", "max 3 words each", "what this looks like in action"],
-  "go_deeper": "2 sentences. First: name the shadow side or blind spot of this trait — what it costs this person or where it can work against them. Second: point toward a related pattern worth exploring next.",
-  "worth_trying": "1-2 sentences. A specific, actionable experiment for this week — not a generic mindfulness tip. It should be directly tied to the behavioral reality of their score on this facet."
-}`
+  "trait_quote": "1-2 sentences. Second person ('you'), present tense. A behaviour or inner experience the reader would recognise in themselves. Do not use the words '${facetName}' or any IPIP domain names (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).",
+  "body": "2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.",
+  "tags": ["3 short behavioral tags", "max 3 words each", "what this looks like in action"]
+}
+
+Keep trait_quote and body together under about 70 words.`
 }
 
 function fallbackContent(
@@ -326,6 +326,13 @@ function fallbackContent(
   }
 
   return base
+}
+
+// Ring 1 cards: trait_quote + body target about 70 words; over this, retry once.
+const RING1_RETRY_WORDS = 95
+
+function ring1WordCount(c: PatternContent): number {
+  return `${c.trait_quote ?? ''} ${c.body ?? ''}`.split(/\s+/).filter(Boolean).length
 }
 
 // Per caller, per 10 minutes. A paid user's full report generates up to 30
@@ -370,16 +377,22 @@ export async function generatePatternCopy(
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1536,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
-    })
+    // Ring 1 cards have a length budget: one more attempt if the first comes
+    // back over RING1_RETRY_WORDS (the second is used either way).
+    let attempt = 0
+    do {
+      const message = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1536,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
+      })
 
-    const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
-    const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
-    content = JSON.parse(jsonText) as PatternContent
+      const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
+      const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
+      content = JSON.parse(jsonText) as PatternContent
+      attempt++
+    } while (req.kind === 'ring1' && attempt < 2 && ring1WordCount(content) > RING1_RETRY_WORDS)
   } catch (err) {
     console.error('[generatePatternCopy] generation failed:', err instanceof Error ? err.message : 'unknown error')
     content = fallbackContent(req.facetName, req.traitWord, reqBranch, reqConditions)

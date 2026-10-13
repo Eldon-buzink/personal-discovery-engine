@@ -886,6 +886,7 @@ export default function ReportPage() {
                         subtitle={patternSubtitle(activeFacet.hueOffset)}
                         subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
                         source={null}
+                        variant="ring1"
                       />
                     ) : (
                       <PatternLoadingState

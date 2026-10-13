@@ -145,38 +145,6 @@ function TagPill({ label }: { label: string }) {
   )
 }
 
-function ContentCard({
-  eyebrow,
-  body,
-  delay,
-}: {
-  eyebrow: string
-  body: string
-  delay: number
-}) {
-  return (
-    <div
-      className="w-full"
-      style={{
-        background: '#ffffff',
-        border: '1px solid #E5E1D5',
-        borderRadius: 12,
-        padding: 16,
-        animation: `fadeIn 0.6s ease both`,
-        animationDelay: `${delay}ms`,
-      }}
-    >
-      <p
-        className="font-sans font-semibold uppercase text-muted"
-        style={{ fontSize: 10, letterSpacing: '0.08em', marginBottom: 8 }}
-      >
-        {eyebrow}
-      </p>
-      <p className="font-sans text-[13.5px] text-charcoal-soft leading-[1.55]">{body}</p>
-    </div>
-  )
-}
-
 function FindingPatternLoader() {
   const [dots, setDots] = useState('.')
   const [showSecondary, setShowSecondary] = useState(false)
@@ -309,20 +277,26 @@ function PatternDetectedScreen({
                 {content!.trait_quote}
               </p>
 
+              {/* Body — where it shows up, what it gives, what it costs. Older
+                  cached content predates `body`; its where_it_shows_up stands
+                  in. Go deeper / Worth trying are no longer shown for Ring 1. */}
+              {(content!.body ?? content!.where_it_shows_up) && (
+                <p
+                  className="font-sans text-[14.5px] leading-[1.65] text-charcoal-soft text-center mt-4"
+                  style={f(150)}
+                >
+                  {content!.body ?? content!.where_it_shows_up}
+                </p>
+              )}
+
               {/* Tags */}
               <div
-                className="flex flex-wrap justify-center gap-2 mt-4"
-                style={{ ...f(150), marginBottom: 4 }}
+                className="flex flex-wrap justify-center gap-2 mt-5"
+                style={{ ...f(300), marginBottom: 4 }}
               >
                 {content!.tags.map((tag) => (
                   <TagPill key={tag} label={tag} />
                 ))}
-              </div>
-
-              {/* Cards */}
-              <div className="flex flex-col gap-3 w-full mt-6">
-                <ContentCard eyebrow="Go deeper" body={content!.go_deeper} delay={300} />
-                <ContentCard eyebrow="Worth trying" body={content!.worth_trying} delay={450} />
               </div>
             </>
           )}
