@@ -43,15 +43,19 @@ export interface TensionGrounding {
 export const CURATED_TENSIONS_ONLY = true
 
 // Report side only (when raw facet scores are known): a tension needs the
-// high facet clearly high and the low facet clearly low. The server check
-// is direction-based and doesn't use these.
+// high facet clearly high. The server check is direction-based and doesn't
+// use this. (There is no matching low-side rule: facet scores are averages
+// of 4 answers, so a low direction (< 2.5) is already 2.25 or less.)
 export const TENSION_HIGH_MIN_SCORE = 3.75
-export const TENSION_LOW_MAX_SCORE = 2.25
 
 // Facets never used in any relationship (theme or tension).
 export const RELATIONSHIP_EXCLUDED_FACETS: readonly string[] = ['Depression']
 
-export const THEMES: ThemeDefinition[] = [
+// PARKED — not used. These cross-domain themes are our own groupings, not
+// an established framework (IPIP-NEO only groups facets into the five
+// domains), so they stay off until a fit study validates them. The engine,
+// the server check, the simulation and the UI use ACTIVE_THEMES only.
+export const PARKED_THEMES: ThemeDefinition[] = [
   {
     id: 'self_direction',
     requires: [],
@@ -122,7 +126,13 @@ export const THEMES: ThemeDefinition[] = [
   },
 ]
 
+// Themes the engine uses. Empty while all themes are parked; to re-enable
+// after the fit study, set this to PARKED_THEMES (one line).
+export const ACTIVE_THEMES: ThemeDefinition[] = []
+
 // High facet first. Order here is the tie-break order between tensions.
+// Every pair must sit inside one domain (DOMAIN_FACETS); the engine only
+// looks for tensions within a domain, so a cross-domain pair never fires.
 export const TENSION_GROUNDINGS: TensionGrounding[] = [
   { high: 'Achievement-Striving', low: 'Self-Discipline', line: 'Ambition runs ahead of day-to-day follow-through.' },
   { high: 'Self-Discipline', low: 'Achievement-Striving', line: 'Steady effort without a big goal pulling you.' },

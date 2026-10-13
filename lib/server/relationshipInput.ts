@@ -2,7 +2,7 @@ import 'server-only'
 
 import { facetTraitWords } from '@/lib/known/scoring'
 import { evaluateRelationships, relationshipSignature, type FiredRelationship, type RevealedTrait } from '@/lib/known/relationships'
-import { THEMES, type ThemeDefinition } from '@/lib/known/relationshipDefinitions'
+import { ACTIVE_THEMES, type ThemeDefinition } from '@/lib/known/relationshipDefinitions'
 
 // Validation for generateRelationshipInsight's arguments, which arrive from
 // the browser. The request names a relationship and the signals it rests on;
@@ -44,5 +44,6 @@ export function parseRelationshipRequest(relationshipId: unknown, signals: unkno
   const submitted = traits.map((t) => `${t.facet}:${t.direction}`).sort().join(',')
   if (relationshipSignature(fired) !== submitted) return null
 
-  return { relationship: fired, theme: THEMES.find((t) => t.id === fired.id) ?? null }
+  // Parked themes never fire in the engine, so they're rejected above.
+  return { relationship: fired, theme: ACTIVE_THEMES.find((t) => t.id === fired.id) ?? null }
 }
