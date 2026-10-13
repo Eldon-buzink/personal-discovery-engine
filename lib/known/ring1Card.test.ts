@@ -3,7 +3,10 @@ import assert from 'node:assert/strict'
 import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { checkRing1Card, checkRing1CardText, ring1CardWords, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
+import {
+  checkRing1Card, checkRing1CardText, hasLongSentence, pickBetterCard, ring1CardWords, ring1ContentsAfter, ring1Sentences,
+  RING1_MAX_SENTENCE_WORDS, RING1_RETRY_WORDS,
+} from './ring1Card'
 import { UnlockedContent } from '../../components/known/ReportVisuals'
 import type { PatternContent, PatternContentEntry } from './types'
 
@@ -52,6 +55,35 @@ test('over the word budget is valid but flagged for a retry', () => {
     assert.equal(r.overBudget, true)
     assert.ok(ring1CardWords(r.card) > RING1_RETRY_WORDS)
   }
+})
+
+// ── Readability: long sentences ─────────────────────────────────────────────
+
+const longSentence = Array.from({ length: RING1_MAX_SENTENCE_WORDS + 1 }, (_, i) => (i === 0 ? 'You' : 'word')).join(' ') + '.'
+
+test('sentences are split on . ! ? across quote and body', () => {
+  assert.deepEqual(ring1Sentences({ trait_quote: 'One here. Two here!', body: 'Three here? Four.' }), ['One here.', 'Two here!', 'Three here?', 'Four.'])
+})
+
+test('a sentence over the limit marks the card tooLong; at the limit it does not', () => {
+  const atLimit = Array.from({ length: RING1_MAX_SENTENCE_WORDS }, () => 'word').join(' ') + '.'
+  assert.equal(hasLongSentence({ trait_quote: atLimit, body: 'Short.' }), false)
+  assert.equal(hasLongSentence({ trait_quote: 'Short.', body: longSentence }), true)
+  const r = checkRing1Card({ ...card, body: longSentence })
+  assert.equal(r.ok && r.tooLong, true)
+  const fine = checkRing1Card(card)
+  assert.equal(fine.ok && fine.tooLong, false)
+})
+
+test('pickBetterCard prefers no long sentence, then fewer words', () => {
+  const long = { ...card, body: longSentence }
+  const longer = { ...card, body: card.body + ' And one more short sentence here.' }
+  // A card with a long sentence loses to one without, whatever the word counts.
+  assert.equal(pickBetterCard(long, longer), longer)
+  assert.equal(pickBetterCard(longer, long), longer)
+  // Neither has a long sentence: fewer words wins; a tie keeps the first.
+  assert.equal(pickBetterCard(longer, card), card)
+  assert.equal(pickBetterCard(card, { ...card }), card)
 })
 
 // ── A failed card is never saved ─────────────────────────────────────────────

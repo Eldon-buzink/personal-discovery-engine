@@ -11,7 +11,7 @@ import type { PatternContent } from '@/lib/known/types'
 import {
   RING1_CARD_SCHEMA,
   checkRing1CardText,
-  ring1CardWords,
+  pickBetterCard,
   type Ring1Card,
 } from '@/lib/known/ring1Card'
 
@@ -153,13 +153,13 @@ const RING1_SCORE_DIRECTION: Record<'high' | 'mid' | 'low', string> = {
 const RING1_EXAMPLES = `Examples (three different shapes — match the quality, not the wording):
 
 Cautiousness, high
-{"trait_quote": "You sit with a decision longer than most people around you, because you want to know what you're committing to.", "body": "That patience tends to make your choices hold up, and it can cost you the moments when waiting was the riskier move. It often shows when everyone else is ready to decide and you're still asking one more question.", "tags": ["Weighs it first", "Hard to rush", "Commits late"]}
+{"trait_quote": "You like to think a decision all the way through before you commit.", "body": "That care tends to make your choices solid. It can also mean missing the moment when waiting was the bigger risk. It often shows when everyone else is ready to decide and you still have one more question.", "tags": ["Weighs it first", "Hard to rush", "Commits late"]}
 
 Orderliness, low
-{"trait_quote": "Plans feel like a starting point to you, not a contract.", "body": "That tends to make you quick to adapt when things change, and it can leave small loose ends that other people notice before you do. It often shows when a project needs steady upkeep rather than a burst of effort.", "tags": ["Adapts fast", "Loose ends", "Burst worker"]}
+{"trait_quote": "Plans feel like a starting point to you, not a promise.", "body": "You tend to adapt quickly when things change. It can also leave small loose ends that other people notice before you do. It often shows when a project needs steady upkeep instead of a burst of energy.", "tags": ["Adapts fast", "Loose ends", "Burst worker"]}
 
 Anxiety, mid
-{"trait_quote": "Worry shows up for you when something seems to matter, and mostly stays in the background when it doesn't.", "body": "Your answers sit in the middle here, which can mean the amount varies a lot from one situation to the next. That tends to keep you alert without running your day, and it can make it harder to tell in the moment which kind of worry you're in.", "tags": ["Selective worry", "Stays alert", "Varies"]}`
+{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "body": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day. It can also make it hard to tell, in the moment, which kind of worry you're feeling.", "tags": ["Selective worry", "Stays alert", "Varies"]}`
 
 function buildRing1Prompt(
   facetName: string,
@@ -192,6 +192,11 @@ Rules:
 - Situations are framed as tendencies ("it often shows up when…"), never as events that happened.
 - Self-check: if a sentence would fit most people, rewrite it more specifically.
 - No imperatives ("try", "consider", "notice", "make sure"), no advice.
+- Use plain everyday words a 12-year-old would follow.
+- Keep sentences under about 18 words, one idea per sentence.
+- At most one "tends to" or "can" per sentence.
+- No semicolons or em-dashes. No abstract nouns where a verb works.
+- Never write "the payoff", "the cost" or "the price" as labels.
 
 ${RING1_EXAMPLES}
 
@@ -533,8 +538,9 @@ export async function generateRing1Copy(
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   // Two attempts. A failed call or an invalid card uses up an attempt; a
-  // valid card over the word budget is kept but tried once more, and the
-  // shorter of the two is used.
+  // valid card that is over the word budget or has a sentence over
+  // RING1_MAX_SENTENCE_WORDS is kept but tried once more, and the better of
+  // the two is used (no long sentence first, then fewer words).
   let best: Ring1Card | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -543,8 +549,8 @@ export async function generateRing1Copy(
         console.error('[generateRing1Copy] invalid card:', check.reason)
         continue
       }
-      if (!best || ring1CardWords(check.card) < ring1CardWords(best)) best = check.card
-      if (!check.overBudget) break
+      best = best ? pickBetterCard(best, check.card) : check.card
+      if (!check.overBudget && !check.tooLong) break
     } catch (err) {
       console.error('[generateRing1Copy] generation failed:', describeError(err))
     }

@@ -12,7 +12,10 @@ import type { PatternContent, PatternContentEntry } from './types'
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS the
 // card is regenerated once.
 export const RING1_TARGET_WORDS = 70
-export const RING1_RETRY_WORDS = 85
+export const RING1_RETRY_WORDS = 90
+// Readability: any sentence in trait_quote + body longer than this marks the
+// card tooLong, which is retried once like an over-budget card.
+export const RING1_MAX_SENTENCE_WORDS = 24
 const TAG_COUNT = 3
 const TAG_MAX_WORDS = 3
 
@@ -40,12 +43,29 @@ export function ring1CardWords(card: Pick<Ring1Card, 'trait_quote' | 'body'>): n
   return words(card.trait_quote) + words(card.body)
 }
 
+// Sentences of trait_quote + body: split after . ! or ? followed by space.
+export function ring1Sentences(card: Pick<Ring1Card, 'trait_quote' | 'body'>): string[] {
+  return `${card.trait_quote} ${card.body}`.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)
+}
+
+export function hasLongSentence(card: Pick<Ring1Card, 'trait_quote' | 'body'>): boolean {
+  return ring1Sentences(card).some((s) => words(s) > RING1_MAX_SENTENCE_WORDS)
+}
+
+// The better of two valid cards: one without a long sentence wins; otherwise
+// (both or neither) the one with fewer words. Ties keep the first.
+export function pickBetterCard(a: Ring1Card, b: Ring1Card): Ring1Card {
+  const longA = hasLongSentence(a), longB = hasLongSentence(b)
+  if (longA !== longB) return longA ? b : a
+  return ring1CardWords(b) < ring1CardWords(a) ? b : a
+}
+
 export type Ring1CardCheck =
-  | { ok: true; card: Ring1Card; overBudget: boolean }
+  | { ok: true; card: Ring1Card; overBudget: boolean; tooLong: boolean }
   | { ok: false; reason: string }
 
-// Validates the tool input. Structure problems fail outright; length only
-// flags overBudget (the caller retries once on that).
+// Validates the model's output. Structure problems fail outright; length
+// only flags overBudget / tooLong (the caller retries once on either).
 export function checkRing1Card(input: unknown): Ring1CardCheck {
   if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
   const { trait_quote, body, tags } = input as Record<string, unknown>
@@ -57,7 +77,7 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
     if (words(t) > TAG_MAX_WORDS) return { ok: false, reason: `tag over ${TAG_MAX_WORDS} words` }
   }
   const card: Ring1Card = { trait_quote: trait_quote.trim(), body: body.trim(), tags: tags.map((t: string) => t.trim()) }
-  return { ok: true, card, overBudget: ring1CardWords(card) > RING1_RETRY_WORDS }
+  return { ok: true, card, overBudget: ring1CardWords(card) > RING1_RETRY_WORDS, tooLong: hasLongSentence(card) }
 }
 
 // The structured-output text → a checked card. Unparseable JSON fails the
