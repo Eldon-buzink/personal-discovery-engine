@@ -5,7 +5,7 @@ import { getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
 import { parsePatternCopyRequest, parseRing1Answers, type PatternCopyRequest } from '@/lib/server/patternCopyInput'
-import { strongestAnswers, type EvidenceItem, type FacetAnswer } from '@/lib/known/ring1Evidence'
+import { evidenceFor, type EvidenceItem, type FacetAnswer } from '@/lib/known/ring1Evidence'
 import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
 import {
@@ -391,6 +391,14 @@ function fallbackContent(
   return base
 }
 
+// For logs: the error's kind and HTTP status only. Never err.message — an
+// API error or a JSON parse error can quote request or response text, and
+// Ring 1 requests carry the person's answers.
+function describeError(err: unknown): string {
+  if (err instanceof Anthropic.APIError) return `${err.constructor.name} ${err.status ?? ''}`.trim()
+  return err instanceof Error ? err.name : 'unknown error'
+}
+
 // Model names, one place each. Ring 1 has its own so it can move
 // independently of the branch cards.
 const MODEL = 'claude-haiku-4-5-20251001'
@@ -463,7 +471,7 @@ export async function generatePatternCopy(
     const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
     content = JSON.parse(jsonText) as PatternContent
   } catch (err) {
-    console.error('[generatePatternCopy] generation failed:', err instanceof Error ? err.message : 'unknown error')
+    console.error('[generatePatternCopy] generation failed:', describeError(err))
     content = fallbackContent(req.traitWord, req.branch, req.strongConditions)
   }
 
@@ -519,7 +527,9 @@ export async function generateRing1Copy(
   if (req.kind !== 'ring1') throw new Error('Invalid request')
   const parsedAnswers = parseRing1Answers(req.facetName, answers)
   if (!parsedAnswers) throw new Error('Invalid request')
-  const evidence = strongestAnswers(parsedAnswers)
+  // Excluded facets (RING1_EVIDENCE_EXCLUDED_FACETS) get no evidence, even
+  // if the request carried answers.
+  const evidence = evidenceFor(req.facetName, parsedAnswers)
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   // Two attempts. A failed call or an invalid card uses up an attempt; a
@@ -536,7 +546,7 @@ export async function generateRing1Copy(
       if (!best || ring1CardWords(check.card) < ring1CardWords(best)) best = check.card
       if (!check.overBudget) break
     } catch (err) {
-      console.error('[generateRing1Copy] generation failed:', err instanceof Error ? err.message : 'unknown error')
+      console.error('[generateRing1Copy] generation failed:', describeError(err))
     }
   }
   return best ? { content: best } : { content: null, failed: true }

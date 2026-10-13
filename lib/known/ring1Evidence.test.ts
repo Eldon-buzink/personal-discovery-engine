@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { facetAnswers, strongestAnswers } from './ring1Evidence'
+import { RING1_EVIDENCE_EXCLUDED_FACETS, evidenceFor, facetAnswers, strongestAnswers } from './ring1Evidence'
 import { FACET_QUESTIONS } from './ring1-questions'
 
 const anxiety = FACET_QUESTIONS.get('Anxiety')!
@@ -31,4 +31,16 @@ test('neutral answers are never used; ties go to the earlier item', () => {
   assert.deepEqual(strongestAnswers(anxiety.map((q) => ({ questionId: q.id, value: 3 }))), [])
   const tied = strongestAnswers(anxiety.map((q) => ({ questionId: q.id, value: 4 })))
   assert.deepEqual(tied.map((e) => e.text), [anxiety[0].text, anxiety[1].text])
+})
+
+test('excluded facets get no evidence: nothing sent from the browser, nothing used on the server', () => {
+  assert.ok(RING1_EVIDENCE_EXCLUDED_FACETS.includes('Depression'))
+  for (const facet of RING1_EVIDENCE_EXCLUDED_FACETS) {
+    const items = FACET_QUESTIONS.get(facet)!
+    const strong = items.map((q) => ({ questionId: q.id, value: 5 }))
+    assert.deepEqual(facetAnswers(facet, new Map(strong.map((a) => [a.questionId, a.value]))), [])
+    assert.deepEqual(evidenceFor(facet, strong), [])
+  }
+  // A facet that isn't excluded still gets its evidence.
+  assert.equal(evidenceFor('Anxiety', anxiety.map((q) => ({ questionId: q.id, value: 5 }))).length, 2)
 })
