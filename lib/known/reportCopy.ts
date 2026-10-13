@@ -20,7 +20,7 @@ export function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult)
   return `${summary.checkInCount} check-ins this week.`
 }
 
-// Every option's count, highest first — "Attuned 5 · Anxious 3 · Grounded
+// Every option's count, highest first — "Alert 5 · Watchful 3 · Untroubled
 // 1" — not just the single winning option. Null when there's nothing in
 // the window yet, so the caller can show an honest empty state instead of
 // an empty string.

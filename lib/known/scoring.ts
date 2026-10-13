@@ -43,20 +43,20 @@ export function computeDomainScore(
 
 const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = {
   // Neuroticism
-  Anxiety:             { low: 'Grounded',       mid: 'Attuned',       high: 'Anxious'       },
-  Anger:               { low: 'Patient',         mid: 'Firm',          high: 'Volatile'      },
-  Depression:          { low: 'Buoyant',         mid: 'Steady',        high: 'Brooding'      },
-  'Self-Consciousness':{ low: 'Assured',         mid: 'Reflective',    high: 'Guarded'       },
-  Immoderation:        { low: 'Tempered',        mid: 'Flexible',      high: 'Impulsive'     },
-  Vulnerability:       { low: 'Resilient',       mid: 'Adaptive',      high: 'Fragile'       },
+  Anxiety:             { low: 'Untroubled',       mid: 'Alert',       high: 'Watchful'       },
+  Anger:               { low: 'Unruffled',         mid: 'Firm',          high: 'Reactive'      },
+  Depression:          { low: 'Light',         mid: 'Even',        high: 'Subdued'      },
+  'Self-Consciousness':{ low: 'At ease',         mid: 'Aware',    high: 'Self-monitoring'       },
+  Immoderation:        { low: 'Restrained',        mid: 'Easygoing',      high: 'Impulse-led'     },
+  Vulnerability:       { low: 'Composed',       mid: 'Adaptive',      high: 'Stress-prone'       },
 
   // Extraversion
-  Friendliness:        { low: 'Reserved',        mid: 'Warm',          high: 'Radiant'       },
+  Friendliness:        { low: 'Slow to warm',        mid: 'Warm',          high: 'Quick to warm'       },
   Gregariousness:      { low: 'Private',         mid: 'Social',        high: 'Gregarious'    },
-  Assertiveness:       { low: 'Deferential',     mid: 'Poised',        high: 'Commanding'    },
+  Assertiveness:       { low: 'Receptive',     mid: 'Poised',        high: 'Take-charge'    },
   'Activity Level':    { low: 'Measured',        mid: 'Active',        high: 'Energized'     },
-  'Excitement-Seeking':{ low: 'Cautious',        mid: 'Daring',        high: 'Bold'          },
-  Cheerfulness:        { low: 'Serious',         mid: 'Upbeat',        high: 'Vibrant'       },
+  'Excitement-Seeking':{ low: 'Low-key',        mid: 'Daring',        high: 'Thrill-seeking'          },
+  Cheerfulness:        { low: 'Serious',         mid: 'Upbeat',        high: 'Buoyant'       },
 
   // Openness
   Imagination:         { low: 'Literal',         mid: 'Creative',      high: 'Imaginative'   },
@@ -70,17 +70,17 @@ const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = 
   Trust:               { low: 'Vigilant',        mid: 'Discerning',    high: 'Trusting'      },
   Morality:            { low: 'Pragmatic',       mid: 'Principled',    high: 'Sincere'       },
   Altruism:            { low: 'Self-sufficient', mid: 'Considerate',   high: 'Generous'      },
-  Cooperation:         { low: 'Direct',          mid: 'Flexible',      high: 'Harmonious'    },
+  Cooperation:         { low: 'Direct',          mid: 'Even-handed',      high: 'Harmonious'    },
   Modesty:             { low: 'Confident',       mid: 'Humble',        high: 'Modest'        },
   Sympathy:            { low: 'Objective',       mid: 'Caring',        high: 'Compassionate' },
 
   // Conscientiousness
-  'Self-Efficacy':     { low: 'Tentative',       mid: 'Capable',       high: 'Masterful'     },
+  'Self-Efficacy':     { low: 'Questioning',       mid: 'Capable',       high: 'Self-assured'     },
   Orderliness:         { low: 'Spontaneous',     mid: 'Organized',     high: 'Methodical'    },
-  Dutifulness:         { low: 'Flexible',        mid: 'Reliable',      high: 'Dutiful'       },
+  Dutifulness:         { low: 'Loosely bound',        mid: 'Reliable',      high: 'Dutiful'       },
   'Achievement-Striving': { low: 'Laid-back',    mid: 'Driven',        high: 'Ambitious'     },
   'Self-Discipline':   { low: 'Fluid',           mid: 'Steady',        high: 'Disciplined'   },
-  Cautiousness:        { low: 'Spontaneous',     mid: 'Deliberate',    high: 'Careful'       },
+  Cautiousness:        { low: 'Quick to act',     mid: 'Deliberate',    high: 'Careful'       },
 }
 
 // The three trait words for a facet, or null for an unknown facet name —

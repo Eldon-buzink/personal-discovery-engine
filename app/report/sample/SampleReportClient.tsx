@@ -37,7 +37,7 @@ const sampleReportCSS = `
 
 const SAMPLE_FACETS: FacetEntry[] = [
   {
-    facet: 'assertiveness',
+    facet: 'Cautiousness',
     traitWord: 'Deliberate',
     hueOffset: 0,
     content: {
@@ -47,8 +47,8 @@ const SAMPLE_FACETS: FacetEntry[] = [
     } satisfies PatternContent,
   },
   {
-    facet: 'independence',
-    traitWord: 'Autonomous',
+    facet: 'Self-Efficacy',
+    traitWord: 'Self-assured',
     hueOffset: 1,
     content: {
       trait_quote: 'Left alone with a hard problem, you speed up rather than stall.',
@@ -57,8 +57,8 @@ const SAMPLE_FACETS: FacetEntry[] = [
     } satisfies PatternContent,
   },
   {
-    facet: 'reflection',
-    traitWord: 'Reflective',
+    facet: 'Self-Consciousness',
+    traitWord: 'Aware',
     hueOffset: 2,
     content: {
       trait_quote: 'You often finish thinking about a conversation hours after it ended.',
@@ -68,8 +68,8 @@ const SAMPLE_FACETS: FacetEntry[] = [
   },
 ]
 
-// Sample traits keep their listed order (no scores) and aren't Ring 1
-// facets, so the carousel shows no related row for them.
+// Sample traits keep their listed order (no scores), and domain is left
+// null so the carousel shows no related row for them.
 const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
   key: f.facet,
   traitWord: f.traitWord,

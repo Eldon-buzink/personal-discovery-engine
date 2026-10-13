@@ -38,49 +38,49 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Anxiety: {
     question: 'How did uncertainty sit with you today?',
     options: [
-      { id: 'low', label: "Grounded — It didn't really take hold." },
-      { id: 'mid', label: 'Attuned — I noticed it, but stayed steady.' },
-      { id: 'high', label: 'Anxious — It stayed with me most of the day.' },
+      { id: 'low', label: "Untroubled — It didn't really take hold." },
+      { id: 'mid', label: 'Alert — I noticed it, but stayed steady.' },
+      { id: 'high', label: 'Watchful — It stayed with me most of the day.' },
     ],
   },
   Anger: {
     question: 'When something got under your skin today, how did you respond?',
     options: [
-      { id: 'low', label: 'Patient — I let it pass without much reaction.' },
+      { id: 'low', label: 'Unruffled — I let it pass without much reaction.' },
       { id: 'mid', label: 'Firm — I addressed it, calmly.' },
-      { id: 'high', label: 'Volatile — It got the better of me.' },
+      { id: 'high', label: 'Reactive — It got the better of me.' },
     ],
   },
   Depression: {
     question: 'How did your mood move today?',
     options: [
-      { id: 'low', label: 'Buoyant — It lifted easily.' },
-      { id: 'mid', label: 'Steady — It held, even.' },
-      { id: 'high', label: 'Brooding — It stayed low and lingered.' },
+      { id: 'low', label: 'Light — It lifted easily.' },
+      { id: 'mid', label: 'Even — It held, even.' },
+      { id: 'high', label: 'Subdued — It stayed low and lingered.' },
     ],
   },
   'Self-Consciousness': {
     question: 'How aware were you of being watched or judged today?',
     options: [
-      { id: 'low', label: 'Assured — Barely crossed my mind.' },
-      { id: 'mid', label: 'Reflective — I noticed it, without much weight.' },
-      { id: 'high', label: 'Guarded — It shaped how I acted.' },
+      { id: 'low', label: 'At ease — Barely crossed my mind.' },
+      { id: 'mid', label: 'Aware — I noticed it, without much weight.' },
+      { id: 'high', label: 'Self-monitoring — It shaped how I acted.' },
     ],
   },
   Immoderation: {
     question: 'How did you handle wanting something today?',
     options: [
-      { id: 'low', label: 'Tempered — I held off without much effort.' },
-      { id: 'mid', label: 'Flexible — I gave in a little, on my terms.' },
-      { id: 'high', label: "Impulsive — I gave in before I'd decided to." },
+      { id: 'low', label: 'Restrained — I held off without much effort.' },
+      { id: 'mid', label: 'Easygoing — I gave in a little, on my terms.' },
+      { id: 'high', label: "Impulse-led — I gave in before I'd decided to." },
     ],
   },
   Vulnerability: {
     question: 'How did you hold up under pressure today?',
     options: [
-      { id: 'low', label: 'Resilient — It barely rattled me.' },
+      { id: 'low', label: 'Composed — It barely rattled me.' },
       { id: 'mid', label: 'Adaptive — I felt it, and adjusted.' },
-      { id: 'high', label: 'Fragile — It knocked me off balance.' },
+      { id: 'high', label: 'Stress-prone — It knocked me off balance.' },
     ],
   },
 
@@ -88,9 +88,9 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Friendliness: {
     question: 'How did you show up with someone new today?',
     options: [
-      { id: 'low', label: 'Reserved — I held back a bit.' },
+      { id: 'low', label: 'Slow to warm — I held back a bit.' },
       { id: 'mid', label: 'Warm — I opened up naturally.' },
-      { id: 'high', label: 'Radiant — I lit up the room.' },
+      { id: 'high', label: 'Quick to warm — I lit up the room.' },
     ],
   },
   Gregariousness: {
@@ -104,9 +104,9 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Assertiveness: {
     question: 'How did you show up when it mattered today?',
     options: [
-      { id: 'low', label: 'Deferential — I let others lead.' },
+      { id: 'low', label: 'Receptive — I let others lead.' },
       { id: 'mid', label: 'Poised — I spoke up when it counted.' },
-      { id: 'high', label: 'Commanding — I took charge.' },
+      { id: 'high', label: 'Take-charge — I took charge.' },
     ],
   },
   'Activity Level': {
@@ -120,9 +120,9 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   'Excitement-Seeking': {
     question: 'How did you handle a chance to do something new or risky today?',
     options: [
-      { id: 'low', label: 'Cautious — I passed on it.' },
+      { id: 'low', label: 'Low-key — I passed on it.' },
       { id: 'mid', label: 'Daring — I leaned in, carefully.' },
-      { id: 'high', label: 'Bold — I jumped right in.' },
+      { id: 'high', label: 'Thrill-seeking — I jumped right in.' },
     ],
   },
   Cheerfulness: {
@@ -130,7 +130,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Serious — Even-keeled, not much brightness.' },
       { id: 'mid', label: 'Upbeat — Genuinely good spirits.' },
-      { id: 'high', label: 'Vibrant — Bright, almost buoyant.' },
+      { id: 'high', label: 'Buoyant — Bright, almost buoyant.' },
     ],
   },
 
@@ -215,7 +215,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     question: 'How did you handle disagreement today?',
     options: [
       { id: 'low', label: 'Direct — I said what I thought, plainly.' },
-      { id: 'mid', label: 'Flexible — I met in the middle.' },
+      { id: 'mid', label: 'Even-handed — I met in the middle.' },
       { id: 'high', label: 'Harmonious — I smoothed it over.' },
     ],
   },
@@ -240,9 +240,9 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   'Self-Efficacy': {
     question: 'How did you feel about handling what came up today?',
     options: [
-      { id: 'low', label: 'Tentative — Unsure I was up to it.' },
+      { id: 'low', label: 'Questioning — Unsure I was up to it.' },
       { id: 'mid', label: 'Capable — Confident I could manage it.' },
-      { id: 'high', label: 'Masterful — Certain I had it handled.' },
+      { id: 'high', label: 'Self-assured — Certain I had it handled.' },
     ],
   },
   Orderliness: {
@@ -256,7 +256,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Dutifulness: {
     question: 'How did you treat a commitment today?',
     options: [
-      { id: 'low', label: 'Flexible — I let it slide a little.' },
+      { id: 'low', label: 'Loosely bound — I let it slide a little.' },
       { id: 'mid', label: 'Reliable — I followed through as planned.' },
       { id: 'high', label: 'Dutiful — I held to it, no matter what.' },
     ],
@@ -280,7 +280,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Cautiousness: {
     question: 'How did you decide something today?',
     options: [
-      { id: 'low', label: 'Spontaneous — I went with my gut, fast.' },
+      { id: 'low', label: 'Quick to act — I went with my gut, fast.' },
       { id: 'mid', label: 'Deliberate — I gave it a beat before deciding.' },
       { id: 'high', label: 'Careful — I thought it through fully before acting.' },
     ],

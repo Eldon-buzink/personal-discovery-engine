@@ -48,7 +48,7 @@ export function weekKey(d: Date): string {
 }
 
 // Rework Part 3a — per-option tallies over a set of check-ins, for the
-// report's distribution line ("Attuned 5 · Anxious 3 · Grounded 1") rather
+// report's distribution line ("Alert 5 · Watchful 3 · Untroubled 1") rather
 // than only the single winning option computeLean below reports. Order of
 // the returned entries is insertion order (first-seen option first); the
 // caller sorts by count for display.

@@ -245,7 +245,8 @@ const HERO_VW = 520, HERO_VH = 500
 // Autonomous -> Curious (Adventurousness mid) and Durable -> Warm (Friendliness
 // mid), verified against lib/known/scoring.ts TRAIT_WORDS — landing-copy-deck.md
 // resolves the two previously-invented words. Deliberate (Cautiousness mid)
-// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// was already real, unchanged; Reflective became Aware (Self-Consciousness
+// mid) when the trait words were renamed.
 // Position/size/hue (cx/cy/r/hueOff) unchanged for all four; only `word`
 // changed for these two. Note: each blob's organic wobble profile is seeded
 // from its word (sharedBuildPointMotionProfile(sharedHashSeed(tr.word + ...)))
@@ -255,7 +256,7 @@ const HERO_VW = 520, HERO_VH = 500
 const HERO_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 270, cy: 245, r: 140, active: true  },
   { word: 'Curious',    hueOff: 5,  cx: 392, cy: 75,  r: 80,  active: false },
-  { word: 'Reflective', hueOff: 10, cx: 105, cy: 360, r: 68,  active: false },
+  { word: 'Aware',      hueOff: 10, cx: 105, cy: 360, r: 68,  active: false },
   { word: 'Warm',       hueOff: 20, cx: 378, cy: 385, r: 64,  active: false },
 ] as const
 
@@ -329,12 +330,13 @@ const BENTO_CLUSTER_VW = 500, BENTO_CLUSTER_VH = 320
 // Autonomous -> Curious (Adventurousness mid), Durable -> Poised
 // (Assertiveness mid), Selective -> Considerate (Altruism mid) — verified
 // against lib/known/scoring.ts TRAIT_WORDS. Deliberate (Cautiousness mid)
-// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// was already real, unchanged; Reflective became Aware (Self-Consciousness
+// mid) when the trait words were renamed.
 // Position/size/hue unchanged; only `word` changed for the three renamed.
 const BENTO_CLUSTER_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 250, cy: 160, r: 112, active: true  },
   { word: 'Curious',    hueOff: 5,  cx: 102, cy: 118, r: 72,  active: false },
-  { word: 'Reflective', hueOff: 10, cx: 390, cy: 105, r: 66,  active: false },
+  { word: 'Aware',      hueOff: 10, cx: 390, cy: 105, r: 66,  active: false },
   { word: 'Poised',     hueOff: 20, cx: 108, cy: 235, r: 62,  active: false },
   { word: 'Considerate',hueOff: 35, cx: 385, cy: 228, r: 58,  active: false },
 ] as const

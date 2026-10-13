@@ -55,7 +55,7 @@ async function fetchDirectionalBandCopy(
   return copyByFacet
 }
 
-// The user's own words for their traits ("Grounded" for Anxiety) and how
+// The user's own words for their traits ("Untroubled" for Anxiety) and how
 // clear-cut each one is, from the report saved in this browser. The practice
 // tables only store facet ids, so on another device this is empty and the
 // list falls back to facet names in their original order.
