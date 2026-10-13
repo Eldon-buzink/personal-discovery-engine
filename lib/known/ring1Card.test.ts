@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { checkRing1Card, ring1CardWords, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
+import { checkRing1Card, checkRing1CardText, ring1CardWords, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
 import { UnlockedContent } from '../../components/known/ReportVisuals'
 import type { PatternContent, PatternContentEntry } from './types'
 
@@ -29,6 +29,12 @@ test('missing or empty fields fail', () => {
   assert.equal(checkRing1Card({ ...card, trait_quote: '' }).ok, false)
   assert.equal(checkRing1Card({ trait_quote: card.trait_quote, tags: card.tags }).ok, false)
   assert.equal(checkRing1Card({ ...card, body: 42 }).ok, false)
+})
+
+test('structured-output text: valid JSON is checked, anything else fails', () => {
+  assert.equal(checkRing1CardText(JSON.stringify(card)).ok, true)
+  assert.equal(checkRing1CardText('').ok, false)
+  assert.equal(checkRing1CardText('Sure! Here is the card:').ok, false)
 })
 
 test('tags must be exactly three, each at most three words', () => {

@@ -2,7 +2,7 @@
  * lib/known/ring1Card.ts
  *
  * Shape and checks for a Ring 1 trait card (trait_quote, body, tags) — what
- * generateRing1Copy asks the model for (as a forced tool call with
+ * generateRing1Copy asks the model for (structured output constrained by
  * RING1_CARD_SCHEMA) and validates before anything is shown or saved.
  * Pure, so it can be unit-tested without the model.
  */
@@ -16,25 +16,21 @@ export const RING1_RETRY_WORDS = 95
 const TAG_COUNT = 3
 const TAG_MAX_WORDS = 3
 
-export const RING1_CARD_TOOL_NAME = 'write_trait_card'
-
-// JSON schema for the forced tool call. The model can only answer through
-// this tool, so there's no free text to strip or parse.
+// JSON schema for structured output (output_config.format) — the response
+// is guaranteed to be JSON of this shape, so there's nothing to strip. Works
+// on models that reject forced tool calls (e.g. Sonnet 5.5) as well as Haiku
+// 4.5. Array-length constraints aren't supported by structured outputs, so
+// the exactly-three-tags rule lives in checkRing1Card instead.
 export const RING1_CARD_SCHEMA = {
   type: 'object',
   properties: {
     trait_quote: { type: 'string', description: '1-2 sentences, second person, present tense.' },
     body: { type: 'string', description: '2-3 sentences of prose: where it shows up, what it gives, what it costs.' },
-    tags: {
-      type: 'array',
-      items: { type: 'string', description: 'Short behavioural tag, max 3 words.' },
-      minItems: TAG_COUNT,
-      maxItems: TAG_COUNT,
-    },
+    tags: { type: 'array', items: { type: 'string', description: 'Short behavioural tag, max 3 words.' } },
   },
   required: ['trait_quote', 'body', 'tags'],
   additionalProperties: false,
-} as const
+}
 
 export type Ring1Card = Required<Pick<PatternContent, 'trait_quote' | 'body' | 'tags'>>
 
@@ -62,6 +58,16 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
   }
   const card: Ring1Card = { trait_quote: trait_quote.trim(), body: body.trim(), tags: tags.map((t: string) => t.trim()) }
   return { ok: true, card, overBudget: ring1CardWords(card) > RING1_RETRY_WORDS }
+}
+
+// The structured-output text → a checked card. Unparseable JSON fails the
+// same way as a structurally invalid card.
+export function checkRing1CardText(text: string): Ring1CardCheck {
+  try {
+    return checkRing1Card(JSON.parse(text))
+  } catch {
+    return { ok: false, reason: 'not JSON' }
+  }
 }
 
 // What to write to known_session.patternContents after a Ring 1 generation:

@@ -10,8 +10,7 @@ import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
 import {
   RING1_CARD_SCHEMA,
-  RING1_CARD_TOOL_NAME,
-  checkRing1Card,
+  checkRing1CardText,
   ring1CardWords,
   type Ring1Card,
 } from '@/lib/known/ring1Card'
@@ -487,20 +486,23 @@ async function requestRing1Card(
   req: { facetName: string; traitWord: string; scoreDirection: 'high' | 'mid' | 'low' },
   evidence: EvidenceItem[]
 ) {
+  // Structured output rather than a forced tool call: newer models (Sonnet
+  // 5.5) reject forced tool_choice, and this keeps MODEL swappable. Room in
+  // max_tokens for models that think by default.
   const message = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 1024,
+    max_tokens: 4096,
     system: RING1_SYSTEM_PROMPT,
-    tools: [{
-      name: RING1_CARD_TOOL_NAME,
-      description: 'Return the trait card.',
-      input_schema: RING1_CARD_SCHEMA as unknown as Anthropic.Tool.InputSchema,
-    }],
-    tool_choice: { type: 'tool', name: RING1_CARD_TOOL_NAME },
+    output_config: { format: { type: 'json_schema', schema: RING1_CARD_SCHEMA } },
     messages: [{ role: 'user', content: buildRing1Prompt(req.facetName, req.traitWord, req.scoreDirection, evidence) }],
   })
-  const block = message.content.find((b) => b.type === 'tool_use')
-  return checkRing1Card(block && block.type === 'tool_use' ? block.input : null)
+  // A refusal or a cut-off answer may not match the schema: count it as a
+  // failed attempt.
+  if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
+    return { ok: false as const, reason: `stop_reason ${message.stop_reason}` }
+  }
+  const text = message.content.find((b) => b.type === 'text')
+  return checkRing1CardText(text && text.type === 'text' ? text.text : '')
 }
 
 export async function generateRing1Copy(
