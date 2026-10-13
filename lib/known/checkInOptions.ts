@@ -48,7 +48,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Unruffled — I let it pass without much reaction.' },
       { id: 'mid', label: 'Firm — I addressed it, calmly.' },
-      { id: 'high', label: 'Reactive — It got the better of me.' },
+      { id: 'high', label: 'Quick to flare — It got the better of me.' },
     ],
   },
   Depression: {
@@ -80,7 +80,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Composed — It barely rattled me.' },
       { id: 'mid', label: 'Adaptive — I felt it, and adjusted.' },
-      { id: 'high', label: 'Stress-prone — It knocked me off balance.' },
+      { id: 'high', label: 'Easily overloaded — It knocked me off balance.' },
     ],
   },
 
@@ -256,7 +256,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
   Dutifulness: {
     question: 'How did you treat a commitment today?',
     options: [
-      { id: 'low', label: 'Loosely bound — I let it slide a little.' },
+      { id: 'low', label: 'Obligation-light — I let it slide a little.' },
       { id: 'mid', label: 'Reliable — I followed through as planned.' },
       { id: 'high', label: 'Dutiful — I held to it, no matter what.' },
     ],

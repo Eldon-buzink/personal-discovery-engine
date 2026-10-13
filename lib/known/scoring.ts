@@ -44,11 +44,11 @@ export function computeDomainScore(
 const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = {
   // Neuroticism
   Anxiety:             { low: 'Untroubled',       mid: 'Alert',       high: 'Watchful'       },
-  Anger:               { low: 'Unruffled',         mid: 'Firm',          high: 'Reactive'      },
+  Anger:               { low: 'Unruffled',         mid: 'Firm',          high: 'Quick to flare'      },
   Depression:          { low: 'Light',         mid: 'Even',        high: 'Subdued'      },
   'Self-Consciousness':{ low: 'At ease',         mid: 'Aware',    high: 'Self-monitoring'       },
   Immoderation:        { low: 'Restrained',        mid: 'Easygoing',      high: 'Impulse-led'     },
-  Vulnerability:       { low: 'Composed',       mid: 'Adaptive',      high: 'Stress-prone'       },
+  Vulnerability:       { low: 'Composed',       mid: 'Adaptive',      high: 'Easily overloaded'       },
 
   // Extraversion
   Friendliness:        { low: 'Slow to warm',        mid: 'Warm',          high: 'Quick to warm'       },
@@ -77,7 +77,7 @@ const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = 
   // Conscientiousness
   'Self-Efficacy':     { low: 'Questioning',       mid: 'Capable',       high: 'Self-assured'     },
   Orderliness:         { low: 'Spontaneous',     mid: 'Organized',     high: 'Methodical'    },
-  Dutifulness:         { low: 'Loosely bound',        mid: 'Reliable',      high: 'Dutiful'       },
+  Dutifulness:         { low: 'Obligation-light',        mid: 'Reliable',      high: 'Dutiful'       },
   'Achievement-Striving': { low: 'Laid-back',    mid: 'Driven',        high: 'Ambitious'     },
   'Self-Discipline':   { low: 'Fluid',           mid: 'Steady',        high: 'Disciplined'   },
   Cautiousness:        { low: 'Quick to act',     mid: 'Deliberate',    high: 'Careful'       },
