@@ -48,6 +48,14 @@ function writeFreeReveals(facets: string[]): void {
 // True when an unpaid caller may get ring-1 text for this facet: it's one
 // of the facets already counted, or there's room under REVEAL_CAP (in which
 // case it's counted now). Regenerating an already-counted facet is free.
+// Read-only: has this facet already been given its free text in this
+// browser? Unlike claimFreeReveal this never adds to the list, so features
+// built on revealed traits (relationship insights) can't use up a free
+// reveal or reach a trait the visitor wasn't given.
+export function isFreeRevealed(facet: string): boolean {
+  return readFreeReveals().includes(facet)
+}
+
 export function claimFreeReveal(facet: string): boolean {
   const current = readFreeReveals()
   if (current.includes(facet)) return true

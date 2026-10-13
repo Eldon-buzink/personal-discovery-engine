@@ -6,7 +6,10 @@ import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
 import { parsePatternCopyRequest, parseRing1Answers, type PatternCopyRequest } from '@/lib/server/patternCopyInput'
 import { evidenceFor, type EvidenceItem, type FacetAnswer } from '@/lib/known/ring1Evidence'
-import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
+import { claimFreeReveal, isFreeRevealed, isPaidUser } from '@/lib/server/entitlement'
+import { parseRelationshipRequest, type RelationshipRequest } from '@/lib/server/relationshipInput'
+import { RELATIONSHIP_INSIGHT_SCHEMA, checkInsightText } from '@/lib/known/relationshipInsight'
+import type { FiredSignal } from '@/lib/known/relationships'
 import type { PatternContent } from '@/lib/known/types'
 import {
   RING1_CARD_SCHEMA,
@@ -556,4 +559,117 @@ export async function generateRing1Copy(
     }
   }
   return best ? { content: best } : { content: null, failed: true }
+}
+
+// ── Relationship insights (Ring 1 traits) ────────────────────────────────────
+
+// Same voice as the trait cards.
+const RELATIONSHIP_SYSTEM_PROMPT = RING1_SYSTEM_PROMPT
+
+// Haiku 4.5 accepts sampling parameters; newer models (e.g. Sonnet 5.5)
+// return a 400 for a non-default temperature, so it's only sent where
+// accepted.
+const RELATIONSHIP_TEMPERATURE = 0.5
+const acceptsTemperature = (model: string) => model.startsWith('claude-haiku-4-5')
+
+const RELATIONSHIP_EXAMPLES = `Examples (match the quality, not the wording):
+
+Self-direction theme
+{"insight": "You tend to decide based on what you need, and you're fine being the one who disagrees. People usually know where you stand, and you rarely end up living someone else's plan. It can also mean your answer isn't the popular one, and that independence can look like distance. Which of your choices is worth that friction?"}
+
+Tension: high Achievement-Striving, low Self-Discipline
+{"insight": "Your drive and your day-to-day follow-through pull in different directions. You tend to set big targets, and staying on task when motivation dips can be harder than the goal itself suggests. That can make progress feel more effortful than it looks from the outside. What gets in the way once the first excitement fades?"}`
+
+function describeSignal(s: FiredSignal): string {
+  const context = FACET_BEHAVIORAL_CONTEXT[s.facet] ?? `The ${s.facet} facet of personality`
+  return `- ${s.direction === 'high' ? 'High' : 'Low'} ${s.facet} (their word: "${s.traitWord}"). ${s.facet} measures: ${context}`
+}
+
+function buildRelationshipPrompt(req: RelationshipRequest): string {
+  const { relationship: rel, theme } = req
+  const what = theme
+    ? `Their answers point the same way on these traits:
+${rel.signals.map(describeSignal).join('\n')}
+
+What this pattern tends to give them: ${theme.gives}.
+What it tends to cost them: ${theme.costs}.`
+    : `Their answers point opposite ways on two traits in the same area:
+${rel.signals.map(describeSignal).join('\n')}
+
+${rel.grounding ? `What this looks like: ${rel.grounding}` : 'Describe how these two pull against each other, using only the descriptions above.'}`
+
+  return `Write a short note about how some of this person's traits relate.
+
+${what}
+
+Rules:
+- Describe only what is listed above. Do not add other traits or outcomes.
+- Second person ("you"), present tense.
+- 2-3 sentences, then end with one reflective question. The question invites reflection; it is not an instruction.
+- About 65 words at most.
+- Weave in what it gives and what it costs, in plain words. Never write "the payoff", "the cost" or "the price".
+- Use "tends to", "often" or "can" for anything that depends on the situation. Never tell the reader what to do: no "try", "should", "consider", "make sure", "remember to".
+- Do not use the facet names or domain names; describe the behaviour.
+- Use plain everyday words a 12-year-old would follow.
+- Keep sentences under about 18 words, one idea per sentence.
+- At most one "tends to" or "can" per sentence.
+- No semicolons or em-dashes. No abstract nouns where a verb works.
+
+${RELATIONSHIP_EXAMPLES}
+
+Return JSON only, no markdown: {"insight": "..."}`
+}
+
+// `insight: null` means it couldn't be written (after one retry): the card
+// shows nothing and nothing is stored.
+export type RelationshipInsightResult = { insight: string } | { insight: null; failed: true }
+
+const REL_RATE_MAX_SIGNED_IN = 40
+const REL_RATE_MAX_ANONYMOUS = 10
+
+export async function generateRelationshipInsight(
+  relationshipId: string,
+  signals: { facet: string; direction: 'high' | 'low'; traitWord: string }[]
+): Promise<RelationshipInsightResult> {
+  // Public endpoint: validated, rate limited and paywalled here.
+  const req = parseRelationshipRequest(relationshipId, signals)
+  if (!req) throw new Error('Invalid request')
+
+  const user = await getSessionUser()
+  const allowed = await checkRateLimit(
+    rateLimitKey('relationship-insight', user?.id ?? null, requestIp()),
+    RATE_WINDOW_SECONDS,
+    user ? REL_RATE_MAX_SIGNED_IN : REL_RATE_MAX_ANONYMOUS
+  )
+  if (!allowed) throw new Error('Too many requests')
+
+  // Paid: any valid relationship. Unpaid: only between traits this visitor
+  // has already been given (read-only — never uses up a free reveal).
+  const paid = user ? await isPaidUser(user.id) : false
+  if (!paid && !req.relationship.signals.every((s) => isFreeRevealed(s.facet))) throw new Error('Payment required')
+
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: RING1_MODEL,
+        max_tokens: 2048,
+        system: RELATIONSHIP_SYSTEM_PROMPT,
+        ...(acceptsTemperature(RING1_MODEL) ? { temperature: RELATIONSHIP_TEMPERATURE } : {}),
+        output_config: { format: { type: 'json_schema', schema: RELATIONSHIP_INSIGHT_SCHEMA } },
+        messages: [{ role: 'user', content: buildRelationshipPrompt(req) }],
+      })
+      if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
+        console.error('[generateRelationshipInsight] stop_reason:', message.stop_reason)
+        continue
+      }
+      const text = message.content.find((b) => b.type === 'text')
+      const check = checkInsightText(text && text.type === 'text' ? text.text : '')
+      if (check.ok) return { insight: check.insight }
+      console.error('[generateRelationshipInsight] rejected:', check.reason)
+    } catch (err) {
+      console.error('[generateRelationshipInsight] generation failed:', describeError(err))
+    }
+  }
+  return { insight: null, failed: true }
 }
