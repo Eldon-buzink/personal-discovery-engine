@@ -40,7 +40,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: "Untroubled — It didn't really take hold." },
       { id: 'mid', label: 'Alert — I noticed it, but stayed steady.' },
-      { id: 'high', label: 'Watchful — It stayed with me most of the day.' },
+      { id: 'high', label: 'Watchful — I kept an eye out for what could go wrong most of the day.' },
     ],
   },
   Anger: {
@@ -55,7 +55,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     question: 'How did your mood move today?',
     options: [
       { id: 'low', label: 'Light — It lifted easily.' },
-      { id: 'mid', label: 'Even — It held, even.' },
+      { id: 'mid', label: 'Even — It held level, neither up nor down.' },
       { id: 'high', label: 'Subdued — It stayed low and lingered.' },
     ],
   },
@@ -90,7 +90,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Slow to warm — I held back a bit.' },
       { id: 'mid', label: 'Warm — I opened up naturally.' },
-      { id: 'high', label: 'Quick to warm — I lit up the room.' },
+      { id: 'high', label: 'Quick to warm — I connected with people almost straight away.' },
     ],
   },
   Gregariousness: {
@@ -106,7 +106,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Receptive — I let others lead.' },
       { id: 'mid', label: 'Poised — I spoke up when it counted.' },
-      { id: 'high', label: 'Take-charge — I took charge.' },
+      { id: 'high', label: 'Take-charge — I stepped in and set the direction.' },
     ],
   },
   'Activity Level': {
@@ -130,7 +130,7 @@ export const CHECK_IN_PROMPTS: Record<string, CheckInPrompt> = {
     options: [
       { id: 'low', label: 'Serious — Even-keeled, not much brightness.' },
       { id: 'mid', label: 'Upbeat — Genuinely good spirits.' },
-      { id: 'high', label: 'Buoyant — Bright, almost buoyant.' },
+      { id: 'high', label: 'Buoyant — My mood stayed bright and lifted.' },
     ],
   },
 
