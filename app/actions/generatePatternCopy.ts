@@ -1,7 +1,11 @@
 'use server'
 
 import Anthropic from '@anthropic-ai/sdk'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { getSessionUser } from '@/lib/supabase/server'
+import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
+import { requestIp } from '@/lib/server/siteOrigin'
+import { parsePatternCopyRequest } from '@/lib/server/patternCopyInput'
+import { claimFreeReveal, isPaidUser } from '@/lib/server/entitlement'
 import type { PatternContent } from '@/lib/known/types'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
@@ -324,6 +328,13 @@ function fallbackContent(
   return base
 }
 
+// Per caller, per 10 minutes. A paid user's full report generates up to 30
+// facets plus five branches in one sitting, so signed-in callers get room
+// for that; anonymous callers only ever need a handful (the free reveals).
+const RATE_WINDOW_SECONDS = 600
+const RATE_MAX_SIGNED_IN = 80
+const RATE_MAX_ANONYMOUS = 20
+
 export async function generatePatternCopy(
   facetName: string,
   traitWord: string,
@@ -332,51 +343,52 @@ export async function generatePatternCopy(
   branch?: string,
   strongConditions?: { label: string; traitWord: string; score: number }[]
 ): Promise<PatternContent> {
-  console.log('[generatePatternCopy] called with:', { facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions })
+  // Server actions are public endpoints: everything below is checked here,
+  // not trusted from the calling page.
+  const req = parsePatternCopyRequest(facetName, traitWord, scoreDirection, assessmentId, branch, strongConditions)
+  if (!req) throw new Error('Invalid request')
+
+  const user = await getSessionUser()
+  const allowed = await checkRateLimit(
+    rateLimitKey('pattern-copy', user?.id ?? null, requestIp()),
+    RATE_WINDOW_SECONDS,
+    user ? RATE_MAX_SIGNED_IN : RATE_MAX_ANONYMOUS
+  )
+  if (!allowed) throw new Error('Too many requests')
+
+  // Paywall, enforced here and not only in the UI: branch content needs a
+  // paid account; ring-1 text beyond the free reveals needs one too.
+  const paid = user ? await isPaidUser(user.id) : false
+  if (!paid) {
+    if (req.kind === 'branch') throw new Error('Payment required')
+    if (!claimFreeReveal(req.facetName)) throw new Error('Payment required')
+  }
+
+  const reqBranch = req.kind === 'branch' ? req.branch : undefined
+  const reqConditions = req.kind === 'branch' ? req.strongConditions : undefined
   let content: PatternContent
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    console.log('[generatePatternCopy] calling Anthropic...')
-
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1536,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(facetName, traitWord, scoreDirection, branch, strongConditions) }],
+      messages: [{ role: 'user', content: buildUserPrompt(req.facetName, req.traitWord, req.scoreDirection, reqBranch, reqConditions) }],
     })
 
     const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
     const jsonText = rawText.replace(/^```(?:json)?\n?|```\s*$/gm, '').trim()
     content = JSON.parse(jsonText) as PatternContent
-    console.log('[generatePatternCopy] success:', content)
   } catch (err) {
-    console.error('[generatePatternCopy] generation failed:', err)
-    content = fallbackContent(facetName, traitWord, branch, strongConditions)
+    console.error('[generatePatternCopy] generation failed:', err instanceof Error ? err.message : 'unknown error')
+    content = fallbackContent(req.facetName, req.traitWord, reqBranch, reqConditions)
   }
 
-  // Persist to Supabase — fire-and-forget. Content is already final at this point;
-  // the UI doesn't need to wait on this write, and failures here are non-critical
-  // (already just logged, never surfaced to the user).
-  //
-  // Service-role client, not the anon key: this table has no legitimate reason
-  // for anon/authenticated access (nothing in the app ever reads report_content
-  // back — the report renders from the localStorage-cached copy instead), so
-  // the anon INSERT/SELECT policies that existed for it were pure unnecessary
-  // exposure, flagged by Supabase's security advisor. Dropped in the same pass
-  // that switched this write to service-role (see supabase/migrations).
-  const supabase = createAdminClient()
-  supabase.from('report_content').insert({
-    assessment_id: assessmentId ?? null,
-    facet: facetName,
-    trait_word: traitWord,
-    score_direction: scoreDirection,
-    trait_quote: content.trait_quote,
-    where_it_shows_up: content.where_it_shows_up,
-    tags: content.tags,
-    go_deeper: content.go_deeper,
-    worth_trying: content.worth_trying,
-  }).then(undefined, (dbErr) => console.error('[generatePatternCopy] db insert failed:', dbErr))
-
+  // Not stored server-side: the report renders from the browser's own
+  // cached copy, and nothing has ever read public.report_content back, so
+  // writing every generated text there only kept an unused copy. The table
+  // and its existing rows are left in place (see supabase/migrations).
+  // assessmentId is still accepted and validated so callers don't change.
   return content
 }

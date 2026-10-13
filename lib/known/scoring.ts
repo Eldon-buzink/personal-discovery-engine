@@ -83,6 +83,12 @@ const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = 
   Cautiousness:        { low: 'Spontaneous',     mid: 'Deliberate',    high: 'Careful'       },
 }
 
+// The three trait words for a facet, or null for an unknown facet name —
+// lets server code check a client-supplied facet/trait-word pair is real.
+export function facetTraitWords(facet: string): { low: string; mid: string; high: string } | null {
+  return Object.prototype.hasOwnProperty.call(TRAIT_WORDS, facet) ? TRAIT_WORDS[facet] : null
+}
+
 export function getTraitWord(facet: string, score: number): string {
   const words = TRAIT_WORDS[facet]
   if (!words) return 'Balanced'

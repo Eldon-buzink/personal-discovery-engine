@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { trackPinterestLead } from '@/app/actions/trackPinterestLead'
+import { readConsent, trackMetaEvent } from '@/lib/consent'
 
 declare global {
   interface Window {
@@ -57,13 +58,15 @@ export default function OnboardingClient() {
   function handleStart() {
     setExiting(true)
 
-    // Meta Pixel: assessment-start Lead. event_id lets a future server-side
-    // Lead event (Conversions API) dedupe against this browser-side one.
-    window.fbq?.('track', 'Lead', { content_name: 'ipip_neo_120_start' }, { eventID: crypto.randomUUID() })
+    // Ad measurement only with consent (lib/consent.ts). Meta Pixel:
+    // assessment-start Lead. event_id lets a future server-side Lead event
+    // (Conversions API) dedupe against this browser-side one.
+    trackMetaEvent('Lead', { content_name: 'ipip_neo_120_start' }, { eventID: crypto.randomUUID() })
 
     // Pinterest Conversions API — server-side only, PINTEREST_CONVERSIONS_TOKEN
-    // never reaches the browser. No email yet, so hash the anonymous id.
-    trackPinterestLead(getOrCreateAnonId()).catch(() => {})
+    // never reaches the browser. No email yet, so hash the anonymous id. The
+    // server action checks the consent cookie again before sending.
+    if (readConsent() === 'granted') trackPinterestLead(getOrCreateAnonId()).catch(() => {})
 
     setTimeout(() => {
       sessionStorage.setItem('known_from', 'onboarding')

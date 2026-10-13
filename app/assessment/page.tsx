@@ -632,7 +632,7 @@ export default function AssessmentPage() {
     // revealedFacets once the anonymous session is claimed; see
     // app/auth/claim/page.tsx.
     if (userId) {
-      recordFacetReveals(userId, [facet]).catch((err) =>
+      recordFacetReveals([facet]).catch((err) =>
         console.error('[triggerReveal] recordFacetReveals error:', err)
       )
     }
