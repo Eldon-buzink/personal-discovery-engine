@@ -18,6 +18,7 @@ import {
   type Ring1Card,
 } from '@/lib/known/ring1Card'
 import { betterAttempt, retryFeedback } from '@/lib/known/copyChecks'
+import { temperatureFor } from '@/lib/known/modelOptions'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
 // One-line descriptions of what each facet actually measures behaviorally.
@@ -417,7 +418,8 @@ function describeError(err: unknown): string {
 // Model names, one place each. Ring 1 has its own so it can move
 // independently of the branch cards.
 const MODEL = 'claude-haiku-4-5-20251001'
-const RING1_MODEL = 'claude-haiku-4-5-20251001'
+// Ring 1 cards and relationship insights. Branch cards stay on MODEL.
+const RING1_MODEL = 'claude-sonnet-5-5'
 
 // Per caller, per 10 minutes. A paid user's full report generates up to 30
 // facets plus five branches in one sitting, so signed-in callers get room
@@ -599,11 +601,9 @@ export async function generateRing1Copy(
 // Same voice as the trait cards.
 const RELATIONSHIP_SYSTEM_PROMPT = RING1_SYSTEM_PROMPT
 
-// Haiku 4.5 accepts sampling parameters; newer models (e.g. Sonnet 5.5)
-// return a 400 for a non-default temperature, so it's only sent where
-// accepted.
+// Sent only to models that accept it (temperatureFor): Sonnet 5.5, the
+// current RING1_MODEL, rejects a non-default temperature, so it gets none.
 const RELATIONSHIP_TEMPERATURE = 0.5
-const acceptsTemperature = (model: string) => model.startsWith('claude-haiku-4-5')
 
 const RELATIONSHIP_EXAMPLES = `Examples (match the quality, not the wording):
 
@@ -688,7 +688,7 @@ export async function generateRelationshipInsight(
       prompt: buildRelationshipPrompt(req),
       schema: RELATIONSHIP_INSIGHT_SCHEMA,
       maxTokens: 2048,
-      temperature: acceptsTemperature(RING1_MODEL) ? RELATIONSHIP_TEMPERATURE : undefined,
+      temperature: temperatureFor(RING1_MODEL, RELATIONSHIP_TEMPERATURE),
     },
     (text) => {
       const c = checkInsightText(text)

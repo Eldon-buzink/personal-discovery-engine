@@ -52,8 +52,8 @@ must fire from exactly those signals, and each trait word must be the
 facet's real word for that direction.
 
 **Our server → Anthropic** (one `POST /v1/messages` per attempt, at most two):
-- Body: `model`, `max_tokens`, `system` (fixed text), `temperature` (Haiku
-  4.5 only), `output_config` (fixed schema), and one user message with the
+- Body: `model` (Sonnet 5.5), `max_tokens`, `system` (fixed text), `temperature`
+  (only for models that accept it, so not Sonnet 5.5), `output_config` (fixed schema), and one user message with the
   relationship's fixed description (what it tends to give and cost, or the
   tension line), each contributing facet's name, direction, trait word and
   fixed behavioural description, plus fixed rules and examples.
