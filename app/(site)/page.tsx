@@ -6,8 +6,8 @@ import LandingPageClient from './LandingPageClient'
 // same pattern as the pricing and onboarding pages.
 export const metadata = buildMetadata({
   path: '/',
-  title: 'Bearing — Get to know yourself better',
-  description: 'A Big Five personality assessment. Rate 120 short statements and see your patterns. Your first 5 patterns are free, no account needed.',
+  title: 'Bearing — Big Five Personality Assessment, Free to Start',
+  description: 'Bearing is a Big Five personality assessment: rate 120 short statements in about 15 minutes. Your first 5 patterns are free, no account needed.',
 })
 
 // No logo asset or internal search feature exists yet (checked public/ and
@@ -19,7 +19,7 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'Bearing',
   url: 'https://www.getbearing.me',
-  description: "A Big Five personality assessment. Rate 120 short statements and see your patterns. Your first 5 patterns are free, no account needed.",
+  description: "Bearing is a Big Five personality assessment: rate 120 short statements in about 15 minutes. Your first 5 patterns are free, no account needed.",
 }
 
 const websiteJsonLd = {

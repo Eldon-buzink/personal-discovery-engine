@@ -39,6 +39,11 @@ export interface PostFrontmatter {
   // is just re-evaluated on whatever build happens to run next. ISO date
   // string ("YYYY-MM-DD"), compared lexically against today.
   publishDate?: string
+  // The date the post actually went live, when it differs from (or there is
+  // no) publishDate. Feeds Article datePublished only; never used for
+  // gating. ISO "YYYY-MM-DD". Set only from a recorded live date, never
+  // guessed.
+  publishedAt?: string
 }
 
 export interface BlogPost {
