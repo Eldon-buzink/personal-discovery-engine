@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties } from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
-import AnimatedBlob from '@/components/known/AnimatedBlob'
+import AnimatedBlob, { blobHue } from '@/components/known/AnimatedBlob'
+import BlobDots from '@/components/known/BlobDots'
 import AuthModal from '@/components/known/AuthModal'
 import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import PatternToast from '@/components/known/PatternToast'
@@ -147,21 +148,17 @@ function TagPill({ label }: { label: string }) {
   )
 }
 
-function FindingPatternLoader() {
-  const [dots, setDots] = useState('.')
+function FindingPatternLoader({ hue }: { hue: number }) {
   const [showSecondary, setShowSecondary] = useState(false)
 
   useEffect(() => {
-    const dotInterval = setInterval(() => {
-      setDots((d) => (d.length >= 3 ? '.' : d + '.'))
-    }, 500)
     const secondaryTimer = setTimeout(() => setShowSecondary(true), 1500)
-    return () => { clearInterval(dotInterval); clearTimeout(secondaryTimer) }
+    return () => clearTimeout(secondaryTimer)
   }, [])
 
   return (
     <div style={{ textAlign: 'center', paddingTop: 32 }}>
-      <p style={{
+      <p role="status" style={{
         fontFamily: 'var(--font-newsreader), Georgia, serif',
         fontStyle: 'italic',
         fontSize: 18,
@@ -169,7 +166,8 @@ function FindingPatternLoader() {
         margin: '0 0 14px',
         lineHeight: 1.55,
       }}>
-        Finding your pattern{dots}
+        Finding your pattern
+        <BlobDots hue={hue} />
       </p>
       <p style={{
         fontFamily: 'var(--font-inter), system-ui, sans-serif',
@@ -270,7 +268,7 @@ function PatternDetectedScreen({
         {/* Loading vs loaded content — min-height reserves space so blob doesn't jump */}
         <div style={{ width: '100%', minHeight: 420 }}>
           {isLoading ? (
-            <FindingPatternLoader />
+            <FindingPatternLoader hue={blobHue(`ring1-pattern-${traitWord.toLowerCase()}`, record.hueOffset)} />
           ) : content === null ? (
             <p className="font-sans text-[14px] leading-[1.6] text-muted text-center mt-8" style={f(0)}>
               We couldn&apos;t write this one just now. Your result is saved and we&apos;ll try again on your report.

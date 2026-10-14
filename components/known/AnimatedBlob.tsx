@@ -41,6 +41,12 @@ function userCuratedHue(seedStr: string, offset: number): number {
   return (curatedHues[bucket].hue + jitter + 360) % 360
 }
 
+// The hue an AnimatedBlob with this seed and offset is drawn in, so small
+// companions (BlobDots) can match it.
+export function blobHue(seed: string, hueOffset = 0): number {
+  return userCuratedHue(seed, hueOffset)
+}
+
 interface MotionPoint {
   phase: number
   freq: number
