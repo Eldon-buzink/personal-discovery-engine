@@ -164,3 +164,15 @@ test('harder traits are the seven named ones, by direction', () => {
   assert.equal(isHarderTrait('Self-Efficacy', 'high'), false)
   assert.equal(isHarderTrait('Cautiousness', 'high'), false)
 })
+
+test('tag words split on hyphens: "in-the-moment" counts as three', () => {
+  const tagged = (tags: string[]) => checkRing1Card({ ...card, tags })
+  const r = tagged(['Pulled in-the-moment', 'Loose ends', 'Burst worker'])
+  assert.ok(r.ok)
+  if (r.ok) assert.ok(r.violations.includes("Tag 'Pulled in-the-moment' has 4 words: shorten to 3."), r.violations.join(' | '))
+  // Over the hard limit once the hyphens are counted.
+  assert.deepEqual(tagged(['Acts on in-the-moment urges', 'Loose ends', 'Burst worker']), { ok: false, reason: 'tag over 4 words' })
+  // A plain two-part compound is two words, so a 2-word tag stays clean.
+  const clean = tagged(['Low-key', 'Loose ends', 'Burst worker'])
+  assert.ok(clean.ok && clean.violations.length === 0)
+})

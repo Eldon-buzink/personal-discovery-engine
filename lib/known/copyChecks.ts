@@ -15,6 +15,9 @@ export const SOFT_SENTENCE_WORDS = 28
 export const HARD_SENTENCE_WORDS = 35
 
 export const countWords = (s: string) => s.split(/\s+/).filter(Boolean).length
+// Tags only: hyphenated parts count separately, so "in-the-moment" is three
+// words and can't slip a long phrase under the tag limit.
+export const countTagWords = (s: string) => s.split(/[\s\-\u2010-\u2015]+/).filter(Boolean).length
 
 export function splitSentences(text: string): string[] {
   return text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)

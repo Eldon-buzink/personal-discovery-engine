@@ -12,7 +12,7 @@
  */
 
 import type { PatternContent, PatternContentEntry } from './types'
-import { PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
+import { PUNCTUATION_NOTE, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
 
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS is a
 // soft violation (retried once with a note, never dropped).
@@ -72,7 +72,7 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
   const violations: string[] = []
   for (const t of tags) {
     if (typeof t !== 'string' || !t.trim()) return { ok: false, reason: 'empty tag' }
-    const n = countWords(t)
+    const n = countTagWords(t)
     if (n > TAG_HARD_MAX_WORDS) return { ok: false, reason: `tag over ${TAG_HARD_MAX_WORDS} words` }
     if (n > TAG_SOFT_MAX_WORDS) violations.push(`Tag '${t.trim()}' has ${n} words: shorten to ${TAG_SOFT_MAX_WORDS}.`)
     if (n < TAG_SOFT_MIN_WORDS) violations.push(`Tag '${t.trim()}' has 1 word: use 2-3 words.`)

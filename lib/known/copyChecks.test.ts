@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { betterAttempt, checkSentenceLengths, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff, retryFeedback, splitSentences } from './copyChecks'
+import { betterAttempt, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff, retryFeedback, splitSentences } from './copyChecks'
 
 test('sentences split on . ! ?', () => {
   assert.deepEqual(splitSentences('One here. Two here! Three? Four.'), ['One here.', 'Two here!', 'Three?', 'Four.'])
@@ -48,4 +48,11 @@ test('em-dashes and semicolons are detected and fixed in code', () => {
   // Never a comma; ordinary hyphens are left alone.
   assert.ok(!fixPunctuation('You plan ahead—it helps.').includes(','))
   assert.equal(fixPunctuation('Twelve-week, self-made plan.'), 'Twelve-week, self-made plan.')
+})
+
+test('countTagWords splits on hyphens and dashes; countWords does not', () => {
+  assert.equal(countTagWords('Pulled in-the-moment'), 4)
+  assert.equal(countTagWords('Self\u2010aware'), 2)
+  assert.equal(countTagWords('  Slow to   warm '), 3)
+  assert.equal(countWords('Pulled in-the-moment'), 2)
 })
