@@ -46,25 +46,36 @@ test('excluded facets get no evidence: nothing sent from the browser, nothing us
   assert.equal(evidenceFor('Anxiety', anxiety.map((q) => ({ questionId: q.id, value: 5 }))).length, 2)
 })
 
-test('excluded items (political 69, 71; religious 72) are never sent or used, but still count in the score', () => {
-  assert.deepEqual([...RING1_EVIDENCE_EXCLUDED_ITEMS].sort((a, b) => a - b), [69, 71, 72])
-  const lib = FACET_QUESTIONS.get('Liberalism')!
-  const answers = new Map(lib.map((q) => [q.id, 5]))
-  const asSent = lib.map((q) => ({ questionId: q.id, value: 5 }))
-
-  // Browser payload: only item 70.
-  assert.deepEqual(facetAnswers('Liberalism', answers).map((a) => a.questionId), [70])
-  // Model prompt: never the excluded items, even if a request carries them.
-  const evidence = evidenceFor('Liberalism', asSent)
-  assert.deepEqual(evidence.map((e) => e.text), [QUESTION_BY_ID.get(70)!.text])
+test('every excluded item is never sent or used, and still counts in its facet score', () => {
+  assert.deepEqual([...RING1_EVIDENCE_EXCLUDED_ITEMS].sort((a, b) => a - b), [18, 19, 20, 44, 69, 71, 72, 77, 80])
   for (const id of RING1_EVIDENCE_EXCLUDED_ITEMS) {
-    assert.ok(!evidence.some((e) => e.text === QUESTION_BY_ID.get(id)!.text))
-  }
+    const item = QUESTION_BY_ID.get(id)!
+    const items = FACET_QUESTIONS.get(item.facet)!
+    // Every item answered 5, so each one is as strong as it can be.
+    const answers = new Map(items.map((q) => [q.id, 5]))
+    const asSent = items.map((q) => ({ questionId: q.id, value: 5 }))
 
-  // Scoring: all four items, item 72 reverse-keyed. 5,5,5 plus (6 - 5) over 4.
-  assert.equal(computeFacetScore('Liberalism', answers), (5 + 5 + 5 + 1) / 4)
-  // Changing only item 72 moves the score, so it still counts.
-  const changed = new Map(answers)
-  changed.set(72, 1)
-  assert.equal(computeFacetScore('Liberalism', changed), (5 + 5 + 5 + 5) / 4)
+    // Browser payload and model evidence: never this item.
+    assert.ok(!facetAnswers(item.facet, answers).some((a) => a.questionId === id), `payload ${id}`)
+    assert.ok(!evidenceFor(item.facet, asSent).some((e) => e.text === item.text), `evidence ${id}`)
+
+    // Score: the plain four-item average, reverse-keyed items as 6 - answer.
+    const expected = items.reduce((sum, q) => sum + (q.reverseScored ? 1 : 5), 0) / 4
+    assert.equal(computeFacetScore(item.facet, answers), expected, `score ${id}`)
+    // Changing only this item moves the score by its share, so it still counts.
+    const changed = new Map(answers)
+    changed.set(id, 1)
+    assert.equal(computeFacetScore(item.facet, changed), expected + (item.reverseScored ? 4 : -4) / 4, `counts ${id}`)
+  }
+})
+
+test('facets left with one or no evidence items still work', () => {
+  const strong = (facet: string) => FACET_QUESTIONS.get(facet)!.map((q) => ({ questionId: q.id, value: 5 }))
+  // Liberalism and Immoderation keep a single item; Depression none.
+  assert.deepEqual(evidenceFor('Liberalism', strong('Liberalism')).map((e) => e.text), [QUESTION_BY_ID.get(70)!.text])
+  assert.deepEqual(evidenceFor('Immoderation', strong('Immoderation')).map((e) => e.text), [QUESTION_BY_ID.get(17)!.text])
+  assert.deepEqual(evidenceFor('Depression', strong('Depression')), [])
+  // A neutral answer on the one remaining item leaves none.
+  const neutral = strong('Immoderation').map((a) => (a.questionId === 17 ? { ...a, value: 3 } : a))
+  assert.deepEqual(evidenceFor('Immoderation', neutral), [])
 })

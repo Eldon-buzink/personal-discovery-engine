@@ -30,13 +30,12 @@ const MAX_EVIDENCE = 2
 // Add a facet name (as in ring1-questions.ts) to exclude it too.
 export const RING1_EVIDENCE_EXCLUDED_FACETS: readonly string[] = ['Depression']
 
-// Single items that are never sent either: the two political Liberalism
-// items (69 "vote for liberal political candidates", 71 "liberal political
-// views") and the religious one (72 "Believe in one true religion").
-// Political opinions and religious beliefs are sensitive data, and the card
-// is about questioning traditions, not politics or faith. They still count
-// in the facet score, which the browser computes from all answers.
-export const RING1_EVIDENCE_EXCLUDED_ITEMS: readonly number[] = [69, 71, 72]
+// Single items that are never sent either (the table in DATA_FLOW.md has
+// each reason): political opinion (69, 71), religious belief (72), eating
+// and cravings (18, 19, 20), gambling (44) and admissions of rule-breaking
+// (77, 80). They still count in the facet score, which the browser computes
+// from all answers; only their answers stay out of the request.
+export const RING1_EVIDENCE_EXCLUDED_ITEMS: readonly number[] = [18, 19, 20, 44, 69, 71, 72, 77, 80]
 
 export function evidenceAllowed(facet: string): boolean {
   return !RING1_EVIDENCE_EXCLUDED_FACETS.includes(facet)

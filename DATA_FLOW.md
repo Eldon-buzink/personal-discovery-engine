@@ -21,9 +21,16 @@ in `lib/server/patternCopyInput.ts`):
   | 69 | Tend to vote for liberal political candidates. | Liberalism | political opinion |
   | 71 | Tend toward liberal political views. | Liberalism | political opinion |
   | 72 | Believe in one true religion. | Liberalism | religious belief |
+  | 18 | Have trouble resisting my cravings. | Immoderation | cravings |
+  | 19 | Eat too much. | Immoderation | eating behaviour |
+  | 20 | Easily resist temptations. | Immoderation | cravings |
+  | 44 | Would rather not gamble. | Excitement-Seeking | gambling |
+  | 77 | Would never cheat on my taxes. | Morality | admission of rule-breaking |
+  | 80 | Know how to get around the rules. | Morality | admission of rule-breaking |
 
-  Political opinions and religious beliefs are sensitive data, and the card
-  describes questioning traditions, not politics or faith. These items still
+  These answers are sensitive (political opinion, religion, eating, cravings,
+  gambling) or read as an admission of breaking rules, and none of them is
+  needed to describe the trait. These items still
   count in the facet score, which the browser computes from all answers; only
   their answers are kept out of the request. The prompts also forbid
   mentioning religion, faith, politics, parties, voting or sexuality.
