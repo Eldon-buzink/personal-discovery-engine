@@ -66,7 +66,7 @@ test('formatted copy never says the starting result was wrong, and names no face
   assert.equal(formatStartVsNow({ type: 'matches' }, 'Anxiety'), 'Mostly matches your starting result.')
   assert.equal(
     formatStartVsNow({ type: 'adjacent', towardOption: 'high' }, 'Anxiety'),
-    'Your days lean a bit more toward Anxious than your starting result.'
+    'Your days lean a bit more toward Watchful than your starting result.'
   )
   assert.equal(formatStartVsNow({ type: 'opposite' }, 'Anxiety'), 'Your days lean differently from your starting result.')
   for (const line of [

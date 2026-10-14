@@ -1,6 +1,7 @@
 // Server component — no interactivity needed
 
 import Link from 'next/link'
+import ConsentSettingsLink from './ConsentSettingsLink'
 
 const charcoal = '#1C1C1A'
 const sans     = 'var(--font-inter), system-ui, sans-serif'
@@ -33,6 +34,7 @@ const COLUMNS = [
     links: [
       { label: 'Privacy', href: '/privacy' },
       { label: 'Terms',   href: '/terms'   },
+      { label: 'Your data', href: '/account' },
     ],
   },
 ]
@@ -85,6 +87,11 @@ export default function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              {col.heading === 'Legal' && (
+                <li>
+                  <ConsentSettingsLink style={{ fontFamily: sans, fontSize: 14, color: cream70 }} />
+                </li>
+              )}
             </ul>
           </div>
         ))}

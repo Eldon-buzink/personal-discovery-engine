@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import type { PatternContent } from '@/lib/known/types'
-import { FacetEntry, InteractiveCluster, OrbitCluster, OrbitCondition, UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
+import { FacetEntry, OrbitCluster, OrbitCondition, UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
+import { TraitCarousel, patternSubtitle } from '@/components/known/TraitCarousel'
+import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 
 // Static example report shown behind the landing page's "See an example
 // report" CTA. Reuses the real report page's presentational components
-// (InteractiveCluster/UnlockedContent/OrbitCluster, shared via
+// (TraitCarousel/UnlockedContent/OrbitCluster, shared via
 // components/known/ReportVisuals.tsx) so the sample stays visually
 // identical to a real one — but with fixed illustrative content instead of
 // localStorage/Supabase-backed data, no paywall, and everything unlocked.
@@ -35,42 +37,45 @@ const sampleReportCSS = `
 
 const SAMPLE_FACETS: FacetEntry[] = [
   {
-    facet: 'assertiveness',
+    facet: 'Cautiousness',
     traitWord: 'Deliberate',
     hueOffset: 0,
     content: {
-      trait_quote: "You don't speak until you've thought it through — and when you do, people tend to listen.",
-      where_it_shows_up: 'In meetings, you let the room talk itself out before you weigh in — and when you do, it usually reframes the whole conversation. Friends bring you the decision they\'ve been avoiding, not the one they\'ve already made.',
+      trait_quote: "You don't speak until you've thought it through, and when you do, people tend to listen.",
+      body: 'In meetings you often let the room talk itself out before you weigh in. That tends to give what you say more weight, and it can mean people read the pause as distance when you are fully engaged.',
       tags: ['Considered', 'Low reactivity', 'High signal-to-noise'],
-      go_deeper: 'This isn\'t hesitation — it\'s a preference for being right over being first. The risk is that people read the pause as disengagement when it\'s actually the opposite.',
-      worth_trying: 'Name the pause out loud once in a while: "give me a second on this" costs nothing and stops people from filling the silence with the wrong assumption.',
     } satisfies PatternContent,
   },
   {
-    facet: 'independence',
-    traitWord: 'Autonomous',
+    facet: 'Self-Efficacy',
+    traitWord: 'Self-assured',
     hueOffset: 1,
     content: {
-      trait_quote: 'Left alone with a hard problem, you don\'t stall — you speed up.',
-      where_it_shows_up: 'You\'ll take the ambiguous project nobody wants to own. Check-ins feel like overhead unless you asked for them yourself.',
+      trait_quote: 'Left alone with a hard problem, you speed up rather than stall.',
+      body: 'It often shows on the ambiguous project nobody else wants to own. That independence tends to get things moving without much oversight, and it can make check-ins and shared ownership feel like friction.',
       tags: ['Self-directed', 'Comfortable with ambiguity', 'Low oversight need'],
-      go_deeper: 'Autonomy is fuel for you, not just a preference — the work that drains you fastest is the work with someone looking over your shoulder, regardless of how good they are at their job.',
-      worth_trying: 'On team projects, ask for a clearly-owned lane up front. You\'ll do your best work there and resent the shared one.',
     } satisfies PatternContent,
   },
   {
-    facet: 'reflection',
-    traitWord: 'Reflective',
+    facet: 'Self-Consciousness',
+    traitWord: 'Aware',
     hueOffset: 2,
     content: {
-      trait_quote: 'You process out loud, mostly with yourself.',
-      where_it_shows_up: 'The nights you replay a conversation aren\'t anxiety — they\'re how you actually finish thinking about it. You notice patterns in your own behavior weeks before anyone points them out.',
-      tags: ['Self-aware', 'Internally processed', 'Slow to conclude, hard to shake'],
-      go_deeper: 'The depth is real, but it has a ceiling: reflection without a second opinion can loop instead of resolve. The stuck patterns you\'ve had longest are usually the ones you\'ve only ever examined alone.',
-      worth_trying: 'Once a stuck thought hits its third replay, say it to one other person before continuing to think about it alone. External friction moves it faster than more solitary reflection will.',
+      trait_quote: 'You often finish thinking about a conversation hours after it ended.',
+      body: 'Replaying it is how you tend to make sense of things, and it often lets you spot patterns in yourself before anyone points them out. The same habit can loop when there is no second voice in it.',
+      tags: ['Self-aware', 'Internally processed', 'Slow to conclude'],
     } satisfies PatternContent,
   },
 ]
+
+// Sample traits keep their listed order (no scores), and domain is left
+// null so the carousel shows no related row for them.
+const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
+  key: f.facet,
+  traitWord: f.traitWord,
+  hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
+  domain: null,
+}))
 
 const ENV_CONDITIONS: OrbitCondition[] = [
   { traitWord: 'Deep work', hue: userCuratedHue('env-pattern-deep-work', 0) },
@@ -121,15 +126,18 @@ export default function SampleReportClient() {
               Who you are
             </p>
 
-            <InteractiveCluster facets={SAMPLE_FACETS} activeIdx={activeIdx} onSelect={setActiveIdx} />
-
-            <div style={{ marginTop: 28 }}>
-              <UnlockedContent
-                traitWord={activeFacet.traitWord}
-                content={activeFacet.content!}
-                hue={activeHue}
-              />
-            </div>
+            <TraitCarousel traits={SAMPLE_TRAITS} activeIdx={activeIdx} onSelect={setActiveIdx}>
+              <div style={{ marginTop: 12 }}>
+                <UnlockedContent
+                  traitWord={activeFacet.traitWord}
+                  content={activeFacet.content!}
+                  hue={activeHue}
+                  subtitle={patternSubtitle(activeFacet.hueOffset)}
+                  source={null}
+                  variant="ring1"
+                />
+              </div>
+            </TraitCarousel>
           </section>
 
           {/* ── Where you thrive ─────────────────────────── */}

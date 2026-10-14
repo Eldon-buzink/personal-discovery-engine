@@ -1,3 +1,5 @@
+import type { PatternContent as CardContent } from "./types";
+
 /**
  * lib/known/branchSuggestion.ts
  *
@@ -51,13 +53,8 @@ export interface PatternContent {
   branch: string; // 'ring1' for Ring 1 facets, or a branch id once branches produce their own patterns
   dimensionScores?: Record<string, number>;
   strongConditions?: { label: string; score: number }[];
-  content: {
-    trait_quote: string;
-    where_it_shows_up: string;
-    tags: string[];
-    go_deeper: string;
-    worth_trying: string;
-  };
+  // Not read by the suggestion logic; same shape the report stores.
+  content: CardContent;
 }
 
 export interface BranchSuggestion {

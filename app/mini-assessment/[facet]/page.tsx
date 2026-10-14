@@ -10,18 +10,10 @@ import {
   MINI_ASSESSMENT_SLUG_TO_FACET,
   MINI_ASSESSMENT_ITEMS,
   MINI_ASSESSMENT_DISPLAY_LABEL,
-  scoreMiniAssessment,
-  bandForScore,
   type MiniAssessmentSlug,
 } from '@/lib/known/miniAssessmentScoring'
 import { preAnswerStorageKey } from '@/lib/known/miniAssessmentLanding'
-
-// Per-browser identifier for a pre-account mini-assessment result, distinct
-// from the row's own id (which is what actually gets claimed on signup —
-// see AuthModalContext 'mini-assessment-signup'). Mirrors anonymous_sessions'
-// shape even though nothing reads this back today; kept for the same reason
-// anonymous_sessions carries one.
-const MINI_SESSION_ID_KEY = 'known_mini_assessment_session_id'
+import { submitMiniAssessment } from '@/app/actions/miniAssessment'
 
 export default function MiniAssessmentQuizPage({ params }: { params: { facet: string } }) {
   const router = useRouter()
@@ -94,27 +86,18 @@ export default function MiniAssessmentQuizPage({ params }: { params: { facet: st
     }
 
     setIsSubmitting(true)
-    const score = scoreMiniAssessment(facet, newResponses)
-    const band = bandForScore(score)
 
-    let sessionId = localStorage.getItem(MINI_SESSION_ID_KEY)
-    if (!sessionId) {
-      sessionId = crypto.randomUUID()
-      localStorage.setItem(MINI_SESSION_ID_KEY, sessionId)
-    }
-
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('mini_assessment_results')
-      .insert({ session_id: sessionId, facet_id: facet, responses: newResponses, band })
-      .select('id')
-      .single()
-
-    if (error) {
-      console.error('[MiniAssessmentQuiz] insert error:', error.message)
+    // Saved and scored on the server (band computed there, row stamped with
+    // this browser's signed anonymous id) — see app/actions/miniAssessment.ts.
+    let data: { id: string; band: string }
+    try {
+      data = await submitMiniAssessment(slug, newResponses)
+    } catch (err) {
+      console.error('[MiniAssessmentQuiz] submit error:', err instanceof Error ? err.message : 'unknown error')
       setIsSubmitting(false)
       return
     }
+    const band = data.band
 
     // Hand the raw per-item responses to the result page via sessionStorage,
     // keyed by the result row's own id — same browser, same tab lineage,

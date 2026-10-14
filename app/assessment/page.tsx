@@ -11,7 +11,9 @@ import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
 import { RING1_QUESTIONS, FACET_QUESTIONS, QUESTION_BY_ID } from '@/lib/known/ring1-questions'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
-import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { generateRing1Copy } from '@/app/actions/generatePatternCopy'
+import { ring1ContentsAfter } from '@/lib/known/ring1Card'
+import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { recordFacetReveals } from '@/app/actions/recordFacetReveals'
 import { REVEAL_CAP, fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
@@ -145,38 +147,6 @@ function TagPill({ label }: { label: string }) {
   )
 }
 
-function ContentCard({
-  eyebrow,
-  body,
-  delay,
-}: {
-  eyebrow: string
-  body: string
-  delay: number
-}) {
-  return (
-    <div
-      className="w-full"
-      style={{
-        background: '#ffffff',
-        border: '1px solid #E5E1D5',
-        borderRadius: 12,
-        padding: 16,
-        animation: `fadeIn 0.6s ease both`,
-        animationDelay: `${delay}ms`,
-      }}
-    >
-      <p
-        className="font-sans font-semibold uppercase text-muted"
-        style={{ fontSize: 10, letterSpacing: '0.08em', marginBottom: 8 }}
-      >
-        {eyebrow}
-      </p>
-      <p className="font-sans text-[13.5px] text-charcoal-soft leading-[1.55]">{body}</p>
-    </div>
-  )
-}
-
 function FindingPatternLoader() {
   const [dots, setDots] = useState('.')
   const [showSecondary, setShowSecondary] = useState(false)
@@ -234,8 +204,10 @@ function PatternDetectedScreen({
     animationDelay: `${delay}ms`,
   })
 
-  const { traitWord, answeredCount, content } = record
-  const isLoading = content === null
+  const { traitWord, answeredCount, content, copyFailed } = record
+  // A failed card must never block the assessment: the buttons show as
+  // soon as the copy is in OR has failed.
+  const isLoading = content === null && !copyFailed
 
   return (
     <div className="min-h-[90vh] bg-cream flex flex-col items-center justify-center px-6 py-12">
@@ -299,6 +271,10 @@ function PatternDetectedScreen({
         <div style={{ width: '100%', minHeight: 420 }}>
           {isLoading ? (
             <FindingPatternLoader />
+          ) : content === null ? (
+            <p className="font-sans text-[14px] leading-[1.6] text-muted text-center mt-8" style={f(0)}>
+              We couldn&apos;t write this one just now. Your result is saved and we&apos;ll try again on your report.
+            </p>
           ) : (
             <>
               {/* Quote */}
@@ -309,20 +285,26 @@ function PatternDetectedScreen({
                 {content!.trait_quote}
               </p>
 
+              {/* Body — where it shows up, what it gives, what it costs. Older
+                  cached content predates `body`; its where_it_shows_up stands
+                  in. Go deeper / Worth trying are no longer shown for Ring 1. */}
+              {(content!.body ?? content!.where_it_shows_up) && (
+                <p
+                  className="font-sans text-[14.5px] leading-[1.65] text-charcoal-soft text-center mt-4"
+                  style={f(150)}
+                >
+                  {content!.body ?? content!.where_it_shows_up}
+                </p>
+              )}
+
               {/* Tags */}
               <div
-                className="flex flex-wrap justify-center gap-2 mt-4"
-                style={{ ...f(150), marginBottom: 4 }}
+                className="flex flex-wrap justify-center gap-2 mt-5"
+                style={{ ...f(300), marginBottom: 4 }}
               >
                 {content!.tags.map((tag) => (
                   <TagPill key={tag} label={tag} />
                 ))}
-              </div>
-
-              {/* Cards */}
-              <div className="flex flex-col gap-3 w-full mt-6">
-                <ContentCard eyebrow="Go deeper" body={content!.go_deeper} delay={300} />
-                <ContentCard eyebrow="Worth trying" body={content!.worth_trying} delay={450} />
               </div>
             </>
           )}
@@ -632,7 +614,7 @@ export default function AssessmentPage() {
     // revealedFacets once the anonymous session is claimed; see
     // app/auth/claim/page.tsx.
     if (userId) {
-      recordFacetReveals(userId, [facet]).catch((err) =>
+      recordFacetReveals([facet]).catch((err) =>
         console.error('[triggerReveal] recordFacetReveals error:', err)
       )
     }
@@ -673,17 +655,25 @@ export default function AssessmentPage() {
       setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content: cachedContent } : r)))
     } else {
       const assessmentId = localStorage.getItem('known_pending_session_id')
-      generatePatternCopy(facet, traitWord, dir, assessmentId)
-        .then((content: PatternContent) => {
+      // On failure nothing is saved: the record shows a neutral line and its
+      // content stays null in the session, so the report generates it later.
+      const markFailed = () => {
+        setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, copyFailed: true } : r)))
+        setActiveToast((cur) => (cur?.facet === facet ? { ...cur, copyFailed: true } : cur))
+        setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, copyFailed: true } : r)))
+      }
+      const answers = facetAnswers(facet, new Map(session.responses.map((r) => [r.questionId, r.value])))
+      generateRing1Copy(facet, traitWord, dir, assessmentId, answers)
+        .then(({ content }) => {
+          const s = loadSession()
+          const patternContents = ring1ContentsAfter(s.patternContents ?? [], { facet, traitWord, scoreDirection: dir }, content)
+          if (!content || !patternContents) return markFailed()
           setCompletedFacets((prev) => prev.map((r) => (r.facet === facet ? { ...r, content } : r)))
           setActiveToast((cur) => (cur?.facet === facet ? { ...cur, content } : cur))
           setToastQueue((q) => q.map((r) => (r.facet === facet ? { ...r, content } : r)))
-          const s = loadSession()
-          const existing = s.patternContents ?? []
-          const newEntry: PatternContentEntry = { facet, traitWord, scoreDirection: dir, content }
-          saveSession({ ...s, patternContents: [...existing.filter((e) => e.facet !== facet), newEntry] })
+          saveSession({ ...s, patternContents })
         })
-        .catch(() => {})
+        .catch(markFailed)
     }
   }
 

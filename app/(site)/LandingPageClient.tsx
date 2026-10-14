@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
 import {
   USER_SEED as SHARED_USER_SEED,
   hashSeed as sharedHashSeed,
@@ -231,7 +232,7 @@ ${compareCSS}${practiceCSS}${faqCSS}${finalCSS}
 // Static 4-blob composition (Deliberate active + 3 fixed satellites,
 // continuously wobbling, never swapping which one is "active") — matches
 // reference/bearing-landing-v6_2.html exactly. Renders as JSX with refs for
-// the per-frame `d` update (InteractiveCluster's pattern on the report page),
+// the per-frame `d` update (the report page's blob pattern),
 // not the mockup's own raw document.createElementNS tree-building.
 //
 // Sizing: the mockup's .hero-blob-wrap is `width:100%;aspect-ratio:520/500`
@@ -244,7 +245,8 @@ const HERO_VW = 520, HERO_VH = 500
 // Autonomous -> Curious (Adventurousness mid) and Durable -> Warm (Friendliness
 // mid), verified against lib/known/scoring.ts TRAIT_WORDS — landing-copy-deck.md
 // resolves the two previously-invented words. Deliberate (Cautiousness mid)
-// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// was already real, unchanged; Reflective became Aware (Self-Consciousness
+// mid) when the trait words were renamed.
 // Position/size/hue (cx/cy/r/hueOff) unchanged for all four; only `word`
 // changed for these two. Note: each blob's organic wobble profile is seeded
 // from its word (sharedBuildPointMotionProfile(sharedHashSeed(tr.word + ...)))
@@ -254,7 +256,7 @@ const HERO_VW = 520, HERO_VH = 500
 const HERO_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 270, cy: 245, r: 140, active: true  },
   { word: 'Curious',    hueOff: 5,  cx: 392, cy: 75,  r: 80,  active: false },
-  { word: 'Reflective', hueOff: 10, cx: 105, cy: 360, r: 68,  active: false },
+  { word: 'Aware',      hueOff: 10, cx: 105, cy: 360, r: 68,  active: false },
   { word: 'Warm',       hueOff: 20, cx: 378, cy: 385, r: 64,  active: false },
 ] as const
 
@@ -328,12 +330,13 @@ const BENTO_CLUSTER_VW = 500, BENTO_CLUSTER_VH = 320
 // Autonomous -> Curious (Adventurousness mid), Durable -> Poised
 // (Assertiveness mid), Selective -> Considerate (Altruism mid) — verified
 // against lib/known/scoring.ts TRAIT_WORDS. Deliberate (Cautiousness mid)
-// and Reflective (Self-Consciousness mid) were already real, unchanged.
+// was already real, unchanged; Reflective became Aware (Self-Consciousness
+// mid) when the trait words were renamed.
 // Position/size/hue unchanged; only `word` changed for the three renamed.
 const BENTO_CLUSTER_TRAITS = [
   { word: 'Deliberate', hueOff: 0,  cx: 250, cy: 160, r: 112, active: true  },
   { word: 'Curious',    hueOff: 5,  cx: 102, cy: 118, r: 72,  active: false },
-  { word: 'Reflective', hueOff: 10, cx: 390, cy: 105, r: 66,  active: false },
+  { word: 'Aware',      hueOff: 10, cx: 390, cy: 105, r: 66,  active: false },
   { word: 'Poised',     hueOff: 20, cx: 108, cy: 235, r: 62,  active: false },
   { word: 'Considerate',hueOff: 35, cx: 385, cy: 228, r: 58,  active: false },
 ] as const
@@ -808,14 +811,17 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState(false)
 
-  async function handleMagicLink() {
+  // Welcome-back sign-in: the same 6-digit code screen as AuthModal and
+  // the paywall (EmailCodeStep), inline in the hero, so sign-in finishes in
+  // this browser; the link in the email is the fallback. A failed send now
+  // shows as an error instead of a false "check your email".
+  async function handleSendCode() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200); return
     }
     setEmailLoading(true)
     try {
-      const supabase = createClient()
-      await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } })
+      await sendSignInCode(email)
       setEmailSent(true)
     } catch {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200)
@@ -834,28 +840,22 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
         Welcome back — pick up where you left off.
       </p>
       {emailSent ? (
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%', background: '#3D6B5C', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'blobReveal 0.35s ease both',
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <p style={{ fontSize:14, color:mkCharcoalSoft, lineHeight:1.6, margin:0 }}>Check your email for the sign-in link.</p>
-        </div>
+        <EmailCodeStep
+          variant="inline"
+          email={email}
+          onVerified={() => router.push('/auth/claim')}
+          onChangeEmail={() => { setEmailSent(false); setEmail('') }}
+        />
       ) : (
         <div style={{ display:'flex', gap:10, maxWidth:440 }}>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleMagicLink() }}
+            onKeyDown={e => { if (e.key === 'Enter') handleSendCode() }}
             placeholder="Your email address"
             style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, fontSize:14, fontFamily:sans, background:'white', outline:'none', color:mkCharcoal }}
           />
-          <button className="mk-btn" onClick={handleMagicLink} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
-            {emailLoading ? 'Sending…' : 'Send me a link'}
+          <button className="mk-btn" onClick={handleSendCode} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
+            {emailLoading ? 'Sending…' : 'Email me a code'}
           </button>
         </div>
       )}
@@ -1135,7 +1135,7 @@ export default function LandingPageClient() {
             </div>
           </div>
           <p className="mk-microcopy" style={{ textAlign:'center', marginTop:32 }}>
-            The written explanation of each pattern is generated by AI from your results.
+            The written explanation of each pattern is generated by AI (Claude, by Anthropic) from your results and a couple of your answers for that pattern, never your name or email.
           </p>
         </section>
 

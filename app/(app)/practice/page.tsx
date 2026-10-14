@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { FACET_DESCRIPTIONS } from '@/lib/known/scoring'
+import { FACET_DESCRIPTIONS, computeFacetScore } from '@/lib/known/scoring'
+import { orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import { facetDisplayLabel, MINI_ASSESSMENT_BAND_COPY, type MiniAssessmentBand, type MiniAssessmentFacet } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { activateFacet } from '@/lib/known/facetActivationClient'
@@ -54,6 +55,30 @@ async function fetchDirectionalBandCopy(
   return copyByFacet
 }
 
+// The user's own words for their traits ("Untroubled" for Anxiety) and how
+// clear-cut each one is, from the report saved in this browser. The practice
+// tables only store facet ids, so on another device this is empty and the
+// list falls back to facet names in their original order.
+function readReportTraits(): { words: Map<string, string>; strength: Map<string, number> } {
+  const words = new Map<string, string>()
+  const strength = new Map<string, number>()
+  try {
+    const s = JSON.parse(localStorage.getItem('known_session') ?? '{}')
+    const answers = new Map<number, number>(
+      (Array.isArray(s.responses) ? s.responses : []).map((r: { questionId: number; value: number }) => [r.questionId, r.value]),
+    )
+    for (const e of Array.isArray(s.patternContents) ? s.patternContents : []) {
+      if (e.branch || !e.facet || !e.traitWord) continue
+      words.set(e.facet, e.traitWord)
+      strength.set(e.facet, traitStrength(computeFacetScore(e.facet, answers)))
+    }
+  } catch {}
+  return { words, strength }
+}
+
+// How many not-yet-active traits to list before "Show all".
+const CANDIDATES_SHOWN = 5
+
 const NOTICE_COPY: Record<string, string> = {
   'already-active': "This one's already active — no changes made.",
   'at-cap': "Your account's set up, but you're at your check-in limit — manage your practice to make room for this one.",
@@ -89,6 +114,9 @@ export default function PracticeHomePage() {
   // the rest of this page's copy already follows.
   const [justActivatedFacet, setJustActivatedFacet] = useState<string | null>(null)
   const [nudgeTarget, setNudgeTarget] = useState<NudgeTarget | null>(null)
+  const [reportTraits, setReportTraits] = useState<ReturnType<typeof readReportTraits>>({ words: new Map(), strength: new Map() })
+  const [showAllCandidates, setShowAllCandidates] = useState(false)
+  useEffect(() => { setReportTraits(readReportTraits()) }, [])
 
   async function checkForNudge(supabase: ReturnType<typeof createClient>, practiceData: PracticeData) {
     const active = activeActivations(practiceData)
@@ -219,7 +247,9 @@ export default function PracticeHomePage() {
   }
 
   const active = activeActivations(data)
-  const candidates = candidateFacetIds(data)
+  const candidates = orderByStrength(candidateFacetIds(data), (f) => reportTraits.strength.get(f) ?? 0)
+    .map((i) => candidateFacetIds(data)[i])
+  const shownCandidates = showAllCandidates ? candidates : candidates.slice(0, CANDIDATES_SHOWN)
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center px-6 py-12">
@@ -232,20 +262,14 @@ export default function PracticeHomePage() {
             <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
               What you&apos;re noticing
             </h1>
+            <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 10 }}>
+              Your practice is where you work with what your report found. Pick up to four traits, check in on
+              them for a moment each day, and see how they move over the weeks.
+            </p>
+            <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5, marginTop: 8 }}>
+              Pick a trait · Check in daily · Weekly read, 4-week report, quarterly review
+            </p>
           </div>
-          {/* A 3-line hamburger here used to just navigate straight to
-              /practice/manage — no actual menu behind it — which reads as a
-              mobile-nav convention gone wrong on desktop (an icon implying
-              a dropdown that never opens). Plain text matches the
-              quarterly-review link right below and is unambiguous at any
-              width. */}
-          <Link
-            href="/practice/manage"
-            className="font-sans"
-            style={{ fontSize: 13, color: '#8a8375', textDecoration: 'underline', marginTop: 4, flexShrink: 0 }}
-          >
-            Manage
-          </Link>
         </div>
 
         {notice && (
@@ -266,24 +290,19 @@ export default function PracticeHomePage() {
           </p>
         )}
 
-        <div style={{ marginBottom: 28 }}>
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-            Active
-          </p>
+        {active.length > 0 && <div style={{ marginBottom: 28 }}>
+          {/* Choosing which traits are active is editing this list, so the
+              action sits on the list's own heading. */}
+          <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
+            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em' }}>
+              Active
+            </p>
+            <Link href="/practice/manage" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
+              Edit
+            </Link>
+          </div>
 
-          {active.length === 0 ? (
-            <div
-              style={{
-                padding: '22px 18px', borderRadius: 14, border: '1px dashed #DAD3C3',
-                textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8,
-              }}
-            >
-              <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>Nothing active right now</p>
-              <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-                Add a pattern below to start your daily check-ins.
-              </p>
-            </div>
-          ) : (
+          {(
             <div className="flex flex-col gap-3">
               {active.map((a) => {
                 const showBadge = showsDirectionalBadge(a, data.revealedFacetIds)
@@ -402,11 +421,61 @@ export default function PracticeHomePage() {
               })}
             </div>
           )}
-        </div>
+        </div>}
+
+        {data.activations.length > 0 && (
+          <div style={{ marginBottom: 28 }}>
+            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+              Your reviews
+            </p>
+            <div className="flex flex-col gap-2">
+              {active.map((a) => {
+                const ready = weeklyInsights.get(a.id)?.summary.qualifies ?? false
+                return (
+                  <Link
+                    key={a.id}
+                    href={`/practice/${a.id}/report`}
+                    style={{
+                      padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                        {facetDisplayLabel(a.facet_id)}
+                      </div>
+                      <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: ready ? directionalAccent : '#8a8375' }}>
+                        {ready ? 'Your weekly read is ready' : 'Weekly read and 4-week report'}
+                      </div>
+                    </div>
+                    <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+                  </Link>
+                )
+              })}
+              <Link
+                href="/practice/quarterly"
+                style={{
+                  padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                }}
+              >
+                <div>
+                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                    This quarter&apos;s review
+                  </div>
+                  <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: '#8a8375' }}>
+                    All your traits, over 90 days
+                  </div>
+                </div>
+                <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div>
           <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
-            Also noticed — not yet active
+            {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet active'}
           </p>
 
           {candidateMessage && (
@@ -421,7 +490,7 @@ export default function PracticeHomePage() {
             </p>
           ) : (
             <div className="flex flex-col gap-2">
-              {candidates.map((facetId) => (
+              {shownCandidates.map((facetId) => (
                 <div
                   key={facetId}
                   style={{
@@ -431,16 +500,16 @@ export default function PracticeHomePage() {
                 >
                   <div>
                     <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
-                      {facetDisplayLabel(facetId)}
+                      {reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}
                     </div>
                     <div className="font-sans text-muted" style={{ fontSize: 12, marginTop: 2 }}>
-                      From your report
+                      {reportTraits.words.has(facetId) ? facetDisplayLabel(facetId) : 'From your report'}
                     </div>
                   </div>
                   <button
                     onClick={() => handleActivateCandidate(facetId)}
                     disabled={activatingFacet === facetId}
-                    aria-label={`Activate ${facetDisplayLabel(facetId)}`}
+                    aria-label={`Activate ${reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}`}
                     className="font-sans"
                     style={{ fontSize: 20, color: '#8a8375', fontWeight: 300, flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
@@ -448,20 +517,19 @@ export default function PracticeHomePage() {
                   </button>
                 </div>
               ))}
+              {candidates.length > CANDIDATES_SHOWN && (
+                <button
+                  onClick={() => setShowAllCandidates((v) => !v)}
+                  className="font-sans"
+                  style={{ alignSelf: 'center', marginTop: 6, fontSize: 12.5, color: '#8a8375', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {showAllCandidates ? 'Show fewer' : `Show all ${candidates.length}`}
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Moved down from top-of-page (review feedback): a once-a-quarter
-            link doesn't earn permanent second-item billing above Active,
-            the thing people actually open this page for daily. Quiet
-            footer placement matches quarterly/recap's own bottom-link
-            convention instead of competing with the daily surface. */}
-        <div style={{ marginTop: 32, textAlign: 'center' }}>
-          <Link href="/practice/quarterly" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
-            This quarter&apos;s review
-          </Link>
-        </div>
       </div>
     </div>
   )

@@ -2,16 +2,20 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import type { PatternContentEntry } from '@/lib/known/types'
-import { generatePatternCopy } from '@/app/actions/generatePatternCopy'
+import { generateRing1Copy, generateRelationshipInsight } from '@/app/actions/generatePatternCopy'
+import { evidenceSentence, relationshipSignature, winningRelationships, type FiredRelationship } from '@/lib/known/relationships'
+import { ring1ContentsAfter } from '@/lib/known/ring1Card'
+import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
 import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
 import { createClient } from '@/lib/supabase/client'
 import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
+import AuthModal from '@/components/known/AuthModal'
 import RelationshipsVisual from '@/components/known/RelationshipsVisual'
 import EnergyFieldVisual from '@/components/known/EnergyFieldVisual'
 import type { EnergyFieldItem } from '@/components/known/EnergyFieldVisual'
@@ -22,8 +26,11 @@ import type { DirectionAccordionItem } from '@/components/known/DirectionAccordi
 import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
+import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
+import type { CarouselTrait } from '@/components/known/TraitCarousel'
+import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import {
-  FacetEntry, OrbitCondition, InteractiveCluster, OrbitCluster, UnlockedContent, userCuratedHue,
+  FacetEntry, OrbitCondition, OrbitCluster, UnlockedContent, userCuratedHue,
 } from '@/components/known/ReportVisuals'
 
 // ── Local types ────────────────────────────────────────────────────────────────
@@ -37,6 +44,24 @@ interface StoredSession {
   revealedFacets?: string[]
   patternContents?: PatternContentEntry[]
   branchResponses?: { environment?: { answers: unknown[]; completed?: boolean } }
+  // Generated relationship insights, reused while `signature` (the
+  // contributing facet:direction pairs) still matches. Failures never stored.
+  relationshipInsights?: CachedInsight[]
+}
+
+interface CachedInsight { id: string; signature: string; text: string }
+
+// Relationship insights: at most this many relationships per report (by
+// rank), and attempts per signature per browser-tab session.
+const MAX_INSIGHT_REQUESTS = 5
+const MAX_INSIGHT_ATTEMPTS = 2
+const INSIGHT_ATTEMPTS_KEY = 'known_relationship_insight_attempts'
+
+function readInsightAttempts(): Record<string, number> {
+  try { return JSON.parse(sessionStorage.getItem(INSIGHT_ATTEMPTS_KEY) ?? '{}') } catch { return {} }
+}
+function writeInsightAttempts(a: Record<string, number>) {
+  try { sessionStorage.setItem(INSIGHT_ATTEMPTS_KEY, JSON.stringify(a)) } catch {}
 }
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -72,15 +97,34 @@ const reportCSS = `
 
 // ── Loading / empty states ────────────────────────────────────────────────────
 
-function PatternLoadingState({ traitWord, isLoading }: { traitWord: string; isLoading: boolean }) {
+function PatternLoadingState({ traitWord, isLoading, failed = false, onRetry }: {
+  traitWord: string
+  isLoading: boolean
+  // Ring 1 only: generating the card failed (after the server's own retry).
+  failed?: boolean
+  onRetry?: () => void
+}) {
   return (
     <div style={{ textAlign: 'center', marginTop: 28 }}>
       <h2 style={{ fontFamily: serif, fontSize: 25, fontWeight: 600, color: charcoal, margin: '0 0 12px' }}>
         {traitWord}
       </h2>
       <p style={{ fontFamily: sans, fontSize: 13.5, color: gray, lineHeight: 1.6 }}>
-        {isLoading ? 'Loading your pattern…' : 'Still loading your pattern. Try refreshing in a moment.'}
+        {failed
+          ? "We couldn't write this one just now. Your result is saved and we'll try again on your report."
+          : isLoading ? 'Loading your pattern…' : 'Still loading your pattern. Try refreshing in a moment.'}
       </p>
+      {failed && onRetry && (
+        <button
+          onClick={onRetry}
+          style={{
+            marginTop: 14, padding: '9px 20px', borderRadius: 100, border: `1px solid ${line}`,
+            background: 'white', color: charcoal, fontFamily: sans, fontSize: 13.5, cursor: 'pointer',
+          }}
+        >
+          Retry
+        </button>
+      )}
     </div>
   )
 }
@@ -161,6 +205,38 @@ function Ring1CompleteCard() {
       <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
         {"You've answered all 120 questions. Your full pattern is mapped."}
       </p>
+    </div>
+  )
+}
+
+// Points people from the report to their practice. Practice needs an
+// account, so signed out it opens the save-progress sign-in first.
+function PracticeCard({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const router = useRouter()
+  const [authOpen, setAuthOpen] = useState(false)
+  return (
+    <div style={{ background: 'white', border: `1px solid ${line}`, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
+      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: charcoal, margin: 0, lineHeight: 1.3 }}>
+        Put it into practice
+      </p>
+      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoalSoft, marginTop: 8 }}>
+        Pick a few traits to check in on for a moment each day, and see how they show up in your weeks.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+        <button
+          onClick={() => (isAuthenticated ? router.push('/practice') : setAuthOpen(true))}
+          style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}
+        >
+          Go to your practice →
+        </button>
+      </div>
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => setAuthOpen(false)}
+        context="save-progress"
+        returnPath="/practice"
+      />
     </div>
   )
 }
@@ -358,7 +434,9 @@ export default function ReportPage() {
   const [facets, setFacets] = useState<FacetEntry[]>([])
   const [totalAnswered, setTotalAnswered] = useState(0)
   const [ring1Complete, setRing1Complete] = useState(false)
+  // activeIdx is a position in strength order (strongest first), not an index into facets.
   const [activeIdx, setActiveIdx] = useState(0)
+  const [facetScores, setFacetScores] = useState<Record<string, number | null>>({})
 
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook).
@@ -409,6 +487,8 @@ export default function ReportPage() {
   const [wsEntry, setWsEntry] = useState<PatternContentEntry | null>(null)
   const [dirEntry, setDirEntry] = useState<PatternContentEntry | null>(null)
   const [ring1Entries, setRing1Entries] = useState<PatternContentEntry[]>([])
+  const [relInsights, setRelInsights] = useState<CachedInsight[]>([])
+  const relRequestedRef = useRef(new Set<string>())
 
   const [entryCream, setEntryCream] = useState(0)
 
@@ -447,6 +527,7 @@ export default function ReportPage() {
     setWsEntry(wsPc)
     setDirEntry(dirPc)
     setRing1Entries(ring1Pcs)
+    setRelInsights(Array.isArray(session.relationshipInsights) ? session.relationshipInsights : [])
 
     let facetNames: string[] = []
     if (ring1Pcs.length > 0) {
@@ -470,13 +551,55 @@ export default function ReportPage() {
       return { facet, traitWord, hueOffset: idx, content: pc?.content ?? null }
     })
     setFacets(initial)
+    setFacetScores(Object.fromEntries(facetNames.map((f) => [f, computeFacetScore(f, answeredMap)])))
   }, [])
 
   // Generate content for any ring-1 facets that arrived with null content
   // (dev-shortcut path, or user left assessment before AI finished).
   const contentFetchRef = useRef(new Set<string>())
+
+  // ── Relationship insights ───────────────────────────────────────────────
+  // Revealed Ring 1 traits (patternContents entries without a branch) with
+  // their stored direction; the engine decides which relationships fire and
+  // which one each trait shows.
+  const relWinners = useMemo(
+    () => winningRelationships(
+      ring1Entries.map((e) => ({ facet: e.facet, traitWord: e.traitWord, direction: e.scoreDirection, score: facetScores[e.facet] })),
+      MAX_INSIGHT_REQUESTS
+    ),
+    [ring1Entries, facetScores]
+  )
   useEffect(() => {
-    const needsContent = facets.filter(f => f.content === null && !contentFetchRef.current.has(f.facet))
+    const unique = Array.from(new Map(Array.from(relWinners.values()).map((r) => [r.id, r])).values())
+      .sort((a, b) => a.rank - b.rank)
+    const attempts = readInsightAttempts()
+    for (const rel of unique) {
+      const signature = relationshipSignature(rel)
+      if (relInsights.some((c) => c.id === rel.id && c.signature === signature)) continue
+      const key = `${rel.id}|${signature}`
+      if ((attempts[key] ?? 0) >= MAX_INSIGHT_ATTEMPTS || relRequestedRef.current.has(key)) continue
+      relRequestedRef.current.add(key)
+      attempts[key] = (attempts[key] ?? 0) + 1
+      generateRelationshipInsight(rel.id, rel.signals.map(({ facet, direction, traitWord }) => ({ facet, direction, traitWord })))
+        .then(({ insight }) => {
+          if (!insight) return
+          const entry: CachedInsight = { id: rel.id, signature, text: insight }
+          setRelInsights((prev) => [...prev.filter((c) => c.id !== rel.id), entry])
+          try {
+            const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')
+            const list = Array.isArray(s.relationshipInsights) ? s.relationshipInsights : []
+            localStorage.setItem('known_session', JSON.stringify({ ...s, relationshipInsights: [...list.filter((c) => c.id !== rel.id), entry] }))
+          } catch {}
+        })
+        .catch(() => {})
+    }
+    writeInsightAttempts(attempts)
+    // relInsights is read for the cache check only; requests are keyed by
+    // relRequestedRef, so a new cached entry doesn't re-run anything.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relWinners])
+  useEffect(() => {
+    const needsContent = facets.filter(f => f.content === null && !f.copyFailed && !contentFetchRef.current.has(f.facet))
     if (needsContent.length === 0) return
 
     const raw = localStorage.getItem('known_session')
@@ -493,29 +616,63 @@ export default function ReportPage() {
       const score = computeFacetScore(entry.facet, answeredMap) ?? 3.0
       const dir: 'high' | 'mid' | 'low' = score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low'
 
-      generatePatternCopy(entry.facet, entry.traitWord, dir, assessmentId)
-        .then((content) => {
-          setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, content } : f))
-          // Persist so future page loads don't regenerate
+      // On failure nothing is saved; the card shows a neutral line with Retry.
+      const markFailed = () =>
+        setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, copyFailed: true } : f))
+      generateRing1Copy(entry.facet, entry.traitWord, dir, assessmentId, facetAnswers(entry.facet, answeredMap))
+        .then(({ content }) => {
+          // Persist so future page loads don't regenerate — real content only.
           const s: StoredSession = JSON.parse(localStorage.getItem('known_session') ?? '{}')
           const pcs = Array.isArray(s.patternContents) ? s.patternContents : []
-          const newEntry: PatternContentEntry = { facet: entry.facet, traitWord: entry.traitWord, scoreDirection: dir, content }
-          localStorage.setItem('known_session', JSON.stringify({
-            ...s,
-            patternContents: [
-              ...pcs.filter((e) => !(e.facet === entry.facet && !e.branch)),
-              newEntry,
-            ],
-          }))
+          const patternContents = ring1ContentsAfter(pcs, { facet: entry.facet, traitWord: entry.traitWord, scoreDirection: dir }, content)
+          if (!content || !patternContents) return markFailed()
+          setFacets((prev) => prev.map((f) => f.facet === entry.facet ? { ...f, content } : f))
+          localStorage.setItem('known_session', JSON.stringify({ ...s, patternContents }))
         })
-        .catch(() => {})
+        .catch(markFailed)
     }
   }, [facets])
 
+  // Clears the failure so the effect above generates this card again.
+  function retryCopy(facet: string) {
+    contentFetchRef.current.delete(facet)
+    setFacets((prev) => prev.map((f) => f.facet === facet ? { ...f, copyFailed: false } : f))
+  }
+
   const isUnlocked = facets.length > 0
+  // Strongest first: distance from the middle of the answer scale, ties in
+  // reveal order. Keyed on facet names so content arriving later doesn't
+  // reshuffle or rebuild the strip.
+  const facetKey = facets.map((f) => `${f.facet}:${f.traitWord}`).join('|')
+  const strengthOrder = useMemo(
+    () => orderByStrength(facets, (f) => traitStrength(facetScores[f.facet])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [facetKey, facetScores],
+  )
+  const carouselTraits: CarouselTrait[] = useMemo(
+    () => strengthOrder.map((i) => {
+      const f = facets[i]
+      return {
+        key: f.facet,
+        traitWord: f.traitWord,
+        hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
+        domain: domainOf(f.facet),
+      }
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [strengthOrder],
+  )
   const safeIdx = Math.min(activeIdx, Math.max(0, facets.length - 1))
-  const activeFacet = facets[safeIdx] ?? null
+  const activeFacet = facets[strengthOrder[safeIdx]] ?? null
   const hasContent = facets[0]?.content != null
+  // The selected trait's insight, when its relationship has a cached text
+  // for the current signals; the evidence sentence is built in code.
+  const activeRel: FiredRelationship | undefined = activeFacet ? relWinners.get(activeFacet.facet) : undefined
+  const activeInsightText = activeRel
+    ? relInsights.find((c) => c.id === activeRel.id && c.signature === relationshipSignature(activeRel))?.text
+    : undefined
+  const activeInsight = activeRel && activeInsightText ? `${activeInsightText} ${evidenceSentence(activeRel)}` : undefined
+
   const activeHue = activeFacet
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
@@ -554,7 +711,7 @@ export default function ReportPage() {
   function handleGatedNav(href: string) {
     // TEMPORARY — diagnosing a production report of the sticky bar bypassing
     // the paywall for an authenticated, unpaid user. Remove once resolved.
-    console.log('[handleGatedNav] href:', href, 'isLocked:', isLocked, 'isPaid:', isPaid, 'isAuthenticated:', isAuthenticated, 'userId:', userId, 'ring1Entries.length:', ring1Entries.length)
+    console.log('[handleGatedNav] href:', href, 'isLocked:', isLocked, 'isPaid:', isPaid, 'isAuthenticated:', isAuthenticated, 'ring1Entries.length:', ring1Entries.length)
     if (!isLocked) {
       router.push(href)
       return
@@ -807,28 +964,37 @@ export default function ReportPage() {
 
           {/* ── Branch 1: Who you are (always first) ─────────── */}
           <section style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
-              {isUnlocked ? 'Who you are' : 'Your report'}
+            {isUnlocked && (
+              <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+              Who you are
             </p>
+            )}
 
             {isUnlocked ? (
               <>
-                <InteractiveCluster facets={facets} activeIdx={safeIdx} onSelect={setActiveIdx} />
-
-                <div style={{ marginTop: 28 }}>
-                  {activeFacet?.content ? (
-                    <UnlockedContent
-                      traitWord={activeFacet.traitWord}
-                      content={activeFacet.content}
-                      hue={activeHue}
-                    />
-                  ) : (
-                    <PatternLoadingState
-                      traitWord={activeFacet?.traitWord ?? ''}
-                      isLoading={true}
-                    />
-                  )}
-                </div>
+                <TraitCarousel traits={carouselTraits} activeIdx={safeIdx} onSelect={setActiveIdx}>
+                  <div style={{ marginTop: 12 }}>
+                    {activeFacet?.content ? (
+                      <UnlockedContent
+                        traitWord={activeFacet.traitWord}
+                        content={activeFacet.content}
+                        hue={activeHue}
+                        subtitle={patternSubtitle(activeFacet.hueOffset)}
+                        subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
+                        source={null}
+                        variant="ring1"
+                        insight={activeInsight}
+                      />
+                    ) : (
+                      <PatternLoadingState
+                        traitWord={activeFacet?.traitWord ?? ''}
+                        isLoading={true}
+                        failed={activeFacet?.copyFailed}
+                        onRetry={() => activeFacet && retryCopy(activeFacet.facet)}
+                      />
+                    )}
+                  </div>
+                </TraitCarousel>
               </>
             ) : (
               <EmptyReportState />
@@ -848,6 +1014,8 @@ export default function ReportPage() {
             <>
               <WhatsnextDivider />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <PracticeCard isAuthenticated={isAuthenticated} />
+
                 {ring1Complete ? (
                   <Ring1CompleteCard />
                 ) : (

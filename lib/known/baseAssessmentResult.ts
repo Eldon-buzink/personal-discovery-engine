@@ -4,7 +4,7 @@
  * Part 0 investigation finding: a base-assessment (full 120-item) facet has
  * a clean low/mid/high mapping too — scoring.ts's TRAIT_WORDS use the exact
  * same words checkInOptions.ts does per facet (confirmed, e.g. Anxiety:
- * Grounded/Attuned/Anxious in both), with getTraitWord's score thresholds
+ * Untroubled/Alert/Watchful in both), with getTraitWord's score thresholds
  * (>=3.5 high, >=2.5 mid, else low). The raw 120-item responses needed to
  * compute it are recoverable server-side: AuthModal.tsx persists the whole
  * assessment session (not just the mini-assessment's 6 answers) into
