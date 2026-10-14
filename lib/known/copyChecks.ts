@@ -25,19 +25,20 @@ export function splitSentences(text: string): string[] {
 const TRADEOFF_LABEL = /^["'“‘(]*the (trade|trade-off|tradeoff|cost|price|payoff|upside|downside) is\b/i
 export const hasLabelledTradeoff = (text: string) => splitSentences(text).some((s) => TRADEOFF_LABEL.test(s))
 
-// Em-dashes (and spaced en-dashes used as dashes) and semicolons: soft — the
+// Em-dashes (and spaced en-dashes used as dashes) and semicolons: soft. The
 // retry note asks for two sentences; anything left is fixed in code.
 const DASH = /\s*(—|\s–\s)\s*/g
 export const PUNCTUATION_NOTE = 'Remove the em-dash/semicolon, use two sentences.'
 export const hasDashOrSemicolon = (text: string) => /—|\s–\s|;/.test(text)
 
-// Last resort after the retry: em-dash → comma, semicolon → period (and the
-// next letter capitalised).
+// Last resort after the retry: an em-dash or semicolon becomes a full stop
+// and the next word starts with a capital. Never a comma (that made comma
+// splices).
 export function fixPunctuation(text: string): string {
   return text
-    .replace(DASH, ', ')
+    .replace(new RegExp(`${DASH.source}(\\w)`, 'g'), (_m, _d: string, c: string) => `. ${c.toUpperCase()}`)
     .replace(/\s*;\s*(\w)/g, (_, c: string) => `. ${c.toUpperCase()}`)
-    .replace(/\s*;\s*$/, '.')
+    .replace(new RegExp(`(${DASH.source}|\\s*;\\s*)$`), '.')
 }
 
 export interface SentenceLengths {

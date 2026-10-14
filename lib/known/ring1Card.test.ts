@@ -87,7 +87,7 @@ test('soft: an em-dash or semicolon asks for two sentences, and is fixed in code
   assert.equal(r.ok, true)
   if (r.ok) {
     assert.deepEqual(r.violations, ['Remove the em-dash/semicolon, use two sentences.'])
-    assert.equal(finishRing1Card(r.card).body, 'You adapt fast, that helps. It can leave loose ends. Others notice.')
+    assert.equal(finishRing1Card(r.card).body, 'You adapt fast. That helps. It can leave loose ends. Others notice.')
   }
 })
 

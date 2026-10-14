@@ -4,7 +4,8 @@ import {
   evaluateRelationships, winningRelationships, relationshipSignature, evidenceSentence, tensionId,
   type RevealedTrait,
 } from './relationships'
-import { ACTIVE_THEMES, PARKED_THEMES } from './relationshipDefinitions'
+import { ACTIVE_THEMES, PARKED_THEMES, TENSION_GROUNDINGS } from './relationshipDefinitions'
+import { domainOfFacet } from './relationships'
 
 const t = (facet: string, direction: RevealedTrait['direction'], traitWord = `${facet}-${direction}`): RevealedTrait => ({ facet, traitWord, direction })
 // Theme tests pass PARKED_THEMES explicitly: themes are parked (off) in the
@@ -116,4 +117,12 @@ test('(parked themes) signature and evidence sentence', () => {
   assert.equal(relationshipSignature(rel), 'Assertiveness:high,Cooperation:low,Liberalism:high')
   assert.equal(evidenceSentence(rel), 'Based on your Direct, Progressive and Take-charge results.')
   assert.equal(evidenceSentence({ signals: rel.signals.slice(0, 2) }), 'Based on your Direct and Progressive results.')
+})
+
+test('every curated tension has both facets in the same domain', () => {
+  for (const g of TENSION_GROUNDINGS) {
+    const high = domainOfFacet(g.high)
+    assert.ok(high, `${g.high} is not a known facet`)
+    assert.equal(domainOfFacet(g.low), high, `${g.high} / ${g.low} cross domains`)
+  }
 })

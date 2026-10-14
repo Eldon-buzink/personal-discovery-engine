@@ -142,7 +142,6 @@ export const TENSION_GROUNDINGS: TensionGrounding[] = [
   { high: 'Anxiety', low: 'Vulnerability', line: "Worries a lot, yet doesn't come apart under real pressure." },
   { high: 'Vulnerability', low: 'Anxiety', line: 'Calm day to day, but rattled when pressure peaks.' },
   { high: 'Altruism', low: 'Cooperation', line: "Helps readily, but doesn't back down in a disagreement." },
-  { high: 'Emotionality', low: 'Sympathy', line: "In touch with own feelings, less moved by other people's." },
   { high: 'Imagination', low: 'Intellect', line: 'Rich inner world, less pull toward abstract debate.' },
   { high: 'Orderliness', low: 'Cautiousness', line: 'Wants systems in place, but acts quickly without long deliberation.' },
 ]

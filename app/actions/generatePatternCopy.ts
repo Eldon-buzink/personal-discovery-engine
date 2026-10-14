@@ -188,7 +188,7 @@ ${evidenceBlock}
 Write:
 - trait_quote: 1-2 sentences. Second person ("you"), present tense. A behaviour or inner experience the reader would recognise. Do not use the words "${facetName}" or any domain name (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).
 - body: 2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.
-- tags: exactly 3 tags, 2-3 words each. Natural phrases someone would say about themselves, not participle fragments or abstract nouns.
+- tags: exactly 3 tags, 2-3 words each, never more than 3. Natural phrases someone would say about themselves, not participle fragments or abstract nouns.
 
 Rules:
 - trait_quote and body together: about 70 words at most.
@@ -204,9 +204,9 @@ Rules:
 - Every sentence must describe this facet's behaviour as described above. Add no other traits or outcomes.
 - No abstract nouns or invented phrases (like "naive harm" or "withheld certainty"). Say what the person does or feels.
 - If a sentence could just as well be about a different facet, rewrite it so it is clearly about this one.
+- Do not add outcomes, feelings or situations that the supplied behaviour description does not state.
 
-Tags, good (natural, 2-3 words): "Finishes what you start", "Slow to trust", "Speaks up early", "Needs quiet time", "Plans ahead", "Easy to approach".
-Tags, bad (fragments or abstractions, never like these): "Finishes what begins", "Withheld certainty", "Cautious openness", "Starts without drag", "Mix and settle", "Selective explorer".
+Tags, good examples (2-3 words, never more than 3): "Starts quickly", "Slow to trust", "Likes variety", "Weighs it first", "Adapts fast", "Stays alert".
 
 ${RING1_EXAMPLES}
 
