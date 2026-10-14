@@ -9,6 +9,7 @@ import { accentColorCss, accentColorSoftCss } from '@/lib/blog/theme'
 import { mdxComponents, proseStyle } from '@/components/blog/mdxComponents'
 import GlowCard from '@/components/blog/GlowCard'
 import FaqBlock from '@/components/blog/FaqBlock'
+import FacetReferenceBlock from '@/components/blog/FacetReferenceBlock'
 import PostSidebar from '@/components/blog/PostSidebar'
 import { blogCharcoal, blogCharcoalSoft, blogPeriwinkle, blogRose, blogSans, blogSerif } from '@/components/blog/tokens'
 
@@ -200,6 +201,10 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         <div className="blog-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 64, paddingBottom: 80 }}>
           <div style={proseStyle}>
             <MDXRemote source={content} components={mdxComponents} options={{ mdxOptions: { rehypePlugins: [rehypeSlug] } }} />
+            {/* Trait posts only: the facet's items, score ranges and check-in, from the report's own source files. */}
+            {frontmatter.category === 'traits' && frontmatter.facetId && (
+              <FacetReferenceBlock facetId={frontmatter.facetId} accent={accent} />
+            )}
             <FaqBlock items={frontmatter.faq ?? []} />
           </div>
 
