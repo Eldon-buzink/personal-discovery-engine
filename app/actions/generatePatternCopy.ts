@@ -15,10 +15,11 @@ import {
   RING1_CARD_SCHEMA,
   checkRing1CardText,
   finishRing1Card,
+  isHarderTrait,
   type Ring1Card,
 } from '@/lib/known/ring1Card'
 import { betterAttempt, retryFeedback } from '@/lib/known/copyChecks'
-import { temperatureFor } from '@/lib/known/modelOptions'
+import { attemptTimeout, temperatureFor } from '@/lib/known/modelOptions'
 
 // ── Behavioral context per facet ─────────────────────────────────────────────
 // One-line descriptions of what each facet actually measures behaviorally.
@@ -144,8 +145,8 @@ const RING1_SYSTEM_PROMPT =
   "You describe patterns in a person's answers. You do not advise, diagnose, praise or predict. " +
   'Use plain, warm, precise language, like a smart friend. Speak to the reader as "you". ' +
   'Use "tends to" and "often" for anything that depends on the situation. Never tell the reader what to do. ' +
-  'No clinical or diagnostic words. Every pattern has a payoff and a price; mention both naturally in the same breath, ' +
-  'without labelling them. Avoid any sentence that would be true of almost anyone.'
+  'No clinical or diagnostic words. Mention an upside and a downside only where the behaviour itself supports them, ' +
+  'without labelling them. Never invent details the description does not give.'
 
 // Four items per facet can't support "strongly and consistently" or
 // "situationally" — this only says which way the answers lean.
@@ -155,16 +156,29 @@ const RING1_SCORE_DIRECTION: Record<'high' | 'mid' | 'low', string> = {
   low: 'Their answers lean clearly toward the opposite of this trait.',
 }
 
-const RING1_EXAMPLES = `Examples (three different shapes — match the quality, not the wording):
+const RING1_EXAMPLES = `Examples (four different shapes — match the quality, not the wording):
 
 Cautiousness, high
-{"trait_quote": "You like to think a decision all the way through before you commit.", "body": "That care tends to make your choices solid. It can also mean missing the moment when waiting was the bigger risk. It often shows when everyone else is ready to decide and you still have one more question.", "tags": ["Weighs it first", "Hard to rush", "Commits late"]}
+{"trait_quote": "You like to think a decision all the way through before you commit.", "body": "It often shows when a choice has to be made and you still have one more question. That care tends to make your choices solid. It can also mean missing the moment when waiting was the bigger risk.", "tags": ["Weighs it first", "Hard to rush", "Commits late"]}
 
 Orderliness, low
-{"trait_quote": "Plans feel like a starting point to you, not a promise.", "body": "You tend to adapt quickly when things change. It can also leave small loose ends that other people notice before you do. It often shows when a project needs steady upkeep instead of a burst of energy.", "tags": ["Adapts fast", "Loose ends", "Burst worker"]}
+{"trait_quote": "Plans feel like a starting point to you, not a promise.", "body": "It often shows when things change halfway through. You tend to adapt quickly without needing a system first. It can also leave small loose ends behind.", "tags": ["Adapts fast", "Loose ends", "Skips the system"]}
 
 Anxiety, mid
-{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "body": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day. It can also make it hard to tell, in the moment, which kind of worry you're feeling.", "tags": ["Selective worry", "Stays alert", "Varies by day"]}`
+{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "body": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day. It can also make it hard to tell, in the moment, which kind of worry you're feeling.", "tags": ["Selective worry", "Stays alert", "Varies by day"]}
+
+Vulnerability, high (a harder trait: no strength is invented)
+{"trait_quote": "When a lot lands at once, it can feel like more than you can handle.", "body": "It often shows up when pressure builds or several things go wrong together. In those moments the feeling tends to take over your day, and calm can be slow to come back.", "tags": ["Feels swamped", "Rattled by pressure", "Slow to settle"]}`
+
+// Shared by the card and insight prompts.
+const GROUNDING_RULES = `- Never describe what other people think, feel, notice, say or do in reaction to the person (no "others miss", "friends wish", "people read you as"). Mention other people only as part of the behaviour itself.
+- A low score means the feeling or tendency is weak, never hidden or suppressed. Never write that a low-scoring person feels something but does not show it.
+- No concrete objects, places, people or events that the description or answers do not name (no meals, money, shopping, replayed words).
+- No judgement words about the person's goals or choices (no "wishing bigger", "worth it", "settling").`
+
+const HARDER_TRAIT_RULE = 'do not invent a strength. If the description gives none, describe the pattern and how it affects the person\'s day, nothing more.'
+
+const RING1_HARDER_FACETS = 'high Anxiety, Anger, Vulnerability, Depression, Self-Consciousness, Immoderation, or low Self-Efficacy'
 
 function buildRing1Prompt(
   facetName: string,
@@ -188,14 +202,14 @@ Their trait word is "${traitWord}".
 ${evidenceBlock}
 Write:
 - trait_quote: 1-2 sentences. Second person ("you"), present tense. A behaviour or inner experience the reader would recognise. Do not use the words "${facetName}" or any domain name (Neuroticism, Extraversion, Openness, Agreeableness, Conscientiousness).
-- body: 2-3 sentences of flowing prose with no labels. It carries three things: a situation where the pattern tends to show up, what the pattern tends to give the person, and what it tends to cost them.
+- body: 2-3 sentences of flowing prose with no labels. First describe where the behaviour tends to show up, then the upside and the downside of that same behaviour. Each of these must follow directly from the behaviour description and the answers above. If they support only one side, write only that side. Never invent the other.
 - tags: exactly 3 tags, 2-3 words each, never more than 3. Natural phrases someone would say about themselves, not participle fragments or abstract nouns.
 
 Rules:
 - trait_quote and body together: about 70 words at most.
 - Do not begin every trait_quote with "You tend to". Vary sentence openings.
 - Situations are framed as tendencies ("it often shows up when…"), never as events that happened.
-- Self-check: if a sentence would fit most people, rewrite it more specifically.
+- Self-check: if a sentence would fit most people, make it more specific to this behaviour, without adding new details.
 - No imperatives ("try", "consider", "notice", "make sure"), no advice.
 - Use plain everyday words a 12-year-old would follow.
 - Keep sentences under about 18 words, one idea per sentence.
@@ -206,6 +220,8 @@ Rules:
 - No abstract nouns or invented phrases (like "naive harm" or "withheld certainty"). Say what the person does or feels.
 - If a sentence could just as well be about a different facet, rewrite it so it is clearly about this one.
 - Do not add outcomes, feelings or situations that the supplied behaviour description does not state.
+${GROUNDING_RULES}
+- For harder traits (${RING1_HARDER_FACETS}), ${HARDER_TRAIT_RULE}${isHarderTrait(facetName, scoreDirection) ? `\n- This card is a harder trait: ${HARDER_TRAIT_RULE}` : ''}
 
 Tags, good examples (2-3 words, never more than 3): "Starts quickly", "Slow to trust", "Likes variety", "Weighs it first", "Adapts fast", "Stays alert".
 
@@ -516,6 +532,8 @@ type Checked<T> = { ok: true; value: T; violations: string[]; words: number } | 
 // - Soft violations retry once with the model's own answer and a note naming
 //   exactly what failed; the better attempt is kept (fewest violations, then
 //   fewest words). A soft violation alone never leaves the result empty.
+// - Both attempts share GENERATION_BUDGET_MS (20 s). Each request times out
+//   at what's left, with no SDK-level retries, and a timeout ends the loop.
 // Returns null only when neither attempt is usable.
 async function generateWithRetry<T>(
   anthropic: Anthropic,
@@ -526,7 +544,10 @@ async function generateWithRetry<T>(
   const first: Anthropic.MessageParam = { role: 'user', content: request.prompt }
   let messages: Anthropic.MessageParam[] = [first]
   let best: { value: T; violations: string[]; words: number } | null = null
+  const startedAt = Date.now()
   for (let attempt = 0; attempt < 2; attempt++) {
+    const timeout = attemptTimeout(startedAt, Date.now())
+    if (timeout === null) break
     try {
       const message = await anthropic.messages.create({
         model: RING1_MODEL,
@@ -535,7 +556,7 @@ async function generateWithRetry<T>(
         ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
         output_config: { format: { type: 'json_schema', schema: request.schema } },
         messages,
-      })
+      }, { timeout, maxRetries: 0 })
       // A refusal or a cut-off answer may not match the schema.
       if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') {
         console.error(`[${logTag}] stop_reason:`, message.stop_reason)
@@ -556,6 +577,7 @@ async function generateWithRetry<T>(
       messages = [first, { role: 'assistant', content: text }, { role: 'user', content: retryFeedback(usable.violations) }]
     } catch (err) {
       console.error(`[${logTag}] generation failed:`, describeError(err))
+      if (err instanceof Anthropic.APIConnectionTimeoutError) break
       messages = [first]
     }
   }
@@ -608,10 +630,10 @@ const RELATIONSHIP_TEMPERATURE = 0.5
 const RELATIONSHIP_EXAMPLES = `Examples (match the quality, not the wording):
 
 Self-direction theme
-{"insight": "You tend to decide based on what you need, and you're fine being the one who disagrees. People usually know where you stand, and you rarely end up living someone else's plan. It can also mean your answer isn't the popular one, and that independence can look like distance. Which of your choices is worth that friction?"}
+{"insight": "You tend to decide based on what you need, and you're fine being the one who disagrees. You rarely end up living someone else's plan. It can also mean your answer is often the less popular one. Which of your choices feel most like your own?"}
 
 Tension: high Achievement-Striving, low Self-Discipline
-{"insight": "Your drive and your day-to-day follow-through pull in different directions. You tend to set big targets, and staying on task when motivation dips can be harder than the goal itself suggests. That can make progress feel more effortful than it looks from the outside. What gets in the way once the first excitement fades?"}`
+{"insight": "Your drive and your day-to-day follow-through pull in different directions. You tend to set big targets. Staying on task when motivation dips can be harder than the goal itself suggests. What gets in the way once the first excitement fades?"}`
 
 function describeSignal(s: FiredSignal): string {
   const context = FACET_BEHAVIORAL_CONTEXT[s.facet] ?? `The ${s.facet} facet of personality`
@@ -640,7 +662,10 @@ Rules:
 - Second person ("you"), present tense.
 - 2-3 sentences, then end with one reflective question. The question invites reflection; it is not an instruction.
 - About 65 words at most.
-- Weave in what it gives and what it costs, in plain words. Never write "the payoff", "the cost" or "the price".
+- Where the descriptions support it, say what it gives and what it costs, in plain words. If they support only one side, write only that side. Never write "the payoff", "the cost" or "the price".
+${GROUNDING_RULES}
+- Use "others" or "people" only for the described behaviour (for example helping others), never for how they react to the person.
+- For harder traits (${RING1_HARDER_FACETS}), ${HARDER_TRAIT_RULE}${rel.signals.some((s) => isHarderTrait(s.facet, s.direction)) ? `\n- One of these traits is a harder trait: ${HARDER_TRAIT_RULE}` : ''}
 - Use "tends to", "often" or "can" for anything that depends on the situation. Never tell the reader what to do: no "try", "should", "consider", "make sure", "remember to".
 - Do not use the facet names or domain names; describe the behaviour.
 - Use plain everyday words a 12-year-old would follow.

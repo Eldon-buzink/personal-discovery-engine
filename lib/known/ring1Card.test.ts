@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { checkRing1Card, checkRing1CardText, finishRing1Card, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
+import { checkRing1Card, checkRing1CardText, finishRing1Card, isHarderTrait, ring1ContentsAfter, RING1_RETRY_WORDS } from './ring1Card'
 import { HARD_SENTENCE_WORDS, SOFT_SENTENCE_WORDS } from './copyChecks'
 import { UnlockedContent } from '../../components/known/ReportVisuals'
 import type { PatternContent, PatternContentEntry } from './types'
@@ -152,4 +152,15 @@ test('the optional insight renders only when given', () => {
   const without = render(card)
   assert.equal(render(card, undefined), without)
   assert.equal(render(card, ''), without)
+})
+
+test('harder traits are the seven named ones, by direction', () => {
+  for (const f of ['Anxiety', 'Anger', 'Vulnerability', 'Depression', 'Self-Consciousness', 'Immoderation']) {
+    assert.equal(isHarderTrait(f, 'high'), true, f)
+    assert.equal(isHarderTrait(f, 'low'), false, f)
+    assert.equal(isHarderTrait(f, 'mid'), false, f)
+  }
+  assert.equal(isHarderTrait('Self-Efficacy', 'low'), true)
+  assert.equal(isHarderTrait('Self-Efficacy', 'high'), false)
+  assert.equal(isHarderTrait('Cautiousness', 'high'), false)
 })

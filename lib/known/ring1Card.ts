@@ -42,6 +42,17 @@ export const RING1_CARD_SCHEMA = {
 
 export type Ring1Card = Required<Pick<PatternContent, 'trait_quote' | 'body' | 'tags'>>
 
+// Harder traits: the prompt tells the model not to invent a strength for
+// these (cards and relationship insights alike).
+const HARDER_TRAITS: readonly string[] = [
+  'Anxiety:high', 'Anger:high', 'Vulnerability:high', 'Depression:high',
+  'Self-Consciousness:high', 'Immoderation:high', 'Self-Efficacy:low',
+]
+
+export function isHarderTrait(facet: string, direction: 'high' | 'mid' | 'low'): boolean {
+  return HARDER_TRAITS.includes(`${facet}:${direction}`)
+}
+
 export function ring1CardWords(card: Pick<Ring1Card, 'trait_quote' | 'body'>): number {
   return countWords(card.trait_quote) + countWords(card.body)
 }
