@@ -174,7 +174,8 @@ Vulnerability, high (a harder trait: no strength is invented)
 const GROUNDING_RULES = `- Never describe what other people think, feel, notice, say or do in reaction to the person (no "others miss", "friends wish", "people read you as"). Mention other people only as part of the behaviour itself.
 - A low score means the feeling or tendency is weak, never hidden or suppressed. Never write that a low-scoring person feels something but does not show it.
 - No concrete objects, places, people or events that the description or answers do not name (no meals, money, shopping, replayed words).
-- No judgement words about the person's goals or choices (no "wishing bigger", "worth it", "settling").`
+- No judgement words about the person's goals or choices (no "wishing bigger", "worth it", "settling").
+- Never mention religion, faith, politics, parties, voting or sexuality.`
 
 // The facet's IPIP name invites politics; the card is about questioning
 // traditions, never about how someone votes.

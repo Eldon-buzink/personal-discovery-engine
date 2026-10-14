@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { RING1_EVIDENCE_EXCLUDED_FACETS, RING1_EVIDENCE_EXCLUDED_ITEMS, evidenceFor, facetAnswers, strongestAnswers } from './ring1Evidence'
-import { FACET_QUESTIONS } from './ring1-questions'
+import { FACET_QUESTIONS, QUESTION_BY_ID } from './ring1-questions'
+import { computeFacetScore } from './scoring'
 
 const anxiety = FACET_QUESTIONS.get('Anxiety')!
 
@@ -45,14 +46,25 @@ test('excluded facets get no evidence: nothing sent from the browser, nothing us
   assert.equal(evidenceFor('Anxiety', anxiety.map((q) => ({ questionId: q.id, value: 5 }))).length, 2)
 })
 
-test('the political Liberalism items are never sent or used; the other two still are', () => {
+test('excluded items (political 69, 71; religious 72) are never sent or used, but still count in the score', () => {
+  assert.deepEqual([...RING1_EVIDENCE_EXCLUDED_ITEMS].sort((a, b) => a - b), [69, 71, 72])
   const lib = FACET_QUESTIONS.get('Liberalism')!
-  const political = lib.filter((q) => /politic/i.test(q.text)).map((q) => q.id)
-  assert.deepEqual([...political].sort(), [...RING1_EVIDENCE_EXCLUDED_ITEMS].sort())
-  const strong = lib.map((q) => ({ questionId: q.id, value: 5 }))
-  const sent = facetAnswers('Liberalism', new Map(strong.map((a) => [a.questionId, a.value])))
-  assert.deepEqual(sent.map((a) => a.questionId), lib.filter((q) => !political.includes(q.id)).map((q) => q.id))
-  // Even if a request carries them, the prompt never sees them.
-  for (const e of evidenceFor('Liberalism', strong)) assert.doesNotMatch(e.text, /politic/i)
-  assert.equal(evidenceFor('Liberalism', strong).length, 2)
+  const answers = new Map(lib.map((q) => [q.id, 5]))
+  const asSent = lib.map((q) => ({ questionId: q.id, value: 5 }))
+
+  // Browser payload: only item 70.
+  assert.deepEqual(facetAnswers('Liberalism', answers).map((a) => a.questionId), [70])
+  // Model prompt: never the excluded items, even if a request carries them.
+  const evidence = evidenceFor('Liberalism', asSent)
+  assert.deepEqual(evidence.map((e) => e.text), [QUESTION_BY_ID.get(70)!.text])
+  for (const id of RING1_EVIDENCE_EXCLUDED_ITEMS) {
+    assert.ok(!evidence.some((e) => e.text === QUESTION_BY_ID.get(id)!.text))
+  }
+
+  // Scoring: all four items, item 72 reverse-keyed. 5,5,5 plus (6 - 5) over 4.
+  assert.equal(computeFacetScore('Liberalism', answers), (5 + 5 + 5 + 1) / 4)
+  // Changing only item 72 moves the score, so it still counts.
+  const changed = new Map(answers)
+  changed.set(72, 1)
+  assert.equal(computeFacetScore('Liberalism', changed), (5 + 5 + 5 + 5) / 4)
 })

@@ -13,8 +13,20 @@ in `lib/server/patternCopyInput.ts`):
 - `assessmentId` — checked, then not used for generation
 - this facet's answers as question ids and values (1–5) — not item text.
   Not sent for facets in `RING1_EVIDENCE_EXCLUDED_FACETS`
-  (`lib/known/ring1Evidence.ts`, default: Depression), and never the two
-  political Liberalism items (`RING1_EVIDENCE_EXCLUDED_ITEMS`)
+  (`lib/known/ring1Evidence.ts`, default: Depression), and never the
+  single items in `RING1_EVIDENCE_EXCLUDED_ITEMS`:
+
+  | Item | Text | Facet | Why |
+  |---|---|---|---|
+  | 69 | Tend to vote for liberal political candidates. | Liberalism | political opinion |
+  | 71 | Tend toward liberal political views. | Liberalism | political opinion |
+  | 72 | Believe in one true religion. | Liberalism | religious belief |
+
+  Political opinions and religious beliefs are sensitive data, and the card
+  describes questioning traditions, not politics or faith. These items still
+  count in the facet score, which the browser computes from all answers; only
+  their answers are kept out of the request. The prompts also forbid
+  mentioning religion, faith, politics, parties, voting or sexuality.
 
 **Our server → Anthropic** (one `POST /v1/messages` per attempt, at most two):
 - Body: `model`, `max_tokens`, `system` (fixed text), `output_config` (fixed

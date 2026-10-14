@@ -32,9 +32,11 @@ export const RING1_EVIDENCE_EXCLUDED_FACETS: readonly string[] = ['Depression']
 
 // Single items that are never sent either: the two political Liberalism
 // items (69 "vote for liberal political candidates", 71 "liberal political
-// views"). The card is about questioning traditions, not politics, and a
-// political opinion shouldn't leave the browser for a trait card.
-export const RING1_EVIDENCE_EXCLUDED_ITEMS: readonly number[] = [69, 71]
+// views") and the religious one (72 "Believe in one true religion").
+// Political opinions and religious beliefs are sensitive data, and the card
+// is about questioning traditions, not politics or faith. They still count
+// in the facet score, which the browser computes from all answers.
+export const RING1_EVIDENCE_EXCLUDED_ITEMS: readonly number[] = [69, 71, 72]
 
 export function evidenceAllowed(facet: string): boolean {
   return !RING1_EVIDENCE_EXCLUDED_FACETS.includes(facet)
