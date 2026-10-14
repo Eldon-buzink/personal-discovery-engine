@@ -13,7 +13,8 @@ in `lib/server/patternCopyInput.ts`):
 - `assessmentId` — checked, then not used for generation
 - this facet's answers as question ids and values (1–5) — not item text.
   Not sent for facets in `RING1_EVIDENCE_EXCLUDED_FACETS`
-  (`lib/known/ring1Evidence.ts`, default: Depression)
+  (`lib/known/ring1Evidence.ts`, default: Depression), and never the two
+  political Liberalism items (`RING1_EVIDENCE_EXCLUDED_ITEMS`)
 
 **Our server → Anthropic** (one `POST /v1/messages` per attempt, at most two):
 - Body: `model`, `max_tokens`, `system` (fixed text), `output_config` (fixed

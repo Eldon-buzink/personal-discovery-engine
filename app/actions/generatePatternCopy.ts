@@ -38,7 +38,7 @@ const FACET_BEHAVIORAL_CONTEXT: Record<string, string> = {
   Anxiety:               'How much this person tends to worry, anticipate negative outcomes, and feel a background sense of unease',
   Anger:                 'How quickly this person becomes frustrated, irritated, or feels a sense of injustice when things go wrong',
   Depression:            'How often this person experiences low mood, a lack of energy, and a tendency to dwell on the harder side of things',
-  'Self-Consciousness':  'How sensitive this person is to being observed or judged — how much social situations activate self-monitoring',
+  'Self-Consciousness':  'How sensitive this person is to being observed or judged — how much social situations activate self-monitoring. It supports feeling watched, embarrassed or self-aware in the moment, and nothing about replaying slips afterwards or where the person sits or stands',
   Immoderation:          'How much this person struggles to resist urges, cravings, or temptations in the moment',
   Vulnerability:         'How much this person feels rattled, overwhelmed, or helpless under pressure or stress',
 
@@ -48,15 +48,15 @@ const FACET_BEHAVIORAL_CONTEXT: Record<string, string> = {
   Assertiveness:         'How naturally this person takes charge, speaks up, and influences the direction of groups',
   'Activity Level':      'How much this person prefers a fast-paced, busy life and feels energized by having a lot going on',
   'Excitement-Seeking':  'How drawn this person is to novelty, risk, intense stimulation, and the thrill of new experiences',
-  Cheerfulness:          'How often this person experiences and expresses positive emotions, joy, and lightheartedness',
+  Cheerfulness:          'How often this person experiences and expresses positive emotions, joy, and lightheartedness. It supports how often joy and laughter show, and gives no downside for a high score, so none is invented',
 
   // Openness
   Imagination:           'How actively this person uses fantasy and imagination — how much they live in a rich inner world',
-  'Artistic Interests':  'How deeply this person is moved by beauty in art, music, nature, or design',
+  'Artistic Interests':  'How deeply this person is moved by beauty in art, music, nature, or design. It supports being moved or unmoved by beauty itself, and names no places or venues (no galleries, concerts or museums)',
   Emotionality:          'How much this person is in touch with their own feelings and values emotion as a source of information',
   Adventurousness:       'How eager this person is to try new things, vary their routines, and seek out unfamiliar experiences',
   Intellect:             'How much this person enjoys abstract ideas, intellectual debate, and playing with complex concepts',
-  Liberalism:            'How open this person is to questioning authority, tradition, and conventional ways of doing things',
+  Liberalism:            'How open this person is to questioning traditions, authority and established values. Liberalism here means only that openness, never politics, left or right, parties or voting',
 
   // Agreeableness
   Trust:                 'How much this person defaults to assuming good faith and benign intent in others',
@@ -176,6 +176,10 @@ const GROUNDING_RULES = `- Never describe what other people think, feel, notice,
 - No concrete objects, places, people or events that the description or answers do not name (no meals, money, shopping, replayed words).
 - No judgement words about the person's goals or choices (no "wishing bigger", "worth it", "settling").`
 
+// The facet's IPIP name invites politics; the card is about questioning
+// traditions, never about how someone votes.
+const LIBERALISM_RULE = 'Liberalism here means openness to questioning traditions, authority and established values. Never mention politics, left or right, parties or voting.'
+
 const HARDER_TRAIT_RULE = 'do not invent a strength. If the description gives none, describe the pattern and how it affects the person\'s day, nothing more.'
 
 const RING1_HARDER_FACETS = 'high Anxiety, Anger, Vulnerability, Depression, Self-Consciousness, Immoderation, or low Self-Efficacy'
@@ -220,7 +224,7 @@ Rules:
 - No abstract nouns or invented phrases (like "naive harm" or "withheld certainty"). Say what the person does or feels.
 - If a sentence could just as well be about a different facet, rewrite it so it is clearly about this one.
 - Do not add outcomes, feelings or situations that the supplied behaviour description does not state.
-${GROUNDING_RULES}
+${GROUNDING_RULES}${facetName === 'Liberalism' ? `\n- ${LIBERALISM_RULE}` : ''}
 - For harder traits (${RING1_HARDER_FACETS}), ${HARDER_TRAIT_RULE}${isHarderTrait(facetName, scoreDirection) ? `\n- This card is a harder trait: ${HARDER_TRAIT_RULE}` : ''}
 
 Tags, good examples (2-3 words, never more than 3): "Starts quickly", "Slow to trust", "Likes variety", "Weighs it first", "Adapts fast", "Stays alert".

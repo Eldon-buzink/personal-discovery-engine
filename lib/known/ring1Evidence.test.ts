@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { RING1_EVIDENCE_EXCLUDED_FACETS, evidenceFor, facetAnswers, strongestAnswers } from './ring1Evidence'
+import { RING1_EVIDENCE_EXCLUDED_FACETS, RING1_EVIDENCE_EXCLUDED_ITEMS, evidenceFor, facetAnswers, strongestAnswers } from './ring1Evidence'
 import { FACET_QUESTIONS } from './ring1-questions'
 
 const anxiety = FACET_QUESTIONS.get('Anxiety')!
@@ -43,4 +43,16 @@ test('excluded facets get no evidence: nothing sent from the browser, nothing us
   }
   // A facet that isn't excluded still gets its evidence.
   assert.equal(evidenceFor('Anxiety', anxiety.map((q) => ({ questionId: q.id, value: 5 }))).length, 2)
+})
+
+test('the political Liberalism items are never sent or used; the other two still are', () => {
+  const lib = FACET_QUESTIONS.get('Liberalism')!
+  const political = lib.filter((q) => /politic/i.test(q.text)).map((q) => q.id)
+  assert.deepEqual([...political].sort(), [...RING1_EVIDENCE_EXCLUDED_ITEMS].sort())
+  const strong = lib.map((q) => ({ questionId: q.id, value: 5 }))
+  const sent = facetAnswers('Liberalism', new Map(strong.map((a) => [a.questionId, a.value])))
+  assert.deepEqual(sent.map((a) => a.questionId), lib.filter((q) => !political.includes(q.id)).map((q) => q.id))
+  // Even if a request carries them, the prompt never sees them.
+  for (const e of evidenceFor('Liberalism', strong)) assert.doesNotMatch(e.text, /politic/i)
+  assert.equal(evidenceFor('Liberalism', strong).length, 2)
 })

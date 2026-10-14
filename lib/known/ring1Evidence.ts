@@ -30,6 +30,12 @@ const MAX_EVIDENCE = 2
 // Add a facet name (as in ring1-questions.ts) to exclude it too.
 export const RING1_EVIDENCE_EXCLUDED_FACETS: readonly string[] = ['Depression']
 
+// Single items that are never sent either: the two political Liberalism
+// items (69 "vote for liberal political candidates", 71 "liberal political
+// views"). The card is about questioning traditions, not politics, and a
+// political opinion shouldn't leave the browser for a trait card.
+export const RING1_EVIDENCE_EXCLUDED_ITEMS: readonly number[] = [69, 71]
+
 export function evidenceAllowed(facet: string): boolean {
   return !RING1_EVIDENCE_EXCLUDED_FACETS.includes(facet)
 }
@@ -40,7 +46,7 @@ export function evidenceAllowed(facet: string): boolean {
 export function facetAnswers(facet: string, answers: Map<number, number>): FacetAnswer[] {
   if (!evidenceAllowed(facet)) return []
   return (FACET_QUESTIONS.get(facet) ?? [])
-    .filter((q) => answers.has(q.id))
+    .filter((q) => answers.has(q.id) && !RING1_EVIDENCE_EXCLUDED_ITEMS.includes(q.id))
     .map((q) => ({ questionId: q.id, value: answers.get(q.id)! }))
 }
 
@@ -48,7 +54,8 @@ export function facetAnswers(facet: string, answers: Map<number, number>): Facet
 // excluded facet (whatever the request carried), otherwise the strongest
 // answers below.
 export function evidenceFor(facet: string, answers: FacetAnswer[]): EvidenceItem[] {
-  return evidenceAllowed(facet) ? strongestAnswers(answers) : []
+  if (!evidenceAllowed(facet)) return []
+  return strongestAnswers(answers.filter((a) => !RING1_EVIDENCE_EXCLUDED_ITEMS.includes(a.questionId)))
 }
 
 // The (up to) two most strongly held, non-neutral answers, with the real
