@@ -53,12 +53,12 @@ export default function PostSidebar({
 
       <div style={{ border: `1px solid ${blogLine}`, borderRadius: 16, padding: 22, background: blogCard }}>
         <p style={{ fontSize: 13, color: blogCharcoalSoft, lineHeight: 1.55, marginBottom: 14, fontFamily: blogSans }}>
-          Get your full trait profile across all five domains, free
-          {currentFacetLabel ? ` — see where ${currentFacetLabel} sits alongside your other 29 facets` : ''}.
+          Your first 5 patterns are free. A one-time €49 unlocks all 30 facets
+          {currentFacetLabel ? ` — including where ${currentFacetLabel} sits alongside the other 29` : ''}.
         </p>
         <Link href="/onboarding">
           <button style={{ width: '100%', background: blogCharcoal, color: blogCream, border: 'none', padding: 11, borderRadius: 100, fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: blogSans }}>
-            Take the free assessment
+            Start free
           </button>
         </Link>
       </div>
