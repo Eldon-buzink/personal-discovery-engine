@@ -22,7 +22,7 @@ const inter = Inter({
 // the assessment/report/auth flow, which isn't meant to be indexed or shared.
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.getbearing.me"),
-  title: "Bearing — Big Five Personality Assessment, Free to Start",
+  title: "Bearing",
   description: "Bearing is a Big Five personality assessment: rate 120 short statements in about 15 minutes. Your first 5 patterns are free, no account needed.",
   openGraph: {
     siteName: "Bearing",
