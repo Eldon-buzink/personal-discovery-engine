@@ -19,7 +19,6 @@ const charcoalSoft = '#56534D'
 const line = '#E5E1D5'
 const coral = '#D85A30'
 const sans = 'var(--font-body)'
-const serif = 'var(--font-display)'
 
 export interface CarouselTrait {
   key: string
@@ -84,7 +83,7 @@ const css = `
     margin:calc(var(--blob) / -2) 0 0 calc(var(--blob) / -2);pointer-events:none;will-change:transform,opacity;}
   .tc-inner svg{display:block;width:100%;height:100%;overflow:visible;}
   .tc-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:${serif};font-style:italic;font-weight:600;font-size:22px;}
+    font-family:var(--font-trait);font-style:italic;font-weight:600;font-size:22px;}
   @media(max-width:560px){.tc-label{font-size:20px;}}
   .tc-ring{position:absolute;inset:14%;border-radius:50%;border:2px solid ${coral};opacity:0;}
   .tc-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:2px;}
@@ -112,7 +111,7 @@ const css = `
   .tc-rel .tc-rel-label{opacity:.75;transition:opacity .2s ease;}
   .tc-rel:hover .tc-rel-label,.tc-rel:focus-visible .tc-rel-label{opacity:1;}
   .tc-rel-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:${serif};font-style:italic;font-weight:600;font-size:12px;line-height:1.15;padding:0 2px;pointer-events:none;}
+    font-family:var(--font-trait);font-style:italic;font-weight:600;font-size:12px;line-height:1.15;padding:0 2px;pointer-events:none;}
   @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-rel .tc-rel-label{transition:none;}.tc-rel-row,.tc-links path{animation:none;}.tc-links path{opacity:1;}}
 `
 

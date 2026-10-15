@@ -16,10 +16,16 @@ import {
 } from '@/lib/blobs'
 import FaqSection from './landing/FaqSection'
 import WhyDifferentSection from './landing/WhyDifferentSection'
-import JourneySection from './landing/JourneySection'
+import dynamic from 'next/dynamic'
+import WhenNear from './landing/WhenNear'
 import { compareCSS, practiceCSS, faqCSS, finalCSS } from './landing/sectionStyles'
 import { css, type } from '@/lib/design/type'
 import { useEnterOnce } from '@/lib/design/motion'
+
+// The journey example (and the date-fns and trend code behind it) loads
+// only when its section comes near the viewport, so it never weighs on the
+// first paint; WhenNear reserves its height meanwhile.
+const JourneySection = dynamic(() => import('./landing/JourneySection'), { ssr: false })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const sans  = "var(--font-body)"
@@ -66,7 +72,6 @@ export const landingCSS = `
   .hero p{${css.body}color:${mkCharcoalSoft};max-width:440px;margin:0 0 28px;}
   .hero-cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .hero-blob-wrap{position:relative;width:100%;aspect-ratio:520/500;overflow:visible;}
-  .trait-label-active{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:30px;}
 
   /* Problem section — heading left-aligned above three .step cards.
      .problem-heading kept as-is (copies .section-head h2's type values
@@ -304,7 +309,7 @@ export function HeroBlobs() {
             pointerEvents: 'none',
             whiteSpace: 'nowrap',
             ...(b.active
-              ? { fontFamily: serif, fontStyle: 'italic' as const, fontWeight: 600, fontSize: 30, color: `hsl(${b.hue},45%,24%)` }
+              ? { ...type.traitWord, fontSize: 30, color: `hsl(${b.hue},45%,24%)` }
               : { ...type.meta, fontWeight: 500, color: 'rgba(28,28,26,0.72)' }),
           }}
         >
@@ -572,7 +577,7 @@ export function DemoBlob({ scale = 1, marginTop, center }: { scale?: number; mar
       <span style={{
         position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
         zIndex: 5, pointerEvents: 'none', whiteSpace: 'nowrap',
-        fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: 30 * scale,
+        ...type.traitWord, fontSize: 30 * scale,
         color: `hsl(${hue},45%,24%)`,
       }}>
         Deliberate
@@ -1074,7 +1079,9 @@ export default function LandingPageClient() {
               <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
             </div>
 
-            <JourneySection />
+            <WhenNear className="practice-hold">
+              <JourneySection />
+            </WhenNear>
 
             <div className="practice-cadence">
               <div><b>Weekly</b><p>A summary of what you logged.</p></div>

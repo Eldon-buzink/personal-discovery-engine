@@ -406,7 +406,7 @@ export default function PracticeHomePage() {
                 >
                   <div>
                     <div
-                      className={reportTraits.words.has(facetId) ? 'font-display italic font-semibold text-display-4 text-charcoal' : 'font-sans font-medium text-ui text-charcoal'}
+                      className={reportTraits.words.has(facetId) ? 'font-trait italic font-semibold text-display-4 text-charcoal' : 'font-sans font-medium text-ui text-charcoal'}
                     >
                       {reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}
                     </div>

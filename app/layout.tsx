@@ -5,12 +5,20 @@ import ConsentBanner from "@/components/known/ConsentBanner";
 import ThemeLabHead from "@/components/known/ThemeLabHead";
 import "./globals.css";
 
-// Italic is loaded for real (not browser-faked): the trait-word token is
-// Newsreader italic 600.
 const newsreader = Newsreader({
   subsets: ["latin"],
-  style: ["normal", "italic"],
   variable: "--font-newsreader",
+});
+
+// The trait-word token (Newsreader italic 600) as its own small static file,
+// loaded for real instead of browser-faked, and not preloaded so it never
+// competes with the page's first paint (it swaps in when first used).
+const newsreaderTrait = Newsreader({
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["600"],
+  variable: "--font-newsreader-italic",
+  preload: false,
 });
 
 const inter = Inter({
@@ -46,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${inter.variable}`}>
+    <html lang="en" className={`${newsreader.variable} ${newsreaderTrait.variable} ${inter.variable}`}>
       <head>
         {/* Supabase auth session check (SiteNav) runs on every page, including
             the landing page — this is the only third-party origin actually

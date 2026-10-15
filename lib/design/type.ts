@@ -32,7 +32,7 @@ export const type = {
   // Size is set by the caller where a blob dictates it; the default is the
   // locked blob-label size (30px).
   traitWord: {
-    fontFamily: 'var(--font-display)',
+    fontFamily: 'var(--font-trait)',
     fontStyle: 'italic',
     fontWeight: 600,
     fontSize: 'var(--text-trait-word)',
@@ -82,7 +82,7 @@ export const css = {
   display2: 'font-family:var(--font-display);font-weight:400;font-style:normal;font-size:var(--text-display-2);line-height:1.2;letter-spacing:-0.01em;',
   display3: 'font-family:var(--font-display);font-weight:400;font-style:normal;font-size:var(--text-display-3);line-height:1.3;',
   display4: 'font-family:var(--font-display);font-weight:400;font-style:normal;font-size:var(--text-display-4);line-height:1.35;',
-  traitWord: 'font-family:var(--font-display);font-style:italic;font-weight:600;',
+  traitWord: 'font-family:var(--font-trait);font-style:italic;font-weight:600;',
   body: 'font-family:var(--font-body);font-size:var(--text-body);line-height:var(--leading-body);font-weight:400;font-style:normal;',
   ui: 'font-family:var(--font-body);font-size:var(--text-ui);line-height:1.4;font-weight:500;font-style:normal;text-transform:none;letter-spacing:normal;',
   meta: 'font-family:var(--font-body);font-size:var(--text-meta);line-height:1.5;font-weight:400;font-style:normal;color:var(--color-meta);text-transform:none;letter-spacing:normal;',

@@ -11,6 +11,7 @@ const config: Config = {
       fontFamily: {
         serif: ["var(--font-display)"],
         display: ["var(--font-display)"],
+        trait: ["var(--font-trait)"],
         sans: ["var(--font-body)"],
       },
       // Type tokens (app/globals.css). Use these, not raw sizes.

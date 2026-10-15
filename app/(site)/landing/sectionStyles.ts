@@ -83,6 +83,8 @@ export const compareCSS = `
 export const practiceCSS = `
   /* Your practice */
   .practice-section{padding:0 0 90px;}
+  /* Space reserved while the journey example loads (WhenNear). */
+  .practice-hold{min-height:480px;}
   /* The journey example: three real practice components, no device
      frames, the recap the largest. Stacked below 860px. */
   .journey{max-width:1040px;margin:0 auto;}

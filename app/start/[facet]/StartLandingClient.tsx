@@ -28,7 +28,11 @@ import {
   landingReassurance,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
-import JourneySection from '@/app/(site)/landing/JourneySection'
+import dynamic from 'next/dynamic'
+import WhenNear from '@/app/(site)/landing/WhenNear'
+
+// Loaded near the viewport only, same as on the home page.
+const JourneySection = dynamic(() => import('@/app/(site)/landing/JourneySection'), { ssr: false })
 import { practiceFixtureFor } from '@/app/(site)/landing/landingPracticeFixture'
 import WhyDifferentSection from '@/app/(site)/landing/WhyDifferentSection'
 import FaqSection from '@/app/(site)/landing/FaqSection'
@@ -269,7 +273,9 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
               <p>{landingPracticeBody(label, checkInPrompt.question)}</p>
             </div>
 
-            <JourneySection fixture={practiceFixture} />
+            <WhenNear className="practice-hold">
+              <JourneySection fixture={practiceFixture} />
+            </WhenNear>
 
             <div className="practice-cadence">
               <div><b>Weekly</b><p>A summary of what you logged.</p></div>
