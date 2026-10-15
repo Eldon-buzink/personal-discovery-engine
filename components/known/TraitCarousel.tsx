@@ -16,7 +16,6 @@ import { DOMAIN_LABELS } from '@/lib/known/traitOrder'
 
 const gray = '#6B675F' // the one meta grey (globals --color-meta)
 const charcoalSoft = '#56534D'
-const cream = '#F7F4ED'
 const line = '#E5E1D5'
 const coral = '#D85A30'
 const sans = 'var(--font-body)'
@@ -89,7 +88,7 @@ const css = `
   @media(max-width:560px){.tc-label{font-size:20px;}}
   .tc-ring{position:absolute;inset:14%;border-radius:50%;border:2px solid ${coral};opacity:0;}
   .tc-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:2px;}
-  .tc-arrow{width:36px;height:36px;border-radius:50%;border:1px solid ${line};background:${cream};color:${charcoalSoft};
+  .tc-arrow{width:36px;height:36px;border-radius:50%;border:1px solid ${line};background:var(--color-bg);color:${charcoalSoft};
     cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;}
   .tc-arrow:disabled{opacity:.35;cursor:default;}
   .tc-count{font-family:${sans};font-size:var(--text-meta);color:${gray};min-width:58px;text-align:center;margin:0;}

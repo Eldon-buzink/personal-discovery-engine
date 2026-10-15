@@ -14,7 +14,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { directionalAccent } from '@/lib/known/practiceTokens'
+import { directionalAccent, selectedAccent, selectedSoft } from '@/lib/known/practiceTokens'
 import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
@@ -238,8 +238,8 @@ export default function CheckInPage({ params }: { params: { activationId: string
                 style={{
                   textAlign: 'left', width: '100%', boxSizing: 'border-box', padding: '16px 18px',
                   borderRadius: 12, cursor: 'pointer',
-                  border: `1.5px solid ${isSelected ? directionalAccent : '#DAD3C3'}`,
-                  background: isSelected ? '#FBEEE8' : '#FFFFFF',
+                  border: `1.5px solid ${isSelected ? selectedAccent : '#DAD3C3'}`,
+                  background: isSelected ? selectedSoft : '#FFFFFF',
                 }}
               >
                 <span style={{ ...type.body }}>{o.label}</span>

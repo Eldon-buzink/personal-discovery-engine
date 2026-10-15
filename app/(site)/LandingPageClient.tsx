@@ -976,12 +976,12 @@ export function FinalCtaSection({ startedUnfinished }: { startedUnfinished: bool
 export default function LandingPageClient() {
   const { ready, welcomeBack, startedUnfinished } = useLandingVisitor()
 
-  if (!ready) return <div style={{ minHeight:'100vh', background:mkCream }} />
+  if (!ready) return <div style={{ minHeight:'100vh', background:'var(--color-bg)' }} />
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: landingCSS }} />
-      <div style={{ background:mkCream, color:mkCharcoal, fontFamily:sans }}>
+      <div style={{ background:'var(--color-bg)', color:mkCharcoal, fontFamily:sans }}>
 
         {/* ── HERO ─────────────────────────────────────────────────── */}
         {/* No min-height:100vh / flex-centering — the mockup's .hero is just

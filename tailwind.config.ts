@@ -25,7 +25,7 @@ const config: Config = {
         meta: ["var(--text-meta)", { lineHeight: "1.5" }],
       },
       colors: {
-        cream: "#F7F4ED",
+        cream: "var(--color-bg)",
         charcoal: "#262420",
         "charcoal-soft": "#56534D",
         // One meta grey, 4.5:1 or better on every background (was #8C8A83, 3.15:1).
