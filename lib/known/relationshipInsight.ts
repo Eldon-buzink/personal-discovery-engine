@@ -13,7 +13,7 @@
  * trade-off label ("The cost is …"), a sentence over 35 words. See lib/known/copyChecks.ts.
  */
 
-import { PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff, splitSentences } from './copyChecks'
+import { CONTRAST_NOTE, PUNCTUATION_NOTE, checkSentenceLengths, countWords, fixPunctuation, hasContrastPattern, hasDash, hasDashOrSemicolon, hasLabelledTradeoff, splitSentences } from './copyChecks'
 
 // Structured output (output_config.format) schema: {"insight": string}.
 export const RELATIONSHIP_INSIGHT_SCHEMA = {
@@ -54,7 +54,8 @@ export function checkInsight(input: unknown): InsightCheck {
   const words = countWords(insight)
   if (words > INSIGHT_MAX_WORDS) violations.push(`The note is ${words} words: cut to about 65.`)
   if (sentences.length < MIN_SENTENCES) violations.push('Write 2-3 sentences before the closing question.')
-  if (hasDashOrSemicolon(insight)) violations.push(PUNCTUATION_NOTE)
+  if (hasDashOrSemicolon(insight) || hasDash(insight)) violations.push(PUNCTUATION_NOTE)
+  if (hasContrastPattern(insight)) violations.push(CONTRAST_NOTE)
   return { ok: true, insight, violations, words }
 }
 

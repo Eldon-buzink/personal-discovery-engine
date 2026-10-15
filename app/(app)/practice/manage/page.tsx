@@ -94,21 +94,21 @@ export default function ManagePracticePage() {
       const result = await deactivateFacet(supabase, row.activationId, userId)
       if (!result.ok) {
         console.error('[Manage] deactivate error:', result.message)
-        setMessage('Something went wrong — try again in a moment.')
+        setMessage('Something went wrong. Try again in a moment.')
       } else {
         const refreshed = await load(supabase, userId)
-        if (!refreshed) setMessage('Turned off — but the page could not refresh. Reload to see it.')
+        if (!refreshed) setMessage('Turned off, but the page could not refresh. Reload to see it.')
       }
     } else {
       const result = await activateFacet(supabase, userId, row.facetId, 'base_assessment')
       if (result.ok) {
         const refreshed = await load(supabase, userId)
-        if (!refreshed) setMessage('Turned on — but the page could not refresh. Reload to see it.')
+        if (!refreshed) setMessage('Turned on, but the page could not refresh. Reload to see it.')
       } else if (result.reason === 'cap') {
-        setMessage("You're at your check-in limit — turn one off first to make room for this one.")
+        setMessage("You're at your check-in limit. Turn one off first to make room for this one.")
       } else {
         console.error('[Manage] activate error:', result.message)
-        setMessage('Something went wrong — try again in a moment.')
+        setMessage('Something went wrong. Try again in a moment.')
       }
     }
 
@@ -155,7 +155,7 @@ export default function ManagePracticePage() {
       <div style={{ padding: '22px 28px 0 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {rows.length === 0 ? (
           <p className="font-sans text-body text-muted">
-            Nothing to manage yet — patterns will show up here once your report reveals them.
+            Nothing to manage yet. Patterns will show up here once your report reveals them.
           </p>
         ) : (
           rows.map((row) => {

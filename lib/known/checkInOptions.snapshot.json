@@ -1,0 +1,6636 @@
+{
+ "Anxiety": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Untroubled",
+   "Alert",
+   "Watchful"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Watchful than your starting result."
+  }
+ },
+ "Anger": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Unruffled",
+   "Firm",
+   "Quick to flare"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Quick to flare than your starting result."
+  }
+ },
+ "Depression": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Light",
+   "Even",
+   "Subdued"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Subdued than your starting result."
+  }
+ },
+ "Self-Consciousness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "At ease",
+   "Aware",
+   "Self-monitoring"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Self-monitoring than your starting result."
+  }
+ },
+ "Immoderation": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Restrained",
+   "Easygoing",
+   "Impulse-led"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Impulse-led than your starting result."
+  }
+ },
+ "Vulnerability": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Composed",
+   "Adaptive",
+   "Overload-prone"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Overload-prone than your starting result."
+  }
+ },
+ "Friendliness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Slow to warm",
+   "Warm",
+   "Quick to warm"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Quick to warm than your starting result."
+  }
+ },
+ "Gregariousness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Private",
+   "Social",
+   "Gregarious"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Gregarious than your starting result."
+  }
+ },
+ "Assertiveness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Receptive",
+   "Poised",
+   "Take-charge"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Take-charge than your starting result."
+  }
+ },
+ "Activity Level": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Measured",
+   "Active",
+   "Energized"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Energized than your starting result."
+  }
+ },
+ "Excitement-Seeking": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Low-key",
+   "Daring",
+   "Thrill-seeking"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Thrill-seeking than your starting result."
+  }
+ },
+ "Cheerfulness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Serious",
+   "Upbeat",
+   "Buoyant"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Buoyant than your starting result."
+  }
+ },
+ "Imagination": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Literal",
+   "Creative",
+   "Imaginative"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Imaginative than your starting result."
+  }
+ },
+ "Artistic Interests": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Practical",
+   "Perceptive",
+   "Aesthetic"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Aesthetic than your starting result."
+  }
+ },
+ "Emotionality": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Detached",
+   "Expressive",
+   "Sensitive"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Sensitive than your starting result."
+  }
+ },
+ "Adventurousness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Familiar",
+   "Curious",
+   "Expansive"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Expansive than your starting result."
+  }
+ },
+ "Intellect": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Concrete",
+   "Inquisitive",
+   "Analytical"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Analytical than your starting result."
+  }
+ },
+ "Liberalism": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Traditional",
+   "Open",
+   "Progressive"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Progressive than your starting result."
+  }
+ },
+ "Trust": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Vigilant",
+   "Discerning",
+   "Trusting"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Trusting than your starting result."
+  }
+ },
+ "Morality": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Pragmatic",
+   "Principled",
+   "Sincere"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Sincere than your starting result."
+  }
+ },
+ "Altruism": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Self-sufficient",
+   "Considerate",
+   "Generous"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Generous than your starting result."
+  }
+ },
+ "Cooperation": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Direct",
+   "Even-handed",
+   "Harmonious"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Harmonious than your starting result."
+  }
+ },
+ "Modesty": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Confident",
+   "Humble",
+   "Modest"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Modest than your starting result."
+  }
+ },
+ "Sympathy": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Objective",
+   "Caring",
+   "Compassionate"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Compassionate than your starting result."
+  }
+ },
+ "Self-Efficacy": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Questioning",
+   "Capable",
+   "Self-assured"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Self-assured than your starting result."
+  }
+ },
+ "Orderliness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Spontaneous",
+   "Organized",
+   "Methodical"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Methodical than your starting result."
+  }
+ },
+ "Dutifulness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Obligation-light",
+   "Reliable",
+   "Dutiful"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Dutiful than your starting result."
+  }
+ },
+ "Achievement-Striving": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Laid-back",
+   "Driven",
+   "Ambitious"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Ambitious than your starting result."
+  }
+ },
+ "Self-Discipline": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Fluid",
+   "Steady",
+   "Disciplined"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Disciplined than your starting result."
+  }
+ },
+ "Cautiousness": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Quick to act",
+   "Deliberate",
+   "Careful"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Careful than your starting result."
+  }
+ },
+ "Unknown facet (fallback prompt)": {
+  "ids": [
+   "low",
+   "mid",
+   "high"
+  ],
+  "words": [
+   "Not really",
+   "A little",
+   "Yes, clearly"
+  ],
+  "trend": {
+   "trend": {
+    "weeks": [
+     {
+      "weekStart": "2026-09-07",
+      "checkInCount": 0,
+      "qualifies": false,
+      "lean": {
+       "type": "none"
+      },
+      "topCount": 0
+     },
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "qualifyingWeekCount": 4,
+    "isTrendQualified": true,
+    "mostRecentObservation": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    },
+    "mostRecentCheckIn": {
+     "checkInDate": "2026-10-11",
+     "responseOption": "high"
+    }
+   },
+   "weekly": {
+    "weekStart": "2026-10-05",
+    "summary": {
+     "weekStart": "2026-10-05",
+     "checkInCount": 4,
+     "qualifies": true,
+     "lean": {
+      "type": "option",
+      "value": "high"
+     },
+     "topCount": 4
+    }
+   },
+   "weeklyProgress": null,
+   "recent": {
+    "window": {
+     "start": "2026-09-14",
+     "end": "2026-10-11",
+     "isFirstWindow": true
+    },
+    "checkInCount": 13,
+    "weeks": [
+     {
+      "weekStart": "2026-09-14",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-21",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "mid"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-09-28",
+      "checkInCount": 3,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 2
+     },
+     {
+      "weekStart": "2026-10-05",
+      "checkInCount": 4,
+      "qualifies": true,
+      "lean": {
+       "type": "option",
+       "value": "high"
+      },
+      "topCount": 4
+     }
+    ],
+    "checkIns": [
+     {
+      "check_in_date": "2026-09-15",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-17",
+      "response_option": "low",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-19",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-22",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-24",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-26",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-09-29",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-01",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-03",
+      "response_option": "mid",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-06",
+      "response_option": "high",
+      "note": null
+     },
+     {
+      "check_in_date": "2026-10-08",
+      "response_option": "high",
+      "note": "Finished the draft before lunch, then left email closed until it was done."
+     },
+     {
+      "check_in_date": "2026-10-10",
+      "response_option": "high",
+      "note": "Wanted to stop the run halfway. Kept going at an easier pace."
+     },
+     {
+      "check_in_date": "2026-10-11",
+      "response_option": "high",
+      "note": null
+     }
+    ]
+   },
+   "startVsNow": "Your days lean a bit more toward Yes, clearly than your starting result."
+  }
+ }
+}

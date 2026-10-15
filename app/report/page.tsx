@@ -152,7 +152,7 @@ function EmptyReportState() {
       </h2>
 
       <p style={{ ...type.body, color: charcoalSoft, maxWidth: 340, margin: '0 auto 26px' }}>
-        Nothing&apos;s surfaced yet — it only takes a handful of honest answers to see the first one.
+        Nothing&apos;s surfaced yet. It only takes a handful of honest answers to see the first one.
       </p>
 
       <Link href="/assessment">
@@ -391,7 +391,7 @@ const TRANSITION_BODY: Record<string, string> = {
   'environment→working_style': "Conditions are one thing. This part is about how you actually work, not how you'd describe it.",
   'environment→direction':     'Conditions are one thing. This part is about where those patterns might actually lead.',
   'relationships→environment': "That's what happens with people. This part is about what's true around you when no one else is in the room.",
-  'relationships→energy':      "How you show up in relationships is shaped, in part, by what fuels you — and what doesn't.",
+  'relationships→energy':      "How you show up in relationships is shaped, in part, by what fuels you and what drains you.",
   'relationships→working_style': "That's what happens with people. This part is about how you actually work, not how you'd describe it.",
   'relationships→direction':   "That's what happens with people. This part is about where those patterns might actually lead.",
   'energy→environment':        'What fuels you is one layer. This part is about the conditions that bring out your best work.',
@@ -1053,7 +1053,7 @@ export default function ReportPage() {
           {/* ── Report footer note ─────────────────────── */}
           <div style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
             <p style={{ ...type.meta }}>
-              A living report — it grows as you keep exploring.
+              A living report. It grows as you keep exploring.
             </p>
           </div>
 

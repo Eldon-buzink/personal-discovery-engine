@@ -224,7 +224,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
               banner); every return visit gets a shorter mechanism-only
               reminder so it doesn't repeat the pitch daily. */}
           <p className="font-sans text-meta text-muted" style={{ marginTop: 10 }}>
-            {isFirstCheckIn ? practicePurposeCopy(directional) : 'This becomes part of your report — not a score, just a record of what you noticed.'}
+            {isFirstCheckIn ? practicePurposeCopy(directional) : 'This goes into your report as a record of what you noticed. There is no score.'}
           </p>
         </div>
 

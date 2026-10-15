@@ -17,5 +17,5 @@
 export function practicePurposeCopy(directional: boolean): string {
   return directional
     ? 'Your first result was a quick guess from 6 questions. Checking in each day shows how your real days compare.'
-    : 'Checking in each day turns your report into an ongoing picture, not just a one-time score.'
+    : 'Checking in each day turns your one-time report into an ongoing picture.'
 }

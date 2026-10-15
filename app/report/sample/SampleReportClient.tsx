@@ -104,7 +104,7 @@ export default function SampleReportClient() {
             background: '#F3F1EB', border: `1px solid ${line}`, textAlign: 'center',
           }}>
             <p style={{ ...type.meta, color: charcoalSoft, margin: 0 }}>
-              This is a sample report with illustrative results — not your data.
+              This is a sample report with illustrative results. It is not your data.
             </p>
           </div>
 
@@ -117,7 +117,7 @@ export default function SampleReportClient() {
               Here&apos;s what yours could look like.
             </h1>
             <p style={{ ...type.body, color: charcoalSoft, maxWidth: 380, margin: '0 auto' }}>
-              Patterns surface as you go, then build into a full picture — this is a stand-in for one person&apos;s.
+              Patterns surface as you go, then build into a full picture. This is a stand-in for one person&apos;s.
             </p>
           </div>
 
@@ -151,7 +151,7 @@ export default function SampleReportClient() {
               What&apos;s next
             </p>
             <p style={{ ...type.body, color: charcoalSoft, maxWidth: 340, margin: '0 auto' }}>
-              Optional branches build out the picture — like where you actually do your best work.
+              Optional branches build out the picture, like where you actually do your best work.
             </p>
           </div>
 
@@ -176,7 +176,7 @@ export default function SampleReportClient() {
                   trait_quote: 'Quiet, unscheduled stretches are when your actual best work happens.',
                   where_it_shows_up: 'A full calendar with no gaps between meetings leaves you foggy by 3pm, even on a light day. Given a free morning, you\'ll default to the hardest task on the list, not the easiest.',
                   tags: ['Deep work', 'Low interruption', 'Self-paced'],
-                  go_deeper: 'This isn\'t about introversion — it\'s about context-switching cost. Every interruption resets a ramp-up you weren\'t consciously tracking.',
+                  go_deeper: 'Every interruption costs you more than it seems. Each one resets a ramp-up you weren\'t consciously tracking.',
                   worth_trying: 'Block one interruption-free stretch daily and treat it like an unmovable meeting, not a nice-to-have.',
                 }}
               />
@@ -189,7 +189,7 @@ export default function SampleReportClient() {
               Curious what yours would say?
             </p>
             <p style={{ ...type.body, color: charcoalSoft, maxWidth: 340, margin: '0 auto 22px' }}>
-              15 minutes, first 5 patterns free — no account needed to start.
+              15 minutes, first 5 patterns free. No account needed to start.
             </p>
             <Link href="/onboarding">
               <button style={{
@@ -197,7 +197,7 @@ export default function SampleReportClient() {
                 ...type.ui, padding: '15px 30px', cursor: 'pointer',
                 minHeight: 44,
               }}>
-                Start your report — it&apos;s free
+                Start your free report
               </button>
             </Link>
           </div>

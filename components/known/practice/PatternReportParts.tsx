@@ -95,7 +95,7 @@ export function WeeksStrip({ facetId, weeks, chipClassName }: { facetId: string;
                 : w.lean.type === 'tie'
                   ? 'Split'
                   : ''
-              : '—'}
+              : 'Too few'}
           </div>
         </div>
       ))}

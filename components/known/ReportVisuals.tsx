@@ -300,7 +300,7 @@ export function OrbitCluster({
           ...type.meta,
           textAlign: 'center', width: 260, margin: 0, pointerEvents: 'none',
         }}>
-          A subtle lean — not a strong signal either way
+          A subtle lean, with no strong signal either way
         </p>
       )}
     </div>

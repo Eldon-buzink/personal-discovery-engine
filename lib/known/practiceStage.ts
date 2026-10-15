@@ -92,7 +92,7 @@ export function formatStageProgress(result: StageResult): string[] | null {
 }
 
 // Compact single-line form for Practice home's card — same data, no
-// progress sentence, just "Step N of 3 — Label".
+// progress sentence, just "Step N of 3: Label".
 export function formatStageCompact(result: StageResult): string {
-  return `Step ${result.stepNumber} of 3 — ${STAGE_LABEL[result.stage]}`
+  return `Step ${result.stepNumber} of 3: ${STAGE_LABEL[result.stage]}`
 }

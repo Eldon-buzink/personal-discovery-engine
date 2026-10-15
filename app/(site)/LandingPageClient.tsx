@@ -842,7 +842,7 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
   return welcomeBack ? (
     <div>
       <p style={{ ...type.meta, marginBottom:14 }}>
-        Welcome back — pick up where you left off.
+        Welcome back. Pick up where you left off.
       </p>
       {emailSent ? (
         <EmailCodeStep

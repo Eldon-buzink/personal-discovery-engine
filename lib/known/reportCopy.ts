@@ -16,7 +16,7 @@ export function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult)
   if (summary.checkInCount === 0) return 'No check-ins logged this week yet.'
   if (!summary.qualifies) return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week.`
   if (summary.lean.type === 'option') return `${summary.checkInCount} check-ins this week, leaning toward "${checkInOptionWord(facetId, summary.lean.value)}."`
-  if (summary.lean.type === 'tie') return `${summary.checkInCount} check-ins this week, evenly split — no clear lean.`
+  if (summary.lean.type === 'tie') return `${summary.checkInCount} check-ins this week, evenly split. No clear lean.`
   return `${summary.checkInCount} check-ins this week.`
 }
 

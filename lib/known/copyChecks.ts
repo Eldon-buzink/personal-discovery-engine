@@ -34,6 +34,21 @@ const DASH = /\s*(—|\s–\s)\s*/g
 export const PUNCTUATION_NOTE = 'Remove the em-dash/semicolon, use two sentences.'
 export const hasDashOrSemicolon = (text: string) => /—|\s–\s|;/.test(text)
 
+// "It's not X, it's Y" / "This isn't X, it's Y" (also across two sentences)
+// and "not just X": soft. The retry note asks for a plain statement; if the
+// kept attempt still has one, it is used as is and the hit is logged.
+const SUBJ = String.raw`(?:it|this|that)`
+const IS = String.raw`(?:'s|’s|\s+is)`
+const NOT_IS = String.raw`(?:${IS}\s+not|\s+isn't|\s+isn’t)`
+const CONTRAST = [
+  new RegExp(String.raw`\b${SUBJ}${NOT_IS}\b[^.!?]{0,80}?(?:[,;:—–]|[.!?])\s*(?:but\s+)?${SUBJ}${IS}\b`, 'i'),
+  /\bnot just\b/i,
+]
+export const CONTRAST_NOTE = 'Remove the "it\'s not X, it\'s Y" or "not just" contrast. Say what it is, plainly.'
+export const hasContrastPattern = (text: string) => CONTRAST.some((r) => r.test(text))
+// Any em dash, or an en dash that is not between two digits (a range).
+export const hasDash = (text: string) => /—|(?<!\d)–|–(?!\d)/.test(text)
+
 // Last resort after the retry: an em-dash or semicolon becomes a full stop
 // and the next word starts with a capital. Never a comma (that made comma
 // splices).

@@ -82,5 +82,5 @@ test('stage 2 copy never claims the comparison is ready, and names no banned wor
 
 test('compact card line gives step number and label in one line', () => {
   const result = computeStage(0, 0)
-  assert.equal(formatStageCompact(result), 'Step 1 of 3 — Collecting')
+  assert.equal(formatStageCompact(result), 'Step 1 of 3: Collecting')
 })

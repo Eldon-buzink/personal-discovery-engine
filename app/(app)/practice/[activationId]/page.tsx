@@ -217,15 +217,15 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
               </span>
             </div>
             <p className="font-sans text-body" style={{ color: directionalSoft }}>
-              This pattern came from a 6-question mini-assessment, not the full 30-facet report. Everything below is a
-              starting read, not a confident one.
+              This pattern came from a 6-question mini-assessment. The full report covers all 30 facets. Everything
+              below is an early read.
             </p>
             <button
               onClick={() => setPaywallOpen(true)}
               className="font-sans font-medium"
               style={{ ...type.ui, display: 'inline-flex', alignSelf: 'flex-start', padding: '9px 14px', borderRadius: 8, background: '#262420', color: '#F7F4ED', marginTop: 2 }}
             >
-              Unlock the full assessment — €49
+              Unlock the full assessment (€49)
             </button>
           </div>
         )}

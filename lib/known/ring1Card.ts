@@ -12,7 +12,7 @@
  */
 
 import type { PatternContent, PatternContentEntry } from './types'
-import { PUNCTUATION_NOTE, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
+import { CONTRAST_NOTE, PUNCTUATION_NOTE, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasContrastPattern, hasDash, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
 
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS is a
 // soft violation (retried once with a note, never dropped).
@@ -85,7 +85,8 @@ export function checkRing1Card(input: unknown): Ring1CardCheck {
   violations.unshift(...lengths.soft)
   const words = ring1CardWords(card)
   if (words > RING1_RETRY_WORDS) violations.push(`The quote and body are ${words} words together: cut to about ${RING1_TARGET_WORDS}.`)
-  if (hasDashOrSemicolon(text)) violations.push(PUNCTUATION_NOTE)
+  if (hasDashOrSemicolon(text) || hasDash(text)) violations.push(PUNCTUATION_NOTE)
+  if (hasContrastPattern(text)) violations.push(CONTRAST_NOTE)
   return { ok: true, card, violations, words }
 }
 

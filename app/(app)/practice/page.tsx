@@ -80,8 +80,8 @@ function readReportTraits(): { words: Map<string, string>; strength: Map<string,
 const CANDIDATES_SHOWN = 5
 
 const NOTICE_COPY: Record<string, string> = {
-  'already-active': "This one's already active — no changes made.",
-  'at-cap': "Your account's set up, but you're at your check-in limit — manage your practice to make room for this one.",
+  'already-active': "This one's already active. Nothing changed.",
+  'at-cap': "Your account's set up, but you're at your check-in limit. Manage your practice to make room for this one.",
 }
 
 // Prefix for the per-activation, per-browser-session dismissal flag — not
@@ -187,13 +187,13 @@ export default function PracticeHomePage() {
 
     if (result.ok) {
       const refreshed = await load(supabase, userId)
-      if (!refreshed) setCandidateMessage('Added — but the page could not refresh. Reload to see it.')
+      if (!refreshed) setCandidateMessage('Added, but the page could not refresh. Reload to see it.')
       else setJustActivatedFacet(facetId)
     } else if (result.reason === 'cap') {
-      setCandidateMessage("You're at your check-in limit — manage your practice to swap one out first.")
+      setCandidateMessage("You're at your check-in limit. Manage your practice to swap one out first.")
     } else {
       console.error('[PracticeHome] activate error:', result.message)
-      setCandidateMessage('Something went wrong — try again in a moment.')
+      setCandidateMessage('Something went wrong. Try again in a moment.')
     }
     setActivatingFacet(null)
   }
@@ -224,7 +224,7 @@ export default function PracticeHomePage() {
           {facetDisplayLabel(nudgeTarget.facetId)} hasn&apos;t been landing lately.
         </p>
         <p className="font-sans text-body text-charcoal-soft">
-          No pressure either way — just checking if this is still the right one to keep active.
+          No pressure either way. We&apos;re just checking if this is still the right one to keep active.
         </p>
         <div className="flex flex-col" style={{ gap: 10, paddingTop: 8 }}>
           <button
@@ -381,7 +381,7 @@ export default function PracticeHomePage() {
 
         <div>
           <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
-            {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet active'}
+            {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed, not active yet'}
           </p>
 
           {candidateMessage && (
@@ -392,7 +392,7 @@ export default function PracticeHomePage() {
 
           {candidates.length === 0 ? (
             <p className="font-sans text-body text-muted">
-              Nothing else yet — as you reveal more patterns in your report, they&apos;ll show up here.
+              Nothing else yet. As you reveal more patterns in your report, they&apos;ll show up here.
             </p>
           ) : (
             <div className="flex flex-col gap-2">
