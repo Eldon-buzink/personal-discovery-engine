@@ -343,9 +343,9 @@ export function BentoCluster() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const wrapRef = useRef<HTMLDivElement>(null)
   // Entrance (once): Deliberate grows in, then the four related patterns
-  // appear around it, 100ms apart. ~1.1s, then only the drift continues.
+  // appear around it, 75ms apart. Ends by 1.125s, then only the drift continues.
   const motionRef = useEnterOnce<HTMLDivElement>()
-  const delayOf = (i: number) => (i === 0 ? 0 : 200 + (i - 1) * 100)
+  const delayOf = (i: number) => (i === 0 ? 0 : 150 + (i - 1) * 75)
   const items = useMemo(() => BENTO_CLUSTER_TRAITS.map(tr => ({
     ...tr,
     hue: sharedUserCuratedHue(SHARED_USER_SEED, tr.hueOff),
@@ -430,7 +430,7 @@ export function OrbitVisual() {
   const youPathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   // Entrance (once): You appears, then each condition travels out from You
-  // to its place, 100ms apart; its label follows. ~1.1s, then drift only.
+  // to its place, 100ms apart; its label follows. Ends by 1.15s, then drift only.
   const motionRef = useEnterOnce<HTMLDivElement>()
   const envItems = useMemo(() => ORBIT_ENV.map(e => {
     const hue = sharedUserCuratedHue(SHARED_USER_SEED, e.hueOff)
@@ -472,7 +472,7 @@ export function OrbitVisual() {
             key={b.word}
             ref={el => { pathRefs.current[b.word] = el }}
             className="m-item m-travel"
-            style={{ ['--d' as string]: `${300 + i * 100}ms`, ['--tx' as string]: `${ORBIT_CX - b.cx}px`, ['--ty' as string]: `${ORBIT_CY - b.cy}px` }}
+            style={{ ['--d' as string]: `${250 + i * 100}ms`, ['--tx' as string]: `${ORBIT_CX - b.cx}px`, ['--ty' as string]: `${ORBIT_CY - b.cy}px` }}
             fill={`url(#orbit-grad-${i})`}
             filter="url(#bento-orbit-blur)"
             d={sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, 0)}
@@ -491,7 +491,7 @@ export function OrbitVisual() {
           key={b.word}
           className="m-item"
           style={{
-            ['--d' as string]: `${500 + i * 100}ms`,
+            ['--d' as string]: `${350 + i * 100}ms`,
             position: 'absolute',
             left: `${(b.cx / ORBIT_VW) * 100}%`,
             top: `${(b.cy / ORBIT_VH) * 100}%`,
@@ -635,16 +635,16 @@ export function ConnectVisual() {
     const glowC = document.createElementNS(NS, 'circle') as SVGCircleElement
     glowC.setAttribute('cx', String(themX)); glowC.setAttribute('cy', String(cy)); glowC.setAttribute('r', String(r * 1.9)); glowC.setAttribute('fill', `url(#${glowId})`); svg.appendChild(glowC)
     // Entrance (once, see useEnterOnce below): You, then the line draws,
-    // then Someone close and its glow. ~1.2s, then it rests.
+    // then Someone close and its glow. Ends by 1.15s, then it rests.
     const enter = (el: SVGElement, cls: string, delay: number) => { el.setAttribute('class', cls); el.style.setProperty('--d', `${delay}ms`) }
-    enter(glowC, 'm-item', 800)
+    enter(glowC, 'm-item', 550)
     const line = document.createElementNS(NS, 'line') as SVGLineElement
     line.setAttribute('x1', String(youX + r)); line.setAttribute('y1', String(cy)); line.setAttribute('x2', String(themX - r)); line.setAttribute('y2', String(cy))
-    line.setAttribute('stroke', 'rgba(28,28,26,0.15)'); line.setAttribute('stroke-width', '1.5'); line.setAttribute('stroke-dasharray', '4,4'); enter(line, 'm-item m-draw', 250); svg.appendChild(line)
+    line.setAttribute('stroke', 'rgba(28,28,26,0.15)'); line.setAttribute('stroke-width', '1.5'); line.setAttribute('stroke-dasharray', '4,4'); enter(line, 'm-item m-draw', 200); svg.appendChild(line)
     const dashed = document.createElementNS(NS, 'circle') as SVGCircleElement
     dashed.setAttribute('cx', String(themX)); dashed.setAttribute('cy', String(cy)); dashed.setAttribute('r', String(r))
     dashed.setAttribute('fill', `hsl(${hue},65%,90%)`); dashed.setAttribute('fill-opacity', '0.25')
-    dashed.setAttribute('stroke', `hsl(${hue},60%,65%)`); dashed.setAttribute('stroke-width', '1.5'); dashed.setAttribute('stroke-dasharray', '5,4'); enter(dashed, 'm-item m-grow', 650); svg.appendChild(dashed)
+    dashed.setAttribute('stroke', `hsl(${hue},60%,65%)`); dashed.setAttribute('stroke-width', '1.5'); dashed.setAttribute('stroke-dasharray', '5,4'); enter(dashed, 'm-item m-grow', 400); svg.appendChild(dashed)
     const youC = document.createElementNS(NS, 'circle') as SVGCircleElement
     youC.setAttribute('cx', String(youX)); youC.setAttribute('cy', String(cy)); youC.setAttribute('r', String(r)); youC.setAttribute('fill', '#2A2720'); enter(youC, 'm-item m-grow', 0); svg.appendChild(youC)
     const youT = document.createElementNS(NS, 'text') as SVGTextElement
@@ -657,7 +657,7 @@ export function ConnectVisual() {
     // dy gap widened from the old 10px-font pairing (-6/13) to -7/16 to keep the
     // two lines from crowding at the larger 12px size — verified no overlap or
     // clipping against the r=38 circle at 375px/390px viewports.
-    themT.innerHTML = `<tspan x="${themX}" dy="-7">Someone</tspan><tspan x="${themX}" dy="16">close</tspan>`; enter(themT, 'm-item', 750); svg.appendChild(themT)
+    themT.innerHTML = `<tspan x="${themX}" dy="-7">Someone</tspan><tspan x="${themX}" dy="16">close</tspan>`; enter(themT, 'm-item', 500); svg.appendChild(themT)
     // No continuous glow pulse any more: after its entrance this visual
     // rests (only blobs keep drifting).
   }, [])

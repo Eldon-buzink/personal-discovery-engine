@@ -98,8 +98,8 @@ export const practiceCSS = `
   .journey.m-play .checkin-row[data-selected]{transition:border-color var(--dur-ui) var(--ease) 300ms,background-color var(--dur-ui) var(--ease) 300ms;}
   .journey.m-armed:not(.m-play) .journey-chip{background:transparent !important;}
   .journey.m-armed:not(.m-play) .journey-chip > *{opacity:0;}
-  .journey.m-play .journey-chip{transition:background-color var(--dur-ui) var(--ease) calc(650ms + var(--i) * 150ms);}
-  .journey.m-play .journey-chip > *{transition:opacity var(--dur-ui) var(--ease) calc(650ms + var(--i) * 150ms);}
+  .journey.m-play .journey-chip{transition:background-color var(--dur-ui) var(--ease) calc(450ms + var(--i) * 100ms);}
+  .journey.m-play .journey-chip > *{transition:opacity var(--dur-ui) var(--ease) calc(450ms + var(--i) * 100ms);}
   .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
   .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
   .practice-cadence b{display:block;${css.display4}margin-bottom:6px;}

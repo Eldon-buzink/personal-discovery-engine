@@ -10,9 +10,12 @@
  * useEnterOnce: the element renders its FINAL state by default (so no-JS,
  * reduced-motion and already-seen visitors just see the result). On mount,
  * unless the visitor prefers reduced motion, it adds `m-armed` (CSS puts the
- * start state), and adds `m-play` once the element is at least 35% in view
- * (CSS transitions to the final state). One IntersectionObserver per
- * element, disconnected after it fires; no animation loop of its own.
+ * start state), and adds `m-play` once the element is at least 35% in view,
+ * or fills half the viewport (an element taller than about three screens can
+ * never be 35% in view) (CSS transitions to the final state). One
+ * IntersectionObserver per element, disconnected after it fires; no
+ * animation loop of its own. Without IntersectionObserver nothing is armed,
+ * so the final state stays.
  */
 
 import { useEffect, useRef } from 'react'
@@ -32,11 +35,12 @@ export function useEnterOnce<T extends Element>() {
     if (!el || typeof IntersectionObserver === 'undefined' || prefersReducedMotion()) return
     el.classList.add('m-armed')
     const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      const viewport = entry.rootBounds?.height ?? window.innerHeight
+      if (entry.isIntersecting && (entry.intersectionRatio >= 0.35 || entry.intersectionRect.height >= viewport / 2)) {
         el.classList.add('m-play')
         io.disconnect()
       }
-    }, { threshold: 0.35 })
+    }, { threshold: [0, 0.1, 0.2, 0.35] })
     io.observe(el)
     return () => io.disconnect()
   }, [])
