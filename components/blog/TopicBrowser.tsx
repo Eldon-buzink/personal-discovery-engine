@@ -123,6 +123,15 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
                 <span style={{ display: 'inline-block', transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>▾</span>
               </button>
             )}
+            {cat === 'traits' && (
+              <Link
+                href="/traits"
+                className="topic-all-facets"
+                style={{ gridColumn: '1 / 3', fontSize: 13.5, fontWeight: 600, color: blogCharcoal, marginTop: 18 }}
+              >
+                See all 30 facets →
+              </Link>
+            )}
           </div>
         )
       })}
@@ -139,7 +148,7 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
              see BentoGrid.tsx: those characters inside a style-tag template
              break hydration, since React escapes them server-side but the
              client-side re-render does not re-escape identically. */
-          .topic-show-more { grid-column: 1 !important; }
+          .topic-show-more, .topic-all-facets { grid-column: 1 !important; }
         }
         @media (max-width: 560px) {
           .topic-tabs { grid-template-columns: 1fr !important; }

@@ -1,4 +1,4 @@
-import { getFacetReference } from '@/lib/known/facetReference'
+import { getFacetReference, isDescribedPublicly } from '@/lib/known/facetReference'
 import { blogCard, blogCharcoal, blogCharcoalSoft, blogLine, blogSans, blogSerif } from './tokens'
 
 // Trait posts only: the facet's items, score ranges, trait words and daily
@@ -6,7 +6,8 @@ import { blogCard, blogCharcoal, blogCharcoalSoft, blogLine, blogSans, blogSerif
 // report uses). Server-rendered, plain semantic HTML.
 export default function FacetReferenceBlock({ facetId, accent }: { facetId: string; accent: string }) {
   const ref = getFacetReference(facetId)
-  if (!ref) return null
+  // Facets withheld from public pages (FACETS_NOT_DESCRIBED_PUBLICLY) show nothing.
+  if (!ref || !isDescribedPublicly(facetId)) return null
   const { label, domain, items, traitWords, thresholds, checkIn } = ref
   const headingId = `facet-reference-${facetId.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
