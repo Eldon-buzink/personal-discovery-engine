@@ -31,21 +31,18 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { format, addDays } from 'date-fns'
+import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { checkInOptionWord } from '@/lib/known/checkInOptions'
-import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
 import { computeWeeklyInsight, type WeeklyInsightResult } from '@/lib/known/weeklyInsight'
 import { computeRecentWeeksReport, type RecentWeeksReportResult } from '@/lib/known/recentWeeksReport'
-import { scopeToCurrentPeriod, computeDistribution, parseCheckInDate } from '@/lib/known/weekSummary'
+import { scopeToCurrentPeriod, computeDistribution } from '@/lib/known/weekSummary'
 import { compareStartToNowFromOptions, formatStartVsNow, type BandId } from '@/lib/known/startVsNow'
 import { selectRecentNotes, type CheckInNote } from '@/lib/known/checkInNotes'
 import { fetchClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { fetchBaseAssessmentBand } from '@/lib/known/baseAssessmentResult'
-import { WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
-import { formatWeekHeadline, formatDistribution } from '@/lib/known/reportCopy'
-import { type } from '@/lib/design/type'
+import { formatDistribution } from '@/lib/known/reportCopy'
+import { RecentNotes, WeekCallout, WeeksStrip, WindowCard } from '@/components/known/practice/PatternReportParts'
 
 interface ReportState {
   facetId: string
@@ -127,12 +124,9 @@ export default function PatternReportPage({ params }: { params: { activationId: 
 
   const { weekly, recent, startBand, notes } = state
   const label = facetDisplayLabel(state.facetId)
-  const weekLabel = `${format(weekly.weekStart, 'MMM d')} – ${format(addDays(weekly.weekStart, 6), 'MMM d')}`
   // "Your first 4 weeks" while still inside that first window since
-  // activation; once it closes, a plain rolling "Last 4 weeks" — anchored
-  // to when THIS facet's period started, not the calendar month (rework
-  // Part 4 — this used to be a hardcoded calendar-month name, which meant
-  // activating on the 28th produced a near-empty "October").
+  // activation; once it closes, a plain rolling "Last 4 weeks", anchored to
+  // when THIS facet's period started, not the calendar month.
   const windowLabel = recent.window.isFirstWindow ? 'Your first 4 weeks' : 'Last 4 weeks'
   const windowDateRange = `${format(recent.window.start, 'MMM d')} – ${format(recent.window.end, 'MMM d')}`
   const distributionLine = formatDistribution(state.facetId, computeDistribution(recent.checkIns))
@@ -151,105 +145,23 @@ export default function PatternReportPage({ params }: { params: { activationId: 
         </h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 8 }}>
-          <div>
-            <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
-              This week · {weekLabel}
-            </p>
-            <div style={{ padding: 18, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p className="font-display font-normal text-display-4 text-charcoal">
-                {formatWeekHeadline(state.facetId, weekly)}
-              </p>
-              {!weekly.summary.qualifies && weekly.summary.checkInCount > 0 && (
-                <p className="font-sans text-meta text-muted">
-                  {WEEKLY_CHECKIN_FLOOR - weekly.summary.checkInCount} more this week for a weekly read.
-                </p>
-              )}
-            </div>
-          </div>
+          <WeekCallout facetId={state.facetId} weekly={weekly} />
 
           <div>
             <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
               {windowLabel} · {windowDateRange}
             </p>
-            <div style={{ padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-              {distributionLine ? (
-                <>
-                  <p className="font-display font-normal text-display-4 text-charcoal">
-                    {distributionLine}
-                  </p>
-                  <p className="font-sans text-meta text-muted">
-                    Based on {recent.checkInCount} check-in{recent.checkInCount === 1 ? '' : 's'}.
-                  </p>
-                </>
-              ) : (
-                <p className="font-display font-normal text-display-4 text-charcoal">
-                  No check-ins logged in this window yet.
-                </p>
-              )}
-              {comparison && (
-                <p
-                  className="font-sans text-muted"
-                  style={{ ...type.meta, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}
-                >
-                  {formatStartVsNow(comparison, state.facetId)}
-                </p>
-              )}
-            </div>
-            <div className="flex" style={{ gap: 6 }}>
-              {recent.weeks.map((w, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1, padding: '8px 6px', borderRadius: 9, textAlign: 'center',
-                    border: w.qualifies ? '1px solid #DAD3C3' : '1px dashed #DAD3C3',
-                    background: w.qualifies ? '#FFFFFF' : 'transparent',
-                  }}
-                >
-                  <div className="font-sans text-meta text-muted" style={{ marginBottom: 3 }}>
-                    Wk {i + 1}
-                  </div>
-                  <div
-                    className="font-sans"
-                    style={w.qualifies
-                      ? { ...type.traitWord, fontSize: 13, color: '#262420' }
-                      : { ...type.meta }}
-                  >
-                    {w.qualifies
-                      ? w.lean.type === 'option'
-                        ? checkInOptionWord(state.facetId, w.lean.value)
-                        : w.lean.type === 'tie'
-                          ? 'Split'
-                          : ''
-                      : '—'}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WindowCard
+              distributionLine={distributionLine}
+              checkInCount={recent.checkInCount}
+              comparisonLine={comparison ? formatStartVsNow(comparison, state.facetId) : null}
+            />
+            <WeeksStrip facetId={state.facetId} weeks={recent.weeks} />
           </div>
 
-          {/* "What you wrote" (Part 3c) — check-in notes have always been
-              saved, never shown anywhere until now. Exactly as typed, no
-              editing or summarizing; hidden entirely when there's nothing
-              to show. */}
-          {notes.length > 0 && (
-            <div>
-              <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
-                What you wrote
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {notes.map((n) => (
-                  <div key={n.date} style={{ padding: '12px 14px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
-                    <p className="font-sans text-meta text-muted" style={{ marginBottom: 4 }}>
-                      {format(parseCheckInDate(n.date), 'MMM d')}
-                    </p>
-                    <p className="font-sans text-body text-charcoal-soft">
-                      {n.note}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* "What you wrote": check-in notes, exactly as typed; hidden
+              entirely when there's nothing to show. */}
+          <RecentNotes notes={notes} />
         </div>
 
         <p className="font-sans text-meta text-charcoal-soft" style={{ textAlign: 'center', padding: '28px 0 4px' }}>

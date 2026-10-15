@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,13 +17,9 @@ import {
 } from '@/lib/blobs'
 import FaqSection from './landing/FaqSection'
 import WhyDifferentSection from './landing/WhyDifferentSection'
-import WhenNear from './landing/WhenNear'
+import JourneySection from './landing/JourneySection'
 import { compareCSS, practiceCSS, faqCSS, finalCSS } from './landing/sectionStyles'
 import { css, type } from '@/lib/design/type'
-
-// "Your practice" phone frames (app/(site)/landing/): loaded only when the
-// section is near the viewport; WhenNear reserves their height meanwhile.
-const PracticePhoneScreens = dynamic(() => import('./landing/PracticePhoneScreens'), { ssr: false })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const sans  = "var(--font-body)"
@@ -1072,9 +1067,7 @@ export default function LandingPageClient() {
               <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
             </div>
 
-            <WhenNear className="practice-hold">
-              <PracticePhoneScreens />
-            </WhenNear>
+            <JourneySection />
 
             <div className="practice-cadence">
               <div><b>Weekly</b><p>A summary of what you logged.</p></div>

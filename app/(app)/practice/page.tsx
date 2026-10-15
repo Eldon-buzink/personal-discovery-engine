@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { FACET_DESCRIPTIONS, computeFacetScore } from '@/lib/known/scoring'
 import { orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import { facetDisplayLabel, MINI_ASSESSMENT_BAND_COPY, type MiniAssessmentBand, type MiniAssessmentFacet } from '@/lib/known/miniAssessmentScoring'
-import { directionalAccent, directionalSoft } from '@/lib/known/practiceTokens'
+import PracticeHomeCard from '@/components/known/practice/PracticeHomeCard'
 import { activateFacet } from '@/lib/known/facetActivationClient'
 import {
   fetchPracticeData,
@@ -312,108 +312,17 @@ export default function PracticeHomePage() {
                 const stage = stages.get(a.id)
                 const stageLine = stage ? formatStageCompact(stage) : null
                 return (
-                  <div
+                  <PracticeHomeCard
                     key={a.id}
-                    style={{
-                      padding: 18, borderRadius: 14, display: 'flex', flexDirection: 'column', gap: 10,
-                      border: showBadge ? `1.5px solid ${directionalAccent}` : '1px solid #E5E1D5',
-                      background: showBadge ? directionalSoft : '#FFFFFF',
-                    }}
-                  >
-                    {/* Review feedback: this used to be a solid-fill orange
-                        pill — the loudest thing on the card, competing with
-                        the facet name itself for the first thing a reader's
-                        eye lands on. A plain uppercase label matches how
-                        every other eyebrow in this app reads ("ACTIVE",
-                        "YOUR PROGRESS") — still distinguishable by color,
-                        no longer shouting. The card's own tinted
-                        background/border already carries the primary
-                        "this one's directional" signal. */}
-                    {showBadge && (
-                      <p className="font-sans text-meta text-muted">
-                        Directional · from mini-assessment
-                      </p>
-                    )}
-                    <Link href={`/practice/${a.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {/* The small dot that used to sit next to every active
-                          facet's name — directional or not — is gone: it
-                          never carried information distinct from the badge
-                          above and the card's own tint/border, just an
-                          unexplained mark (review feedback). */}
-                      <span className="font-display font-normal text-display-4 text-charcoal">
-                        {facetDisplayLabel(a.facet_id)}
-                      </span>
-                      <p className="font-sans text-body text-charcoal-soft">
-                        {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
-                      </p>
-                      {/* Compact ladder (rework Part 2) — same stage this
-                          facet's detail page shows, one line, so the card
-                          itself says where things stand without a click. */}
-                      {stageLine && (
-                        <p className="font-sans text-meta text-muted">
-                          {stageLine}
-                        </p>
-                      )}
-                    </Link>
-                    {showBadge && (
-                      <p
-                        className="font-sans text-meta"
-                        style={{ color: '#8a5a3d', paddingTop: 8, borderTop: '1px solid color-mix(in srgb, var(--accent-flag) 30%, transparent)' }}
-                      >
-                        Unlock the full assessment (€49) for a complete, non-directional read on this pattern.
-                      </p>
-                    )}
-                    {checkedInToday.has(a.id) ? (
-                      // Round 5 feedback: this used to always show the dark
-                      // "Check in today" button, even right after the user
-                      // had just checked in — no way to tell it had worked.
-                      // A distinct, non-clickable confirmed state (checking
-                      // back in again today isn't a thing the product
-                      // supports — check_ins is one row per day) closes
-                      // that loop.
-                      <div
-                        className="font-sans font-medium text-ui"
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                          textAlign: 'center', padding: 11, minHeight: 44, borderRadius: 8,
-                          border: '1px solid #DAD3C3', color: '#6b6659',
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 13l4 4L19 7" stroke="#6b6659" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Checked in today
-                      </div>
-                    ) : (
-                      <Link
-                        href={`/practice/${a.id}/checkin`}
-                        className="font-sans font-medium text-ui"
-                        style={{ display: 'block', textAlign: 'center', padding: 11, minHeight: 44, borderRadius: 8, background: '#262420', color: '#F7F4ED' }}
-                      >
-                        Check in today
-                      </Link>
-                    )}
-                    {/* Review feedback: weekly progress only ever showed up
-                        on a facet's own detail page — the homepage, where
-                        people actually land day to day, said nothing about
-                        it. Same quiet, count-based copy as facet detail;
-                        silent when there's nothing yet to report. */}
-                    {weeklyQualifies ? (
-                      <Link
-                        href={`/practice/${a.id}/report`}
-                        className="font-sans font-medium text-ui text-charcoal"
-                        style={{ textDecoration: 'underline', textAlign: 'center' }}
-                      >
-                        Your weekly read is ready
-                      </Link>
-                    ) : (
-                      weeklyProgress && (
-                        <p className="font-sans text-meta text-muted" style={{ textAlign: 'center' }}>
-                          {weeklyProgress}
-                        </p>
-                      )
-                    )}
-                  </div>
+                    facetId={a.facet_id}
+                    showBadge={showBadge}
+                    bodyCopy={directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
+                    stageLine={stageLine}
+                    checkedInToday={checkedInToday.has(a.id)}
+                    weeklyQualifies={weeklyQualifies}
+                    weeklyProgress={weeklyProgress}
+                    hrefs={{ detail: `/practice/${a.id}`, checkin: `/practice/${a.id}/checkin`, report: `/practice/${a.id}/report` }}
+                  />
                 )
               })}
             </div>

@@ -83,7 +83,13 @@ export const compareCSS = `
 export const practiceCSS = `
   /* Your practice */
   .practice-section{padding:0 0 90px;}
-  .practice-hold{min-height:600px;}
+  /* The journey example: three real practice components, no device
+     frames, the recap the largest. Stacked below 860px. */
+  .journey{max-width:1040px;margin:0 auto;}
+  .journey-example{${css.meta}text-align:center;margin:0 0 16px;}
+  .journey-grid{display:grid;grid-template-columns:0.95fr 0.9fr 1.3fr;gap:20px;align-items:start;}
+  .journey-step{background:${mkCard};border:1px solid ${mkLine};border-radius:18px;padding:18px;}
+  .journey-step-recap{display:flex;flex-direction:column;gap:16px;}
   .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
   .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
   .practice-cadence b{display:block;${css.display4}margin-bottom:6px;}
@@ -91,6 +97,7 @@ export const practiceCSS = `
   .practice-closing{${css.display4}text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:40px auto 0;}
   @media(max-width:860px){
     .practice-cadence{grid-template-columns:1fr;gap:18px;margin-top:36px;}
+    .journey-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;}
   }
   @media(max-width:640px){
     .practice-section{padding-bottom:60px;}

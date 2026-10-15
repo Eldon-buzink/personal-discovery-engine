@@ -14,7 +14,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { directionalAccent, selectedAccent, selectedSoft } from '@/lib/known/practiceTokens'
+import { directionalAccent } from '@/lib/known/practiceTokens'
+import CheckInAnswerRows from '@/components/known/practice/CheckInAnswerRows'
 import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
@@ -227,26 +228,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
           </p>
         </div>
 
-        <div className="flex flex-col gap-2.5">
-          {prompt.options.map((o) => {
-            const isSelected = selected === o.id
-            return (
-              <button
-                key={o.id}
-                onClick={() => setSelected(o.id)}
-                className="font-sans text-charcoal"
-                style={{
-                  textAlign: 'left', width: '100%', boxSizing: 'border-box', padding: '16px 18px',
-                  borderRadius: 12, cursor: 'pointer',
-                  border: `1.5px solid ${isSelected ? selectedAccent : '#DAD3C3'}`,
-                  background: isSelected ? selectedSoft : '#FFFFFF',
-                }}
-              >
-                <span style={{ ...type.body }}>{o.label}</span>
-              </button>
-            )
-          })}
-        </div>
+        <CheckInAnswerRows options={prompt.options} selected={selected} onSelect={setSelected} />
 
         <div>
           <label htmlFor="note" className="font-sans font-medium text-ui text-charcoal-soft" style={{ display: 'block', marginBottom: 8 }}>
