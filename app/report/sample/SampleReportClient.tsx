@@ -9,7 +9,7 @@ import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 import { type } from '@/lib/design/type'
-import EvidencePanel from '@/components/known/EvidencePanel'
+import EvidenceDialog from '@/components/known/EvidenceDialog'
 import { sampleEvidencePanel } from '@/lib/known/sampleEvidence'
 
 // Static example report shown behind the landing page's "See an example
@@ -138,7 +138,7 @@ export default function SampleReportClient() {
                   variant="ring1"
                   evidence={(() => {
                     const data = sampleEvidencePanel(activeFacet.facet)
-                    return data && <EvidencePanel key={activeFacet.facet} data={data} />
+                    return <EvidenceDialog key={activeFacet.facet} data={data} />
                   })()}
                 />
               </div>

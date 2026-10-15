@@ -33,6 +33,9 @@ export interface EvidencePanelData {
   // the answers the model received, in order (0 to 2 of them).
   answers: { text: string; answer: 'You agreed' | 'You disagreed' }[] | null
   itemCount: number
+  // A facet whose answers are never sent (Depression): the dialog shows only
+  // its title and the statement-count line.
+  sensitive: boolean
 }
 
 export function evidencePanelData(
@@ -51,7 +54,16 @@ export function evidencePanelData(
         answer: e.direction === 'agree' ? ('You agreed' as const) : ('You disagreed' as const),
       }))
     : null
-  return { words, direction, sentence, answers, itemCount: items.length }
+  return { words, direction, sentence, answers, itemCount: items.length, sensitive: !evidenceAllowed(facet) }
+}
+
+// Whether the card shows the "See what this is based on" button at all: for
+// a sensitive facet (title and count only), otherwise only when there are
+// answers to show (never for an older card, nor when every answer was
+// neutral).
+export function evidenceTriggerShown(data: EvidencePanelData | null): boolean {
+  if (!data) return false
+  return data.sensitive || (data.answers?.length ?? 0) > 0
 }
 
 // Heading for the answers part; matches how many there really are.

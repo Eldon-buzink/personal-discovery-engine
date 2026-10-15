@@ -11,7 +11,7 @@ import { evidenceSentence, relationshipSignature, winningRelationships, type Fir
 import { ring1ContentsAfter } from '@/lib/known/ring1Card'
 import { facetAnswers } from '@/lib/known/ring1Evidence'
 import { evidencePanelData } from '@/lib/known/evidencePanel'
-import EvidencePanel from '@/components/known/EvidencePanel'
+import EvidenceDialog from '@/components/known/EvidenceDialog'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
 import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
@@ -669,7 +669,7 @@ export default function ReportPage() {
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
 
-  // Evidence panel for the selected trait. Direction: the one the card was
+  // "See what this is based on" for the selected trait. Direction: the one the card was
   // written for (stored with it); otherwise from the score, same cut-offs.
   // Answers only for a card in the current format (body), whose request
   // carried them; older cards and never-sent facets show no answers.
@@ -989,7 +989,7 @@ export default function ReportPage() {
                         source={null}
                         variant="ring1"
                         insight={activeInsight}
-                        evidence={activeEvidence && <EvidencePanel key={activeFacet.facet} data={activeEvidence} />}
+                        evidence={<EvidenceDialog key={activeFacet.facet} data={activeEvidence} />}
                       />
                     ) : (
                       <PatternLoadingState

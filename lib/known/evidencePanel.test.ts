@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { answersHeading, evidencePanelData, itemCountLine } from './evidencePanel'
+import { answersHeading, evidencePanelData, evidenceTriggerShown, itemCountLine } from './evidencePanel'
 import { FACET_QUESTIONS, QUESTION_BY_ID } from './ring1-questions'
 import { evidenceFor, facetAnswers } from './ring1Evidence'
 import { facetTraitWords } from './scoring'
@@ -67,4 +67,25 @@ test('spectrum words, sentence and the meta line come from the code', () => {
   assert.equal(answersHeading(2), 'Two of your answers on this pattern')
   assert.equal(answersHeading(1), 'One of your answers on this pattern')
   assert.equal(evidencePanelData('Not a facet', 'high', new Map(), true), null)
+})
+
+test('slight answers (2 and 4) count, and read like any other agree/disagree', () => {
+  const items = FACET_QUESTIONS.get('Anxiety')!
+  const panel = evidencePanelData('Anxiety', 'mid', mapOf('Anxiety', [4, 3, 2, 3]), true)!
+  assert.deepEqual(panel.answers, [
+    { text: items[0].text, answer: 'You agreed' },
+    { text: items[2].text, answer: 'You disagreed' },
+  ])
+})
+
+test('trigger: sensitive facets yes (title and count only), otherwise only with answers', () => {
+  assert.equal(evidenceTriggerShown(null), false)
+  const dep = evidencePanelData('Depression', 'high', mapOf('Depression', [5, 5, 5, 5]), true)!
+  assert.equal(dep.sensitive, true)
+  assert.equal(evidenceTriggerShown(dep), true)
+  assert.equal(evidenceTriggerShown(evidencePanelData('Anxiety', 'high', mapOf('Anxiety', [5, 5, 5, 5]), false)), false)
+  assert.equal(evidenceTriggerShown(evidencePanelData('Anxiety', 'mid', mapOf('Anxiety', [3, 3, 3, 3]), true)), false)
+  const one = evidencePanelData('Anxiety', 'mid', mapOf('Anxiety', [3, 3, 4, 3]), true)!
+  assert.equal(one.sensitive, false)
+  assert.equal(evidenceTriggerShown(one), true)
 })
