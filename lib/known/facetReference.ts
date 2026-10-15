@@ -19,6 +19,16 @@ import { TRAIT_WORDS, TRAIT_WORD_THRESHOLDS } from './scoring'
 import { CHECK_IN_PROMPTS, type CheckInOption } from './checkInOptions'
 import { facetDisplayLabel } from './miniAssessmentScoring'
 
+// Facets whose items and trait words are not shown on public pages. Two of
+// Liberalism's four statements are political and one is religious, so public
+// pages show only its label with a neutral note. The questionnaire and the
+// report are unaffected. Remove a facet from this list to describe it publicly.
+export const FACETS_NOT_DESCRIBED_PUBLICLY: readonly string[] = ['Liberalism']
+
+export function isDescribedPublicly(facetId: string): boolean {
+  return !FACETS_NOT_DESCRIBED_PUBLICLY.includes(facetId)
+}
+
 export interface FacetReferenceItem {
   id: number
   text: string
