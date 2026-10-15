@@ -157,11 +157,10 @@ export function CheckInScreen({
   )
 }
 
-// fixture: the Self-Discipline example by default (home page); the
-// mini-assessment landing pages pass practiceFixtureFor(their facet).
-export default function PracticePhoneScreens({ fixture = landingPracticeFixture }: { fixture?: LandingPracticeFixture }) {
-  const fx = fixture
-  const data = useMemo(() => {
+// Every string the screens show, computed from the fixture by the same
+// lib/known functions the practice pages call.
+export function usePracticeExampleData(fx: LandingPracticeFixture) {
+  return useMemo(() => {
     const m = materializeFixture(fx)
     const prompt = getCheckInPrompt(fx.facetId)
     // Screen 1 is "before today's check-in"; screen 3 is right after it.
@@ -188,6 +187,150 @@ export default function PracticePhoneScreens({ fixture = landingPracticeFixture 
       notes: selectRecentNotes(m.after),
     }
   }, [fx])
+}
+
+// The practice home screen (mirrors app/(app)/practice/page.tsx). With
+// `standalone` it renders at full phone width without the phone row's
+// scale (the /practice/example page); same markup otherwise.
+export function HomeScreen({
+  standalone = false,
+  fixture = landingPracticeFixture,
+}: {
+  standalone?: boolean
+  fixture?: LandingPracticeFixture
+}) {
+  const fx = fixture
+  const data = usePracticeExampleData(fx)
+  const label = facetDisplayLabel(fx.facetId)
+  return (
+    <div className={standalone ? 'bg-cream' : 'pp-screen bg-cream'} style={{ padding: '44px 24px', ...(standalone ? { width: SCREEN_W } : {}) }}>
+      <div style={{ marginBottom: 24 }}>
+        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 4 }}>
+          Your practice
+        </p>
+        <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
+          What you&apos;re noticing
+        </h3>
+      </div>
+      <Eyebrow>Active</Eyebrow>
+      <div
+        style={{
+          padding: 18, borderRadius: 14, display: 'flex', flexDirection: 'column', gap: 10,
+          border: fx.directional ? `1.5px solid ${directionalAccent}` : '1px solid #E5E1D5',
+          background: fx.directional ? directionalSoft : '#FFFFFF',
+        }}
+      >
+        {fx.directional && (
+          <p className="font-sans font-semibold uppercase" style={{ fontSize: 11, letterSpacing: '0.04em', color: directionalAccent }}>
+            Directional · from mini-assessment
+          </p>
+        )}
+        <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>{label}</span>
+        <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>{data.bandCopy}</p>
+        <p className="font-sans text-muted" style={{ fontSize: 12 }}>{data.stageLine}</p>
+        <div
+          className="font-sans font-medium pp-checkin-btn"
+          style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+        >
+          Check in today
+        </div>
+        {data.weeklyBefore.summary.qualifies && (
+          <span className="font-sans" style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}>
+            Your weekly read is ready
+          </span>
+        )}
+      </div>
+      <div style={{ marginTop: 32, textAlign: 'center' }}>
+        <span className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
+          This quarter&apos;s review
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// The recap screen (mirrors [activationId]/report/page.tsx), right after
+// today's check-in. `standalone` as for HomeScreen.
+export function RecapScreen({
+  standalone = false,
+  fixture = landingPracticeFixture,
+}: {
+  standalone?: boolean
+  fixture?: LandingPracticeFixture
+}) {
+  const fx = fixture
+  const data = usePracticeExampleData(fx)
+  const label = facetDisplayLabel(fx.facetId)
+  return (
+    <div className={standalone ? 'bg-cream' : 'pp-screen bg-cream'} style={{ padding: '40px 24px', display: 'flex', flexDirection: 'column', gap: 8, ...(standalone ? { width: SCREEN_W } : {}) }}>
+      <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>Your report</p>
+      <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3, marginBottom: 4 }}>{label}</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
+        <div className="pp-fill" style={{ ['--d' as string]: '3.5s' }}>
+          <Eyebrow>This week · {data.weekLabel}</Eyebrow>
+          <div style={{ padding: 16, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}` }}>
+            <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>{data.weekHeadline}</p>
+          </div>
+        </div>
+        <div>
+          <div className="pp-fill" style={{ ['--d' as string]: '4.2s' }}>
+            <Eyebrow>{data.windowLabel} · {data.windowDateRange}</Eyebrow>
+            <div style={{ padding: 16, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+              <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>{data.distributionLine}</p>
+              <p className="font-sans text-muted" style={{ fontSize: 13 }}>Based on {data.recent.checkInCount} check-ins.</p>
+              <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}>
+                {data.comparisonLine}
+              </p>
+            </div>
+          </div>
+          <div className="flex" style={{ gap: 6 }}>
+            {data.recent.weeks.map((w, i) => (
+              <div
+                key={i}
+                className="pp-fill"
+                style={{
+                  ['--d' as string]: `${4.9 + i * 0.3}s`,
+                  flex: 1, padding: '8px 6px', borderRadius: 9, textAlign: 'center',
+                  border: w.qualifies ? '1px solid #DAD3C3' : '1px dashed #DAD3C3',
+                  background: w.qualifies ? '#FFFFFF' : 'transparent',
+                }}
+              >
+                <div className="font-sans text-muted" style={{ fontSize: 10, marginBottom: 3 }}>Wk {i + 1}</div>
+                <div className="font-sans" style={{ fontSize: 11, lineHeight: 1.25, color: w.qualifies ? '#262420' : '#ADA695', fontStyle: w.qualifies ? 'normal' : 'italic' }}>
+                  {w.qualifies
+                    ? w.lean.type === 'option' ? checkInOptionWord(fx.facetId, w.lean.value) : w.lean.type === 'tie' ? 'Split' : ''
+                    : '—'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {data.notes.length > 0 && (
+          <div className="pp-fill" style={{ ['--d' as string]: '6.2s' }}>
+            <Eyebrow>What you wrote</Eyebrow>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {data.notes.map((n) => (
+                <div key={n.date} style={{ padding: '10px 12px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
+                  <p className="font-sans text-muted" style={{ fontSize: 11, marginBottom: 3 }}>{format(parseCheckInDate(n.date), 'MMM d')}</p>
+                  <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.5 }}>{n.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '18px 0 0' }}>
+        No score. No verdict. Just what you noticed.
+      </p>
+    </div>
+  )
+}
+
+// fixture: the Self-Discipline example by default (home page); the
+// mini-assessment landing pages pass practiceFixtureFor(their facet).
+export default function PracticePhoneScreens({ fixture = landingPracticeFixture }: { fixture?: LandingPracticeFixture }) {
+  const fx = fixture
+  const data = usePracticeExampleData(fx)
 
   const rootRef = useRef<HTMLDivElement>(null)
   const [armed, setArmed] = useState(false)
@@ -219,49 +362,7 @@ export default function PracticePhoneScreens({ fixture = landingPracticeFixture 
         <div className="pp-col">
           <div className="pp-frame" aria-hidden="true">
             <span className="pp-example">Example</span>
-            <div className="pp-screen bg-cream" style={{ padding: '44px 24px' }}>
-              <div style={{ marginBottom: 24 }}>
-                <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 4 }}>
-                  Your practice
-                </p>
-                <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
-                  What you&apos;re noticing
-                </h3>
-              </div>
-              <Eyebrow>Active</Eyebrow>
-              <div
-                style={{
-                  padding: 18, borderRadius: 14, display: 'flex', flexDirection: 'column', gap: 10,
-                  border: fx.directional ? `1.5px solid ${directionalAccent}` : '1px solid #E5E1D5',
-                  background: fx.directional ? directionalSoft : '#FFFFFF',
-                }}
-              >
-                {fx.directional && (
-                  <p className="font-sans font-semibold uppercase" style={{ fontSize: 11, letterSpacing: '0.04em', color: directionalAccent }}>
-                    Directional · from mini-assessment
-                  </p>
-                )}
-                <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>{label}</span>
-                <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>{data.bandCopy}</p>
-                <p className="font-sans text-muted" style={{ fontSize: 12 }}>{data.stageLine}</p>
-                <div
-                  className="font-sans font-medium pp-checkin-btn"
-                  style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
-                >
-                  Check in today
-                </div>
-                {data.weeklyBefore.summary.qualifies && (
-                  <span className="font-sans" style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}>
-                    Your weekly read is ready
-                  </span>
-                )}
-              </div>
-              <div style={{ marginTop: 32, textAlign: 'center' }}>
-                <span className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
-                  This quarter&apos;s review
-                </span>
-              </div>
-            </div>
+            <HomeScreen fixture={fx} />
           </div>
           <p className="pp-caption"><b>Practice home</b></p>
         </div>
@@ -279,67 +380,7 @@ export default function PracticePhoneScreens({ fixture = landingPracticeFixture 
         <div className="pp-col">
           <div className="pp-frame" aria-hidden="true">
             <span className="pp-example">Example</span>
-            <div className="pp-screen bg-cream" style={{ padding: '40px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>Your report</p>
-              <h3 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3, marginBottom: 4 }}>{label}</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
-                <div className="pp-fill" style={{ ['--d' as string]: '3.5s' }}>
-                  <Eyebrow>This week · {data.weekLabel}</Eyebrow>
-                  <div style={{ padding: 16, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}` }}>
-                    <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>{data.weekHeadline}</p>
-                  </div>
-                </div>
-                <div>
-                  <div className="pp-fill" style={{ ['--d' as string]: '4.2s' }}>
-                    <Eyebrow>{data.windowLabel} · {data.windowDateRange}</Eyebrow>
-                    <div style={{ padding: 16, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-                      <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>{data.distributionLine}</p>
-                      <p className="font-sans text-muted" style={{ fontSize: 13 }}>Based on {data.recent.checkInCount} check-ins.</p>
-                      <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}>
-                        {data.comparisonLine}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex" style={{ gap: 6 }}>
-                    {data.recent.weeks.map((w, i) => (
-                      <div
-                        key={i}
-                        className="pp-fill"
-                        style={{
-                          ['--d' as string]: `${4.9 + i * 0.3}s`,
-                          flex: 1, padding: '8px 6px', borderRadius: 9, textAlign: 'center',
-                          border: w.qualifies ? '1px solid #DAD3C3' : '1px dashed #DAD3C3',
-                          background: w.qualifies ? '#FFFFFF' : 'transparent',
-                        }}
-                      >
-                        <div className="font-sans text-muted" style={{ fontSize: 10, marginBottom: 3 }}>Wk {i + 1}</div>
-                        <div className="font-sans" style={{ fontSize: 11, lineHeight: 1.25, color: w.qualifies ? '#262420' : '#ADA695', fontStyle: w.qualifies ? 'normal' : 'italic' }}>
-                          {w.qualifies
-                            ? w.lean.type === 'option' ? checkInOptionWord(fx.facetId, w.lean.value) : w.lean.type === 'tie' ? 'Split' : ''
-                            : '—'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {data.notes.length > 0 && (
-                  <div className="pp-fill" style={{ ['--d' as string]: '6.2s' }}>
-                    <Eyebrow>What you wrote</Eyebrow>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {data.notes.map((n) => (
-                        <div key={n.date} style={{ padding: '10px 12px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
-                          <p className="font-sans text-muted" style={{ fontSize: 11, marginBottom: 3 }}>{format(parseCheckInDate(n.date), 'MMM d')}</p>
-                          <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.5 }}>{n.note}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '18px 0 0' }}>
-                No score. No verdict. Just what you noticed.
-              </p>
-            </div>
+            <RecapScreen fixture={fx} />
           </div>
           <p className="pp-caption"><b>Recap</b></p>
         </div>
