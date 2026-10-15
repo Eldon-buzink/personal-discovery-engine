@@ -317,6 +317,7 @@ export function UnlockedContent({
   hideQuote = false,
   variant = 'branch',
   insight,
+  evidence,
 }: {
   traitWord: string
   content: PatternContent
@@ -338,6 +339,9 @@ export function UnlockedContent({
   // Ring 1 only, optional: a short muted paragraph between body and tags
   // (e.g. how this trait relates to another). Nothing renders when absent.
   insight?: string
+  // Ring 1 only, optional: the "See what this is based on" panel, rendered
+  // after the tags (the last thing on the card).
+  evidence?: React.ReactNode
 }) {
   if (variant === 'ring1') {
     const body = content.body ?? content.where_it_shows_up
@@ -396,6 +400,7 @@ export function UnlockedContent({
             </div>
           </>
         )}
+        {evidence}
       </div>
     )
   }

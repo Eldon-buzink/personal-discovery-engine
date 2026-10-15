@@ -40,9 +40,22 @@ function anchorTransform(anchor: 'left' | 'center' | 'right'): string {
   return 'translateX(-50%)'
 }
 
-export default function BandSpectrum({ facet, band }: { facet: MiniAssessmentFacet; band: MiniAssessmentBand }) {
+// labels: optional override for the three stop words (the report's
+// evidence panel passes the facet's trait words). Default: the
+// mini-assessment band words for `facet`.
+export default function BandSpectrum({ facet, band, labels }: {
+  facet?: MiniAssessmentFacet
+  band: MiniAssessmentBand
+  labels?: Record<MiniAssessmentBand, string>
+}) {
+  const word = (b: MiniAssessmentBand) => (labels ? labels[b] : facet ? checkInOptionWord(facet, b) : '')
   return (
-    <div className="w-full" style={{ maxWidth: 320 }}>
+    <div
+      className="w-full"
+      style={{ maxWidth: 320 }}
+      role="img"
+      aria-label={`${word('low')}, ${word('mid')}, ${word('high')}: marked at ${word(band)}`}
+    >
       <div className="relative w-full" style={{ height: 22, marginBottom: 12 }}>
         <div className="absolute bg-line" style={{ left: 11, right: 11, top: '50%', height: 1, transform: 'translateY(-50%)' }} />
         {BAND_ORDER.map((b) => {
@@ -58,13 +71,13 @@ export default function BandSpectrum({ facet, band }: { facet: MiniAssessmentFac
                 width: active ? 22 : 14,
                 height: active ? 22 : 14,
                 background: active ? '#262420' : '#F7F4ED',
-                border: `2px solid ${active ? '#262420' : '#8C8A83'}`,
+                border: `2px solid ${active ? '#262420' : 'var(--color-meta)'}`,
               }}
             />
           )
         })}
       </div>
-      <div className="relative w-full" style={{ height: 16 }}>
+      <div className="relative w-full" style={{ height: 20 }} aria-hidden="true">
         {BAND_ORDER.map((b) => (
           <span
             key={b}
@@ -72,12 +85,12 @@ export default function BandSpectrum({ facet, band }: { facet: MiniAssessmentFac
             style={{
               left: `${BAND_POSITION[b]}%`,
               transform: anchorTransform(BAND_ANCHOR[b]),
-              fontSize: 11,
-              color: b === band ? '#262420' : '#8C8A83',
+              fontSize: 'var(--text-meta)',
+              color: b === band ? '#262420' : 'var(--color-meta)',
               fontWeight: b === band ? 600 : 400,
             }}
           >
-            {checkInOptionWord(facet, b)}
+            {word(b)}
           </span>
         ))}
       </div>

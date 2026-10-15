@@ -10,6 +10,8 @@ import { generateRing1Copy, generateRelationshipInsight } from '@/app/actions/ge
 import { evidenceSentence, relationshipSignature, winningRelationships, type FiredRelationship } from '@/lib/known/relationships'
 import { ring1ContentsAfter } from '@/lib/known/ring1Card'
 import { facetAnswers } from '@/lib/known/ring1Evidence'
+import { evidencePanelData } from '@/lib/known/evidencePanel'
+import EvidencePanel from '@/components/known/EvidencePanel'
 import { suggestNextBranch, suggestQualifyingBranches } from '@/lib/known/branchSuggestion'
 import type { Branch, BranchSuggestion, QualifyingBranch } from '@/lib/known/branchSuggestion'
 import { fetchIsPaid, isRevealCapped } from '@/lib/known/paywall'
@@ -423,6 +425,9 @@ export default function ReportPage() {
   // activeIdx is a position in strength order (strongest first), not an index into facets.
   const [activeIdx, setActiveIdx] = useState(0)
   const [facetScores, setFacetScores] = useState<Record<string, number | null>>({})
+  // The browser's own answers (known_session.responses), for the evidence
+  // panel: the same answers each card's request took its evidence from.
+  const [responseMap, setResponseMap] = useState<Map<number, number>>(new Map())
 
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook).
@@ -496,6 +501,7 @@ export default function ReportPage() {
 
     const responses = Array.isArray(session.responses) ? session.responses : []
     const answeredMap = new Map<number, number>(responses.map((r) => [r.questionId, r.value]))
+    setResponseMap(answeredMap)
     const total = responses.length
     setTotalAnswered(total)
     setRing1Complete(total >= 120)
@@ -662,6 +668,19 @@ export default function ReportPage() {
   const activeHue = activeFacet
     ? userCuratedHue(`ring1-pattern-${activeFacet.traitWord.toLowerCase()}`, activeFacet.hueOffset)
     : 8
+
+  // Evidence panel for the selected trait. Direction: the one the card was
+  // written for (stored with it); otherwise from the score, same cut-offs.
+  // Answers only for a card in the current format (body), whose request
+  // carried them; older cards and never-sent facets show no answers.
+  const activeEvidence = (() => {
+    if (!activeFacet?.content) return null
+    const stored = ring1Entries.find((e) => e.facet === activeFacet.facet)?.scoreDirection
+    const score = facetScores[activeFacet.facet]
+    const direction = stored ?? (score == null ? null : score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low')
+    if (!direction) return null
+    return evidencePanelData(activeFacet.facet, direction, responseMap, !!activeFacet.content.body)
+  })()
 
   const completedBranches: Branch[] = [
     ...(envEntry    ? ['environment'   as Branch] : []),
@@ -975,6 +994,7 @@ export default function ReportPage() {
                         source={null}
                         variant="ring1"
                         insight={activeInsight}
+                        evidence={activeEvidence && <EvidencePanel key={activeFacet.facet} data={activeEvidence} />}
                       />
                     ) : (
                       <PatternLoadingState

@@ -9,6 +9,8 @@ import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 import { type } from '@/lib/design/type'
+import EvidencePanel from '@/components/known/EvidencePanel'
+import { sampleEvidencePanel } from '@/lib/known/sampleEvidence'
 
 // Static example report shown behind the landing page's "See an example
 // report" CTA. Reuses the real report page's presentational components
@@ -134,6 +136,10 @@ export default function SampleReportClient() {
                   subtitle={patternSubtitle(activeFacet.hueOffset)}
                   source={null}
                   variant="ring1"
+                  evidence={(() => {
+                    const data = sampleEvidencePanel(activeFacet.facet)
+                    return data && <EvidencePanel key={activeFacet.facet} data={data} />
+                  })()}
                 />
               </div>
             </TraitCarousel>
