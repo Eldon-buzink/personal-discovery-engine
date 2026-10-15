@@ -419,7 +419,7 @@ export default function PracticeHomePage() {
                     disabled={activatingFacet === facetId}
                     aria-label={`Activate ${reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}`}
                     className="font-sans"
-                    style={{ fontSize: 20, color: 'var(--color-meta)', fontWeight: 300, flexShrink: 0, minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ fontSize: 20, color: '#8C8A83', fontWeight: 300, flexShrink: 0, minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     +
                   </button>

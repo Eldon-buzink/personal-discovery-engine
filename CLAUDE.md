@@ -8,7 +8,7 @@
 - **trait-word**: Newsreader italic 600, only for the user's own trait word (blob labels, the pattern name). The blob label is 30px.
 - **body**: sans 16px, line-height 1.6.
 - **ui**: sans 14px medium, sentence case (buttons, chips, labels).
-- **meta**: sans 13px in the one meta grey, `#6B675F` (4.5:1 or better on every background).
+- **meta**: sans 13px in the muted grey, `#8C8A83` (`text-muted`). Colour tokens stay as they are on main.
 
 **Italic only for trait words.** No other italics: no italic headline tails, quotes, one-liners or notes.
 

@@ -26,12 +26,10 @@ const config: Config = {
         meta: ["var(--text-meta)", { lineHeight: "1.5" }],
       },
       colors: {
-        cream: "var(--color-bg)",
+        cream: "#F7F4ED",
         charcoal: "#262420",
         "charcoal-soft": "#56534D",
-        // One meta grey, 4.5:1 or better on every background (was #8C8A83, 3.15:1).
-        muted: "#6B675F",
-        meta: "#6B675F",
+        muted: "#8C8A83",
         "line": "#E5E1D5",
         accent: "#3D6B5C",
       },

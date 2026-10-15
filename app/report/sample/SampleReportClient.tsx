@@ -19,7 +19,7 @@ import { sampleEvidencePanel } from '@/lib/known/sampleEvidence'
 // identical to a real one — but with fixed illustrative content instead of
 // localStorage/Supabase-backed data, no paywall, and everything unlocked.
 
-const gray = '#6B675F' // the one meta grey (globals --color-meta)
+const gray = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal = '#262420'
 const cream = '#F7F4ED'

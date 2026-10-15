@@ -8,7 +8,7 @@ import { type } from '@/lib/design/type'
 // No color, no blob, no dot-on-line — confirmed this branch doesn't use either
 // existing visual language.
 
-const gray         = '#6B675F' // the one meta grey (globals --color-meta)
+const gray         = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
 const line         = '#E5E1D5'

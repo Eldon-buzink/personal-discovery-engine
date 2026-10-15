@@ -21,8 +21,8 @@ const cream    = '#F5F2EB'
 const charcoal = '#1C1C1A'
 const c40      = 'rgba(28,28,26,0.4)'
 const c80      = 'rgba(28,28,26,0.8)'
-const sans     = 'var(--font-body)'
-const serif    = 'var(--font-display)'
+const sans     = 'var(--font-inter), system-ui, sans-serif'
+const serif    = 'var(--font-newsreader), Georgia, serif'
 
 const LAST_UPDATED = 'July 23, 2026'
 

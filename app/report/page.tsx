@@ -83,7 +83,7 @@ const line = '#E5E1D5'
 const reportCSS = `
   .report-cards-row{display:flex;gap:12px;}
   .report-sticky-bar{
-    position:fixed;bottom:0;left:0;right:0;min-height:64px;background:var(--color-bg);
+    position:fixed;bottom:0;left:0;right:0;min-height:64px;background:${cream};
     border-top:1px solid ${line};z-index:100;display:flex;align-items:center;
     justify-content:space-between;padding:14px 28px;gap:16px;
   }
@@ -341,7 +341,7 @@ function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; right
         <button style={{
           ...type.ui, color: charcoal,
           padding: '10px 20px', minHeight: 44, border: 'none', borderRadius: 100,
-          background: 'var(--color-bg)', cursor: 'pointer',
+          background: cream, cursor: 'pointer',
         }}>
           {rightLabel}
         </button>
@@ -951,12 +951,7 @@ export default function ReportPage() {
       <SiteNav />
       {stickyBar && <StickyBar {...stickyBar} />}
 
-      {/* tint-root + --tint-hue: theme-lab variant D only (a faint tint of
-          the selected trait's hue); without the lab it's the plain background. */}
-      <div
-        className="tint-root"
-        style={{ background: 'var(--color-bg)', minHeight: '100vh', paddingTop: NAV_H, ['--tint-hue' as string]: activeHue } as React.CSSProperties}
-      >
+      <div style={{ background: cream, minHeight: '100vh', paddingTop: NAV_H }}>
         <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 22px 64px' }}>
 
           {/* ── Intro ─────────────────────────────────────── */}

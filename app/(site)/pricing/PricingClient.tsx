@@ -31,8 +31,8 @@ const gray         = '#8C8A83'
 const line         = '#E5E1D5'
 const white        = '#FDFCF9'
 const teal         = '#3D6B5C'
-const sans         = 'var(--font-body)'
-const serif        = 'var(--font-display)'
+const sans         = 'var(--font-inter), system-ui, sans-serif'
+const serif        = 'var(--font-newsreader), Georgia, serif'
 
 const pricingCSS = `
   .pr-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }

@@ -60,18 +60,20 @@ export const type = {
     lineHeight: 1.5,
     fontWeight: 400,
     fontStyle: 'normal',
-    color: 'var(--color-meta)',
+    color: '#8C8A83',
     textTransform: 'none',
     letterSpacing: 'normal',
   } as CSSProperties,
 }
 
+// The palette as it is on main (tailwind.config.ts colors); not tokens of
+// their own, so nothing here can drift from it.
 export const color = {
-  bg: 'var(--color-bg)',
-  ink: 'var(--color-ink)',
-  body: 'var(--color-body)',
-  meta: 'var(--color-meta)',
-  accent: 'var(--color-accent)',
+  bg: '#F7F4ED',
+  ink: '#262420',
+  body: '#56534D',
+  meta: '#8C8A83',
+  accent: '#D85A30',
 }
 
 // The same tokens as CSS declarations, for components that style through a
@@ -85,5 +87,5 @@ export const css = {
   traitWord: 'font-family:var(--font-trait);font-style:italic;font-weight:600;',
   body: 'font-family:var(--font-body);font-size:var(--text-body);line-height:var(--leading-body);font-weight:400;font-style:normal;',
   ui: 'font-family:var(--font-body);font-size:var(--text-ui);line-height:1.4;font-weight:500;font-style:normal;text-transform:none;letter-spacing:normal;',
-  meta: 'font-family:var(--font-body);font-size:var(--text-meta);line-height:1.5;font-weight:400;font-style:normal;color:var(--color-meta);text-transform:none;letter-spacing:normal;',
+  meta: 'font-family:var(--font-body);font-size:var(--text-meta);line-height:1.5;font-weight:400;font-style:normal;color:#8C8A83;text-transform:none;letter-spacing:normal;',
 }

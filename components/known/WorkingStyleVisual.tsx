@@ -18,7 +18,7 @@ const AXIS_ROWS: { axis: WorkingStyleAxis; y: number; fill: string; stroke: stri
 const LEFT_X = 40
 const RIGHT_X = 360
 
-const gray         = '#6B675F' // the one meta grey (globals --color-meta)
+const gray         = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
 

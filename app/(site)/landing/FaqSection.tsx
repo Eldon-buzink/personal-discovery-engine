@@ -48,6 +48,7 @@ export default function FaqSection() {
       <div className="wrap">
         <div className="faq-cols">
           <div>
+            <div className="mk-eyebrow">FAQ</div>
             <h2 className="problem-heading">Common questions</h2>
           </div>
           <FaqAccordion items={FAQ_ITEMS} />

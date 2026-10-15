@@ -18,7 +18,6 @@ import { createCheckoutSession } from '@/app/actions/createCheckoutSession'
 import { getCheckoutSessionStatus } from '@/app/actions/getCheckoutSessionStatus'
 import { claimAnonymousSession, saveAnonymousSession } from '@/app/actions/anonymousSession'
 import { fetchIsPaid } from '@/lib/known/paywall'
-import { type } from '@/lib/design/type'
 
 declare global {
   interface Window {
@@ -360,10 +359,10 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       >
         {view === 'payment' && (
           <>
-            <p className="font-sans text-meta text-muted text-center" style={{ marginBottom: 10 }}>
+            <p className="font-sans font-semibold uppercase text-muted text-center" style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}>
               Unlock your full report
             </p>
-            <p className="font-display font-normal text-display-3 text-charcoal text-center" style={{ marginBottom: 20 }}>
+            <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 20 }}>
               You&apos;ve found {traitCount} {traitWord}. There&apos;s more underneath.
             </p>
 
@@ -373,14 +372,14 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
                   <span style={{
                     flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
                     background: '#EFEBDF', color: '#56534D',
-                    fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
+                    fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, fontWeight: 600,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginTop: 1,
                   }}>
                     {i + 1}
                   </span>
                   <span style={{
-                    fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.5, color: '#56534D',
+                    fontFamily: 'var(--font-inter), sans-serif', fontSize: 13.5, lineHeight: 1.5, color: '#56534D',
                   }}>
                     {item}
                   </span>
@@ -389,18 +388,18 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
             </ul>
 
             <div className="flex items-baseline justify-center gap-2" style={{ marginBottom: 22 }}>
-              <span className="font-display font-normal text-display-2 text-charcoal">€49</span>
-              <span className="font-sans text-meta text-muted">one payment, not a subscription</span>
+              <span className="font-serif text-charcoal" style={{ fontSize: 30, fontStyle: 'italic' }}>€49</span>
+              <span className="font-sans text-muted" style={{ fontSize: 12.5 }}>one payment, not a subscription</span>
             </div>
 
             <button
               onClick={handleUnlockClick}
               className="w-full font-sans font-medium text-cream bg-charcoal"
-              style={{ ...type.ui, borderRadius: 10, padding: 15, marginBottom: 12 }}
+              style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
             >
               Unlock the full picture →
             </button>
-            <button onClick={onClose} className="font-sans text-meta text-muted underline text-center w-full">
+            <button onClick={onClose} className="font-sans text-muted underline text-center w-full" style={{ fontSize: 12.5 }}>
               Not now
             </button>
           </>
@@ -408,10 +407,10 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
 
         {view === 'login' && (
           <>
-            <p className="font-sans text-meta text-muted text-center" style={{ marginBottom: 10 }}>
+            <p className="font-sans font-semibold uppercase text-muted text-center" style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}>
               {isReturning ? 'Welcome back' : 'One more step'}
             </p>
-            <p className="font-display font-normal text-display-3 text-charcoal text-center" style={{ marginBottom: 12 }}>
+            <p className="font-serif font-medium text-charcoal text-center" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 12 }}>
               {isReturning ? 'Sign in to continue' : 'Create an account to continue'}
             </p>
             <p className="font-sans text-charcoal-soft text-center" style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}>

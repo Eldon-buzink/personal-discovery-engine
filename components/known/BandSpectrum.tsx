@@ -71,7 +71,7 @@ export default function BandSpectrum({ facet, band, labels }: {
                 width: active ? 22 : 14,
                 height: active ? 22 : 14,
                 background: active ? '#262420' : '#F7F4ED',
-                border: `2px solid ${active ? '#262420' : 'var(--color-meta)'}`,
+                border: `2px solid ${active ? '#262420' : '#8C8A83'}`,
               }}
             />
           )
@@ -86,7 +86,7 @@ export default function BandSpectrum({ facet, band, labels }: {
               left: `${BAND_POSITION[b]}%`,
               transform: anchorTransform(BAND_ANCHOR[b]),
               fontSize: 'var(--text-meta)',
-              color: b === band ? '#262420' : 'var(--color-meta)',
+              color: b === band ? '#262420' : '#8C8A83',
               fontWeight: b === band ? 600 : 400,
             }}
           >

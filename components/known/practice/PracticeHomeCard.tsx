@@ -67,7 +67,7 @@ export default function PracticeHomeCard({
       {showBadge && showUnlockLine && (
         <p
           className="font-sans text-meta"
-          style={{ color: '#8a5a3d', paddingTop: 8, borderTop: '1px solid color-mix(in srgb, var(--accent-flag) 30%, transparent)' }}
+          style={{ color: '#8a5a3d', paddingTop: 8, borderTop: `1px solid ${directionalAccent}4d` }}
         >
           Unlock the full assessment (€49) for a complete, non-directional read on this pattern.
         </p>

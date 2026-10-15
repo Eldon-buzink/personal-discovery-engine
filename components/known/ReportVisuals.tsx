@@ -16,7 +16,7 @@ import { type } from '@/lib/design/type'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const gray = '#6B675F' // the one meta grey (globals --color-meta)
+const gray = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal = '#262420'
 const line = '#E5E1D5'
@@ -381,7 +381,7 @@ export function UnlockedContent({
 
         {insight && (
           <div key={insight} style={{ maxWidth: 420, margin: '14px auto 0', animation: 'fadeIn 0.6s ease both' }}>
-            <p style={{ ...type.body, color: 'var(--color-meta)', textAlign: 'center' }}>
+            <p style={{ ...type.body, color: '#8C8A83', textAlign: 'center' }}>
               {insight}
             </p>
           </div>

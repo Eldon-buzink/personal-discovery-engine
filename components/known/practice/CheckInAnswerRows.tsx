@@ -1,5 +1,5 @@
 import type { CheckInOption, CheckInOptionId } from '@/lib/known/checkInOptions'
-import { selectedAccent, selectedSoft } from '@/lib/known/practiceTokens'
+import { directionalAccent } from '@/lib/known/practiceTokens'
 import { type } from '@/lib/design/type'
 
 // The daily check-in's answer rows, presentational. With onSelect they are
@@ -16,8 +16,8 @@ export default function CheckInAnswerRows({
   const rowStyle = (isSelected: boolean) => ({
     textAlign: 'left' as const, width: '100%', boxSizing: 'border-box' as const, padding: '16px 18px',
     borderRadius: 12,
-    border: `1.5px solid ${isSelected ? selectedAccent : '#DAD3C3'}`,
-    background: isSelected ? selectedSoft : '#FFFFFF',
+    border: `1.5px solid ${isSelected ? directionalAccent : '#DAD3C3'}`,
+    background: isSelected ? '#FBEEE8' : '#FFFFFF',
   })
 
   if (!onSelect) {

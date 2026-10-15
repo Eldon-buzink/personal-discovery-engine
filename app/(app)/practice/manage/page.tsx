@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { selectedAccent } from '@/lib/known/practiceTokens'
+import { directionalAccent } from '@/lib/known/practiceTokens'
 import { activateFacet, deactivateFacet } from '@/lib/known/facetActivationClient'
 import { fetchPracticeData, isActive, type PracticeData } from '@/lib/known/practiceData'
 import { type } from '@/lib/design/type'
@@ -174,7 +174,7 @@ export default function ManagePracticePage() {
                   </div>
                   <div
                     className="font-sans text-meta"
-                    style={{ color: row.directional ? '#262420' : 'var(--color-meta)', fontWeight: row.directional ? 500 : 400 }}
+                    style={{ color: row.directional ? '#262420' : '#8C8A83', fontWeight: row.directional ? 500 : 400 }}
                   >
                     {row.sourceLabel}
                   </div>
@@ -186,7 +186,7 @@ export default function ManagePracticePage() {
                   style={{
                     position: 'relative', width: 40, height: 24, borderRadius: 12, border: 'none', flexShrink: 0,
                     cursor: 'pointer', padding: 0, opacity: isToggling ? 0.6 : 1,
-                    background: row.active ? selectedAccent : '#DAD3C3',
+                    background: row.active ? directionalAccent : '#DAD3C3',
                   }}
                 >
                   <span
