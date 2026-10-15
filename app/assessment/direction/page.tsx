@@ -75,8 +75,8 @@ const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
 const cream        = '#F7F4ED'
 const line         = '#E5E1D5'
-const sans         = 'var(--font-inter), system-ui, sans-serif'
-const serif        = 'var(--font-newsreader), serif'
+const sans         = 'var(--font-body)'
+const serif        = 'var(--font-display)'
 
 function f(delay: number, dur = 0.6): CSSProperties {
   return { animation: `fadeIn ${dur}s ease both`, animationDelay: `${delay}ms` }

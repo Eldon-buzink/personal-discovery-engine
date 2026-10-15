@@ -8,6 +8,7 @@ import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
 import { directionalAccent } from '@/lib/known/practiceTokens'
 import { activateFacet, deactivateFacet } from '@/lib/known/facetActivationClient'
 import { fetchPracticeData, isActive, type PracticeData } from '@/lib/known/practiceData'
+import { type } from '@/lib/design/type'
 
 interface ManageRow {
   facetId: string
@@ -117,7 +118,7 @@ export default function ManagePracticePage() {
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -131,13 +132,13 @@ export default function ManagePracticePage() {
           for why. No-op below 448px. */}
       <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+        <p className="font-sans text-meta text-muted">
           Manage your practice
         </p>
-        <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 23, lineHeight: 1.3 }}>
+        <h1 className="font-display font-normal text-display-2 text-charcoal">
           What&apos;s part of your check-ins?
         </h1>
-        <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 2 }}>
+        <p className="font-sans text-body text-charcoal-soft" style={{ paddingTop: 2 }}>
           We suggest a few, for focus. You decide what stays.
         </p>
       </div>
@@ -145,7 +146,7 @@ export default function ManagePracticePage() {
       {message && (
         <p
           className="font-sans"
-          style={{ margin: '16px 28px 0 28px', fontSize: 13, color: '#8a5a3d', padding: '10px 14px', borderRadius: 10, background: '#FBEEE8' }}
+          style={{ ...type.meta, margin: '16px 28px 0 28px', color: '#8a5a3d', padding: '10px 14px', borderRadius: 10, background: '#FBEEE8' }}
         >
           {message}
         </p>
@@ -153,7 +154,7 @@ export default function ManagePracticePage() {
 
       <div style={{ padding: '22px 28px 0 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {rows.length === 0 ? (
-          <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+          <p className="font-sans text-body text-muted">
             Nothing to manage yet — patterns will show up here once your report reveals them.
           </p>
         ) : (
@@ -168,12 +169,12 @@ export default function ManagePracticePage() {
                 }}
               >
                 <div>
-                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14, marginBottom: 2, lineHeight: 1.3 }}>
+                  <div className="font-sans font-medium text-ui text-charcoal" style={{ marginBottom: 2 }}>
                     {facetDisplayLabel(row.facetId)}
                   </div>
                   <div
-                    className="font-sans"
-                    style={{ fontSize: 12, color: row.directional ? directionalAccent : '#8a8375', fontWeight: row.directional ? 500 : 400 }}
+                    className="font-sans text-meta"
+                    style={{ color: row.directional ? '#262420' : 'var(--color-meta)', fontWeight: row.directional ? 500 : 400 }}
                   >
                     {row.sourceLabel}
                   </div>
@@ -205,7 +206,7 @@ export default function ManagePracticePage() {
         <Link
           href="/practice"
           className="font-sans font-medium"
-          style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+          style={{ ...type.ui, display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED' }}
         >
           Done
         </Link>

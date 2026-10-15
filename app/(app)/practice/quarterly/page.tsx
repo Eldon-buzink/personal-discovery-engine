@@ -29,6 +29,7 @@ import { computeFacetMilestone } from '@/lib/known/quarterlyReview'
 import { computePeriodWindow, type PeriodWindow } from '@/lib/known/periodWindow'
 import { isActive, type ActivationRow } from '@/lib/known/practiceData'
 import { COMPARISON_MIN_CHECKINS, MILESTONE_WINDOW_DAYS } from '@/lib/known/practiceConfig'
+import { type } from '@/lib/design/type'
 
 interface FacetMilestoneRow {
   facetId: string
@@ -109,7 +110,7 @@ export default function MilestoneReviewPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -125,36 +126,36 @@ export default function MilestoneReviewPage() {
           for why. No-op below 448px. */}
       <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+        <p className="font-sans text-meta text-muted">
           {windowEyebrow}
         </p>
-        <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 25, lineHeight: 1.3 }}>
+        <h1 className="font-display font-normal text-display-2 text-charcoal">
           {headline}
         </h1>
       </div>
 
       <div style={{ padding: '22px 28px 32px 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {windowDateRange && (
-          <p className="font-sans text-muted" style={{ fontSize: 13 }}>
+          <p className="font-sans text-meta text-muted">
             {windowDateRange}
           </p>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+          <p className="font-sans text-meta text-muted">
             Your patterns
           </p>
           {rows.length === 0 ? (
-            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+            <p className="font-sans text-body text-muted">
               Nothing active right now.
             </p>
           ) : (
             rows.map((r) => (
               <div key={r.facetId} style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF' }}>
-                <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14, marginBottom: 2 }}>
+                <div className="font-sans font-medium text-ui text-charcoal" style={{ marginBottom: 2 }}>
                   {facetDisplayLabel(r.facetId)}
                 </div>
-                <div className="font-sans text-muted" style={{ fontSize: 12 }}>
+                <div className="font-sans text-meta text-muted">
                   {r.checkInCount} check-in{r.checkInCount === 1 ? '' : 's'} · {r.statusText}
                 </div>
               </div>
@@ -162,29 +163,29 @@ export default function MilestoneReviewPage() {
           )}
         </div>
 
-        <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '4px 0' }}>
+        <p className="font-sans text-meta text-charcoal-soft" style={{ textAlign: 'center', padding: '4px 0' }}>
           No score. No verdict. Just what you noticed.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
-          <p className="font-serif text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+          <p className="font-display font-normal text-display-4 text-charcoal">
             Still feels right?
           </p>
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.55 }}>
+          <p className="font-sans text-body text-charcoal-soft">
             A good moment to check whether these are still the patterns worth your attention.
           </p>
           <div className="flex" style={{ gap: 10, paddingTop: 4 }}>
             <Link
               href="/practice"
               className="font-sans font-medium"
-              style={{ flex: 1, textAlign: 'center', padding: 13, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+              style={{ ...type.ui, flex: 1, textAlign: 'center', padding: 13, borderRadius: 10, background: '#262420', color: '#F7F4ED' }}
             >
               Keep going
             </Link>
             <Link
               href="/practice/manage"
               className="font-sans text-charcoal-soft"
-              style={{ flex: 1, textAlign: 'center', padding: 13, borderRadius: 10, border: '1px solid #DAD3C3', fontSize: 14 }}
+              style={{ ...type.ui, flex: 1, textAlign: 'center', padding: 13, borderRadius: 10, border: '1px solid #DAD3C3' }}
             >
               Make changes
             </Link>

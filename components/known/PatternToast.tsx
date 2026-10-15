@@ -112,7 +112,7 @@ export default function PatternToast({ record, revealedCount, revealCap, isPaid,
         {/* Labels */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
-            fontFamily: 'var(--font-newsreader), serif',
+            fontFamily: 'var(--font-display)',
             fontStyle: 'italic',
             fontWeight: 600,
             fontSize: 15,
@@ -122,7 +122,7 @@ export default function PatternToast({ record, revealedCount, revealCap, isPaid,
             {record.traitWord}
           </p>
           <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-body)',
             fontSize: 12,
             color: '#8C8A83',
             marginTop: 2,
@@ -135,7 +135,7 @@ export default function PatternToast({ record, revealedCount, revealCap, isPaid,
         <button
           onClick={(e) => { e.stopPropagation(); onSeeIt() }}
           style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-body)',
             fontSize: 13,
             fontWeight: 500,
             color: '#3D6B5C',

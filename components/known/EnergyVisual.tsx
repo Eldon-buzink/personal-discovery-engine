@@ -95,7 +95,7 @@ export default function EnergyVisual({
     return () => cancelAnimationFrame(raf)
   }, [fuelProfile, drainProfile])
 
-  const sans = 'var(--font-inter), system-ui, sans-serif'
+  const sans = 'var(--font-body)'
 
   const fuelLabel  = topFuel.label
   const drainLabel = topDrain.label

@@ -26,7 +26,7 @@ export default function ConsentBanner() {
   }
 
   const button: React.CSSProperties = {
-    fontFamily: 'var(--font-inter), system-ui, sans-serif', fontSize: 14, fontWeight: 500,
+    fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500,
     padding: '10px 18px', borderRadius: 999, cursor: 'pointer',
     background: '#F7F4ED', color: '#262420', border: '1px solid #F7F4ED', minWidth: 112,
   }
@@ -42,7 +42,7 @@ export default function ConsentBanner() {
         display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16,
       }}
     >
-      <p style={{ flex: '1 1 320px', margin: 0, fontFamily: 'var(--font-inter), system-ui, sans-serif', fontSize: 14, lineHeight: 1.55 }}>
+      <p style={{ flex: '1 1 320px', margin: 0, fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.55 }}>
         Can we measure our ads? We&apos;d use Meta and Pinterest to see which ads bring people here.
         It stays off unless you say yes, and you can change it any time.{' '}
         <Link href="/privacy" style={{ color: '#F7F4ED', textDecoration: 'underline' }}>Privacy</Link>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useMemo, useRef } from 'react'
+import { type } from '@/lib/design/type'
 
 // ── Blob engine (self-contained, matches report page implementation) ───────────
 
@@ -106,8 +107,7 @@ export default function RelationshipsVisual({
   const lineX1 = CX1 + 5
   const lineX2 = cx2  - 5
 
-  const sans  = 'var(--font-inter), system-ui, sans-serif'
-  const serif = 'var(--font-newsreader), serif'
+  const sans  = 'var(--font-body)'
 
   return (
     <svg
@@ -151,7 +151,7 @@ export default function RelationshipsVisual({
       <text
         x="200" y="55" textAnchor="middle"
         style={{
-          fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: '18px',
+          ...type.traitWord, fontSize: '18px',
           fill: `hsl(${hue},45%,28%)`,
         }}
       >
@@ -176,13 +176,13 @@ export default function RelationshipsVisual({
       />
       <text
         x={cx2} y={CY - 4} textAnchor="middle"
-        style={{ fontFamily: sans, fontSize: '10.5px', fill: `hsl(${hue},55%,30%)` }}
+        style={{ fontFamily: sans, fontSize: '12px', fill: `hsl(${hue},55%,30%)` }}
       >
         Someone
       </text>
       <text
         x={cx2} y={CY + 10} textAnchor="middle"
-        style={{ fontFamily: sans, fontSize: '10.5px', fill: `hsl(${hue},55%,30%)` }}
+        style={{ fontFamily: sans, fontSize: '12px', fill: `hsl(${hue},55%,30%)` }}
       >
         close
       </text>

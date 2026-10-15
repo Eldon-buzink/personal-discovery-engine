@@ -19,6 +19,7 @@ import { getCheckInPrompt, checkInOptionWord } from '@/lib/known/checkInOptions'
 import { todayLocalDateString } from '@/lib/known/checkInDate'
 import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 import { detectUnlockMoment, formatUnlockMoment, type UnlockMoment } from '@/lib/known/checkInUnlock'
+import { type } from '@/lib/design/type'
 
 export default function CheckInPage({ params }: { params: { activationId: string } }) {
   const router = useRouter()
@@ -134,7 +135,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
   if (isLoading || !facetId) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -154,10 +155,10 @@ export default function CheckInPage({ params }: { params: { activationId: string
               <path d="M5 13l4 4L19 7" stroke="#F7F4ED" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <p className="font-serif font-medium text-charcoal" style={{ fontSize: 20, lineHeight: 1.4, marginBottom: 6 }}>
+          <p className="font-display font-normal text-display-3 text-charcoal" style={{ marginBottom: 6 }}>
             Checked in
           </p>
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.5 }}>
+          <p className="font-sans text-body text-charcoal-soft">
             Logged as &ldquo;{checkInOptionWord(facetId, selected)}&rdquo; for {facetDisplayLabel(facetId)} today.
           </p>
           {/* Rework Part 5 — say so, once, exactly when this check-in is
@@ -167,13 +168,13 @@ export default function CheckInPage({ params }: { params: { activationId: string
               when nothing actually unlocked. */}
           {formatUnlockMoment(unlockMoment) && (
             <>
-              <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.5, marginTop: 14 }}>
+              <p className="font-sans text-body text-charcoal-soft" style={{ marginTop: 14 }}>
                 {formatUnlockMoment(unlockMoment)}
               </p>
               <Link
                 href={`/practice/${activationId}/report`}
                 className="font-sans font-medium"
-                style={{ display: 'inline-block', marginTop: 14, padding: '11px 20px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+                style={{ ...type.ui, display: 'inline-block', marginTop: 14, padding: '11px 20px', borderRadius: 8, background: '#262420', color: '#F7F4ED' }}
               >
                 See your report
               </Link>
@@ -196,22 +197,22 @@ export default function CheckInPage({ params }: { params: { activationId: string
           it did when this div was the root. */}
       <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div className="flex-1 flex flex-col" style={{ padding: '48px 28px 0 28px', gap: 28, overflowY: 'auto' }}>
-        <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+        <Link href="/practice" className="font-sans text-meta text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           ← Your practice
         </Link>
 
         <div className="flex items-center gap-2">
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: directionalAccent }} />
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+          <p className="font-sans text-meta text-muted">
             Today&apos;s check-in
           </p>
         </div>
 
         <div>
-          <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 28, lineHeight: 1.25, marginBottom: 12 }}>
+          <h1 className="font-display font-normal text-display-2 text-charcoal" style={{ marginBottom: 12 }}>
             {facetDisplayLabel(facetId)}
           </h1>
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.55 }}>
+          <p className="font-sans text-body text-charcoal-soft">
             {prompt.question}
           </p>
           {/* Review feedback: this screen had zero framing of what a
@@ -221,7 +222,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
               (Part 1 — same wording as facet detail and the activation
               banner); every return visit gets a shorter mechanism-only
               reminder so it doesn't repeat the pitch daily. */}
-          <p className="font-sans text-muted" style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 10 }}>
+          <p className="font-sans text-meta text-muted" style={{ marginTop: 10 }}>
             {isFirstCheckIn ? practicePurposeCopy(directional) : 'This becomes part of your report — not a score, just a record of what you noticed.'}
           </p>
         </div>
@@ -241,14 +242,14 @@ export default function CheckInPage({ params }: { params: { activationId: string
                   background: isSelected ? '#FBEEE8' : '#FFFFFF',
                 }}
               >
-                <span style={{ fontSize: 15, lineHeight: 1.4 }}>{o.label}</span>
+                <span style={{ ...type.body }}>{o.label}</span>
               </button>
             )
           })}
         </div>
 
         <div>
-          <label htmlFor="note" className="font-sans text-charcoal-soft" style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
+          <label htmlFor="note" className="font-sans font-medium text-ui text-charcoal-soft" style={{ display: 'block', marginBottom: 8 }}>
             Anything else worth noting? (optional)
           </label>
           <textarea
@@ -259,7 +260,7 @@ export default function CheckInPage({ params }: { params: { activationId: string
             className="font-sans text-charcoal"
             style={{
               width: '100%', boxSizing: 'border-box', minHeight: 64, padding: '12px 14px',
-              borderRadius: 10, border: '1px solid #DAD3C3', background: '#FFFFFF', fontSize: 14, resize: 'none',
+              ...type.body, borderRadius: 10, border: '1px solid #DAD3C3', background: '#FFFFFF', resize: 'none',
             }}
           />
         </div>
@@ -277,13 +278,13 @@ export default function CheckInPage({ params }: { params: { activationId: string
           className="font-sans font-medium"
           style={{
             display: 'block', textAlign: 'center', padding: 15, borderRadius: 10,
-            background: '#262420', color: '#F7F4ED', fontSize: 15,
+            ...type.ui, background: '#262420', color: '#F7F4ED',
             opacity: !selected || isSaving ? 0.5 : 1,
           }}
         >
           {isSaving ? 'Saving…' : 'Save check-in'}
         </button>
-        <Link href="/practice" className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>
+        <Link href="/practice" className="font-sans text-meta text-muted" style={{ display: 'block', textAlign: 'center', padding: 8 }}>
           Skip today
         </Link>
       </div>

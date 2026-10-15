@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
+import { type } from '@/lib/design/type'
 import type { PatternContentEntry } from '@/lib/known/types'
 import { generateRing1Copy, generateRelationshipInsight } from '@/app/actions/generatePatternCopy'
 import { evidenceSentence, relationshipSignature, winningRelationships, type FiredRelationship } from '@/lib/known/relationships'
@@ -66,14 +67,11 @@ function writeInsightAttempts(a: Record<string, number>) {
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const gray = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal = '#262420'
 const cream = '#F7F4ED'
 const line = '#E5E1D5'
 
-const sans = 'var(--font-inter), system-ui, sans-serif'
-const serif = 'var(--font-newsreader), serif'
 
 // ── Responsive CSS ────────────────────────────────────────────────────────────
 // "Go deeper"/"Worth trying" side-by-side on narrow screens squeezes each
@@ -106,10 +104,10 @@ function PatternLoadingState({ traitWord, isLoading, failed = false, onRetry }: 
 }) {
   return (
     <div style={{ textAlign: 'center', marginTop: 28 }}>
-      <h2 style={{ fontFamily: serif, fontSize: 25, fontWeight: 600, color: charcoal, margin: '0 0 12px' }}>
+      <h2 style={{ ...type.traitWord, color: charcoal, margin: '0 0 12px' }}>
         {traitWord}
       </h2>
-      <p style={{ fontFamily: sans, fontSize: 13.5, color: gray, lineHeight: 1.6 }}>
+      <p style={{ ...type.body, color: charcoalSoft }}>
         {failed
           ? "We couldn't write this one just now. Your result is saved and we'll try again on your report."
           : isLoading ? 'Loading your pattern…' : 'Still loading your pattern. Try refreshing in a moment.'}
@@ -118,8 +116,8 @@ function PatternLoadingState({ traitWord, isLoading, failed = false, onRetry }: 
         <button
           onClick={onRetry}
           style={{
-            marginTop: 14, padding: '9px 20px', borderRadius: 100, border: `1px solid ${line}`,
-            background: 'white', color: charcoal, fontFamily: sans, fontSize: 13.5, cursor: 'pointer',
+            ...type.ui, marginTop: 14, padding: '9px 20px', minHeight: 44, borderRadius: 100, border: `1px solid ${line}`,
+            background: 'white', color: charcoal, cursor: 'pointer',
           }}
         >
           Retry
@@ -147,21 +145,18 @@ function EmptyReportState() {
         <AnimatedBlob seed={EMPTY_STATE_SEED} hueOffset={2} size={104} baseRadius={37} />
       </div>
 
-      <h2 style={{
-        fontFamily: serif, fontStyle: 'italic', fontWeight: 600, fontSize: 23,
-        color: charcoal, lineHeight: 1.35, margin: '20px 0 10px',
-      }}>
+      <h2 style={{ ...type.display3, color: charcoal, margin: '20px 0 10px' }}>
         This is where your patterns will live.
       </h2>
 
-      <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, maxWidth: 340, margin: '0 auto 26px' }}>
+      <p style={{ ...type.body, color: charcoalSoft, maxWidth: 340, margin: '0 auto 26px' }}>
         Nothing&apos;s surfaced yet — it only takes a handful of honest answers to see the first one.
       </p>
 
       <Link href="/assessment">
         <button style={{
           background: charcoal, color: cream, borderRadius: 9999, border: 'none',
-          padding: '14px 28px', fontFamily: sans, fontSize: 14.5, fontWeight: 500, cursor: 'pointer',
+          ...type.ui, padding: '14px 28px', minHeight: 44, cursor: 'pointer',
         }}>
           Start the assessment
         </button>
@@ -172,13 +167,15 @@ function EmptyReportState() {
 
 // ── Section dividers ──────────────────────────────────────────────────────────
 
-function SectionDivider({ marker, body }: { marker: string; body: string }) {
+function SectionDivider({ marker, body }: { marker?: string; body: string }) {
   return (
     <div style={{ borderTop: `1px solid ${line}`, padding: '44px 0 28px', marginTop: 40, textAlign: 'center' }}>
-      <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: gray, fontWeight: 600, margin: '0 0 10px' }}>
-        {marker}
-      </p>
-      <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: charcoalSoft, maxWidth: 340, margin: '0 auto', lineHeight: 1.5 }}>
+      {marker && (
+        <p style={{ ...type.meta, margin: '0 0 10px' }}>
+          {marker}
+        </p>
+      )}
+      <p style={{ ...type.body, color: charcoalSoft, maxWidth: 360, margin: '0 auto' }}>
         {body}
       </p>
     </div>
@@ -199,10 +196,10 @@ function WhatsnextDivider() {
 function Ring1CompleteCard() {
   return (
     <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
+      <p style={{ ...type.display4, color: cream, margin: 0 }}>
         Fully mapped.
       </p>
-      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
+      <p style={{ ...type.body, color: 'rgba(247,244,237,0.85)', marginTop: 8 }}>
         {"You've answered all 120 questions. Your full pattern is mapped."}
       </p>
     </div>
@@ -216,16 +213,16 @@ function PracticeCard({ isAuthenticated }: { isAuthenticated: boolean }) {
   const [authOpen, setAuthOpen] = useState(false)
   return (
     <div style={{ background: 'white', border: `1px solid ${line}`, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: charcoal, margin: 0, lineHeight: 1.3 }}>
+      <p style={{ ...type.display4, color: charcoal, margin: 0 }}>
         Put it into practice
       </p>
-      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoalSoft, marginTop: 8 }}>
+      <p style={{ ...type.body, color: charcoalSoft, marginTop: 8 }}>
         Pick a few traits to check in on for a moment each day, and see how they show up in your weeks.
       </p>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
         <button
           onClick={() => (isAuthenticated ? router.push('/practice') : setAuthOpen(true))}
-          style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}
+          style={{ ...type.ui, background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', minHeight: 44, border: 'none', cursor: 'pointer' }}
         >
           Go to your practice →
         </button>
@@ -244,14 +241,14 @@ function PracticeCard({ isAuthenticated }: { isAuthenticated: boolean }) {
 function ContinueRing1Card({ totalAnswered, onContinue }: { totalAnswered: number; onContinue: () => void }) {
   return (
     <div style={{ background: charcoal, borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-      <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: cream, margin: 0, lineHeight: 1.3 }}>
+      <p style={{ ...type.display4, color: cream, margin: 0 }}>
         Keep discovering
       </p>
-      <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: 'rgba(247,244,237,0.8)', marginTop: 8 }}>
+      <p style={{ ...type.body, color: 'rgba(247,244,237,0.85)', marginTop: 8 }}>
         {"You've answered"} {totalAnswered} of 120 questions. More patterns may still surface.
       </p>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-        <button onClick={onContinue} style={{ background: 'white', color: charcoal, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', fontFamily: sans }}>
+        <button onClick={onContinue} style={{ ...type.ui, background: 'white', color: charcoal, borderRadius: 8, padding: '10px 18px', minHeight: 44, border: 'none', cursor: 'pointer' }}>
           Continue →
         </button>
       </div>
@@ -293,22 +290,22 @@ function BranchSuggestionCard({
       boxShadow: '0 0 20px 2px hsla(175,65%,55%,0.25), 0 0 40px 4px hsla(205,65%,60%,0.15)',
     }}>
       <div style={{ background: 'white', borderRadius: 14, padding: '20px 22px', textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 11, textTransform: 'uppercase', color: gray, fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
+        <p style={{ ...type.meta, margin: '0 0 8px' }}>
           {branchLabel}
         </p>
-        <p style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: charcoal, margin: 0, lineHeight: 1.3 }}>
+        <p style={{ ...type.display4, color: charcoal, margin: 0 }}>
           There might be something here
         </p>
-        <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, lineHeight: 1.6, marginTop: 8 }}>
+        <p style={{ ...type.body, color: charcoalSoft, marginTop: 8 }}>
           {reason}
         </p>
         {hasExtra && (
-          <p style={{ fontFamily: sans, fontSize: 12, color: gray, marginTop: 10 }}>
+          <p style={{ ...type.meta, marginTop: 10 }}>
             {isPaid ? 'Also available' : 'Also unlocks'}: {extraBranchLabels!.join(', ')}.
           </p>
         )}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button onClick={onSelect} style={{ background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', fontSize: 13, fontFamily: sans, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
+          <button onClick={onSelect} style={{ ...type.ui, background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', minHeight: 44, border: 'none', cursor: 'pointer' }}>
             {ctaLabel}
           </button>
         </div>
@@ -322,7 +319,7 @@ function BranchSuggestionCard({
 function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; rightLabel: string; onSelect: () => void }) {
   return (
     <div className="report-sticky-bar">
-      <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: charcoalSoft, margin: 0, flex: 1, minWidth: 0 }}>
+      <p style={{ ...type.body, color: charcoalSoft, margin: 0, flex: 1, minWidth: 0 }}>
         {leftText}
       </p>
       <div
@@ -340,8 +337,8 @@ function StickyBar({ leftText, rightLabel, onSelect }: { leftText: string; right
         }}
       >
         <button style={{
-          fontFamily: sans, fontSize: 13, fontWeight: 500, color: charcoal,
-          padding: '10px 20px', border: 'none', borderRadius: 100,
+          ...type.ui, color: charcoal,
+          padding: '10px 20px', minHeight: 44, border: 'none', borderRadius: 100,
           background: cream, cursor: 'pointer',
         }}>
           {rightLabel}
@@ -377,15 +374,6 @@ const BRANCH_ROUTES: Record<Branch, string> = {
 type OptionalBranchKey = 'environment' | 'relationships' | 'energy' | 'working_style' | 'direction'
 type SectionKey = 'ring1' | OptionalBranchKey
 
-const SECTION_LABEL: Record<SectionKey, string> = {
-  ring1:         'Who you are',
-  environment:   'Where you thrive',
-  relationships: 'How I connect',
-  energy:        'Your energy',
-  working_style: 'How I work',
-  direction:     'Where this might lead',
-}
-
 // Every transition a user could actually hit. Ring 1 is always first, so ring1→X
 // covers every possible "first completed branch"; the remaining 20 cover every
 // ordered pair among the 5 optional branches — with 5 optional branches, at most
@@ -420,10 +408,8 @@ const TRANSITION_BODY: Record<string, string> = {
 
 function SectionTransition({ from, to }: { from: SectionKey; to: SectionKey }) {
   return (
-    <SectionDivider
-      marker={`${SECTION_LABEL[from]} → ${SECTION_LABEL[to]}`}
-      body={TRANSITION_BODY[`${from}→${to}`] ?? ''}
-    />
+    // No marker: the next section's own label already names where you are.
+    <SectionDivider body={TRANSITION_BODY[`${from}→${to}`] ?? ''} />
   )
 }
 
@@ -761,7 +747,7 @@ export default function ReportPage() {
 
     return (
       <section style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
           Where you thrive
         </p>
         <OrbitCluster
@@ -794,7 +780,7 @@ export default function ReportPage() {
 
     return (
       <section style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
           How I connect
         </p>
         <div style={{ width: '100%', maxWidth: 400, margin: '8px auto 0' }}>
@@ -835,7 +821,7 @@ export default function ReportPage() {
 
     return (
       <section style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
           Your energy
         </p>
         {energyEntry.content ? (
@@ -872,7 +858,7 @@ export default function ReportPage() {
 
     return (
       <section style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
           How I work
         </p>
         {wsEntry.content ? (
@@ -909,7 +895,7 @@ export default function ReportPage() {
 
     return (
       <section style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
           Where this might lead
         </p>
         {dirEntry.content ? (
@@ -951,13 +937,13 @@ export default function ReportPage() {
 
           {/* ── Intro ─────────────────────────────────────── */}
           <div style={{ padding: '36px 0 30px', textAlign: 'center' }}>
-            <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 12 }}>
+            <p style={{ ...type.meta, marginBottom: 12 }}>
               Your report
             </p>
-            <h1 style={{ fontFamily: serif, fontSize: 27, fontWeight: 500, lineHeight: 1.3, color: charcoal, margin: '0 0 12px' }}>
+            <h1 style={{ ...type.display2, color: charcoal, margin: '0 0 12px' }}>
               Everything found so far.
             </h1>
-            <p style={{ fontFamily: sans, fontSize: 13.5, color: charcoalSoft, maxWidth: 380, margin: '0 auto', lineHeight: 1.6 }}>
+            <p style={{ ...type.body, color: charcoalSoft, maxWidth: 380, margin: '0 auto' }}>
               All patterns surface here as you explore.
             </p>
           </div>
@@ -965,7 +951,7 @@ export default function ReportPage() {
           {/* ── Branch 1: Who you are (always first) ─────────── */}
           <section style={{ textAlign: 'center' }}>
             {isUnlocked && (
-              <p style={{ fontFamily: sans, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 600, marginBottom: 6, textAlign: 'center' }}>
+              <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
               Who you are
             </p>
             )}
@@ -1046,7 +1032,7 @@ export default function ReportPage() {
 
           {/* ── Report footer note ─────────────────────── */}
           <div style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
-            <p style={{ fontFamily: sans, fontSize: 11.5, color: gray }}>
+            <p style={{ ...type.meta }}>
               A living report — it grows as you keep exploring.
             </p>
           </div>

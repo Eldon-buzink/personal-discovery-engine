@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AXIS_POLES, type WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
+import { type } from '@/lib/design/type'
 
 // ── Layout: matches reference/known-full-flow.html's "Anchored pairs" section ──
 // viewBox 0 0 400 190. 3 horizontal axis lines (y=48/108/168), each with a dot
@@ -17,11 +18,9 @@ const AXIS_ROWS: { axis: WorkingStyleAxis; y: number; fill: string; stroke: stri
 const LEFT_X = 40
 const RIGHT_X = 360
 
-const gray         = '#8C8A83'
+const gray         = '#6B675F' // the one meta grey (globals --color-meta)
 const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
-const sans         = 'var(--font-inter), system-ui, sans-serif'
-const serif        = 'var(--font-newsreader), serif'
 
 export interface WorkingStyleAxisItem {
   axis:     WorkingStyleAxis
@@ -46,8 +45,8 @@ export default function WorkingStyleVisual({ items }: { items: WorkingStyleAxisI
             const isActive = row.axis === activeAxis
             return (
               <g key={row.axis}>
-                <text x={LEFT_X} y={row.y - 15} fontSize="11" fill={charcoalSoft}>{poles.left}</text>
-                <text x={RIGHT_X} y={row.y - 15} textAnchor="end" fontSize="11" fill={gray}>{poles.right}</text>
+                <text x={LEFT_X} y={row.y - 15} fontSize="12" fill={charcoalSoft} style={{ fontFamily: 'var(--font-body)' }}>{poles.left}</text>
+                <text x={RIGHT_X} y={row.y - 15} textAnchor="end" fontSize="12" fill={gray} style={{ fontFamily: 'var(--font-body)' }}>{poles.right}</text>
                 <line x1={LEFT_X} y1={row.y} x2={RIGHT_X} y2={row.y} stroke="#E5E1D5" strokeWidth="1" />
                 <circle
                   cx={cx} cy={row.y} r={row.radius}
@@ -65,28 +64,28 @@ export default function WorkingStyleVisual({ items }: { items: WorkingStyleAxisI
           gap used elsewhere in the report (Environment/Relationships use 20; Energy's
           own internal gap is tighter at 4, which reads as cramped — not matched here). */}
       <div style={{ textAlign: 'center', marginTop: 20 }}>
-        <h3 style={{ fontFamily: serif, fontSize: 21, fontWeight: 600, color: charcoal, margin: '0 0 6px' }}>
+        <h3 style={{ ...type.traitWord, fontSize: 'var(--text-display-3)', color: charcoal, margin: '0 0 6px' }}>
           {AXIS_DISPLAY_NAME[activeAxis]}
         </h3>
-        <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, lineHeight: 1.55, color: activeRow.stroke, maxWidth: 400, margin: '0 auto 6px' }}>
+        <p style={{ ...type.display4, color: activeRow.stroke, maxWidth: 400, margin: '0 auto 6px' }}>
           &ldquo;{activeItem?.quote ?? ''}&rdquo;
         </p>
-        <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 20px' }}>
+        <p style={{ ...type.meta, margin: '0 0 20px' }}>
           From your working style branch
         </p>
         <div style={{ margin: '0 0 4px' }}>
           <p style={{
-            fontFamily: sans, fontSize: 13, fontWeight: 600, margin: '0 0 8px',
+            ...type.ui, margin: '0 0 8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', display: 'inline-block', background: activeRow.stroke }} />
             Where this shows up
           </p>
-          <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, maxWidth: 420, margin: '0 auto' }}>
+          <p style={{ ...type.body, color: charcoalSoft, maxWidth: 420, margin: '0 auto' }}>
             {activeItem?.evidence ?? ''}
           </p>
         </div>
-        <p style={{ fontFamily: sans, fontSize: 12, color: gray, marginTop: 18 }}>
+        <p style={{ ...type.meta, marginTop: 18 }}>
           Tap a point above for more on that specific axis
         </p>
       </div>

@@ -162,7 +162,7 @@ function FindingPatternLoader() {
   return (
     <div style={{ textAlign: 'center', paddingTop: 32 }}>
       <p style={{
-        fontFamily: 'var(--font-newsreader), Georgia, serif',
+        fontFamily: 'var(--font-display)',
         fontStyle: 'italic',
         fontSize: 18,
         color: '#56534D',
@@ -172,7 +172,7 @@ function FindingPatternLoader() {
         Finding your pattern{dots}
       </p>
       <p style={{
-        fontFamily: 'var(--font-inter), system-ui, sans-serif',
+        fontFamily: 'var(--font-body)',
         fontSize: 13,
         color: '#8C8A83',
         margin: 0,

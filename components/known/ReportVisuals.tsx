@@ -12,16 +12,15 @@
 
 import { useEffect, useId, useMemo, useRef } from 'react'
 import type { PatternContent } from '@/lib/known/types'
+import { type } from '@/lib/design/type'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const gray = '#8C8A83'
+const gray = '#6B675F' // the one meta grey (globals --color-meta)
 const charcoalSoft = '#56534D'
 const charcoal = '#262420'
 const line = '#E5E1D5'
 
-const sans = 'var(--font-inter), system-ui, sans-serif'
-const serif = 'var(--font-newsreader), serif'
 
 // ── Shared types ──────────────────────────────────────────────────────────────
 
@@ -117,8 +116,7 @@ export function generateAnimatedBlobPath(
 export function TagPill({ label, hue = 8 }: { label: string; hue?: number }) {
   return (
     <span style={{
-      fontFamily: sans,
-      fontSize: 12.5,
+      ...type.ui,
       padding: '5px 12px',
       borderRadius: 14,
       border: `1px solid hsl(${hue},40%,75%)`,
@@ -227,7 +225,7 @@ export function OrbitCluster({
           width: isOrbit ? 30 : 24, height: isOrbit ? 30 : 24, borderRadius: '50%',
           background: charcoal, border: `${isOrbit ? 4 : 3}px solid #F7F4ED`, boxShadow: `0 0 0 1px ${line}`,
         }} />
-        <span style={{ fontFamily: sans, fontSize: 10.5, fontWeight: 600, color: charcoalSoft, marginTop: 6 }}>You</span>
+        <span style={{ ...type.meta, fontWeight: 600, color: charcoalSoft, marginTop: 6 }}>You</span>
       </div>
 
       {/* Blobs */}
@@ -284,8 +282,8 @@ export function OrbitCluster({
               left: `${(b.cx / 500) * 100}%`,
               top: `${topPct}%`,
               transform: isOrbit ? 'translate(-50%, -50%)' : 'translate(-50%, 0)',
-              fontFamily: serif, fontStyle: 'italic', fontWeight: 500,
-              fontSize: isOrbit ? (b.isActive ? 14 : 10.5) : 13,
+              ...type.traitWord,
+              fontSize: isOrbit ? (b.isActive ? 14 : 12) : 13,
               color: b.weak ? gray : `hsl(${b.hue},50%,26%)`,
               zIndex: 5, pointerEvents: 'none', textAlign: 'center',
             }}
@@ -299,7 +297,7 @@ export function OrbitCluster({
       {count === 0 && (
         <p style={{
           position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
-          fontFamily: serif, fontStyle: 'italic', fontSize: 12.5, color: gray,
+          ...type.meta,
           textAlign: 'center', width: 260, margin: 0, pointerEvents: 'none',
         }}>
           A subtle lean — not a strong signal either way
@@ -345,10 +343,10 @@ export function UnlockedContent({
     const body = content.body ?? content.where_it_shows_up
     return (
       <div style={{ textAlign: 'center' }}>
-        <h2 style={{ fontFamily: serif, fontSize: 25, fontWeight: 600, color: charcoal, margin: '0 0 2px', textAlign: 'center' }}>
+        <h2 style={{ ...type.traitWord, color: charcoal, margin: '0 0 2px', textAlign: 'center' }}>
           {traitWord}
         </h2>
-        <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
+        <p style={{ ...type.meta, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
           {subtitle}
         </p>
         {subtitleNote && (
@@ -358,20 +356,20 @@ export function UnlockedContent({
         )}
 
         <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
-          <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.5, color: charcoalSoft, textAlign: 'center' }}>
+          <p style={{ ...type.display4, color: charcoalSoft, textAlign: 'center' }}>
             {content.trait_quote}
           </p>
         </div>
 
         {source && (
-          <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 20px', textAlign: 'center' }}>
+          <p style={{ ...type.meta, margin: '0 0 20px', textAlign: 'center' }}>
             {source}
           </p>
         )}
 
         {body && (
           <div style={{ maxWidth: 420, margin: '0 auto 8px' }}>
-            <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
+            <p style={{ ...type.body, color: charcoalSoft, textAlign: 'center' }}>
               {body}
             </p>
           </div>
@@ -379,7 +377,7 @@ export function UnlockedContent({
 
         {insight && (
           <div key={insight} style={{ maxWidth: 420, margin: '14px auto 0', animation: 'fadeIn 0.6s ease both' }}>
-            <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.65, color: gray, textAlign: 'center' }}>
+            <p style={{ ...type.body, color: 'var(--color-meta)', textAlign: 'center' }}>
               {insight}
             </p>
           </div>
@@ -389,7 +387,7 @@ export function UnlockedContent({
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '26px 0 10px' }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-              <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+              <p style={{ ...type.ui, color: charcoal, margin: 0 }}>
                 How it tends to show up
               </p>
             </div>
@@ -406,18 +404,11 @@ export function UnlockedContent({
     <div style={{ textAlign: 'center' }}>
       {!hideQuote && (
         <>
-          <h2 style={{
-            fontFamily: serif,
-            fontSize: 25,
-            fontWeight: 600,
-            color: charcoal,
-            margin: '0 0 2px',
-            textAlign: 'center',
-          }}>
+          <h2 style={{ ...type.traitWord, color: charcoal, margin: '0 0 2px', textAlign: 'center' }}>
             {traitWord}
           </h2>
 
-          <p style={{ fontFamily: sans, fontSize: 13, color: gray, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
+          <p style={{ ...type.meta, marginBottom: subtitleNote ? 14 : 22, textAlign: 'center' }}>
             {subtitle}
           </p>
           {/* 2. The domain as a pill, same design as the tags */}
@@ -428,33 +419,26 @@ export function UnlockedContent({
           )}
 
           <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
-            <p style={{
-              fontFamily: serif,
-              fontStyle: 'italic',
-              fontSize: 17,
-              lineHeight: 1.5,
-              color: charcoalSoft,
-              textAlign: 'center',
-            }}>
+            <p style={{ ...type.display4, color: charcoalSoft, textAlign: 'center' }}>
               {content.trait_quote}
             </p>
           </div>
 
           {source && (
-            <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 24px', textAlign: 'center' }}>
+            <p style={{ ...type.meta, margin: '0 0 24px', textAlign: 'center' }}>
               {source}
             </p>
           )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-            <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+            <p style={{ ...type.ui, color: charcoal, margin: 0 }}>
               Where this shows up
             </p>
           </div>
 
           <div style={{ maxWidth: 420, margin: '0 auto', marginBottom: 16 }}>
-            <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, textAlign: 'center' }}>
+            <p style={{ ...type.body, color: charcoalSoft, textAlign: 'center' }}>
               {content.where_it_shows_up}
             </p>
           </div>
@@ -466,10 +450,10 @@ export function UnlockedContent({
           flex: 1, background: 'white', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
           display: 'flex', flexDirection: 'column', textAlign: 'left',
         }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
+          <p style={{ ...type.meta, margin: '0 0 10px', textAlign: 'left' }}>
             Go deeper
           </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: '0 0 14px', textAlign: 'left' }}>
+          <p style={{ ...type.body, color: charcoal, margin: '0 0 14px', textAlign: 'left' }}>
             {content.go_deeper}
           </p>
         </div>
@@ -478,10 +462,10 @@ export function UnlockedContent({
           flex: 1, background: '#F3F1EB', border: `1px solid ${line}`, borderRadius: 12, padding: 18,
           display: 'flex', flexDirection: 'column', textAlign: 'left',
         }}>
-          <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 10px', textAlign: 'left' }}>
+          <p style={{ ...type.meta, margin: '0 0 10px', textAlign: 'left' }}>
             Worth trying
           </p>
-          <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoal, margin: 0, textAlign: 'left' }}>
+          <p style={{ ...type.body, color: charcoal, margin: 0, textAlign: 'left' }}>
             {content.worth_trying}
           </p>
         </div>
@@ -490,7 +474,7 @@ export function UnlockedContent({
       {content.tags.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '26px 0 10px' }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: `hsl(${hue},55%,50%)`, flexShrink: 0 }} />
-          <p style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: charcoal, margin: 0 }}>
+          <p style={{ ...type.ui, color: charcoal, margin: 0 }}>
             {hideQuote ? 'Your characteristics' : `Your ${traitWord} characteristics`}
           </p>
         </div>

@@ -45,6 +45,7 @@ import { fetchClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResu
 import { fetchBaseAssessmentBand } from '@/lib/known/baseAssessmentResult'
 import { WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
 import { formatWeekHeadline, formatDistribution } from '@/lib/known/reportCopy'
+import { type } from '@/lib/design/type'
 
 interface ReportState {
   facetId: string
@@ -119,7 +120,7 @@ export default function PatternReportPage({ params }: { params: { activationId: 
   if (isLoading || !state) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -142,24 +143,24 @@ export default function PatternReportPage({ params }: { params: { activationId: 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
       <div className="w-full max-w-md" style={{ padding: '48px 28px 40px 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+        <p className="font-sans text-meta text-muted">
           Your report
         </p>
-        <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3, marginBottom: 8 }}>
+        <h1 className="font-display font-normal text-display-2 text-charcoal" style={{ marginBottom: 8 }}>
           {label}
         </h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 8 }}>
           <div>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+            <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
               This week · {weekLabel}
             </p>
             <div style={{ padding: 18, borderRadius: 14, background: directionalSoft, border: `1.5px solid ${directionalAccent}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+              <p className="font-display font-normal text-display-4 text-charcoal">
                 {formatWeekHeadline(state.facetId, weekly)}
               </p>
               {!weekly.summary.qualifies && weekly.summary.checkInCount > 0 && (
-                <p className="font-sans text-muted" style={{ fontSize: 13 }}>
+                <p className="font-sans text-meta text-muted">
                   {WEEKLY_CHECKIN_FLOOR - weekly.summary.checkInCount} more this week for a weekly read.
                 </p>
               )}
@@ -167,28 +168,28 @@ export default function PatternReportPage({ params }: { params: { activationId: 
           </div>
 
           <div>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+            <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
               {windowLabel} · {windowDateRange}
             </p>
             <div style={{ padding: 18, borderRadius: 14, background: '#FFFFFF', border: '1px solid #E5E1D5', display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               {distributionLine ? (
                 <>
-                  <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+                  <p className="font-display font-normal text-display-4 text-charcoal">
                     {distributionLine}
                   </p>
-                  <p className="font-sans text-muted" style={{ fontSize: 13 }}>
+                  <p className="font-sans text-meta text-muted">
                     Based on {recent.checkInCount} check-in{recent.checkInCount === 1 ? '' : 's'}.
                   </p>
                 </>
               ) : (
-                <p className="font-serif font-medium text-charcoal" style={{ fontSize: 17, lineHeight: 1.4 }}>
+                <p className="font-display font-normal text-display-4 text-charcoal">
                   No check-ins logged in this window yet.
                 </p>
               )}
               {comparison && (
                 <p
                   className="font-sans text-muted"
-                  style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}
+                  style={{ ...type.meta, paddingTop: 4, borderTop: '1px solid #E5E1D5' }}
                 >
                   {formatStartVsNow(comparison, state.facetId)}
                 </p>
@@ -204,16 +205,14 @@ export default function PatternReportPage({ params }: { params: { activationId: 
                     background: w.qualifies ? '#FFFFFF' : 'transparent',
                   }}
                 >
-                  <div className="font-sans text-muted" style={{ fontSize: 10, marginBottom: 3 }}>
+                  <div className="font-sans text-meta text-muted" style={{ marginBottom: 3 }}>
                     Wk {i + 1}
                   </div>
                   <div
                     className="font-sans"
-                    style={{
-                      fontSize: 11, lineHeight: 1.25,
-                      color: w.qualifies ? '#262420' : '#ADA695',
-                      fontStyle: w.qualifies ? 'normal' : 'italic',
-                    }}
+                    style={w.qualifies
+                      ? { ...type.traitWord, fontSize: 13, color: '#262420' }
+                      : { ...type.meta }}
                   >
                     {w.qualifies
                       ? w.lean.type === 'option'
@@ -234,16 +233,16 @@ export default function PatternReportPage({ params }: { params: { activationId: 
               to show. */}
           {notes.length > 0 && (
             <div>
-              <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+              <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
                 What you wrote
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {notes.map((n) => (
                   <div key={n.date} style={{ padding: '12px 14px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
-                    <p className="font-sans text-muted" style={{ fontSize: 11, marginBottom: 4 }}>
+                    <p className="font-sans text-meta text-muted" style={{ marginBottom: 4 }}>
                       {format(parseCheckInDate(n.date), 'MMM d')}
                     </p>
-                    <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.5 }}>
+                    <p className="font-sans text-body text-charcoal-soft">
                       {n.note}
                     </p>
                   </div>
@@ -253,11 +252,11 @@ export default function PatternReportPage({ params }: { params: { activationId: 
           )}
         </div>
 
-        <p className="font-serif text-charcoal-soft" style={{ fontStyle: 'italic', fontSize: 14, textAlign: 'center', padding: '28px 0 4px' }}>
+        <p className="font-sans text-meta text-charcoal-soft" style={{ textAlign: 'center', padding: '28px 0 4px' }}>
           No score. No verdict. Just what you noticed.
         </p>
 
-        <Link href={`/practice/${activationId}`} className="font-sans text-muted" style={{ display: 'block', textAlign: 'center', padding: 8, fontSize: 13 }}>
+        <Link href={`/practice/${activationId}`} className="font-sans text-meta text-muted" style={{ display: 'block', textAlign: 'center', padding: 8 }}>
           Back to your pattern
         </Link>
       </div>

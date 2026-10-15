@@ -14,13 +14,13 @@ import { ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, use
 import { buildPointMotionProfile, generateAnimatedBlobPath, hashSeed } from '@/components/known/ReportVisuals'
 import { DOMAIN_LABELS } from '@/lib/known/traitOrder'
 
-const gray = '#8C8A83'
+const gray = '#6B675F' // the one meta grey (globals --color-meta)
 const charcoalSoft = '#56534D'
 const cream = '#F7F4ED'
 const line = '#E5E1D5'
 const coral = '#D85A30'
-const sans = 'var(--font-inter), system-ui, sans-serif'
-const serif = 'var(--font-newsreader), serif'
+const sans = 'var(--font-body)'
+const serif = 'var(--font-display)'
 
 export interface CarouselTrait {
   key: string
@@ -85,14 +85,14 @@ const css = `
     margin:calc(var(--blob) / -2) 0 0 calc(var(--blob) / -2);pointer-events:none;will-change:transform,opacity;}
   .tc-inner svg{display:block;width:100%;height:100%;overflow:visible;}
   .tc-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:${serif};font-style:italic;font-weight:500;font-size:22px;}
+    font-family:${serif};font-style:italic;font-weight:600;font-size:22px;}
   @media(max-width:560px){.tc-label{font-size:20px;}}
   .tc-ring{position:absolute;inset:14%;border-radius:50%;border:2px solid ${coral};opacity:0;}
   .tc-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:2px;}
   .tc-arrow{width:36px;height:36px;border-radius:50%;border:1px solid ${line};background:${cream};color:${charcoalSoft};
     cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;}
   .tc-arrow:disabled{opacity:.35;cursor:default;}
-  .tc-count{font-family:${sans};font-size:12px;color:${gray};min-width:58px;text-align:center;margin:0;}
+  .tc-count{font-family:${sans};font-size:var(--text-meta);color:${gray};min-width:58px;text-align:center;margin:0;}
   .tc-arrow:focus-visible,.tc-rel:focus-visible{outline:2px solid ${coral};outline-offset:2px;}
   .tc{--rel:72px;}
   @media(max-width:560px){.tc{--rel:64px;}}
@@ -113,7 +113,7 @@ const css = `
   .tc-rel .tc-rel-label{opacity:.75;transition:opacity .2s ease;}
   .tc-rel:hover .tc-rel-label,.tc-rel:focus-visible .tc-rel-label{opacity:1;}
   .tc-rel-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:${serif};font-style:italic;font-weight:500;font-size:11px;line-height:1.15;padding:0 2px;pointer-events:none;}
+    font-family:${serif};font-style:italic;font-weight:600;font-size:12px;line-height:1.15;padding:0 2px;pointer-events:none;}
   @media(prefers-reduced-motion:reduce){.tc-strip,.tc-rel svg,.tc-rel .tc-rel-label{transition:none;}.tc-rel-row,.tc-links path{animation:none;}.tc-links path{opacity:1;}}
 `
 

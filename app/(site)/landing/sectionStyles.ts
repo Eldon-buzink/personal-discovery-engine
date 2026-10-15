@@ -5,6 +5,7 @@
 // its own mobile overrides right after it — so both pages share one copy.
 
 import { mkCard, mkCharcoal, mkCharcoalSoft, mkCream, mkLine } from '@/app/start/startLandingShared'
+import { css } from '@/lib/design/type'
 
 export const compareCSS = `
   /* USP compare section */
@@ -48,18 +49,18 @@ export const compareCSS = `
      reads across. */
   .compare-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .compare-head .mk-eyebrow{margin-bottom:0;}
-  .compare-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:${mkCharcoal};color:${mkCream};display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Newsreader',serif;}
+  .compare-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:${mkCharcoal};display:flex;align-items:center;justify-content:center;${css.meta}color:${mkCream};}
   .compare-card.highlight .compare-num{background:${mkCream};color:${mkCharcoal};}
   /* 16px/1.6, matching .bento-card p/.problem-line — an existing size/
      line-height pair, not a new one — replacing the previous 13px/1.55. */
-  .compare-card p{font-size:16px;line-height:1.6;margin:0;color:${mkCharcoalSoft};}
+  .compare-card p{${css.body}margin:0;color:${mkCharcoalSoft};}
   .compare-card.highlight p{color:#C9C4B8;}
 
   /* grid-row:1/span 3, same as .compare-card — otherwise, now that
      .compare has 3 row tracks instead of 1, auto-placement would only put
      "vs" in row 1, not spanning the full height of the cards beside it.
      align-self:center then centers it within that full 3-row span. */
-  .compare-vs{grid-row:1/span 4;font-size:13px;color:${mkCharcoalSoft};text-align:center;align-self:center;}
+  .compare-vs{grid-row:1/span 4;${css.meta}text-align:center;align-self:center;}
   @media(max-width:860px){
     /* grid-row:auto (was 1/span 3) + display:block (was grid/subgrid) on
        both the cards and "vs" — single column now, so nothing should span
@@ -85,15 +86,14 @@ export const practiceCSS = `
   .practice-hold{min-height:600px;}
   .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
   .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
-  .practice-cadence b{display:block;font-family:'Newsreader',serif;font-weight:500;font-size:20px;margin-bottom:6px;}
-  .practice-cadence p{font-size:15px;line-height:1.6;color:${mkCharcoalSoft};margin:0;}
-  .practice-closing{font-family:'Newsreader',serif;font-style:italic;font-size:18px;line-height:1.5;text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:40px auto 0;}
+  .practice-cadence b{display:block;${css.display4}margin-bottom:6px;}
+  .practice-cadence p{${css.body}color:${mkCharcoalSoft};margin:0;}
+  .practice-closing{${css.display4}text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:40px auto 0;}
   @media(max-width:860px){
     .practice-cadence{grid-template-columns:1fr;gap:18px;margin-top:36px;}
   }
   @media(max-width:640px){
     .practice-section{padding-bottom:60px;}
-    .practice-closing{font-size:16px;}
   }
 `
 
@@ -121,7 +121,7 @@ export const faqCSS = `
   .faq-row{
     display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;
     width:100%;background:none;border:none;padding:0;margin:0;cursor:pointer;
-    font:inherit;font-size:15px;font-weight:600;color:${mkCharcoal};text-align:left;
+    ${css.display4}color:${mkCharcoal};text-align:left;
   }
   /* :focus-visible, not :focus — shows the outline for keyboard focus only,
      not on a mouse click, matching how focus rings work everywhere else a
@@ -130,7 +130,7 @@ export const faqCSS = `
   .faq-icon{font-size:18px;color:${mkCharcoalSoft};transition:transform 0.25s ease;flex-shrink:0;}
   .faq-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease;}
   .faq-body-inner{padding-top:10px;}
-  .faq-body-inner p{font-size:15px;line-height:1.6;color:${mkCharcoalSoft};margin:0 0 6px;text-align:left;}
+  .faq-body-inner p{${css.body}color:${mkCharcoalSoft};margin:0 0 6px;text-align:left;}
   @media(prefers-reduced-motion: reduce){
     .faq-body{transition:none;}
   }
@@ -148,17 +148,15 @@ export const finalCSS = `
   .final-card{max-width:900px;margin:0 auto;border-radius:32px;padding:80px 60px;text-align:center;position:relative;overflow:hidden;background:${mkCream};}
   .final-glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.55;z-index:0;}
   .final-content{position:relative;z-index:1;}
-  .final-card h2{font-family:'Newsreader',serif;font-size:38px;font-weight:500;max-width:560px;margin:0 auto 18px;line-height:1.2;}
-  .final-card h2 em{display:block;font-style:italic;font-weight:400;}
-  .final-card p{color:${mkCharcoalSoft};font-size:15px;max-width:480px;margin:0 auto 32px;}
+  .final-card h2{${css.display2}max-width:560px;margin:0 auto 18px;}
+  .final-card h2 em{display:block;font-style:normal;color:${mkCharcoalSoft};}
+  .final-card p{${css.body}color:${mkCharcoalSoft};max-width:480px;margin:0 auto 32px;}
   .final-cta-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
-  .final-link{color:${mkCharcoal};font-size:14px;text-decoration:underline;align-self:center;}
+  .final-link{${css.ui}color:${mkCharcoal};text-decoration:underline;align-self:center;}
   @media(max-width:860px){
     .final-card{padding:56px 28px;}
   }
   @media(max-width:640px){
     .final-outer{padding:56px 20px;}
-    .final-card h2{font-size:30px;}
-    .final-card p{font-size:14px;}
   }
 `

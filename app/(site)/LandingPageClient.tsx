@@ -20,14 +20,15 @@ import FaqSection from './landing/FaqSection'
 import WhyDifferentSection from './landing/WhyDifferentSection'
 import WhenNear from './landing/WhenNear'
 import { compareCSS, practiceCSS, faqCSS, finalCSS } from './landing/sectionStyles'
+import { css, type } from '@/lib/design/type'
 
 // "Your practice" phone frames (app/(site)/landing/): loaded only when the
 // section is near the viewport; WhenNear reserves their height meanwhile.
 const PracticePhoneScreens = dynamic(() => import('./landing/PracticePhoneScreens'), { ssr: false })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-export const sans  = "var(--font-inter), -apple-system, sans-serif"
-export const serif = "var(--font-newsreader), Georgia, serif"
+export const sans  = "var(--font-body)"
+export const serif = "var(--font-display)"
 
 // ─── Mockup-exact tokens (reference/bearing-landing-v6_2.html :root) ──────────
 // Every rebuilt section on this page uses these — confirmed with the user
@@ -59,18 +60,18 @@ const NS = 'http://www.w3.org/2000/svg'
 export const landingCSS = `
   .wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
   .section-head{max-width:600px;margin:0 auto 48px;text-align:center;}
-  .section-head h2{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0 0 14px;}
-  .section-head p{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .section-head h2{${css.display2}margin:0 0 14px;}
+  .section-head p{${css.body}color:${mkCharcoalSoft};margin:0;}
 
   /* Hero */
   .hero{padding:88px 32px 70px;}
   .hero-inner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;}
-  .hero h1{font-size:52px;line-height:1.08;font-weight:500;margin:0 0 22px;}
-  .hero h1 em{font-style:italic;font-weight:400;color:${mkCharcoalSoft};}
-  .hero p{font-size:17px;line-height:1.55;color:${mkCharcoalSoft};max-width:440px;margin:0 0 28px;}
+  .hero h1{${css.display1}margin:0 0 22px;}
+  .hero h1 em{font-style:normal;color:${mkCharcoalSoft};}
+  .hero p{${css.body}color:${mkCharcoalSoft};max-width:440px;margin:0 0 28px;}
   .hero-cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .hero-blob-wrap{position:relative;width:100%;aspect-ratio:520/500;overflow:visible;}
-  .trait-label-active{font-family:'Newsreader',Georgia,serif;font-style:italic;font-weight:600;font-size:30px;}
+  .trait-label-active{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:30px;}
 
   /* Problem section — heading left-aligned above three .step cards.
      .problem-heading kept as-is (copies .section-head h2's type values
@@ -88,12 +89,12 @@ export const landingCSS = `
      .wrap no longer hits that cap and both paddings stack. Matches
      .bento-section/.usp-section, which never had this extra padding. */
   .problem-section{padding:20px 0 90px;}
-  .problem-heading{font-family:'Newsreader',serif;font-size:34px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
+  .problem-heading{${css.display2}margin:0;text-align:left;}
   /* Same type values as .section-head p (15px/mkCharcoalSoft/1.6), but
      left-aligned instead of inheriting .section-head's own text-align:center
      — this section's heading has always been left-aligned, unlike every
      other section-head. */
-  .problem-subtitle{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:10px 0 0;text-align:left;}
+  .problem-subtitle{${css.body}color:${mkCharcoalSoft};margin:10px 0 0;text-align:left;}
   /* Root cause of the 1280px heading/grid misalignment: .how-steps (below,
      shared with How it works) carries its own max-width:1000px + margin:0
      auto, designed for sitting directly inside .how (no width cap of its
@@ -112,10 +113,9 @@ export const landingCSS = `
      start at the same y without reserving extra space for a wrap that
      never happens. */
   .problem-section .step{text-align:center;}
-  .problem-title{font-family:'Newsreader',serif;font-size:24px;font-weight:500;line-height:1.2;margin:0 0 8px;}
-  /* Serif italic, same body color as before (mkCharcoalSoft) — a quote now,
-     not plain body copy. */
-  .problem-line{font-family:'Newsreader',serif;font-style:italic;font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .problem-title{${css.display3}margin:0 0 8px;}
+  /* Body token, upright (italic is reserved for trait words). */
+  .problem-line{${css.body}color:${mkCharcoalSoft};margin:0;}
   /* 84px, up from 56px (x1.5, matching the visuals themselves) — the
      tallest of the three enlarged visuals (card 1's circles) now bottoms
      out at 72px, so this still clears it with room to spare.
@@ -127,9 +127,9 @@ export const landingCSS = `
   .bento-section{padding:40px 0 90px;}
   .bento{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;max-width:1120px;margin:0 auto 22px;}
   .bento-card{background:${mkCard};border:1px solid ${mkLine};border-radius:24px;padding:34px;overflow:visible;}
-  .bento-card h3{font-family:'Newsreader',serif;font-size:24px;font-weight:500;margin:0 0 8px;line-height:1.2;}
-  .bento-card p{font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
-  .bento-example-link{color:${mkCharcoal};font-size:14px;text-decoration:underline;margin-top:12px;}
+  .bento-card h3{${css.display3}margin:0 0 8px;}
+  .bento-card p{${css.body}color:${mkCharcoalSoft};margin:0;}
+  .bento-example-link{${css.ui}color:${mkCharcoal};text-decoration:underline;margin-top:12px;}
   .bento-col{display:flex;flex-direction:column;gap:22px;}
   .bento-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1120px;margin:0 auto;}
   .bento-cluster-canvas-wrap{position:relative;flex:1;min-height:280px;margin:16px -8px -8px;overflow:visible;}
@@ -146,9 +146,9 @@ export const landingCSS = `
   .how{padding:20px 32px 90px;}
   .how-steps{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
   .step{border:1px solid ${mkLine};border-radius:18px;padding:26px 22px;background:${mkCard};text-align:left;}
-  .step-mark{width:28px;height:28px;border-radius:50%;background:${mkCharcoal};color:${mkCream};display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:16px;font-family:'Newsreader',serif;}
-  .step h3{font-size:16px;font-weight:600;margin:0 0 8px;}
-  .step p{font-size:13.5px;line-height:1.55;color:${mkCharcoalSoft};margin:0;}
+  .step-mark{width:28px;height:28px;border-radius:50%;background:${mkCharcoal};display:flex;align-items:center;justify-content:center;margin-bottom:16px;${css.meta}color:${mkCream};}
+  .step h3{${css.display4}margin:0 0 8px;}
+  .step p{${css.body}color:${mkCharcoalSoft};margin:0;}
 
   /* Static 5-dot scale (step 1), restored from the earlier /home-v2 build
      (HomeV2Client.tsx's StaticDotScale/.hv2-dotscale*, renamed without the
@@ -161,7 +161,7 @@ export const landingCSS = `
   .dotscale-row{position:relative;display:flex;align-items:center;justify-content:space-between;}
   .dotscale-line{position:absolute;left:10px;right:10px;top:50%;transform:translateY(-50%);height:1px;background:${mkLine};}
   .dotscale-dot{position:relative;z-index:1;width:20px;height:20px;border-radius:50%;background:${mkCream};border:2px solid ${mkCharcoalSoft};}
-  .dotscale-labels{display:flex;justify-content:space-between;font-size:11px;color:${mkCharcoalSoft};}
+  .dotscale-labels{display:flex;justify-content:space-between;${css.meta}}
 
   /* Light-background pill (step 3), restored from the earlier /home-v2
      build's .hv2-benefit-pill — itself a recolor of .badge-pill (radius
@@ -170,21 +170,20 @@ export const landingCSS = `
      .bento-card.dark it was designed to sit on and would be invisible here.
      Font-size 13px matches .mk-microcopy, not a new value. */
   .step-pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-  .step-pill{font-size:13px;color:${mkCharcoalSoft};border:1px solid ${mkLine};border-radius:999px;padding:5px 12px;background:${mkCard};}
+  .step-pill{${css.ui}color:${mkCharcoalSoft};border:1px solid ${mkLine};border-radius:999px;padding:5px 12px;background:${mkCard};}
 
   /* Shared eyebrow/microcopy/btn — mockup's global .eyebrow/.microcopy/.btn,
      kept as classes (rather than inline per-instance) since they're reused
      across every rebuilt section here, same as the mockup. */
-  .mk-eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:${mkCharcoalSoft};margin-bottom:14px;}
-  .mk-microcopy{font-size:13px;color:${mkCharcoalSoft};}
-  .mk-btn{background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',var(--font-inter),sans-serif;}
+  .mk-eyebrow{${css.meta}margin-bottom:14px;}
+  .mk-microcopy{${css.meta}}
+  .mk-btn{${css.ui}background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:11px 20px;min-height:44px;cursor:pointer;}
 
   @media(max-width:860px){
     .hero-inner{grid-template-columns:1fr;}
     .bento{grid-template-columns:1fr;}
     .bento-row3{grid-template-columns:1fr;}
     .how-steps{grid-template-columns:1fr;}
-    .hero h1{font-size:38px;}
     /* .hero-blob-wrap's own margin-top:20px (removed) stacked on top of
        .hero-inner's grid gap:40px, double-spacing the text column and the
        blob once they're single-column here — the grid's own gap already
@@ -223,7 +222,6 @@ export const landingCSS = `
     .problem-section .problem-line{grid-column:2;grid-row:2;}
     .how{padding:10px 20px 60px;}
     .step{padding:22px 18px;}
-    .problem-title{font-size:20px;}
   }
 ${compareCSS}${practiceCSS}${faqCSS}${finalCSS}
 `
@@ -312,7 +310,7 @@ export function HeroBlobs() {
             whiteSpace: 'nowrap',
             ...(b.active
               ? { fontFamily: serif, fontStyle: 'italic' as const, fontWeight: 600, fontSize: 30, color: `hsl(${b.hue},45%,24%)` }
-              : { fontFamily: sans, fontSize: 13, fontWeight: 500, color: 'rgba(28,28,26,0.65)' }),
+              : { ...type.meta, fontWeight: 500, color: 'rgba(28,28,26,0.72)' }),
           }}
         >
           {b.word}
@@ -394,8 +392,8 @@ export function BentoCluster() {
               // this smaller visual. Missing here before; the two visuals'
               // active labels are the same "Deliberate" pattern name and
               // should read with the same weight.
-              ? { fontFamily: serif, fontStyle: 'italic' as const, fontWeight: 600, fontSize: 22, color: `hsl(${b.hue},45%,24%)` }
-              : { fontFamily: sans, fontSize: 12.5, fontWeight: 500, color: 'rgba(28,28,26,0.58)' }),
+              ? { ...type.traitWord, fontSize: 22, color: `hsl(${b.hue},45%,24%)` }
+              : { ...type.meta, fontWeight: 500, color: 'rgba(28,28,26,0.72)' }),
           }}
         >
           {b.word}
@@ -483,7 +481,7 @@ export function OrbitVisual() {
             top: `${(b.cy / ORBIT_VH) * 100}%`,
             transform: 'translate(-50%,-50%)',
             pointerEvents: 'none',
-            fontFamily: sans, fontSize: 13, fontWeight: 400, color: 'rgba(28,28,26,0.65)',
+            ...type.meta, color: 'rgba(28,28,26,0.72)',
           }}
         >
           {b.word}
@@ -496,7 +494,7 @@ export function OrbitVisual() {
           top: `${(ORBIT_CY / ORBIT_VH) * 100}%`,
           transform: 'translate(-50%,-50%)',
           pointerEvents: 'none',
-          fontFamily: sans, fontSize: 13, fontWeight: 500, color: `hsl(${youHue},45%,24%)`,
+          ...type.meta, fontWeight: 500, color: `hsl(${youHue},45%,24%)`,
         }}
       >
         You
@@ -630,11 +628,11 @@ export function ConnectVisual() {
     youC.setAttribute('cx', String(youX)); youC.setAttribute('cy', String(cy)); youC.setAttribute('r', String(r)); youC.setAttribute('fill', '#2A2720'); svg.appendChild(youC)
     const youT = document.createElementNS(NS, 'text') as SVGTextElement
     youT.setAttribute('x', String(youX)); youT.setAttribute('y', String(cy + 4)); youT.setAttribute('text-anchor', 'middle')
-    youT.setAttribute('font-family', 'Inter,sans-serif'); youT.setAttribute('font-size', '11'); youT.setAttribute('font-weight', '600'); youT.setAttribute('fill', 'rgba(245,242,235,0.9)')
+    youT.style.fontFamily = 'var(--font-body)'; youT.setAttribute('font-size', '12'); youT.setAttribute('font-weight', '600'); youT.setAttribute('fill', 'rgba(245,242,235,0.9)')
     youT.textContent = 'You'; svg.appendChild(youT)
     const themT = document.createElementNS(NS, 'text') as SVGTextElement
     themT.setAttribute('x', String(themX)); themT.setAttribute('y', String(cy)); themT.setAttribute('text-anchor', 'middle')
-    themT.setAttribute('font-family', 'Inter,sans-serif'); themT.setAttribute('font-size', '12'); themT.setAttribute('fill', `hsl(${hue},50%,38%)`)
+    themT.style.fontFamily = 'var(--font-body)'; themT.setAttribute('font-size', '12'); themT.setAttribute('fill', `hsl(${hue},50%,38%)`)
     // dy gap widened from the old 10px-font pairing (-6/13) to -7/16 to keep the
     // two lines from crowding at the larger 12px size — verified no overlap or
     // clipping against the r=38 circle at 375px/390px viewports.
@@ -836,7 +834,7 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
 
   return welcomeBack ? (
     <div>
-      <p style={{ fontFamily:sans, fontSize:13, color:mkCharcoalSoft, marginBottom:14 }}>
+      <p style={{ ...type.meta, marginBottom:14 }}>
         Welcome back — pick up where you left off.
       </p>
       {emailSent ? (
@@ -852,14 +850,14 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
             type="email" value={email} onChange={e => setEmail(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleSendCode() }}
             placeholder="Your email address"
-            style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, fontSize:14, fontFamily:sans, background:'white', outline:'none', color:mkCharcoal }}
+            style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, ...type.body, background:'white', outline:'none', color:mkCharcoal }}
           />
-          <button className="mk-btn" onClick={handleSendCode} disabled={emailLoading} style={{ padding:'12px 20px', fontSize:14, whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
+          <button className="mk-btn" onClick={handleSendCode} disabled={emailLoading} style={{ padding:'12px 20px', whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
             {emailLoading ? 'Sending…' : 'Email me a code'}
           </button>
         </div>
       )}
-      <button onClick={handleStartFresh} style={{ marginTop:14, background:'none', border:'none', cursor:'pointer', fontFamily:sans, fontSize:13, color:mkCharcoalSoft, padding:0, textDecoration:'underline', textUnderlineOffset:3 }}>
+      <button onClick={handleStartFresh} style={{ ...type.meta, marginTop:14, background:'none', border:'none', cursor:'pointer', padding:0, minHeight:44, textDecoration:'underline', textUnderlineOffset:3 }}>
         or start fresh
       </button>
     </div>
@@ -1009,14 +1007,12 @@ export default function LandingPageClient() {
         <section className="bento-section">
           <div className="wrap">
             <div className="section-head">
-              <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>What you get</div>
               <h2>See your patterns.<br />Go deeper where it matters.</h2>
             </div>
 
             <div className="bento">
               {/* Cluster card */}
               <div className="bento-card" style={{ display:'flex', flexDirection:'column' }}>
-                <div className="mk-eyebrow">YOUR PATTERNS</div>
                 <h3>Your patterns, made visible</h3>
                 <p>Each of your 30 facets gets a word and a description, so you see specific patterns instead of one label.</p>
                 <Link href="/report/sample" className="bento-example-link">See an example report</Link>
@@ -1028,7 +1024,6 @@ export default function LandingPageClient() {
               {/* Right column */}
               <div className="bento-col">
                 <div className="bento-card">
-                  <div className="mk-eyebrow">Where you thrive</div>
                   <h3>Your ideal environment</h3>
                   <div className="bento-orbit-wrap">
                     <OrbitVisual />
@@ -1036,7 +1031,6 @@ export default function LandingPageClient() {
                   <p style={{ marginTop:16 }}>The settings, structures, and contexts where you naturally do your best work.</p>
                 </div>
                 <div className="bento-card">
-                  <div className="mk-eyebrow">How you connect</div>
                   <h3>Relationship patterns</h3>
                   <div className="bento-connect-wrap">
                     <ConnectVisual />
@@ -1054,7 +1048,6 @@ export default function LandingPageClient() {
                 class. */}
             <div className="bento-row3" style={{ gridTemplateColumns: '1fr' }}>
               <div className="bento-card">
-                <div className="mk-eyebrow">What gives you energy</div>
                 <h3>The fuel behind your best days</h3>
                 <p>Specific activities, environments, and interactions that restore rather than deplete you.</p>
               </div>

@@ -149,7 +149,7 @@ export default function OnboardingClient() {
             <button
               onClick={handleStart}
               className="w-full bg-charcoal text-cream font-serif text-[18px] text-center py-4 rounded-[100px] transition-opacity hover:opacity-90 cursor-pointer"
-              style={{ fontFamily: 'var(--font-newsreader), serif' }}
+              style={{ fontFamily: 'var(--font-display)' }}
             >
               Start
             </button>

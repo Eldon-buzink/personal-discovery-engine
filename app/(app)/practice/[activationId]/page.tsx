@@ -51,6 +51,7 @@ import { practicePurposeCopy } from '@/lib/known/practicePurpose'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import BandSpectrum from '@/components/known/BandSpectrum'
 import PaywallModal from '@/components/known/PaywallModal'
+import { type } from '@/lib/design/type'
 
 interface DetailState {
   facetId: string
@@ -150,7 +151,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
   if (isLoading || !detail) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -189,20 +190,20 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
       <div className="w-full max-w-md flex flex-col">
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <Link href="/practice" className="font-sans text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 14 }}>
+          <Link href="/practice" className="font-sans text-meta text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
             ← Your practice
           </Link>
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 6 }}>
+          <p className="font-sans text-meta text-muted" style={{ marginBottom: 6 }}>
             {detail.checkInCount === 0 ? 'Just added' : 'Your pattern so far'}
           </p>
-          <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 27, lineHeight: 1.25 }}>
+          <h1 className="font-display font-normal text-display-2 text-charcoal">
             {label}
           </h1>
           {/* Purpose line (rework Part 1) — only on first visit, matching
               the "Just added" eyebrow above. A returning visitor who's
               already checking in doesn't need the pitch repeated. */}
           {detail.checkInCount === 0 && (
-            <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.55, marginTop: 10 }}>
+            <p className="font-sans text-body text-charcoal-soft" style={{ marginTop: 10 }}>
               {practicePurposeCopy(detail.directional)}
             </p>
           )}
@@ -211,18 +212,18 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         {detail.showBadge && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, borderRadius: 12, background: directionalAccent }}>
             <div className="flex items-center gap-2">
-              <span className="font-sans font-semibold" style={{ fontSize: 13, color: '#F7F4ED' }}>
+              <span className="font-sans font-medium text-ui" style={{ color: '#F7F4ED' }}>
                 Directional result
               </span>
             </div>
-            <p className="font-sans" style={{ fontSize: 13, lineHeight: 1.55, color: directionalSoft }}>
+            <p className="font-sans text-body" style={{ color: directionalSoft }}>
               This pattern came from a 6-question mini-assessment, not the full 30-facet report. Everything below is a
               starting read, not a confident one.
             </p>
             <button
               onClick={() => setPaywallOpen(true)}
               className="font-sans font-medium"
-              style={{ display: 'inline-flex', alignSelf: 'flex-start', padding: '9px 14px', borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 13, marginTop: 2 }}
+              style={{ ...type.ui, display: 'inline-flex', alignSelf: 'flex-start', padding: '9px 14px', borderRadius: 8, background: '#262420', color: '#F7F4ED', marginTop: 2 }}
             >
               Unlock the full assessment — €49
             </button>
@@ -247,11 +248,11 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             <div style={{ width: '100%', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
               <BandSpectrum facet={miniFacet} band={miniBand} />
             </div>
-            <p className="font-serif italic text-charcoal-soft" style={{ fontSize: 15, lineHeight: 1.6, marginBottom: insightText ? 10 : 0 }}>
+            <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: insightText ? 10 : 0 }}>
               {bandCopy}
             </p>
             {insightText && (
-              <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <p className="font-sans text-body text-charcoal-soft">
                 {insightText}
               </p>
             )}
@@ -259,7 +260,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         )}
 
         {!miniFacet && description && (
-          <p className="font-sans text-charcoal-soft" style={{ fontSize: 14, lineHeight: 1.6 }}>
+          <p className="font-sans text-body text-charcoal-soft">
             {description}
           </p>
         )}
@@ -271,10 +272,10 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
               border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
             }}
           >
-            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
+            <p className="font-display font-normal text-display-4 text-charcoal-soft">
               Nothing logged yet
             </p>
-            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+            <p className="font-sans text-meta text-muted">
               Your first check-in starts building this.
             </p>
           </div>
@@ -285,10 +286,10 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
               border: '1px dashed #DAD3C3', textAlign: 'center', alignItems: 'center',
             }}
           >
-            <p className="font-serif text-charcoal-soft" style={{ fontSize: 16 }}>
+            <p className="font-display font-normal text-display-4 text-charcoal-soft">
               {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
             </p>
-            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+            <p className="font-sans text-meta text-muted">
               This pattern isn&apos;t currently active, so no trend is being tracked.
             </p>
           </div>
@@ -315,16 +316,16 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
                     background: '#FFFFFF', border: '1px solid #E5E1D5',
                   }}
                 >
-                  <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+                  <p className="font-sans text-meta text-muted">
                     Step {stageResult.stepNumber} of 3
                   </p>
-                  <p className="font-serif font-medium text-charcoal" style={{ fontSize: 18, lineHeight: 1.3 }}>
+                  <p className="font-display font-normal text-display-4 text-charcoal">
                     {STAGE_LABEL[stageResult.stage]}
                   </p>
                   {progressLines && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {progressLines.map((line) => (
-                        <p key={line} className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                        <p key={line} className="font-sans text-meta text-muted">
                           {line}
                         </p>
                       ))}
@@ -341,22 +342,22 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
               }}
             >
               <div className="flex items-center justify-between">
-                <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.03em' }}>
+                <p className="font-sans text-meta text-muted">
                   Your progress
                 </p>
-                <p className="font-sans text-muted" style={{ fontSize: 12, fontStyle: 'italic' }}>
+                <p className="font-sans text-meta text-muted">
                   {detail.checkInCount} check-in{detail.checkInCount === 1 ? '' : 's'} logged
                 </p>
               </div>
-              <p className="font-serif font-medium text-charcoal" style={{ fontSize: 19, lineHeight: 1.45 }}>
+              <p className="font-display font-normal text-display-4 text-charcoal">
                 {formatMostRecent(detail.facetId, detail.trend)}
               </p>
               {weeklyProgress && (
-                <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                <p className="font-sans text-meta text-muted">
                   {weeklyProgress}
                 </p>
               )}
-              <Link href={`/practice/${activationId}/report`} className="font-sans" style={{ fontSize: 12.5, color: directionalAccent, textDecoration: 'underline' }}>
+              <Link href={`/practice/${activationId}/report`} className="font-sans font-medium text-ui" style={{ color: '#262420', textDecoration: 'underline' }}>
                 See your full report
               </Link>
             </div>
@@ -375,7 +376,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
               textAlign: 'center', padding: 15, borderRadius: 10,
-              border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 15,
+              ...type.ui, border: '1px solid #DAD3C3', color: '#6b6659',
             }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -387,7 +388,7 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
           <Link
             href={`/practice/${activationId}/checkin`}
             className="font-sans font-medium"
-            style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+            style={{ ...type.ui, display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED' }}
           >
             Check in today
           </Link>

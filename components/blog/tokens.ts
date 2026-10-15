@@ -19,8 +19,8 @@ export const blogHeroCardBg = '#FBF8F1'
 // darks for different dark surfaces.
 export const blogCardDark = 'hsl(30,10%,24%)'
 
-export const blogSans = "'Inter', var(--font-inter), sans-serif"
-export const blogSerif = "'Newsreader', var(--font-newsreader), serif"
+export const blogSans = "var(--font-body)"
+export const blogSerif = "var(--font-display)"
 
 // The 8 curated accent hues, as CSS custom-property-equivalent strings —
 // same hue numbers as lib/blog/theme.ts's BLOG_ACCENT_HUES (kept in sync

@@ -206,7 +206,7 @@ export default function PracticeHomePage() {
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading your practice…</p>
+        <p className="font-sans text-meta text-muted">Loading your practice…</p>
       </div>
     )
   }
@@ -217,27 +217,27 @@ export default function PracticeHomePage() {
     // load, never pushed. Non-gamified copy: no streak language, no guilt.
     return (
       <div className="min-h-screen bg-cream flex flex-col justify-center px-7" style={{ gap: 20 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+        <p className="font-sans text-meta text-muted">
           A quick check
         </p>
-        <p className="font-serif font-medium text-charcoal" style={{ fontSize: 22, lineHeight: 1.4 }}>
+        <p className="font-display font-normal text-display-3 text-charcoal">
           {facetDisplayLabel(nudgeTarget.facetId)} hasn&apos;t been landing lately.
         </p>
-        <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.55 }}>
+        <p className="font-sans text-body text-charcoal-soft">
           No pressure either way — just checking if this is still the right one to keep active.
         </p>
         <div className="flex flex-col" style={{ gap: 10, paddingTop: 8 }}>
           <button
             onClick={handleKeepNudgedFacetActive}
-            className="font-sans font-medium"
-            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+            className="font-sans font-medium text-ui"
+            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, background: '#262420', color: '#F7F4ED' }}
           >
             Keep it active
           </button>
           <Link
             href="/practice/manage"
-            className="font-sans text-charcoal-soft"
-            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, border: '1px solid #DAD3C3', fontSize: 14 }}
+            className="font-sans font-medium text-ui text-charcoal-soft"
+            style={{ display: 'block', textAlign: 'center', padding: 14, borderRadius: 10, border: '1px solid #DAD3C3' }}
           >
             Swap it for something else
           </Link>
@@ -256,17 +256,17 @@ export default function PracticeHomePage() {
       <div className="w-full max-w-md">
         <div className="flex items-start justify-between gap-3" style={{ marginBottom: 24 }}>
           <div>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 12, letterSpacing: '0.04em', marginBottom: 4 }}>
+            <p className="font-sans text-meta text-muted" style={{ marginBottom: 4 }}>
               Your practice
             </p>
-            <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 26, lineHeight: 1.3 }}>
+            <h1 className="font-display font-normal text-display-2 text-charcoal">
               What you&apos;re noticing
             </h1>
-            <p className="font-sans text-charcoal-soft" style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 10 }}>
+            <p className="font-sans text-body text-charcoal-soft" style={{ marginTop: 10 }}>
               Your practice is where you work with what your report found. Pick up to four traits, check in on
               them for a moment each day, and see how they move over the weeks.
             </p>
-            <p className="font-sans text-muted" style={{ fontSize: 12, lineHeight: 1.5, marginTop: 8 }}>
+            <p className="font-sans text-meta text-muted" style={{ marginTop: 8 }}>
               Pick a trait · Check in daily · Weekly read, 4-week report, quarterly review
             </p>
           </div>
@@ -274,8 +274,8 @@ export default function PracticeHomePage() {
 
         {notice && (
           <p
-            className="font-sans text-charcoal-soft"
-            style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
+            className="font-sans text-body text-charcoal-soft"
+            style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
           >
             {notice}
           </p>
@@ -283,8 +283,8 @@ export default function PracticeHomePage() {
 
         {justActivatedFacet && (
           <p
-            className="font-sans text-charcoal-soft"
-            style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
+            className="font-sans text-body text-charcoal-soft"
+            style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: '#EFEBDF' }}
           >
             {facetDisplayLabel(justActivatedFacet)} added. {practicePurposeCopy(false)}
           </p>
@@ -294,10 +294,10 @@ export default function PracticeHomePage() {
           {/* Choosing which traits are active is editing this list, so the
               action sits on the list's own heading. */}
           <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em' }}>
+            <p className="font-sans text-meta text-muted">
               Active
             </p>
-            <Link href="/practice/manage" className="font-sans" style={{ fontSize: 12.5, color: '#8a8375', textDecoration: 'underline' }}>
+            <Link href="/practice/manage" className="font-sans text-ui text-muted" style={{ textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>
               Edit
             </Link>
           </div>
@@ -330,10 +330,7 @@ export default function PracticeHomePage() {
                         background/border already carries the primary
                         "this one's directional" signal. */}
                     {showBadge && (
-                      <p
-                        className="font-sans font-semibold uppercase"
-                        style={{ fontSize: 11, letterSpacing: '0.04em', color: directionalAccent }}
-                      >
+                      <p className="font-sans text-meta text-muted">
                         Directional · from mini-assessment
                       </p>
                     )}
@@ -343,25 +340,25 @@ export default function PracticeHomePage() {
                           never carried information distinct from the badge
                           above and the card's own tint/border, just an
                           unexplained mark (review feedback). */}
-                      <span className="font-serif font-medium text-charcoal" style={{ fontSize: 18 }}>
+                      <span className="font-display font-normal text-display-4 text-charcoal">
                         {facetDisplayLabel(a.facet_id)}
                       </span>
-                      <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                      <p className="font-sans text-body text-charcoal-soft">
                         {directionalBandCopy.get(a.facet_id) ?? FACET_DESCRIPTIONS[a.facet_id] ?? ''}
                       </p>
                       {/* Compact ladder (rework Part 2) — same stage this
                           facet's detail page shows, one line, so the card
                           itself says where things stand without a click. */}
                       {stageLine && (
-                        <p className="font-sans text-muted" style={{ fontSize: 12 }}>
+                        <p className="font-sans text-meta text-muted">
                           {stageLine}
                         </p>
                       )}
                     </Link>
                     {showBadge && (
                       <p
-                        className="font-sans"
-                        style={{ fontSize: 12, color: '#8a5a3d', paddingTop: 8, borderTop: `1px solid ${directionalAccent}4d` }}
+                        className="font-sans text-meta"
+                        style={{ color: '#8a5a3d', paddingTop: 8, borderTop: `1px solid ${directionalAccent}4d` }}
                       >
                         Unlock the full assessment (€49) for a complete, non-directional read on this pattern.
                       </p>
@@ -375,11 +372,11 @@ export default function PracticeHomePage() {
                       // supports — check_ins is one row per day) closes
                       // that loop.
                       <div
-                        className="font-sans font-medium"
+                        className="font-sans font-medium text-ui"
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                          textAlign: 'center', padding: 11, borderRadius: 8,
-                          border: '1px solid #DAD3C3', color: '#6b6659', fontSize: 14,
+                          textAlign: 'center', padding: 11, minHeight: 44, borderRadius: 8,
+                          border: '1px solid #DAD3C3', color: '#6b6659',
                         }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -390,8 +387,8 @@ export default function PracticeHomePage() {
                     ) : (
                       <Link
                         href={`/practice/${a.id}/checkin`}
-                        className="font-sans font-medium"
-                        style={{ display: 'block', textAlign: 'center', padding: 11, borderRadius: 8, background: '#262420', color: '#F7F4ED', fontSize: 14 }}
+                        className="font-sans font-medium text-ui"
+                        style={{ display: 'block', textAlign: 'center', padding: 11, minHeight: 44, borderRadius: 8, background: '#262420', color: '#F7F4ED' }}
                       >
                         Check in today
                       </Link>
@@ -404,14 +401,14 @@ export default function PracticeHomePage() {
                     {weeklyQualifies ? (
                       <Link
                         href={`/practice/${a.id}/report`}
-                        className="font-sans"
-                        style={{ fontSize: 12, color: directionalAccent, textDecoration: 'underline', textAlign: 'center' }}
+                        className="font-sans font-medium text-ui text-charcoal"
+                        style={{ textDecoration: 'underline', textAlign: 'center' }}
                       >
                         Your weekly read is ready
                       </Link>
                     ) : (
                       weeklyProgress && (
-                        <p className="font-sans text-muted" style={{ fontSize: 12, textAlign: 'center' }}>
+                        <p className="font-sans text-meta text-muted" style={{ textAlign: 'center' }}>
                           {weeklyProgress}
                         </p>
                       )
@@ -425,7 +422,7 @@ export default function PracticeHomePage() {
 
         {data.activations.length > 0 && (
           <div style={{ marginBottom: 28 }}>
-            <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+            <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
               Your reviews
             </p>
             <div className="flex flex-col gap-2">
@@ -441,14 +438,14 @@ export default function PracticeHomePage() {
                     }}
                   >
                     <div>
-                      <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                      <div className="font-sans font-medium text-ui text-charcoal">
                         {facetDisplayLabel(a.facet_id)}
                       </div>
-                      <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: ready ? directionalAccent : '#8a8375' }}>
+                      <div className={`font-sans text-meta ${ready ? 'font-medium text-charcoal' : 'text-muted'}`} style={{ marginTop: 2 }}>
                         {ready ? 'Your weekly read is ready' : 'Weekly read and 4-week report'}
                       </div>
                     </div>
-                    <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+                    <span aria-hidden="true" className="font-sans text-muted" style={{ fontSize: 16, flexShrink: 0 }}>→</span>
                   </Link>
                 )
               })}
@@ -460,32 +457,32 @@ export default function PracticeHomePage() {
                 }}
               >
                 <div>
-                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                  <div className="font-sans font-medium text-ui text-charcoal">
                     This quarter&apos;s review
                   </div>
-                  <div className="font-sans" style={{ fontSize: 12, marginTop: 2, color: '#8a8375' }}>
+                  <div className="font-sans text-meta text-muted" style={{ marginTop: 2 }}>
                     All your traits, over 90 days
                   </div>
                 </div>
-                <span aria-hidden="true" className="font-sans" style={{ fontSize: 16, color: '#8a8375', flexShrink: 0 }}>→</span>
+                <span aria-hidden="true" className="font-sans text-muted" style={{ fontSize: 16, flexShrink: 0 }}>→</span>
               </Link>
             </div>
           </div>
         )}
 
         <div>
-          <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 11, letterSpacing: '0.03em', marginBottom: 10 }}>
+          <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
             {active.length === 0 ? 'Pick a trait to start with' : 'Also noticed — not yet active'}
           </p>
 
           {candidateMessage && (
-            <p className="font-sans" style={{ fontSize: 13, color: '#8a5a3d', marginBottom: 10 }}>
+            <p className="font-sans text-meta" style={{ color: '#8a5a3d', marginBottom: 10 }}>
               {candidateMessage}
             </p>
           )}
 
           {candidates.length === 0 ? (
-            <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+            <p className="font-sans text-body text-muted">
               Nothing else yet — as you reveal more patterns in your report, they&apos;ll show up here.
             </p>
           ) : (
@@ -499,10 +496,12 @@ export default function PracticeHomePage() {
                   }}
                 >
                   <div>
-                    <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14 }}>
+                    <div
+                      className={reportTraits.words.has(facetId) ? 'font-display italic font-semibold text-display-4 text-charcoal' : 'font-sans font-medium text-ui text-charcoal'}
+                    >
                       {reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}
                     </div>
-                    <div className="font-sans text-muted" style={{ fontSize: 12, marginTop: 2 }}>
+                    <div className="font-sans text-meta text-muted" style={{ marginTop: 2 }}>
                       {reportTraits.words.has(facetId) ? facetDisplayLabel(facetId) : 'From your report'}
                     </div>
                   </div>
@@ -511,7 +510,7 @@ export default function PracticeHomePage() {
                     disabled={activatingFacet === facetId}
                     aria-label={`Activate ${reportTraits.words.get(facetId) ?? facetDisplayLabel(facetId)}`}
                     className="font-sans"
-                    style={{ fontSize: 20, color: '#8a8375', fontWeight: 300, flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ fontSize: 20, color: 'var(--color-meta)', fontWeight: 300, flexShrink: 0, minWidth: 44, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     +
                   </button>
@@ -520,8 +519,8 @@ export default function PracticeHomePage() {
               {candidates.length > CANDIDATES_SHOWN && (
                 <button
                   onClick={() => setShowAllCandidates((v) => !v)}
-                  className="font-sans"
-                  style={{ alignSelf: 'center', marginTop: 6, fontSize: 12.5, color: '#8a8375', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
+                  className="font-sans text-ui text-muted"
+                  style={{ alignSelf: 'center', marginTop: 6, minHeight: 44, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   {showAllCandidates ? 'Show fewer' : `Show all ${candidates.length}`}
                 </button>
