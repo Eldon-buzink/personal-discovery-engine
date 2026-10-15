@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Sans, Newsreader } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import MetaPixel from "@/components/known/MetaPixel";
 import ConsentBanner from "@/components/known/ConsentBanner";
-import ThemeLab from "@/components/known/ThemeLab";
+import ThemeLabHead from "@/components/known/ThemeLabHead";
 import "./globals.css";
 
 // Italic is loaded for real (not browser-faked): the trait-word token is
@@ -16,14 +16,6 @@ const newsreader = Newsreader({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-});
-
-// Theme lab only (NEXT_PUBLIC_THEME_LAB=1, ?sans=instrument). Not preloaded,
-// so its files are only fetched when the lab switches to it.
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-instrument",
-  preload: false,
 });
 
 // metadataBase resolves the relative OG/Twitter image paths set per-route
@@ -54,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${inter.variable} ${instrumentSans.variable}`}>
+    <html lang="en" className={`${newsreader.variable} ${inter.variable}`}>
       <head>
         {/* Supabase auth session check (SiteNav) runs on every page, including
             the landing page — this is the only third-party origin actually
@@ -63,9 +55,10 @@ export default function RootLayout({
             rendered once the paywall actually opens, not loaded eagerly. */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        {/* Dev-only theme lab; renders nothing (and ships nothing) unless the flag is set. */}
+        {process.env.NEXT_PUBLIC_THEME_LAB === "1" && <ThemeLabHead />}
       </head>
       <body className="font-sans antialiased">
-        {process.env.NEXT_PUBLIC_THEME_LAB === "1" && <ThemeLab />}
         {/* Meta Pixel loads only after the visitor allows ad measurement
             (ConsentBanner); see components/known/MetaPixel.tsx. */}
         <MetaPixel />

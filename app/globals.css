@@ -84,28 +84,8 @@ html, body {
   }
 }
 
-/* Theme lab (NEXT_PUBLIC_THEME_LAB=1 only; set by components/known/ThemeLab).
-   Without the lab, none of these attributes is ever set, so the defaults
-   above are what ships. */
-html[data-sans="instrument"] {
-  --font-body: var(--font-instrument), system-ui, sans-serif;
-}
-/* B: a slightly greyer, less yellow off-white. */
-html[data-bg="b"] {
-  --color-bg: #F4F3F0;
-}
-/* C: current cream; coral only for the selected / active state. */
-html[data-bg="c"] {
-  --accent-flag: #262420;
-  --accent-flag-soft: #FFFFFF;
-}
-/* D: report only. A very faint tint of the selected trait's blob hue
-   (--tint-hue is set on the report's root); 6% keeps meta text above
-   4.5:1. */
-html[data-bg="d"] .tint-root {
-  background: color-mix(in srgb, hsl(var(--tint-hue, 8) 70% 60%) 6%, var(--color-bg)) !important;
-  transition: background-color 600ms cubic-bezier(0.22, 1, 0.36, 1);
-}
+/* Theme lab variants (?sans=, ?bg=) live in components/known/ThemeLabHead.tsx
+   and are only rendered when NEXT_PUBLIC_THEME_LAB=1. */
 
 @keyframes fadeIn {
   from {
