@@ -28,11 +28,7 @@ import {
   landingReassurance,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
-import dynamic from 'next/dynamic'
-import WhenNear from '@/app/(site)/landing/WhenNear'
-
-// Loaded near the viewport only, same as on the home page.
-const JourneySection = dynamic(() => import('@/app/(site)/landing/JourneySection'), { ssr: false })
+import JourneyStory from '@/app/(site)/landing/JourneyStory'
 import { practiceFixtureFor } from '@/app/(site)/landing/landingPracticeFixture'
 import WhyDifferentSection from '@/app/(site)/landing/WhyDifferentSection'
 import FaqSection from '@/app/(site)/landing/FaqSection'
@@ -273,19 +269,9 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
               <p>{landingPracticeBody(label, checkInPrompt.question)}</p>
             </div>
 
-            <WhenNear className="practice-hold">
-              <JourneySection fixture={practiceFixture} />
-            </WhenNear>
+            <JourneyStory fixture={practiceFixture} />
 
-            <div className="practice-cadence">
-              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
-              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
-              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
-            </div>
-
-            <p className="practice-closing">
-              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
-            </p>
+            <p className="practice-closing">No score. No verdict. Just what you noticed.</p>
 
             <div style={{ textAlign: 'center', marginTop: 32 }}>
               <Link href={quizHref}>

@@ -83,31 +83,58 @@ export const compareCSS = `
 export const practiceCSS = `
   /* Your practice */
   .practice-section{padding:0 0 90px;}
-  /* Space reserved while the journey example loads (WhenNear). */
-  .practice-hold{min-height:480px;}
-  /* The journey example: three real practice components, no device
-     frames, the recap the largest. Stacked below 860px. */
+  /* The journey example (JourneyStory): three numbered steps, each a
+     caption over a real practice component, joined by a thin line that
+     draws once. Columns on desktop (the recap the widest), one column with
+     the line running down the left below 860px. Each component box
+     reserves its own height (.journey-hold-*) while it loads. */
   .journey{max-width:1040px;margin:0 auto;}
-  .journey-example{${css.meta}text-align:center;margin:0 0 16px;}
-  .journey-grid{display:grid;grid-template-columns:0.95fr 0.9fr 1.3fr;gap:20px;align-items:start;}
-  .journey-step{background:${mkCard};border:1px solid ${mkLine};border-radius:18px;padding:18px;}
-  .journey-step-recap{display:flex;flex-direction:column;gap:16px;}
-  /* Entrance (lib/design/motion.ts): the selected answer starts unselected,
-     then turns selected; then the week chips fill in, 150ms apart. */
+  .journey-example{${css.meta}text-align:center;margin:0 0 20px;}
+  .journey-steps{display:grid;grid-template-columns:0.85fr 0.95fr 1.3fr;gap:20px;align-items:start;list-style:none;margin:0;padding:0;}
+  .journey-step{display:flex;flex-direction:column;min-width:0;}
+  .journey-marker-row{display:flex;align-items:center;margin-bottom:12px;}
+  .journey-marker{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid ${mkCharcoal};display:flex;align-items:center;justify-content:center;${css.ui}color:${mkCharcoal};background:${mkCream};}
+  .journey-line{flex:1;height:1px;background:${mkLine};margin:0 -20px 0 10px;transform-origin:left center;}
+  .journey-caption{${css.display4}color:${mkCharcoal};margin:0 0 6px;}
+  .journey-note{${css.body}color:${mkCharcoalSoft};margin:0 0 6px;}
+  .journey-card{margin-top:10px;background:${mkCard};border:1px solid ${mkLine};border-radius:18px;padding:18px;}
+  .journey-card-recap{display:flex;flex-direction:column;gap:16px;}
+  /* Reserved heights: the smallest measured height per breakpoint over the
+     three fixtures, so a box never shows empty space; whatever it grows by
+     happens off-screen (WhenNear mounts 600px early). */
+  .journey-hold-home{min-height:422px;}
+  .journey-hold-checkin{min-height:349px;}
+  .journey-hold-recap{min-height:202px;}
+  .journey-hold-recap.journey-hold-notes{min-height:372px;}
+  /* Entrance (lib/design/motion.ts): the lines draw (1 to 2, then 2 to 3),
+     today's answer turns selected, then the week chips fill in, 100ms
+     apart. Ends within 1.2s. */
+  .journey.m-armed:not(.m-play) .journey-line{transform:scaleX(0);}
   .journey.m-armed:not(.m-play) .checkin-row[data-selected]{border-color:#DAD3C3 !important;background:#FFFFFF !important;}
   .journey.m-play .checkin-row[data-selected]{transition:border-color var(--dur-ui) var(--ease) 300ms,background-color var(--dur-ui) var(--ease) 300ms;}
   .journey.m-armed:not(.m-play) .journey-chip{background:transparent !important;}
   .journey.m-armed:not(.m-play) .journey-chip > *{opacity:0;}
   .journey.m-play .journey-chip{transition:background-color var(--dur-ui) var(--ease) calc(450ms + var(--i) * 100ms);}
   .journey.m-play .journey-chip > *{transition:opacity var(--dur-ui) var(--ease) calc(450ms + var(--i) * 100ms);}
-  .practice-cadence{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:44px auto 0;}
-  .practice-cadence div{border-top:1px solid ${mkLine};padding-top:14px;}
-  .practice-cadence b{display:block;${css.display4}margin-bottom:6px;}
-  .practice-cadence p{${css.body}color:${mkCharcoalSoft};margin:0;}
-  .practice-closing{${css.display4}text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:40px auto 0;}
+  .practice-closing{${css.display4}text-align:center;color:${mkCharcoal};max-width:620px;margin:44px auto 0;}
+  .practice-lead{${css.body}text-align:center;color:${mkCharcoalSoft};max-width:620px;margin:8px auto 0;}
   @media(max-width:860px){
-    .practice-cadence{grid-template-columns:1fr;gap:18px;margin-top:36px;}
-    .journey-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;}
+    .journey-steps{grid-template-columns:1fr;gap:0;max-width:440px;margin:0 auto;}
+    .journey-step{position:relative;padding:0 0 32px 44px;}
+    .journey-step:last-child{padding-bottom:0;}
+    .journey-marker-row{position:absolute;left:0;top:0;bottom:0;width:28px;flex-direction:column;margin:0;}
+    .journey-line{flex:1;width:1px;height:auto;margin:8px 0 0;transform-origin:center top;}
+    .journey.m-armed:not(.m-play) .journey-line{transform:scaleY(0);}
+    .journey-caption{min-height:28px;display:flex;align-items:center;}
+    .journey-hold-home{min-height:351px;}
+    .journey-hold-checkin{min-height:299px;}
+    .journey-hold-recap{min-height:226px;}
+    .journey-hold-recap.journey-hold-notes{min-height:372px;}
+  }
+  @media(max-width:480px){
+    .journey-hold-home{min-height:377px;}
+    .journey-hold-checkin{min-height:349px;}
+    .journey-hold-recap.journey-hold-notes{min-height:398px;}
   }
   @media(max-width:640px){
     .practice-section{padding-bottom:60px;}

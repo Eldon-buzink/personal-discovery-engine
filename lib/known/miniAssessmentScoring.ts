@@ -133,17 +133,17 @@ export function bandForScore(score: number): MiniAssessmentBand {
 export const MINI_ASSESSMENT_BAND_COPY: Record<MiniAssessmentFacet, Record<MiniAssessmentBand, string>> = {
   'Self-Discipline': {
     low: 'Right now, the pull to set things aside shows up more often than the pull to push through.',
-    mid: "Your answers landed near the middle of this trait — not a strong pull toward pushing through, and not a strong pull toward setting things aside.",
+    mid: "Your answers landed near the middle of this trait. You don't pull strongly toward pushing through or toward setting things aside.",
     high: 'You have a strong pull toward finishing what you start, even past the point it stops feeling interesting.',
   },
   Anxiety: {
-    low: "Uncertainty doesn't seem to sit with you for long — you lean toward steady rather than tense.",
-    mid: "Your answers landed near the middle of this trait — not a strong pull toward staying grounded, and not a strong pull toward feeling anxious.",
+    low: "Uncertainty doesn't seem to sit with you for long. You lean toward steady rather than tense.",
+    mid: "Your answers landed near the middle of this trait. You don't pull strongly toward staying grounded or toward feeling anxious.",
     high: 'Worry and tension show up readily for you, especially around what might go wrong.',
   },
   Liberalism: {
     low: 'You lean toward holding onto the frameworks you were raised with, more than questioning them.',
-    mid: "Your answers landed near the middle of this trait — not a strong pull toward holding onto tradition, and not a strong pull toward questioning it.",
+    mid: "Your answers landed near the middle of this trait. You don't pull strongly toward holding onto tradition or toward questioning it.",
     high: 'You lean toward questioning inherited rules and beliefs rather than deferring to them.',
   },
 }

@@ -16,16 +16,10 @@ import {
 } from '@/lib/blobs'
 import FaqSection from './landing/FaqSection'
 import WhyDifferentSection from './landing/WhyDifferentSection'
-import dynamic from 'next/dynamic'
-import WhenNear from './landing/WhenNear'
+import JourneyStory from './landing/JourneyStory'
 import { compareCSS, practiceCSS, faqCSS, finalCSS } from './landing/sectionStyles'
 import { css, type } from '@/lib/design/type'
 import { useEnterOnce } from '@/lib/design/motion'
-
-// The journey example (and the date-fns and trend code behind it) loads
-// only when its section comes near the viewport, so it never weighs on the
-// first paint; WhenNear reserves its height meanwhile.
-const JourneySection = dynamic(() => import('./landing/JourneySection'), { ssr: false })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const sans  = "var(--font-body)"
@@ -1067,31 +1061,23 @@ export default function LandingPageClient() {
         </section>
 
         {/* ── YOUR PRACTICE ──────────────────────────────────────── */}
-        {/* The phone screens mirror the real practice pages and take every
-            string from the app's own lib/known functions over one fixture
-            (app/(site)/landing/landingPracticeFixture.ts). Nothing here says
-            what is free or paid in the practice. */}
+        {/* Three steps (JourneyStory): the captions are plain markup, the
+            real practice components under them take every string from the
+            app's own lib/known functions over one fixture
+            (app/(site)/landing/landingPracticeFixture.ts) and load near the
+            viewport. Nothing here says what is free or paid. */}
         <section className="practice-section">
           <div className="wrap">
             <div className="section-head">
               <div className="mk-eyebrow" style={{ justifyContent:'center', display:'flex' }}>Your practice</div>
               <h2>Insight sticks when you keep noticing.</h2>
-              <p>Choose the patterns that matter to you. Each evening, a short check-in. Over time you build a record of your own evidence, not a generic tip list.</p>
+              <p>Choose the patterns that matter to you, and see how they show up in your own days.</p>
             </div>
 
-            <WhenNear className="practice-hold">
-              <JourneySection />
-            </WhenNear>
+            <JourneyStory />
 
-            <div className="practice-cadence">
-              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
-              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
-              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
-            </div>
-
-            <p className="practice-closing">
-              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
-            </p>
+            <p className="practice-closing">No score. No verdict. Just what you noticed.</p>
+            <p className="practice-lead">It starts with your report. Here&apos;s how that works.</p>
           </div>
         </section>
 
