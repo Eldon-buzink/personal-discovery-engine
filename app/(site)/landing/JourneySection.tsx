@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { useEnterOnce } from '@/lib/design/motion'
 import PracticeHomeCard from '@/components/known/practice/PracticeHomeCard'
 import CheckInAnswerRows from '@/components/known/practice/CheckInAnswerRows'
 import { RecentNotes, WeekCallout, WeeksStrip } from '@/components/known/practice/PatternReportParts'
@@ -16,9 +17,12 @@ import { landingPracticeFixture, type LandingPracticeFixture } from './landingPr
 // mini-assessment landing pages pass practiceFixtureFor(their facet).
 export default function JourneySection({ fixture = landingPracticeFixture }: { fixture?: LandingPracticeFixture }) {
   const ex = useMemo(() => buildJourneyExample(fixture), [fixture])
+  // Once on entering view: today's answer gets selected, then the week
+  // chips fill in one by one. Not scroll-linked; final state by default.
+  const motionRef = useEnterOnce<HTMLDivElement>()
 
   return (
-    <div className="journey" aria-label="An example of the practice">
+    <div ref={motionRef} className="journey" aria-label="An example of the practice">
       <p className="journey-example">Example</p>
       <div className="journey-grid">
         <div className="journey-step journey-step-home">

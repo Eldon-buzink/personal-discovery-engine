@@ -13,13 +13,13 @@ import {
   generateAnimatedBlobPath as sharedGenerateAnimatedBlobPath,
   blobGradientStops,
   useBlobAnimation,
-  registerBlobTask,
 } from '@/lib/blobs'
 import FaqSection from './landing/FaqSection'
 import WhyDifferentSection from './landing/WhyDifferentSection'
 import JourneySection from './landing/JourneySection'
 import { compareCSS, practiceCSS, faqCSS, finalCSS } from './landing/sectionStyles'
 import { css, type } from '@/lib/design/type'
+import { useEnterOnce } from '@/lib/design/motion'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const sans  = "var(--font-body)"
@@ -337,6 +337,10 @@ const BENTO_CLUSTER_TRAITS = [
 export function BentoCluster() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const wrapRef = useRef<HTMLDivElement>(null)
+  // Entrance (once): Deliberate grows in, then the four related patterns
+  // appear around it, 100ms apart. ~1.1s, then only the drift continues.
+  const motionRef = useEnterOnce<HTMLDivElement>()
+  const delayOf = (i: number) => (i === 0 ? 0 : 200 + (i - 1) * 100)
   const items = useMemo(() => BENTO_CLUSTER_TRAITS.map(tr => ({
     ...tr,
     hue: sharedUserCuratedHue(SHARED_USER_SEED, tr.hueOff),
@@ -348,7 +352,7 @@ export function BentoCluster() {
   }, [items], wrapRef, { respectReducedMotion: true })
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
+    <div style={{ position: 'absolute', inset: 0 }} ref={(el) => { (wrapRef as React.MutableRefObject<HTMLDivElement | null>).current = el; (motionRef as React.MutableRefObject<HTMLDivElement | null>).current = el }}>
       <svg viewBox={`0 0 ${BENTO_CLUSTER_VW} ${BENTO_CLUSTER_VH}`} width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', left: 0, top: 0 }}>
         <defs>
           <filter id="bento-cluster-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -362,20 +366,24 @@ export function BentoCluster() {
             </radialGradient>
           ))}
         </defs>
-        {items.map(b => (
+        {items.map((b, i) => (
           <path
             key={b.word}
             ref={el => { pathRefs.current[b.word] = el }}
+            className="m-item m-grow"
+            style={{ ['--d' as string]: `${delayOf(i)}ms` }}
             fill={`url(#bento-cluster-grad-${b.word})`}
             filter="url(#bento-cluster-blur)"
             d={sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, 0)}
           />
         ))}
       </svg>
-      {items.map(b => (
+      {items.map((b, i) => (
         <div
           key={b.word}
+          className="m-item"
           style={{
+            ['--d' as string]: `${delayOf(i) + 150}ms`,
             position: 'absolute',
             left: `${(b.cx / BENTO_CLUSTER_VW) * 100}%`,
             top: `${(b.cy / BENTO_CLUSTER_VH) * 100}%`,
@@ -416,6 +424,9 @@ export function OrbitVisual() {
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({})
   const youPathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
+  // Entrance (once): You appears, then each condition travels out from You
+  // to its place, 100ms apart; its label follows. ~1.1s, then drift only.
+  const motionRef = useEnterOnce<HTMLDivElement>()
   const envItems = useMemo(() => ORBIT_ENV.map(e => {
     const hue = sharedUserCuratedHue(SHARED_USER_SEED, e.hueOff)
     const profile = sharedBuildPointMotionProfile(sharedHashSeed(e.word + '-env'), 8)
@@ -432,7 +443,7 @@ export function OrbitVisual() {
   }, [envItems, youProfile], wrapRef, { respectReducedMotion: true })
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }} ref={wrapRef}>
+    <div style={{ position: 'absolute', inset: 0 }} ref={(el) => { (wrapRef as React.MutableRefObject<HTMLDivElement | null>).current = el; (motionRef as React.MutableRefObject<HTMLDivElement | null>).current = el }}>
       <svg viewBox={`0 0 ${ORBIT_VW} ${ORBIT_VH}`} width="100%" height="100%" style={{ overflow: 'visible', position: 'absolute', left: 0, top: 0 }}>
         <defs>
           <filter id="bento-orbit-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -455,6 +466,8 @@ export function OrbitVisual() {
           <path
             key={b.word}
             ref={el => { pathRefs.current[b.word] = el }}
+            className="m-item m-travel"
+            style={{ ['--d' as string]: `${300 + i * 100}ms`, ['--tx' as string]: `${ORBIT_CX - b.cx}px`, ['--ty' as string]: `${ORBIT_CY - b.cy}px` }}
             fill={`url(#orbit-grad-${i})`}
             filter="url(#bento-orbit-blur)"
             d={sharedGenerateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.28, 0)}
@@ -462,15 +475,18 @@ export function OrbitVisual() {
         ))}
         <path
           ref={youPathRef}
+          className="m-item m-grow"
           fill="url(#orbit-grad-you)"
           filter="url(#bento-orbit-blur)"
           d={sharedGenerateAnimatedBlobPath(ORBIT_CX, ORBIT_CY, 20, youProfile, 0.25, 0)}
         />
       </svg>
-      {envItems.map(b => (
+      {envItems.map((b, i) => (
         <div
           key={b.word}
+          className="m-item"
           style={{
+            ['--d' as string]: `${500 + i * 100}ms`,
             position: 'absolute',
             left: `${(b.cx / ORBIT_VW) * 100}%`,
             top: `${(b.cy / ORBIT_VH) * 100}%`,
@@ -483,6 +499,7 @@ export function OrbitVisual() {
         </div>
       ))}
       <div
+        className="m-item"
         style={{
           position: 'absolute',
           left: `${(ORBIT_CX / ORBIT_VW) * 100}%`,
@@ -612,49 +629,39 @@ export function ConnectVisual() {
     defs.appendChild(glowGrad); svg.appendChild(defs)
     const glowC = document.createElementNS(NS, 'circle') as SVGCircleElement
     glowC.setAttribute('cx', String(themX)); glowC.setAttribute('cy', String(cy)); glowC.setAttribute('r', String(r * 1.9)); glowC.setAttribute('fill', `url(#${glowId})`); svg.appendChild(glowC)
+    // Entrance (once, see useEnterOnce below): You, then the line draws,
+    // then Someone close and its glow. ~1.2s, then it rests.
+    const enter = (el: SVGElement, cls: string, delay: number) => { el.setAttribute('class', cls); el.style.setProperty('--d', `${delay}ms`) }
+    enter(glowC, 'm-item', 800)
     const line = document.createElementNS(NS, 'line') as SVGLineElement
     line.setAttribute('x1', String(youX + r)); line.setAttribute('y1', String(cy)); line.setAttribute('x2', String(themX - r)); line.setAttribute('y2', String(cy))
-    line.setAttribute('stroke', 'rgba(28,28,26,0.15)'); line.setAttribute('stroke-width', '1.5'); line.setAttribute('stroke-dasharray', '4,4'); svg.appendChild(line)
+    line.setAttribute('stroke', 'rgba(28,28,26,0.15)'); line.setAttribute('stroke-width', '1.5'); line.setAttribute('stroke-dasharray', '4,4'); enter(line, 'm-item m-draw', 250); svg.appendChild(line)
     const dashed = document.createElementNS(NS, 'circle') as SVGCircleElement
     dashed.setAttribute('cx', String(themX)); dashed.setAttribute('cy', String(cy)); dashed.setAttribute('r', String(r))
     dashed.setAttribute('fill', `hsl(${hue},65%,90%)`); dashed.setAttribute('fill-opacity', '0.25')
-    dashed.setAttribute('stroke', `hsl(${hue},60%,65%)`); dashed.setAttribute('stroke-width', '1.5'); dashed.setAttribute('stroke-dasharray', '5,4'); svg.appendChild(dashed)
+    dashed.setAttribute('stroke', `hsl(${hue},60%,65%)`); dashed.setAttribute('stroke-width', '1.5'); dashed.setAttribute('stroke-dasharray', '5,4'); enter(dashed, 'm-item m-grow', 650); svg.appendChild(dashed)
     const youC = document.createElementNS(NS, 'circle') as SVGCircleElement
-    youC.setAttribute('cx', String(youX)); youC.setAttribute('cy', String(cy)); youC.setAttribute('r', String(r)); youC.setAttribute('fill', '#2A2720'); svg.appendChild(youC)
+    youC.setAttribute('cx', String(youX)); youC.setAttribute('cy', String(cy)); youC.setAttribute('r', String(r)); youC.setAttribute('fill', '#2A2720'); enter(youC, 'm-item m-grow', 0); svg.appendChild(youC)
     const youT = document.createElementNS(NS, 'text') as SVGTextElement
     youT.setAttribute('x', String(youX)); youT.setAttribute('y', String(cy + 4)); youT.setAttribute('text-anchor', 'middle')
     youT.style.fontFamily = 'var(--font-body)'; youT.setAttribute('font-size', '12'); youT.setAttribute('font-weight', '600'); youT.setAttribute('fill', 'rgba(245,242,235,0.9)')
-    youT.textContent = 'You'; svg.appendChild(youT)
+    youT.textContent = 'You'; enter(youT, 'm-item', 100); svg.appendChild(youT)
     const themT = document.createElementNS(NS, 'text') as SVGTextElement
     themT.setAttribute('x', String(themX)); themT.setAttribute('y', String(cy)); themT.setAttribute('text-anchor', 'middle')
     themT.style.fontFamily = 'var(--font-body)'; themT.setAttribute('font-size', '12'); themT.setAttribute('fill', `hsl(${hue},50%,38%)`)
     // dy gap widened from the old 10px-font pairing (-6/13) to -7/16 to keep the
     // two lines from crowding at the larger 12px size — verified no overlap or
     // clipping against the r=38 circle at 375px/390px viewports.
-    themT.innerHTML = `<tspan x="${themX}" dy="-7">Someone</tspan><tspan x="${themX}" dy="16">close</tspan>`; svg.appendChild(themT)
-    // Visibility-gated like every other blob component (see lib/blobs.ts's
-    // useBlobAnimation doc comment) — ConnectVisual can't use that hook
-    // directly since this whole visual is built with raw DOM calls inside a
-    // single mount-time effect, not JSX, so the same IntersectionObserver
-    // pattern is inlined here instead.
-    let isVisible = true
-    let observer: IntersectionObserver | null = null
-    if (typeof IntersectionObserver !== 'undefined') {
-      isVisible = false
-      observer = new IntersectionObserver(
-        ([entry]) => { isVisible = entry.isIntersecting },
-        { rootMargin: '200px 0px' },
-      )
-      observer.observe(svg)
-    }
-
-    const unreg = registerBlobTask(t => {
-      if (!isVisible) return
-      glowC.setAttribute('r', String(r * 1.9 * (1 + Math.sin(t * 1.2) * 0.08)))
-    })
-    return () => { unreg(); observer?.disconnect() }
+    themT.innerHTML = `<tspan x="${themX}" dy="-7">Someone</tspan><tspan x="${themX}" dy="16">close</tspan>`; enter(themT, 'm-item', 750); svg.appendChild(themT)
+    // No continuous glow pulse any more: after its entrance this visual
+    // rests (only blobs keep drifting).
   }, [])
-  return <svg ref={ref} viewBox="0 0 380 110" width="100%" height="100%" style={{ overflow:'visible' }} />
+  const motionRef = useEnterOnce<HTMLDivElement>()
+  return (
+    <div ref={motionRef} style={{ position: 'absolute', inset: 0 }}>
+      <svg ref={ref} viewBox="0 0 380 110" width="100%" height="100%" style={{ overflow:'visible' }} />
+    </div>
+  )
 }
 
 // ─── Problem card visuals ───────────────────────────────────────────────────

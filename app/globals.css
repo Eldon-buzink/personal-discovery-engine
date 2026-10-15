@@ -41,6 +41,36 @@ html, body {
   --leading-body: 1.6;
   --text-ui: 14px;
   --text-meta: 13px;
+
+  /* Motion: one easing curve, two durations. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-ui: 200ms;
+  --dur-enter: 600ms;
+}
+
+/* Reduced motion everywhere: instant state, no movement. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Entrance motion (lib/design/motion.ts useEnterOnce) ──────────────────
+   Default = final state. .m-armed sets the start state; .m-play
+   transitions to the final state once, with per-item delays (--d). */
+.m-item { transform-box: fill-box; transform-origin: center; }
+.m-armed:not(.m-play) .m-item { opacity: 0; }
+.m-armed:not(.m-play) .m-grow { transform: scale(0.86); }
+.m-armed:not(.m-play) .m-travel { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0.6); }
+.m-armed:not(.m-play) .m-draw { transform: scaleX(0); }
+.m-draw { transform-origin: left center; }
+.m-play .m-item {
+  transition: opacity var(--dur-enter) var(--ease) var(--d, 0ms), transform var(--dur-enter) var(--ease) var(--d, 0ms);
 }
 
 @media (max-width: 640px) {
