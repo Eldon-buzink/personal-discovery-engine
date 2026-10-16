@@ -10,11 +10,9 @@ const line = 'rgba(38,36,32,0.1)'
 
 export const baseCSS = `
   .lo{background:${cream};color:${ink};overflow-x:hidden;}
-  /* Page headings only: real product components (the report card's trait
-     word, for one) style their own headings inline and keep them. */
-  .lo h1:not([style]){${css.display1}margin:0;}
-  .lo h2:not([style]){${css.display2}margin:0;}
-  .lo h3:not([style]){${css.display4}margin:0;}
+  .lo h1{${css.display1}margin:0;}
+  .lo h2{${css.display2}margin:0;}
+  .lo h3{${css.display4}margin:0;}
   .lo p{margin:0;}
   .lo-body{${css.body}color:${soft};}
   .lo-meta{${css.meta}}
@@ -60,4 +58,7 @@ export const baseCSS = `
   ${faqCSS}
   ${finalCSS}
   .final-card .lo-btn{margin:0;}
+  /* The closing card keeps its own centred layout (after the page rules). */
+  .lo .final-card h2{margin:0 auto 18px;max-width:560px;}
+  .lo .final-card p:not(.lo-meta){margin:0 auto 32px;max-width:480px;}
 `

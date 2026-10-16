@@ -6,6 +6,7 @@ export const metadata = buildMetadata({ path: '/landing-options', title: 'Landin
 
 const OPTIONS = [
   { href: '/landing-options/a', name: 'A. One story', line: 'A single centred column. Six numbered steps on one thread take you from the assessment into the practice.' },
+  { href: '/landing-options/a2', name: 'A, iteration 2', line: 'A with the first round of feedback: how it feels, the problems, the real report, the practice with affirmation and a fuller weekly read, a more visual comparison.' },
   { href: '/landing-options/b', name: 'B. Chapters', line: 'Three chapters, each a short text beside the real product components at full size.' },
   { href: '/landing-options/c', name: 'C. A month with Bearing', line: 'A timeline from the first statement on day 1 to what you see after four weeks.' },
 ]

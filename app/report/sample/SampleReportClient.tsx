@@ -36,7 +36,7 @@ const sampleReportCSS = `
   }
 `
 
-const SAMPLE_FACETS: FacetEntry[] = [
+export const SAMPLE_FACETS: FacetEntry[] = [
   {
     facet: 'Cautiousness',
     traitWord: 'Deliberate',
@@ -71,7 +71,7 @@ const SAMPLE_FACETS: FacetEntry[] = [
 
 // Sample traits keep their listed order (no scores), and domain is left
 // null so the carousel shows no related row for them.
-const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
+export const SAMPLE_TRAITS: CarouselTrait[] = SAMPLE_FACETS.map((f) => ({
   key: f.facet,
   traitWord: f.traitWord,
   hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),

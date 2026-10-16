@@ -3,11 +3,12 @@ import { buildMetadata } from '@/lib/seo'
 import OptionA from '../OptionA'
 import OptionB from '../OptionB'
 import OptionC from '../OptionC'
+import OptionA2 from '../OptionA2'
 
 // Three landing page options for review. Not indexed, not in the sitemap;
 // the live landing page (/) is unchanged.
-const OPTIONS = { a: OptionA, b: OptionB, c: OptionC } as const
-const NAMES = { a: 'One story', b: 'Chapters', c: 'A month with Bearing' } as const
+const OPTIONS = { a: OptionA, a2: OptionA2, b: OptionB, c: OptionC } as const
+const NAMES = { a: 'One story', a2: 'One story, iteration 2', b: 'Chapters', c: 'A month with Bearing' } as const
 
 export function generateStaticParams() {
   return Object.keys(OPTIONS).map((option) => ({ option }))
