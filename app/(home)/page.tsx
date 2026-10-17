@@ -1,9 +1,15 @@
 import { buildMetadata } from '@/lib/seo'
-import LandingPageClient from './LandingPageClient'
+import SiteFooter from '@/components/known/SiteFooter'
+import V3Client from './_landing/V3Client'
+import Problems from './_landing/Problems'
+import Solution from './_landing/Solution'
+import Tracker from './_landing/Tracker'
+import Faq from './_landing/Faq'
+import Closing from './_landing/Closing'
 
-// Client-side page (animated blobs, auth state, router) can't export metadata
-// directly — split into this thin server wrapper + LandingPageClient.tsx,
-// same pattern as the pricing and onboarding pages.
+// The landing page. Outside the (site) group so it has its own navigation
+// (V3Nav). Metadata and JSON-LD are unchanged from the old landing, which
+// is kept for reference at /landing-old (noindex).
 export const metadata = buildMetadata({
   path: '/',
   title: 'Bearing — Get to know yourself better',
@@ -34,7 +40,8 @@ export default function Page() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
-      <LandingPageClient />
+      <V3Client problems={<Problems />} solution={<Solution />} practice={<Tracker />} faq={<Faq />} closing={<Closing />} />
+      <SiteFooter />
     </>
   )
 }

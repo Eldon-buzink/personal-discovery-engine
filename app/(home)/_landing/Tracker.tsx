@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Landing v3, step 4: the trait tracker. Three steps side by side, like the
+ * Landing: the trait tracker. Three steps side by side, like the
  * problems section, each a short text over the real screen it describes,
  * straight on the page (no toggle, no card around them):
  *   1. Choose: Manage your practice's rows (ManageRow), switches that work,
@@ -52,7 +52,7 @@ export const trackerCSS = `
   .tr-saved[hidden]{display:flex;visibility:hidden;}
 
   .tr-close{max-width:680px;margin:136px auto 0;}
-  .tr-close p:first-child{font-family:var(--font-display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.2;letter-spacing:-0.02em;color:${ink};margin:0;text-wrap:balance;}
+  .tr-close p:first-child{${css.display2}color:${ink};margin:0;text-wrap:balance;}
   .tr-close p + p{${css.body}font-size:18px;color:${soft};margin:20px auto 0;max-width:560px;text-wrap:balance;}
 
   /* Entrances, once each as it comes into view. */

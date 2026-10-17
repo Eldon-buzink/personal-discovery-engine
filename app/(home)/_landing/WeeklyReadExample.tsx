@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Landing v3, tracker step 3: one week with three check-ins, and the
+ * Landing, tracker step 3: one week with three check-ins, and the
  * weekly read the product gives for it. The days strip is landing-only;
  * the read is the app's own WeekCallout over computeWeeklyInsight, so the
  * headline is exactly what the app would say for these three answers.

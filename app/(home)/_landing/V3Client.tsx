@@ -5,13 +5,24 @@ import { useId, useMemo, useRef, type ReactNode } from 'react'
 import { blobGradientStops, buildPointMotionProfile, CURATED_HUES, generateAnimatedBlobPath, hashSeed, useBlobAnimation } from '@/lib/blobs'
 import { useEnterOnce } from '@/lib/design/motion'
 import { css } from '@/lib/design/type'
+import { HeroCta, useLandingVisitor } from '@/app/(site)/LandingPageClient'
+import { mkCharcoal, mkCream } from '@/app/start/startLandingShared'
 import V3Nav, { v3NavCSS } from './V3Nav'
+import { ctaFor, VisitorContext } from './visitor'
 
-// Landing v3, step 1: the hero. After traitstack.com's hero (a large serif
-// headline with a grey second sentence, one short line, one pill button),
-// with blobs drifting behind the text: one in each of the eight brand hues
-// (CURATED_HUES), on the shared blob clock.
-// `problems`: the section under the hero (step 2), one of three designs.
+// The landing page shell and its hero. After traitstack.com's hero (a large
+// serif headline with a grey second sentence, one short line, one pill
+// button), with blobs drifting behind the text: one in each of the eight
+// brand hues (CURATED_HUES), on the shared blob clock. The sections below
+// come in as props from app/(home)/page.tsx.
+//
+// Visitor state is the old landing's own (useLandingVisitor): signed-in
+// visitors go on to their report or assessment, a returning visitor with
+// patterns gets the welcome-back sign-in (HeroCta), and one who started
+// but didn't finish sees "Continue your assessment" on every button.
+// Unlike the old page, the content renders straight away (no blank page
+// until the check is done), so the HTML is there for search engines.
+
 
 // Eight blobs, one per brand hue, spread around the headline. Two larger
 // ones carry the stronger "active" gradient.
@@ -68,7 +79,7 @@ const HERO_CSS = `
   .v3-h1 span{display:block;color:#7d7a72;}
   .v3-sub{${css.body}font-size:18px;color:#46433d;max-width:540px;margin:24px auto 0;}
   .v3-ctas{margin-top:36px;display:flex;justify-content:center;}
-  .v3-btn{${css.ui}font-size:15px;display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px;border-radius:999px;background:#262420;color:#F7F4ED;
+  .v3-btn{${css.ui}display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px;border-radius:999px;background:#262420;color:#F7F4ED;
     box-shadow:0 1px 2px rgba(38,36,32,0.2),0 8px 24px -10px rgba(38,36,32,0.45);transition:transform var(--dur-ui) var(--ease);}
   .v3-btn svg{transition:transform var(--dur-ui) var(--ease);}
   .v3-btn:hover svg{transform:translateX(3px);}
@@ -77,6 +88,14 @@ const HERO_CSS = `
   .v3-note{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 20px;list-style:none;margin:20px 0 0;padding:0;}
   .v3-note li{${css.meta}color:#46433d;display:inline-flex;align-items:center;gap:6px;}
   .v3-note svg{color:#3D6B5C;}
+  .v3-welcome{display:flex;justify-content:center;margin-top:36px;}
+  .v3-welcome > div{width:100%;max-width:440px;}
+
+  /* The old landing's shared classes, used by HeroCta (welcome back) and
+     the closing section (FinalCtaSection), copied unchanged. */
+  .mk-eyebrow{${css.meta}margin-bottom:14px;}
+  .mk-microcopy{${css.meta}}
+  .mk-btn{${css.ui}background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:11px 20px;min-height:44px;cursor:pointer;}
 
   /* Entrance: once (lib/design/motion). */
   .m-armed:not(.m-play) .v3-in{opacity:0;transform:translateY(12px);}
@@ -93,8 +112,11 @@ const tick = <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
 
 export default function V3Client({ problems, solution, practice, faq, closing }: { problems?: ReactNode; solution?: ReactNode; practice?: ReactNode; faq?: ReactNode; closing?: ReactNode }) {
   const copyRef = useEnterOnce<HTMLDivElement>()
+  const { welcomeBack, startedUnfinished } = useLandingVisitor()
+  const cta = ctaFor(startedUnfinished)
   const d = (ms: number) => ({ ['--d' as string]: `${ms}ms` })
   return (
+    <VisitorContext.Provider value={{ welcomeBack, startedUnfinished }}>
     <div className="v3">
       <style dangerouslySetInnerHTML={{ __html: v3NavCSS + HERO_CSS }} />
       <V3Nav />
@@ -109,24 +131,27 @@ export default function V3Client({ problems, solution, practice, faq, closing }:
             <p className="v3-sub v3-in" style={d(160)}>
               The worry that won’t settle. The plan you drop halfway. Bearing shows you the patterns behind them, and helps you notice them in your days.
             </p>
-            <div className="v3-ctas v3-in" style={d(240)}>
-              <Link href="/onboarding" className="v3-btn">Start the assessment {arrow}</Link>
-            </div>
+            {welcomeBack ? (
+              <div className="v3-welcome v3-in" style={d(240)}>
+                <HeroCta welcomeBack startedUnfinished={false} />
+              </div>
+            ) : (
+              <div className="v3-ctas v3-in" style={d(240)}>
+                <Link href={cta.href} className="v3-btn">{cta.label} {arrow}</Link>
+              </div>
+            )}
             <ul className="v3-note v3-in" style={d(300)} aria-label="Before you start">
               {['About 15 minutes', 'First 5 patterns free', 'No account to start'].map((n) => <li key={n}>{tick}{n}</li>)}
             </ul>
           </div>
         </section>
         {problems}
-        {/* Step 3: the solution (id="solution"; the problems section's
-            arrow points here). */}
         {solution}
-        {/* Step 4: the trait tracker. */}
         {practice}
-        {/* Steps 5 and 6: the FAQ and the closing call to action. */}
         {faq}
         {closing}
       </main>
     </div>
+    </VisitorContext.Provider>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Landing v3, step 5: the FAQ. The live page's questions and accordion
+ * Landing: the FAQ. The live page's questions and accordion
  * (FAQ_ITEMS, FaqAccordion), centred like the rest of v3. The "FAQ"
  * eyebrow is dropped: the heading already says it.
  */

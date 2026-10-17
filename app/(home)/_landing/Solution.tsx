@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Landing v3, step 3: the solution. An example report, centred, in one
+ * Landing: the solution. An example report, centred, in one
  * card: the report's own "Who you are" visual (TraitCarousel) with the
  * full blob view (the selected trait large, its related traits from the
  * same domain around it, joined by dashed lines) and the selected trait's
@@ -43,7 +43,7 @@ export const solutionCSS = `
   .sv-label{${css.meta}margin:0 0 4px;}
   .sv-card .tc-arrow{background:#FFFFFF;}
   .sv-facts{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 28px;list-style:none;margin:40px 0 0;padding:0;}
-  .sv-facts li{${css.ui}font-weight:400;color:${soft};display:inline-flex;align-items:center;gap:8px;}
+  .sv-facts li{${css.meta}color:#46433d;display:inline-flex;align-items:center;gap:8px;}
   .sv-facts svg{color:#3D6B5C;}
   .sv-link{${css.ui}display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:20px;color:${ink};text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(38,36,32,0.35);}
   .sv-link:hover{text-decoration-color:${ink};}

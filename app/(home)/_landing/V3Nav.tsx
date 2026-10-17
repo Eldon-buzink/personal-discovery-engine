@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ctaFor, useVisitor } from './visitor'
 import { useEffect, useState } from 'react'
 import { css } from '@/lib/design/type'
 
@@ -53,6 +54,7 @@ export const v3NavCSS = `
 export default function V3Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const cta = ctaFor(useVisitor().startedUnfinished)
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8)
     on()
@@ -65,7 +67,7 @@ export default function V3Nav() {
         <Link href="/" className="v3-logo">Bearing</Link>
         <nav className="v3-links" aria-label="Main">
           {LINKS.map((l) => <Link key={l.href} href={l.href} className="v3-link">{l.label}</Link>)}
-          <Link href="/onboarding" className="v3-cta">Start the assessment</Link>
+          <Link href={cta.href} className="v3-cta">{cta.label}</Link>
           <button type="button" className="v3-menu-btn" aria-expanded={open} aria-controls="v3-menu" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen((v) => !v)}>
             <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
               {open
@@ -78,7 +80,7 @@ export default function V3Nav() {
       {open && (
         <div id="v3-menu" className="v3-panel">
           {LINKS.map((l) => <Link key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</Link>)}
-          <Link href="/onboarding" className="v3-cta" onClick={() => setOpen(false)}>Start the assessment</Link>
+          <Link href={cta.href} className="v3-cta" onClick={() => setOpen(false)}>{cta.label}</Link>
         </div>
       )}
     </header>
