@@ -75,11 +75,11 @@ export default function BlogPage() {
         >
           <div style={{ maxWidth: 480 }}>
             <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: blogRose, marginBottom: 10 }}>
-              Free · 15 minutes
+              Free to start · About 15 minutes
             </div>
             <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 24, marginBottom: 10, lineHeight: 1.25 }}>See where you actually land.</h3>
             <p style={{ fontSize: 14, color: '#C9C5BA', lineHeight: 1.55 }}>
-              Stop reading about traits in the abstract — get your own scores across all five domains, grounded in the same research these articles come from.
+              Stop reading about traits in the abstract — see your own patterns, grounded in the same research these articles come from. Your first 5 are free; a one-time €49 unlocks all 30 facets.
             </p>
           </div>
           <div className="strip-cta-block" style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -88,7 +88,7 @@ export default function BlogPage() {
                 Start your assessment
               </button>
             </Link>
-            <div style={{ fontSize: 11.5, color: '#9C978C', marginTop: 10 }}>No account to start · No credit card</div>
+            <div style={{ fontSize: 11.5, color: '#9C978C', marginTop: 10 }}>No account for your first 5 · No credit card to start</div>
           </div>
         </GlowCard>
 

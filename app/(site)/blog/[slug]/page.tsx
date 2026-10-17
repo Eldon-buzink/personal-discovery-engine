@@ -9,6 +9,7 @@ import { accentColorCss, accentColorSoftCss } from '@/lib/blog/theme'
 import { mdxComponents, proseStyle } from '@/components/blog/mdxComponents'
 import GlowCard from '@/components/blog/GlowCard'
 import FaqBlock from '@/components/blog/FaqBlock'
+import FacetReferenceBlock from '@/components/blog/FacetReferenceBlock'
 import PostSidebar from '@/components/blog/PostSidebar'
 import { blogCharcoal, blogCharcoalSoft, blogPeriwinkle, blogRose, blogSans, blogSerif } from '@/components/blog/tokens'
 
@@ -82,12 +83,19 @@ export default function PostPage({ params }: { params: { slug: string } }) {
 
   const canonicalUrl = `https://www.getbearing.me/blog/${post.slug}`
 
-  // frontmatter.updatedAt is a date-only string (e.g. "2026-07-27") — there's
+  // Frontmatter dates are date-only strings (e.g. "2026-07-27") — there's
   // no time-of-day or timezone in the CMS source, so rather than inventing
-  // one, this pins it to UTC midnight, same as formatUpdatedAt() above
+  // one, this pins them to UTC midnight, same as formatUpdatedAt() above
   // already does for display. "Z" is a real, honest timezone designator for
   // data that has no finer-grained time info, not a guess at a business zone.
-  const isoDate = `${frontmatter.updatedAt}T00:00:00Z`
+  //
+  // datePublished: the recorded live date, else the scheduled publishDate,
+  // else updatedAt. dateModified: updatedAt, but never earlier than
+  // datePublished — several scheduled posts were last edited before their
+  // publishDate, and a modified date before the published date is invalid.
+  const publishedDay = frontmatter.publishedAt ?? frontmatter.publishDate ?? frontmatter.updatedAt
+  const modifiedDay = frontmatter.updatedAt > publishedDay ? frontmatter.updatedAt : publishedDay
+  const toIso = (day: string) => `${day}T00:00:00Z`
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -95,11 +103,25 @@ export default function PostPage({ params }: { params: { slug: string } }) {
     headline: frontmatter.title,
     description: frontmatter.dek,
     image: `https://www.getbearing.me/blog/${post.slug}/image`,
-    datePublished: isoDate,
-    dateModified: isoDate,
+    datePublished: toIso(publishedDay),
+    dateModified: toIso(modifiedDay),
     author: { '@type': 'Organization', name: 'Bearing', url: 'https://www.getbearing.me' },
     publisher: { '@type': 'Organization', name: 'Bearing', url: 'https://www.getbearing.me' },
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+  }
+
+  // Mirrors the visible breadcrumb below: Resources / category / post. The
+  // category crumb links to /blog on the page (there's no per-category
+  // page), so it carries the same URL here.
+  const crumbName = frontmatter.facetId ?? frontmatter.title
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Resources', item: 'https://www.getbearing.me/blog' },
+      { '@type': 'ListItem', position: 2, name: categoryLabel, item: 'https://www.getbearing.me/blog' },
+      { '@type': 'ListItem', position: 3, name: crumbName, item: canonicalUrl },
+    ],
   }
 
   const faqJsonLd = frontmatter.faq && frontmatter.faq.length > 0
@@ -118,6 +140,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
     <div style={{ background: '#F7F4ED', minHeight: '100vh', fontFamily: blogSans }}>
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {faqJsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       )}
@@ -132,7 +155,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
               title for every other category — those titles are the
               identifier, not a "Name: subtitle" pair, so there's nothing
               shorter and reliable to slice out of them. */}
-          <span>{frontmatter.facetId ?? frontmatter.title}</span>
+          <span>{crumbName}</span>
         </div>
 
         <GlowCard
@@ -178,6 +201,10 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         <div className="blog-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 64, paddingBottom: 80 }}>
           <div style={proseStyle}>
             <MDXRemote source={content} components={mdxComponents} options={{ mdxOptions: { rehypePlugins: [rehypeSlug] } }} />
+            {/* Trait posts only: the facet's items, score ranges and check-in, from the report's own source files. */}
+            {frontmatter.category === 'traits' && frontmatter.facetId && (
+              <FacetReferenceBlock facetId={frontmatter.facetId} accent={accent} />
+            )}
             <FaqBlock items={frontmatter.faq ?? []} />
           </div>
 

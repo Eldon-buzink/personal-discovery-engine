@@ -41,7 +41,11 @@ export function computeDomainScore(
 // ── Trait word table ──────────────────────────────────────────────────────────
 // Thresholds: score >= 3.5 → high | score >= 2.5 → mid | score < 2.5 → low
 
-const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = {
+// Exported for read-only reference (lib/known/facetReference.ts) so the blog
+// shows the same numbers and words the report uses.
+export const TRAIT_WORD_THRESHOLDS = { high: 3.5, mid: 2.5 } as const
+
+export const TRAIT_WORDS: Record<string, { low: string; mid: string; high: string }> = {
   // Neuroticism
   Anxiety:             { low: 'Untroubled',       mid: 'Alert',       high: 'Watchful'       },
   Anger:               { low: 'Unruffled',         mid: 'Firm',          high: 'Quick to flare'      },
@@ -92,8 +96,8 @@ export function facetTraitWords(facet: string): { low: string; mid: string; high
 export function getTraitWord(facet: string, score: number): string {
   const words = TRAIT_WORDS[facet]
   if (!words) return 'Balanced'
-  if (score >= 3.5) return words.high
-  if (score >= 2.5) return words.mid
+  if (score >= TRAIT_WORD_THRESHOLDS.high) return words.high
+  if (score >= TRAIT_WORD_THRESHOLDS.mid) return words.mid
   return words.low
 }
 
