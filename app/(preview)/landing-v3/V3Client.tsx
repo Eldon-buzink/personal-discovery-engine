@@ -116,6 +116,9 @@ export default function V3Client({ problems }: { problems?: ReactNode }) {
           </div>
         </section>
         {problems}
+        {/* Where the solution section goes next (the problems section's
+            arrow points here). */}
+        <div id="solution" />
       </main>
     </div>
   )

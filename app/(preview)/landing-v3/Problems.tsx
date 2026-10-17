@@ -21,14 +21,14 @@ const soft = '#56534D'
 const line = 'rgba(38,36,32,0.12)'
 
 export const problemsCSS = `
-  .pv{padding:120px 24px;border-top:1px solid ${line};}
+  .pv{padding:120px 24px;}
   .pv-wrap{max-width:1040px;margin:0 auto;}
-  .pv h2{${css.display2}margin:0;color:${ink};}
-  .pv-intro{${css.body}color:${soft};margin:16px 0 0;max-width:560px;}
+  .pv h2{font-family:var(--font-display);font-weight:400;font-size:clamp(34px,4.2vw,52px);line-height:1.08;letter-spacing:-0.025em;margin:0;color:${ink};}
+  .pv-intro{${css.body}font-size:18px;color:${soft};margin:20px 0 0;max-width:580px;}
   .pv-bridge{${css.display4}color:${ink};margin:56px 0 0;max-width:600px;}
   .m-armed:not(.m-play) .pv-in{opacity:0;transform:translateY(12px);}
   .m-play .pv-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
-  @media(max-width:640px){ .pv{padding:80px 16px;} .pv-bridge{margin-top:40px;} }
+  @media(max-width:640px){ .pv{padding:80px 16px;} .pv-intro{font-size:16px;} .pv-bridge{margin-top:40px;} }
 
   /* ── 1. Moments with a name ── */
   .p1-head{text-align:center;max-width:640px;margin:0 auto 48px;}
@@ -53,9 +53,10 @@ export const problemsCSS = `
   }
 
   /* ── 2. How it feels (after mrdoge.ai "Sharper than a guess") ── */
-  .p2-head{text-align:center;max-width:640px;margin:0 auto;}
+  .p2-head{text-align:center;max-width:860px;margin:0 auto;}
+  .pv h2,.pv h3,.pv-bridge{text-wrap:balance;}
   .p2-head .pv-intro{margin-left:auto;margin-right:auto;}
-  .p2-tabs-wrap{display:flex;justify-content:center;margin:32px 0 40px;}
+  .p2-tabs-wrap{display:flex;justify-content:center;margin:36px 0 56px;}
   .p2-tabs{display:inline-flex;position:relative;padding:4px;border-radius:999px;background:rgba(38,36,32,0.06);max-width:100%;overflow-x:auto;scrollbar-width:none;}
   .p2-tabs::-webkit-scrollbar{display:none;}
   .p2-tab{${css.ui}position:relative;z-index:1;flex-shrink:0;min-height:44px;padding:0 18px;border:none;background:transparent;border-radius:999px;color:${soft};cursor:pointer;white-space:nowrap;
@@ -64,28 +65,32 @@ export const problemsCSS = `
   .p2-tab:focus-visible{outline:2px solid ${ink};outline-offset:-2px;}
   .p2-pill{position:absolute;top:4px;bottom:4px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(38,36,32,0.14);
     transition:left var(--dur-ui) var(--ease),width var(--dur-ui) var(--ease);}
-  .p2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid ${line};border-radius:24px;overflow:hidden;background:rgba(255,255,255,0.35);}
-  .p2-cell{padding:40px 32px 36px;text-align:center;}
+  .p2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}
+  .p2-cell{padding:8px 36px 4px;text-align:center;}
   .p2-cell + .p2-cell{border-left:1px solid ${line};}
-  .p2-blob{display:block;width:56px;height:56px;margin:0 auto 20px;transition:transform var(--dur-ui) var(--ease);}
+  .p2-blob{display:block;width:72px;height:72px;margin:0 auto 22px;transition:transform var(--dur-ui) var(--ease);}
   .p2-cell:hover .p2-blob{transform:scale(1.1) rotate(-8deg);}
-  .p2-cell h3{${css.display4}color:${ink};margin:0 0 8px;}
+  .p2-cell h3{${css.display3}color:${ink};margin:0 0 10px;}
   .p2-cell p{${css.body}color:${soft};margin:0;}
   .p2-grid.swap .p2-cell{animation:p2-in var(--dur-enter) var(--ease) both;animation-delay:var(--d,0ms);}
   @keyframes p2-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-  .p2-foot{text-align:center;}
-  .p2-foot .pv-bridge{margin-left:auto;margin-right:auto;}
-  @media(max-width:860px){
+  .p2-foot{text-align:center;max-width:640px;margin:72px auto 0;}
+  .p2-foot .pv-bridge{${css.display3}margin:0 auto;max-width:600px;}
+  .p2-foot .p2-next{${css.body}font-size:18px;color:${soft};margin:14px auto 0;max-width:520px;}
+  .p2-down{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-top:20px;border-radius:50%;border:1px solid ${line};color:${ink};}
+  .p2-down:focus-visible{outline:2px solid ${ink};outline-offset:2px;}
+  .p2-down svg{transition:transform var(--dur-ui) var(--ease);}
+  .p2-down:hover svg{transform:translateY(3px);}  @media(max-width:860px){
     .p2-grid{grid-template-columns:1fr;}
     .p2-cell + .p2-cell{border-left:none;border-top:1px solid ${line};}
-    .p2-cell{padding:32px 24px;}
+    .p2-cell{padding:32px 8px;}
   }
   /* Phone: the four tabs as a 2 x 2 grid so none is cut off; the chosen
      one is white (no sliding pill). */
   @media(max-width:640px){
     .p2-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;border-radius:22px;width:100%;overflow:visible;}
     .p2-pill{display:none;}
-    .p2-tab{padding:0 10px;transition:color var(--dur-ui) var(--ease),background-color var(--dur-ui) var(--ease);}
+    .p2-tab{padding:8px 10px;min-height:56px;white-space:normal;line-height:1.3;transition:color var(--dur-ui) var(--ease),background-color var(--dur-ui) var(--ease);}
     .p2-tab[aria-selected="true"]{background:#FFFFFF;box-shadow:0 1px 3px rgba(38,36,32,0.14);}
   }
   @media(prefers-reduced-motion:reduce){ .p2-grid.swap .p2-cell{animation:none;} }
@@ -111,7 +116,7 @@ const MOMENTS = [
 ]
 
 // A small trait blob with the report's own soft gradient and a light blur.
-function MiniBlob({ hue, seed, className = 'p1-blob' }: { hue: number; seed: string; className?: string }) {
+function MiniBlob({ hue, seed, className = 'p1-blob', blur = 1.6 }: { hue: number; seed: string; className?: string; blur?: number }) {
   const d = useMemo(() => generateAnimatedBlobPath(22, 22, 16, buildPointMotionProfile(hashSeed(seed), 8), 0.3, 0), [seed])
   const id = `p1-${seed.replace(/\W/g, '')}`
   return (
@@ -120,7 +125,7 @@ function MiniBlob({ hue, seed, className = 'p1-blob' }: { hue: number; seed: str
         <radialGradient id={`${id}-g`} cx="45%" cy="40%" r="70%">
           {blobGradientStops(hue, true).map((s, i) => <stop key={i} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />)}
         </radialGradient>
-        <filter id={`${id}-f`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" /></filter>
+        <filter id={`${id}-f`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={blur} /></filter>
       </defs>
       <path d={d} fill={`url(#${id}-g)`} filter={`url(#${id}-f)`} />
     </svg>
@@ -163,35 +168,35 @@ export function Problems1() {
 // than a guess" grid, with a soft blob in place of each icon.
 const FEELINGS = [
   {
-    key: 'stuck', label: 'Stuck', hues: [CURATED_HUES[0], CURATED_HUES[1], CURATED_HUES[7]],
+    key: 'again', label: 'Why do I keep doing this?', hues: [CURATED_HUES[0], CURATED_HUES[1], CURATED_HUES[7]],
     items: [
-      { title: 'Same week, again.', body: 'You make a plan, life gets in the way, and a few days later you’re back where you started.' },
-      { title: 'You know what to change.', body: 'You’ve read the books and made the lists. Somehow it still doesn’t stick.' },
-      { title: 'Running in place.', body: 'Your days are full, yet nothing feels like it’s moving forward.' },
+      { title: 'Sunday night resolutions.', body: 'You promise yourself this week will be different. By Wednesday it looks a lot like the last one.' },
+      { title: 'The same argument, again.', body: 'It starts over something small, and you can feel yourself heading for the same ending.' },
+      { title: 'You could explain it to a friend.', body: 'You know your habit inside out. Changing it is another story.' },
     ],
   },
   {
-    key: 'lost', label: 'Lost', hues: [CURATED_HUES[5], CURATED_HUES[4], CURATED_HUES[6]],
+    key: 'want', label: 'What do I actually want?', hues: [CURATED_HUES[5], CURATED_HUES[4], CURATED_HUES[6]],
     items: [
-      { title: 'No answer you believe.', body: 'People ask what’s next, and you can’t say it with any conviction.' },
-      { title: 'Right on paper.', body: 'The job, the plans and the routine all look fine. You just don’t feel like yourself in them.' },
-      { title: 'The thread is gone.', body: 'Somewhere along the way you stopped knowing what matters to you most.' },
+      { title: 'The question you dodge.', body: 'Someone asks what you want from the next few years, and you change the subject.' },
+      { title: 'A life that looks fine.', body: 'From the outside it all works. From the inside you’re not sure it’s really yours.' },
+      { title: 'Borrowed goals.', body: 'Some of what you’re chasing, you picked up from other people along the way.' },
     ],
   },
   {
-    key: 'more', label: 'More to discover', hues: [CURATED_HUES[3], CURATED_HUES[2], CURATED_HUES[4]],
+    key: 'more', label: 'Is there more to me?', hues: [CURATED_HUES[3], CURATED_HUES[2], CURATED_HUES[4]],
     items: [
-      { title: 'There’s more to you.', body: 'A part of you hasn’t had room yet, and you’d like to find out what it is.' },
-      { title: 'Your reactions surprise you.', body: 'Some days you feel or do things you can’t quite explain, even to yourself.' },
-      { title: 'Ready to look closer.', body: 'You want to understand how you really work, beyond a quick quiz or a label.' },
+      { title: 'A side of you on hold.', body: 'There’s something you’ve always been curious about, and it keeps getting pushed to later.' },
+      { title: 'Where did that come from?', body: 'Now and then you react in a way that surprises even you.' },
+      { title: 'More than four letters.', body: 'Quizzes put you in a box. You suspect the real picture is a lot more interesting.' },
     ],
   },
   {
-    key: 'decisions', label: 'Wrong decisions', hues: [CURATED_HUES[6], CURATED_HUES[0], CURATED_HUES[1]],
+    key: 'choice', label: 'Did I choose right?', hues: [CURATED_HUES[6], CURATED_HUES[0], CURATED_HUES[1]],
     items: [
-      { title: 'Second-guessing everything.', body: 'You make a choice, then spend days wondering if it was the right one.' },
-      { title: 'Choices that don’t fit.', body: 'You said yes to the job, the plan or the favour, and later felt it was never really you.' },
-      { title: 'Same outcome, new place.', body: 'Different situation, same result. You can see it coming and still end up there.' },
+      { title: 'The 2 a.m. replay.', body: 'Long after the decision is made, you’re lying awake going over the other option.' },
+      { title: 'Yes first, regret later.', body: 'You agree before you’ve thought it through, then spend the week wishing you’d said no.' },
+      { title: 'New place, same feeling.', body: 'New job, new city, new start. Somehow you end up feeling the way you did before.' },
     ],
   },
 ]
@@ -231,7 +236,7 @@ export function Problems2() {
       <div ref={ref} className="pv-wrap">
         <div className="p2-head">
           <h2 className="pv-in">Does any of this sound like you?</h2>
-          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>Most people find Bearing when something feels off and they can’t quite say what. Pick the one that feels closest.</p>
+          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>Most people come to Bearing with a question they keep asking themselves. Which one is yours?</p>
         </div>
         <div className="p2-tabs-wrap pv-in" style={{ ['--d' as string]: '200ms' }}>
           <div ref={tabsRef} className="p2-tabs" role="tablist" aria-label="How it feels" onKeyDown={onKey}>
@@ -246,14 +251,18 @@ export function Problems2() {
         <div key={swap} id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${f.key}`} className={`p2-grid${swap ? ' swap' : ''}`}>
           {f.items.map((it, n) => (
             <div key={it.title} className="p2-cell pv-in" style={{ ['--d' as string]: `${300 + n * 90}ms` }}>
-              <MiniBlob hue={f.hues[n]} seed={`${f.key}-${n}`} className="p2-blob" />
+              <MiniBlob hue={f.hues[n]} seed={`${f.key}-${n}`} className="p2-blob" blur={3.6} />
               <h3>{it.title}</h3>
               <p>{it.body}</p>
             </div>
           ))}
         </div>
         <div className="p2-foot">
-          <p className="pv-bridge pv-in">Bearing helps you understand why, and gives you a way to work with it, day by day.</p>
+          <p className="pv-bridge pv-in">Every one of these has a pattern behind it. And a pattern is something you can learn to work with.</p>
+          <p className="p2-next pv-in" style={{ ['--d' as string]: '100ms' }}>It starts with seeing yours clearly. In about 15 minutes, Bearing shows you how you tend to think, feel and act.</p>
+          <a href="#solution" className="p2-down pv-in" style={{ ['--d' as string]: '200ms' }} aria-label="See how Bearing works">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v9.5M4 8.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </a>
         </div>
       </div>
     </section>
