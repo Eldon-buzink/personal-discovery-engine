@@ -729,9 +729,27 @@ export default function AssessmentPage() {
       }
     }
 
-    const newAnsweredSet = new Set(newMap.keys())
-    const next = findFirstUnanswered(questionOrder, newAnsweredSet, currentIndex + 1)
+    // After going back, step forward one question at a time through the
+    // ones already answered (each shows its answer); otherwise on to the
+    // next unanswered one, as before.
+    const following = questionOrder[currentIndex + 1]
+    const next = following !== undefined && newMap.has(following)
+      ? currentIndex + 1
+      : findFirstUnanswered(questionOrder, new Set(newMap.keys()), currentIndex + 1)
     setCurrentIndex(next)
+  }
+
+  // The nearest answered question before this one, or -1 at the start.
+  function previousAnsweredIndex(): number {
+    for (let i = Math.min(currentIndex, questionOrder.length) - 1; i >= 0; i--) {
+      if (answeredMap.has(questionOrder[i])) return i
+    }
+    return -1
+  }
+
+  function handleBack() {
+    const prev = previousAnsweredIndex()
+    if (prev >= 0) setCurrentIndex(prev)
   }
 
   function handleKeepGoing() {
@@ -1002,6 +1020,8 @@ export default function AssessmentPage() {
               question={currentQuestion.text}
               format="dot-scale"
               onNext={handleNext}
+              onBack={previousAnsweredIndex() >= 0 ? handleBack : undefined}
+              initialAnswer={answeredMap.has(currentQuestion.id) ? String(answeredMap.get(currentQuestion.id)) : ''}
               centered={false}
               scaleLabels={['Very Inaccurate', 'Very Accurate']}
             />
