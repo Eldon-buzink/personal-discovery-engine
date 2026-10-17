@@ -3,6 +3,7 @@ import { buildMetadata } from '@/lib/seo'
 import SiteFooter from '@/components/known/SiteFooter'
 import V3Client from '../V3Client'
 import ProblemsSection from './ProblemsSection'
+import Solution from '../Solution'
 
 // Landing v3, step 2: the hero plus one of three designs for the problems
 // section (p1, p2, p3). Not indexed, not in the sitemap.
@@ -20,7 +21,7 @@ export default function LandingV3Variant({ params }: { params: { variant: string
   if (!VARIANTS.includes(params.variant as (typeof VARIANTS)[number])) notFound()
   return (
     <>
-      <V3Client problems={<ProblemsSection variant={params.variant as (typeof VARIANTS)[number]} />} />
+      <V3Client problems={<ProblemsSection variant={params.variant as (typeof VARIANTS)[number]} />} solution={<Solution />} />
       <SiteFooter />
     </>
   )

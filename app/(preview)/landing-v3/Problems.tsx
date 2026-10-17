@@ -11,7 +11,10 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { format, subDays } from 'date-fns'
+import Link from 'next/link'
 import { RecentNotes } from '@/components/known/practice/PatternReportParts'
+import { LANDING_SOUND_FAMILIAR } from '@/lib/known/miniAssessmentLanding'
+import { facetDisplayLabel, MINI_ASSESSMENT_SLUG_TO_FACET, type MiniAssessmentSlug } from '@/lib/known/miniAssessmentScoring'
 import { blobGradientStops, buildPointMotionProfile, CURATED_HUES, generateAnimatedBlobPath, hashSeed } from '@/lib/blobs'
 import { prefersReducedMotion, useEnterOnce } from '@/lib/design/motion'
 import { css } from '@/lib/design/type'
@@ -67,11 +70,17 @@ export const problemsCSS = `
     transition:left var(--dur-ui) var(--ease),width var(--dur-ui) var(--ease);}
   .p2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}
   .p2-cell{padding:8px 36px 4px;text-align:center;}
-  .p2-cell + .p2-cell{border-left:1px solid ${line};}
   .p2-blob{display:block;width:72px;height:72px;margin:0 auto 22px;transition:transform var(--dur-ui) var(--ease);}
   .p2-cell:hover .p2-blob{transform:scale(1.1) rotate(-8deg);}
   .p2-cell h3{${css.display3}color:${ink};margin:0 0 10px;}
   .p2-cell p{${css.body}color:${soft};margin:0;}
+  .p2-feel{${css.display4}color:${soft};text-align:center;max-width:560px;margin:-24px auto 48px;text-wrap:balance;}
+  .p2-grid.swap + .p2-check,.p2-feel.swap{animation:p2-in var(--dur-enter) var(--ease) both;}
+  .p2-check{${css.ui}display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:28px;color:${ink};text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(38,36,32,0.35);}
+  .p2-check:hover{text-decoration-color:${ink};}
+  .p2-check svg{transition:transform var(--dur-ui) var(--ease);}
+  .p2-check:hover svg{transform:translateX(3px);}
+  .p2-checkrow{text-align:center;}
   .p2-grid.swap .p2-cell{animation:p2-in var(--dur-enter) var(--ease) both;animation-delay:var(--d,0ms);}
   @keyframes p2-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   .p2-foot{text-align:center;max-width:640px;margin:72px auto 0;}
@@ -82,8 +91,7 @@ export const problemsCSS = `
   .p2-down svg{transition:transform var(--dur-ui) var(--ease);}
   .p2-down:hover svg{transform:translateY(3px);}  @media(max-width:860px){
     .p2-grid{grid-template-columns:1fr;}
-    .p2-cell + .p2-cell{border-left:none;border-top:1px solid ${line};}
-    .p2-cell{padding:32px 8px;}
+    .p2-cell{padding:20px 8px;}
   }
   /* Phone: the four tabs as a 2 x 2 grid so none is cut off; the chosen
      one is white (no sliding pill). */
@@ -166,40 +174,23 @@ export function Problems1() {
 // The four feelings people come to Bearing with, as tabs; each opens three
 // moments in the person's own voice, laid out like mrdoge.ai's "Sharper
 // than a guess" grid, with a soft blob in place of each icon.
-const FEELINGS = [
-  {
-    key: 'again', label: 'Why do I keep doing this?', hues: [CURATED_HUES[0], CURATED_HUES[1], CURATED_HUES[7]],
-    items: [
-      { title: 'Sunday night resolutions.', body: 'You promise yourself this week will be different. By Wednesday it looks a lot like the last one.' },
-      { title: 'The same argument, again.', body: 'It starts over something small, and you can feel yourself heading for the same ending.' },
-      { title: 'You could explain it to a friend.', body: 'You know your habit inside out. Changing it is another story.' },
-    ],
-  },
-  {
-    key: 'want', label: 'What do I actually want?', hues: [CURATED_HUES[5], CURATED_HUES[4], CURATED_HUES[6]],
-    items: [
-      { title: 'The question you dodge.', body: 'Someone asks what you want from the next few years, and you change the subject.' },
-      { title: 'A life that looks fine.', body: 'From the outside it all works. From the inside you’re not sure it’s really yours.' },
-      { title: 'Borrowed goals.', body: 'Some of what you’re chasing, you picked up from other people along the way.' },
-    ],
-  },
-  {
-    key: 'more', label: 'Is there more to me?', hues: [CURATED_HUES[3], CURATED_HUES[2], CURATED_HUES[4]],
-    items: [
-      { title: 'A side of you on hold.', body: 'There’s something you’ve always been curious about, and it keeps getting pushed to later.' },
-      { title: 'Where did that come from?', body: 'Now and then you react in a way that surprises even you.' },
-      { title: 'More than four letters.', body: 'Quizzes put you in a box. You suspect the real picture is a lot more interesting.' },
-    ],
-  },
-  {
-    key: 'choice', label: 'Did I choose right?', hues: [CURATED_HUES[6], CURATED_HUES[0], CURATED_HUES[1]],
-    items: [
-      { title: 'The 2 a.m. replay.', body: 'Long after the decision is made, you’re lying awake going over the other option.' },
-      { title: 'Yes first, regret later.', body: 'You agree before you’ve thought it through, then spend the week wishing you’d said no.' },
-      { title: 'New place, same feeling.', body: 'New job, new city, new start. Somehow you end up feeling the way you did before.' },
-    ],
-  },
-]
+// The product's three quick-check themes (the /start/{slug} pages) with the
+// problem copy written for each (LANDING_SOUND_FAMILIAR in
+// lib/known/miniAssessmentLanding.ts): how it feels from the inside and
+// three moments in the person's own words. Imported, so it can't drift.
+const SLUGS: MiniAssessmentSlug[] = ['discipline', 'anxiety', 'values']
+const THEME_HUES: Record<MiniAssessmentSlug, number[]> = {
+  discipline: [CURATED_HUES[0], CURATED_HUES[1], CURATED_HUES[7]],
+  anxiety: [CURATED_HUES[5], CURATED_HUES[4], CURATED_HUES[6]],
+  values: [CURATED_HUES[3], CURATED_HUES[2], CURATED_HUES[1]],
+}
+const FEELINGS = SLUGS.map((slug) => ({
+  key: slug,
+  label: facetDisplayLabel(MINI_ASSESSMENT_SLUG_TO_FACET[slug]),
+  feel: LANDING_SOUND_FAMILIAR[slug].subtitle,
+  hues: THEME_HUES[slug],
+  items: LANDING_SOUND_FAMILIAR[slug].cards.map((c) => ({ title: c.title, body: c.line })),
+}))
 
 export function Problems2() {
   const ref = useEnterOnce<HTMLDivElement>()
@@ -236,7 +227,7 @@ export function Problems2() {
       <div ref={ref} className="pv-wrap">
         <div className="p2-head">
           <h2 className="pv-in">Does any of this sound like you?</h2>
-          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>Most people come to Bearing with a question they keep asking themselves. Which one is yours?</p>
+          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>Pick a pattern and see how it can feel from the inside.</p>
         </div>
         <div className="p2-tabs-wrap pv-in" style={{ ['--d' as string]: '200ms' }}>
           <div ref={tabsRef} className="p2-tabs" role="tablist" aria-label="How it feels" onKeyDown={onKey}>
@@ -248,14 +239,23 @@ export function Problems2() {
             ))}
           </div>
         </div>
-        <div key={swap} id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${f.key}`} className={`p2-grid${swap ? ' swap' : ''}`}>
-          {f.items.map((it, n) => (
-            <div key={it.title} className="p2-cell pv-in" style={{ ['--d' as string]: `${300 + n * 90}ms` }}>
-              <MiniBlob hue={f.hues[n]} seed={`${f.key}-${n}`} className="p2-blob" blur={3.6} />
-              <h3>{it.title}</h3>
-              <p>{it.body}</p>
-            </div>
-          ))}
+        <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${f.key}`}>
+          <p key={`feel-${swap}`} className={`p2-feel pv-in${swap ? ' swap' : ''}`} style={{ ['--d' as string]: '250ms' }}>{f.feel}</p>
+          <div key={swap} className={`p2-grid${swap ? ' swap' : ''}`}>
+            {f.items.map((it, n) => (
+              <div key={it.title} className="p2-cell pv-in" style={{ ['--d' as string]: `${300 + n * 90}ms` }}>
+                <MiniBlob hue={f.hues[n]} seed={`${f.key}-${n}`} className="p2-blob" blur={3.6} />
+                <h3>{it.title}</h3>
+                <p>&ldquo;{it.body}&rdquo;</p>
+              </div>
+            ))}
+          </div>
+          <div className="p2-checkrow">
+            <Link href={`/start/${f.key}`} className="p2-check">
+              Take the 2-minute check on {f.label.toLowerCase()}
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </Link>
+          </div>
         </div>
         <div className="p2-foot">
           <p className="pv-bridge pv-in">Every one of these has a pattern behind it. And a pattern is something you can learn to work with.</p>
