@@ -29,7 +29,7 @@ const BLOBS = CURATED_HUES.map((hue, i) => ({
   ][i],
 }))
 
-// Also behind the closing section (Closing.tsx); ids are per instance.
+// SVG ids are per instance, so it can be placed more than once.
 export function HeroBlobs() {
   const uid = useId().replace(/:/g, "")
   const wrapRef = useRef<HTMLDivElement>(null)
