@@ -89,7 +89,7 @@ const HERO_CSS = `
 const arrow = <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 const tick = <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 
-export default function V3Client({ problems, solution }: { problems?: ReactNode; solution?: ReactNode }) {
+export default function V3Client({ problems, solution, practice }: { problems?: ReactNode; solution?: ReactNode; practice?: ReactNode }) {
   const copyRef = useEnterOnce<HTMLDivElement>()
   const d = (ms: number) => ({ ['--d' as string]: `${ms}ms` })
   return (
@@ -119,6 +119,8 @@ export default function V3Client({ problems, solution }: { problems?: ReactNode;
         {/* Step 3: the solution (id="solution"; the problems section's
             arrow points here). */}
         {solution}
+        {/* Step 4: the trait tracker. */}
+        {practice}
       </main>
     </div>
   )

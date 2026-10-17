@@ -30,7 +30,11 @@ const ink = '#262420'
 const soft = '#56534D'
 
 export const solutionCSS = `
-  .sv{padding:120px 24px 128px;text-align:center;}
+  .sv{padding:0 24px 128px;text-align:center;}
+  /* The thread from the problems' last line into this section; draws once. */
+  .sv-thread{display:block;width:1px;height:72px;margin:40px auto;background:linear-gradient(rgba(38,36,32,0),rgba(38,36,32,0.28));transform-origin:center top;}
+  .m-armed:not(.m-play) .sv-thread{transform:scaleY(0);}
+  .m-play .sv-thread{transition:transform var(--dur-enter) var(--ease);}
   .sv-wrap{max-width:1040px;margin:0 auto;}
   .sv h2{font-family:var(--font-display);font-weight:400;font-size:clamp(34px,4.2vw,52px);line-height:1.08;letter-spacing:-0.025em;margin:0;color:${ink};text-wrap:balance;}
   .sv-intro{${css.body}font-size:18px;color:${soft};max-width:600px;margin:20px auto 0;text-wrap:balance;}
@@ -48,7 +52,8 @@ export const solutionCSS = `
   .m-armed:not(.m-play) .sv-in{opacity:0;transform:translateY(16px);}
   .m-play .sv-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
   @media(max-width:640px){
-    .sv{padding:80px 16px 88px;}
+    .sv{padding:0 16px 88px;}
+    .sv-thread{height:56px;margin:28px auto;}
     .sv-intro{font-size:16px;}
     .sv-card{margin-top:40px;padding:22px 14px 28px;border-radius:22px;}
   }
@@ -112,11 +117,12 @@ export default function Solution() {
     <section id="solution" className="sv">
       <style dangerouslySetInnerHTML={{ __html: solutionCSS }} />
       <div ref={ref} className="sv-wrap">
-        <h2 className="sv-in">Meet your patterns.</h2>
-        <p className="sv-intro sv-in" style={{ ['--d' as string]: '100ms' }}>
-          Answer 120 short statements in about 15 minutes. Your report gives each of your 30 patterns its own word, shows how strongly you lean, and explains in plain words how it tends to show up in your days.
+        <span className="sv-thread" aria-hidden="true" />
+        <h2 className="sv-in" style={{ ['--d' as string]: '200ms' }}>Meet your patterns.</h2>
+        <p className="sv-intro sv-in" style={{ ['--d' as string]: '300ms' }}>
+          It starts with seeing yours clearly. Answer 120 short statements in about 15 minutes, and your report gives each of your 30 patterns its own word, shows how strongly you lean, and explains how it tends to show up in your days.
         </p>
-        <div className="sv-card sv-in" style={{ ['--d' as string]: '200ms' }}>
+        <div className="sv-card sv-in" style={{ ['--d' as string]: '400ms' }}>
           <p className="sv-label">Example report</p>
           <TraitCarousel traits={traits} activeIdx={i} onSelect={setI}>
             <div style={{ marginTop: 12 }}>

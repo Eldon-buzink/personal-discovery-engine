@@ -58,6 +58,7 @@ export const problemsCSS = `
   /* ── 2. How it feels (after mrdoge.ai "Sharper than a guess") ── */
   .p2-head{text-align:center;max-width:860px;margin:0 auto;}
   .pv h2,.pv h3,.pv-bridge{text-wrap:balance;}
+  .pv.pv-joined{padding-bottom:0;}
   .p2-head .pv-intro{margin-left:auto;margin-right:auto;}
   .p2-tabs-wrap{display:flex;justify-content:center;margin:36px 0 56px;}
   .p2-tabs{display:inline-flex;position:relative;padding:4px;border-radius:999px;background:rgba(38,36,32,0.06);max-width:100%;overflow-x:auto;scrollbar-width:none;}
@@ -85,11 +86,6 @@ export const problemsCSS = `
   @keyframes p2-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   .p2-foot{text-align:center;max-width:640px;margin:72px auto 0;}
   .p2-foot .pv-bridge{${css.display3}margin:0 auto;max-width:600px;}
-  .p2-foot .p2-next{${css.body}font-size:18px;color:${soft};margin:14px auto 0;max-width:520px;}
-  .p2-down{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-top:20px;border-radius:50%;border:1px solid ${line};color:${ink};}
-  .p2-down:focus-visible{outline:2px solid ${ink};outline-offset:2px;}
-  .p2-down svg{transition:transform var(--dur-ui) var(--ease);}
-  .p2-down:hover svg{transform:translateY(3px);}  @media(max-width:860px){
     .p2-grid{grid-template-columns:1fr;}
     .p2-cell{padding:20px 8px;}
   }
@@ -223,7 +219,7 @@ export function Problems2() {
   }
   const f = FEELINGS[i]
   return (
-    <section className="pv">
+    <section className="pv pv-joined">
       <div ref={ref} className="pv-wrap">
         <div className="p2-head">
           <h2 className="pv-in">Does any of this sound like you?</h2>
@@ -259,10 +255,6 @@ export function Problems2() {
         </div>
         <div className="p2-foot">
           <p className="pv-bridge pv-in">Every one of these has a pattern behind it. And a pattern is something you can learn to work with.</p>
-          <p className="p2-next pv-in" style={{ ['--d' as string]: '100ms' }}>It starts with seeing yours clearly. In about 15 minutes, Bearing shows you how you tend to think, feel and act.</p>
-          <a href="#solution" className="p2-down pv-in" style={{ ['--d' as string]: '200ms' }} aria-label="See how Bearing works">
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v9.5M4 8.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </a>
         </div>
       </div>
     </section>
