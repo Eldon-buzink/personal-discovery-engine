@@ -52,26 +52,43 @@ export const problemsCSS = `
     .p1-name{justify-content:flex-start;}
   }
 
-  /* ── 2. Where it shows up ── */
-  .p2{position:relative;overflow:hidden;}
-  .p2-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:72px;align-items:start;}
-  .p2-tabs{display:inline-flex;position:relative;margin-top:32px;padding:4px;border-radius:999px;background:rgba(38,36,32,0.06);}
-  .p2-tab{${css.ui}position:relative;z-index:1;min-height:44px;padding:0 18px;border:none;background:transparent;border-radius:999px;color:${soft};cursor:pointer;
+  /* ── 2. How it feels (after mrdoge.ai "Sharper than a guess") ── */
+  .p2-head{text-align:center;max-width:640px;margin:0 auto;}
+  .p2-head .pv-intro{margin-left:auto;margin-right:auto;}
+  .p2-tabs-wrap{display:flex;justify-content:center;margin:32px 0 40px;}
+  .p2-tabs{display:inline-flex;position:relative;padding:4px;border-radius:999px;background:rgba(38,36,32,0.06);max-width:100%;overflow-x:auto;scrollbar-width:none;}
+  .p2-tabs::-webkit-scrollbar{display:none;}
+  .p2-tab{${css.ui}position:relative;z-index:1;flex-shrink:0;min-height:44px;padding:0 18px;border:none;background:transparent;border-radius:999px;color:${soft};cursor:pointer;white-space:nowrap;
     transition:color var(--dur-ui) var(--ease);}
   .p2-tab[aria-selected="true"]{color:${ink};}
-  .p2-tab:focus-visible{outline:2px solid ${ink};outline-offset:2px;}
+  .p2-tab:focus-visible{outline:2px solid ${ink};outline-offset:-2px;}
   .p2-pill{position:absolute;top:4px;bottom:4px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(38,36,32,0.14);
     transition:left var(--dur-ui) var(--ease),width var(--dur-ui) var(--ease);}
-  .p2-panel{position:relative;min-height:340px;}
-  .p2-glow{position:absolute;right:-60px;top:-40px;width:340px;height:340px;pointer-events:none;opacity:0.55;filter:blur(30px);transition:color var(--dur-enter) var(--ease);}
-  .p2-items{position:relative;list-style:none;margin:0;padding:0;}
-  .p2-item{${css.display3}color:${ink};padding:22px 0;border-top:1px solid ${line};}
-  .p2-item:last-child{border-bottom:1px solid ${line};}
-  .p2-items.swap .p2-item{animation:p2-in var(--dur-enter) var(--ease) both;animation-delay:var(--d,0ms);}
+  .p2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid ${line};border-radius:24px;overflow:hidden;background:rgba(255,255,255,0.35);}
+  .p2-cell{padding:40px 32px 36px;text-align:center;}
+  .p2-cell + .p2-cell{border-left:1px solid ${line};}
+  .p2-blob{display:block;width:56px;height:56px;margin:0 auto 20px;transition:transform var(--dur-ui) var(--ease);}
+  .p2-cell:hover .p2-blob{transform:scale(1.1) rotate(-8deg);}
+  .p2-cell h3{${css.display4}color:${ink};margin:0 0 8px;}
+  .p2-cell p{${css.body}color:${soft};margin:0;}
+  .p2-grid.swap .p2-cell{animation:p2-in var(--dur-enter) var(--ease) both;animation-delay:var(--d,0ms);}
   @keyframes p2-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-  @media(max-width:860px){ .p2-grid{grid-template-columns:1fr;gap:36px;} .p2-panel{min-height:0;} }
-  @media(max-width:420px){ .p2-tab{padding:0 12px;} }
-  @media(prefers-reduced-motion:reduce){ .p2-items.swap .p2-item{animation:none;} }
+  .p2-foot{text-align:center;}
+  .p2-foot .pv-bridge{margin-left:auto;margin-right:auto;}
+  @media(max-width:860px){
+    .p2-grid{grid-template-columns:1fr;}
+    .p2-cell + .p2-cell{border-left:none;border-top:1px solid ${line};}
+    .p2-cell{padding:32px 24px;}
+  }
+  /* Phone: the four tabs as a 2 x 2 grid so none is cut off; the chosen
+     one is white (no sliding pill). */
+  @media(max-width:640px){
+    .p2-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;border-radius:22px;width:100%;overflow:visible;}
+    .p2-pill{display:none;}
+    .p2-tab{padding:0 10px;transition:color var(--dur-ui) var(--ease),background-color var(--dur-ui) var(--ease);}
+    .p2-tab[aria-selected="true"]{background:#FFFFFF;box-shadow:0 1px 3px rgba(38,36,32,0.14);}
+  }
+  @media(prefers-reduced-motion:reduce){ .p2-grid.swap .p2-cell{animation:none;} }
 
   /* ── 3. End of the day ── */
   .p3-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:72px;align-items:start;}
@@ -94,11 +111,11 @@ const MOMENTS = [
 ]
 
 // A small trait blob with the report's own soft gradient and a light blur.
-function MiniBlob({ hue, seed }: { hue: number; seed: string }) {
+function MiniBlob({ hue, seed, className = 'p1-blob' }: { hue: number; seed: string; className?: string }) {
   const d = useMemo(() => generateAnimatedBlobPath(22, 22, 16, buildPointMotionProfile(hashSeed(seed), 8), 0.3, 0), [seed])
   const id = `p1-${seed.replace(/\W/g, '')}`
   return (
-    <svg className="p1-blob" viewBox="0 0 44 44" aria-hidden="true" style={{ overflow: 'visible' }}>
+    <svg className={className} viewBox="0 0 44 44" aria-hidden="true" style={{ overflow: 'visible' }}>
       <defs>
         <radialGradient id={`${id}-g`} cx="45%" cy="40%" r="70%">
           {blobGradientStops(hue, true).map((s, i) => <stop key={i} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />)}
@@ -139,31 +156,42 @@ export function Problems1() {
   )
 }
 
-// ─── Design 2: Where it shows up ────────────────────────────────────────────
+// ─── Design 2: How it feels ─────────────────────────────────────────────────
 
-const AREAS = [
+// The four feelings people come to Bearing with, as tabs; each opens three
+// moments in the person's own voice, laid out like mrdoge.ai's "Sharper
+// than a guess" grid, with a soft blob in place of each icon.
+const FEELINGS = [
   {
-    key: 'work', label: 'At work', hue: CURATED_HUES[5],
+    key: 'stuck', label: 'Stuck', hues: [CURATED_HUES[0], CURATED_HUES[1], CURATED_HUES[7]],
     items: [
-      'You rewrite the same email three times before you send it.',
-      'You take on one more thing, then stay late to make it fit.',
-      'One piece of feedback stays with you for days.',
+      { title: 'Same week, again.', body: 'You make a plan, life gets in the way, and a few days later you’re back where you started.' },
+      { title: 'You know what to change.', body: 'You’ve read the books and made the lists. Somehow it still doesn’t stick.' },
+      { title: 'Running in place.', body: 'Your days are full, yet nothing feels like it’s moving forward.' },
     ],
   },
   {
-    key: 'people', label: 'With people', hue: CURATED_HUES[7],
+    key: 'lost', label: 'Lost', hues: [CURATED_HUES[5], CURATED_HUES[4], CURATED_HUES[6]],
     items: [
-      'You agree to plans you would rather skip.',
-      'A short reply makes you wonder what you did wrong.',
-      'You hold back in a group, then think of the right thing to say on the way home.',
+      { title: 'No answer you believe.', body: 'People ask what’s next, and you can’t say it with any conviction.' },
+      { title: 'Right on paper.', body: 'The job, the plans and the routine all look fine. You just don’t feel like yourself in them.' },
+      { title: 'The thread is gone.', body: 'Somewhere along the way you stopped knowing what matters to you most.' },
     ],
   },
   {
-    key: 'self', label: 'On your own', hue: CURATED_HUES[3],
+    key: 'more', label: 'More to discover', hues: [CURATED_HUES[3], CURATED_HUES[2], CURATED_HUES[4]],
     items: [
-      'You start strong on Monday and drift by Thursday.',
-      'You can’t switch off, even when the work is done.',
-      'You know what you want to change, but not where to start.',
+      { title: 'There’s more to you.', body: 'A part of you hasn’t had room yet, and you’d like to find out what it is.' },
+      { title: 'Your reactions surprise you.', body: 'Some days you feel or do things you can’t quite explain, even to yourself.' },
+      { title: 'Ready to look closer.', body: 'You want to understand how you really work, beyond a quick quiz or a label.' },
+    ],
+  },
+  {
+    key: 'decisions', label: 'Wrong decisions', hues: [CURATED_HUES[6], CURATED_HUES[0], CURATED_HUES[1]],
+    items: [
+      { title: 'Second-guessing everything.', body: 'You make a choice, then spend days wondering if it was the right one.' },
+      { title: 'Choices that don’t fit.', body: 'You said yes to the job, the plan or the favour, and later felt it was never really you.' },
+      { title: 'Same outcome, new place.', body: 'Different situation, same result. You can see it coming and still end up there.' },
     ],
   },
 ]
@@ -184,41 +212,48 @@ export function Problems2() {
     window.addEventListener('resize', place)
     return () => window.removeEventListener('resize', place)
   }, [i])
-  const pick = (n: number) => { if (n === i) return; setI(n); setSwap((s) => s + 1) }
+  const pick = (n: number) => {
+    if (n === i) return
+    setI(n)
+    setSwap((v) => v + 1)
+    tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[n]?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
     e.preventDefault()
-    const n = (i + (e.key === 'ArrowRight' ? 1 : AREAS.length - 1)) % AREAS.length
+    const n = (i + (e.key === 'ArrowRight' ? 1 : FEELINGS.length - 1)) % FEELINGS.length
     pick(n)
     tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[n]?.focus()
   }
-  const area = AREAS[i]
-  const glow = useMemo(() => generateAnimatedBlobPath(170, 170, 130, buildPointMotionProfile(hashSeed('p2-glow'), 9), 0.3, 0), [])
+  const f = FEELINGS[i]
   return (
-    <section className="pv p2">
-      <div ref={ref} className="pv-wrap p2-grid">
-        <div>
-          <h2 className="pv-in">Where does it show up for you?</h2>
-          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>The same few patterns tend to come back in very different places. Pick one and see if it sounds familiar.</p>
-          <div ref={tabsRef} className="p2-tabs pv-in" style={{ ['--d' as string]: '200ms' }} role="tablist" aria-label="Where it shows up" onKeyDown={onKey}>
+    <section className="pv">
+      <div ref={ref} className="pv-wrap">
+        <div className="p2-head">
+          <h2 className="pv-in">Does any of this sound like you?</h2>
+          <p className="pv-intro pv-in" style={{ ['--d' as string]: '100ms' }}>Most people find Bearing when something feels off and they can’t quite say what. Pick the one that feels closest.</p>
+        </div>
+        <div className="p2-tabs-wrap pv-in" style={{ ['--d' as string]: '200ms' }}>
+          <div ref={tabsRef} className="p2-tabs" role="tablist" aria-label="How it feels" onKeyDown={onKey}>
             <span className="p2-pill" style={{ left: pill.left, width: pill.width }} aria-hidden="true" />
-            {AREAS.map((a, n) => (
-              <button key={a.key} type="button" role="tab" id={`${id}-tab-${a.key}`} aria-selected={n === i} aria-controls={`${id}-panel`} tabIndex={n === i ? 0 : -1} className="p2-tab" onClick={() => pick(n)}>
-                {a.label}
+            {FEELINGS.map((x, n) => (
+              <button key={x.key} type="button" role="tab" id={`${id}-tab-${x.key}`} aria-selected={n === i} aria-controls={`${id}-panel`} tabIndex={n === i ? 0 : -1} className="p2-tab" onClick={() => pick(n)}>
+                {x.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="p2-panel" id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${area.key}`}>
-          <svg className="p2-glow" viewBox="0 0 340 340" aria-hidden="true" style={{ color: `hsl(${area.hue},65%,72%)` }}>
-            <path d={glow} fill="currentColor" />
-          </svg>
-          <ul key={swap} className={`p2-items${swap ? ' swap' : ''}`}>
-            {area.items.map((t, n) => (
-              <li key={t} className="p2-item pv-in" style={{ ['--d' as string]: `${300 + n * 90}ms` }}>{t}</li>
-            ))}
-          </ul>
-          <p className="pv-bridge">Bearing helps you see the pattern behind moments like these, wherever they happen.</p>
+        <div key={swap} id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${f.key}`} className={`p2-grid${swap ? ' swap' : ''}`}>
+          {f.items.map((it, n) => (
+            <div key={it.title} className="p2-cell pv-in" style={{ ['--d' as string]: `${300 + n * 90}ms` }}>
+              <MiniBlob hue={f.hues[n]} seed={`${f.key}-${n}`} className="p2-blob" />
+              <h3>{it.title}</h3>
+              <p>{it.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="p2-foot">
+          <p className="pv-bridge pv-in">Bearing helps you understand why, and gives you a way to work with it, day by day.</p>
         </div>
       </div>
     </section>
