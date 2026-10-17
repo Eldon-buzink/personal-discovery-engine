@@ -135,7 +135,7 @@ export default function PricingClient() {
     <div style={{ background: cream, color: charcoal, fontFamily: sans }}>
       <style dangerouslySetInnerHTML={{ __html: pricingCSS }} />
 
-      <div style={{ maxWidth: 920, margin: '0 auto', padding: '88px 24px 64px' }}>
+      <div style={{ maxWidth: 920, margin: '0 auto', padding: '116px 24px 64px' }}>
 
         {/* Eyebrow + headline */}
         <p style={{

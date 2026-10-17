@@ -7,8 +7,8 @@ import Tracker from './_landing/Tracker'
 import Faq from './_landing/Faq'
 import Closing from './_landing/Closing'
 
-// The landing page. Outside the (site) group so it has its own navigation
-// (V3Nav). Metadata and JSON-LD are unchanged from the old landing, which
+// The landing page. Outside the (site) group: V3Client renders the shared
+// SiteNav itself, above its own full-bleed hero. Metadata and JSON-LD are unchanged from the old landing, which
 // is kept for reference at /landing-old (noindex).
 export const metadata = buildMetadata({
   path: '/',

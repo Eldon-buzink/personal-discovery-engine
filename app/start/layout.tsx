@@ -8,7 +8,7 @@ export default function StartLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-cream">
       <header className="px-6 pt-6 flex justify-center">
-        <Link href="/" className="font-serif text-charcoal" style={{ fontSize: 20, fontWeight: 500 }}>
+        <Link href="/" className="text-charcoal" style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em' }}>
           Bearing
         </Link>
       </header>

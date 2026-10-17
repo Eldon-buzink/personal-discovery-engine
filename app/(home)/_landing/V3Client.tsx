@@ -7,7 +7,7 @@ import { useEnterOnce } from '@/lib/design/motion'
 import { css } from '@/lib/design/type'
 import { HeroCta, useLandingVisitor } from '@/app/(site)/LandingPageClient'
 import { mkCharcoal, mkCream } from '@/app/start/startLandingShared'
-import V3Nav, { v3NavCSS } from './V3Nav'
+import SiteNav from '@/components/known/SiteNav'
 import { ctaFor, VisitorContext } from './visitor'
 
 // The landing page shell and its hero. After traitstack.com's hero (a large
@@ -118,8 +118,8 @@ export default function V3Client({ problems, solution, practice, faq, closing }:
   return (
     <VisitorContext.Provider value={{ welcomeBack, startedUnfinished }}>
     <div className="v3">
-      <style dangerouslySetInnerHTML={{ __html: v3NavCSS + HERO_CSS }} />
-      <V3Nav />
+      <style dangerouslySetInnerHTML={{ __html: HERO_CSS }} />
+      <SiteNav />
       <main>
         <section className="v3-hero">
           <HeroBlobs />
