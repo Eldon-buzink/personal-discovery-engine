@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useRef, type ReactNode } from 'react'
+import { useId, useMemo, useRef, type ReactNode } from 'react'
 import { blobGradientStops, buildPointMotionProfile, CURATED_HUES, generateAnimatedBlobPath, hashSeed, useBlobAnimation } from '@/lib/blobs'
 import { useEnterOnce } from '@/lib/design/motion'
 import { css } from '@/lib/design/type'
@@ -29,7 +29,9 @@ const BLOBS = CURATED_HUES.map((hue, i) => ({
   ][i],
 }))
 
-function HeroBlobs() {
+// Also behind the closing section (Closing.tsx); ids are per instance.
+export function HeroBlobs() {
+  const uid = useId().replace(/:/g, "")
   const wrapRef = useRef<HTMLDivElement>(null)
   const refs = useRef<(SVGPathElement | null)[]>([])
   const items = useMemo(() => BLOBS.map((b, i) => ({ ...b, profile: buildPointMotionProfile(hashSeed(`v3-hero-${i}`), 9) })), [])
@@ -40,15 +42,15 @@ function HeroBlobs() {
     <div ref={wrapRef} className="v3-blobs" aria-hidden="true">
       <svg viewBox="0 0 1000 560" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
         <defs>
-          <filter id="v3-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26" /></filter>
+          <filter id={`v3-blur-${uid}`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26" /></filter>
           {items.map((b, i) => (
-            <radialGradient key={i} id={`v3-grad-${i}`} cx="45%" cy="40%" r="70%">
+            <radialGradient key={i} id={`v3-grad-${uid}-${i}`} cx="45%" cy="40%" r="70%">
               {blobGradientStops(b.hue, b.active).map((s, j) => <stop key={j} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />)}
             </radialGradient>
           ))}
         </defs>
         {items.map((b, i) => (
-          <path key={i} ref={(el) => { refs.current[i] = el }} fill={`url(#v3-grad-${i})`} filter="url(#v3-blur)" d={generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, 0)} />
+          <path key={i} ref={(el) => { refs.current[i] = el }} fill={`url(#v3-grad-${uid}-${i})`} filter={`url(#v3-blur-${uid})`} d={generateAnimatedBlobPath(b.cx, b.cy, b.r, b.profile, 0.3, 0)} />
         ))}
       </svg>
     </div>
@@ -89,7 +91,7 @@ const HERO_CSS = `
 const arrow = <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 const tick = <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 
-export default function V3Client({ problems, solution, practice }: { problems?: ReactNode; solution?: ReactNode; practice?: ReactNode }) {
+export default function V3Client({ problems, solution, practice, faq, closing }: { problems?: ReactNode; solution?: ReactNode; practice?: ReactNode; faq?: ReactNode; closing?: ReactNode }) {
   const copyRef = useEnterOnce<HTMLDivElement>()
   const d = (ms: number) => ({ ['--d' as string]: `${ms}ms` })
   return (
@@ -121,6 +123,9 @@ export default function V3Client({ problems, solution, practice }: { problems?: 
         {solution}
         {/* Step 4: the trait tracker. */}
         {practice}
+        {/* Steps 5 and 6: the FAQ and the closing call to action. */}
+        {faq}
+        {closing}
       </main>
     </div>
   )

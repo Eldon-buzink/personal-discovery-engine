@@ -1,61 +1,49 @@
 'use client'
 
 /**
- * Landing v3, step 4: the trait tracker. Three steps down the page, each a
- * short text next to the real screen it describes, straight on the page
- * (no toggle, no card around them, so it reads apart from the solution's
- * example report):
+ * Landing v3, step 4: the trait tracker. Three steps side by side, like the
+ * problems section, each a short text over the real screen it describes,
+ * straight on the page (no toggle, no card around them):
  *   1. Choose: Manage your practice's rows (ManageRow), switches that work,
  *      with the app's own four-pattern limit and message.
  *   2. Check in: the evening question with its answers (CheckInAnswerRows).
- *   3. See what changes: the pattern's review page as the app renders it
- *      (PatternReportBody), over the landing example's four weeks.
+ *   3. Weekly read: three check-ins in a week and the read the app gives
+ *      for them (WeeklyReadExample, the app's WeekCallout).
  * Then a short close with what Bearing wants for the user.
- *
- * Every string on the screens comes from the app's own functions over the
- * landing fixture (buildJourneyExample, computeRecentWeeksReport,
- * formatDistribution, formatStartVsNow, selectRecentNotes).
  */
 
 import { useMemo, useState, type ReactNode } from 'react'
-import { format } from 'date-fns'
 import ManageRow from '@/components/known/practice/ManageRow'
 import CheckInAnswerRows from '@/components/known/practice/CheckInAnswerRows'
-import { PatternReportBody } from '@/components/known/practice/PatternReportParts'
-import { landingPracticeFixture, materializeFixture } from '@/app/(site)/landing/landingPracticeFixture'
+import { landingPracticeFixture } from '@/app/(site)/landing/landingPracticeFixture'
 import { buildJourneyExample } from '@/lib/known/journeyExample'
-import { computeRecentWeeksReport } from '@/lib/known/recentWeeksReport'
-import { computeDistribution } from '@/lib/known/weekSummary'
-import { formatDistribution } from '@/lib/known/reportCopy'
-import { compareStartToNowFromOptions, formatStartVsNow } from '@/lib/known/startVsNow'
-import { selectRecentNotes } from '@/lib/known/checkInNotes'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
+import { ACTIVE_FACET_CAP, WEEKLY_CHECKIN_FLOOR } from '@/lib/known/practiceConfig'
 import type { CheckInOptionId } from '@/lib/known/checkInOptions'
 import { useEnterOnce } from '@/lib/design/motion'
 import { css } from '@/lib/design/type'
+import WeeklyReadExample from './WeeklyReadExample'
 
 const ink = '#262420'
 const soft = '#56534D'
 
 export const trackerCSS = `
   .tr{padding:136px 24px 136px;text-align:center;}
-  .tr-wrap{max-width:1040px;margin:0 auto;}
+  .tr-wrap{max-width:1120px;margin:0 auto;}
   .tr h2{font-family:var(--font-display);font-weight:400;font-size:clamp(34px,4.2vw,52px);line-height:1.08;letter-spacing:-0.025em;margin:0;color:${ink};text-wrap:balance;}
   .tr-intro{${css.body}font-size:18px;color:${soft};max-width:620px;margin:20px auto 0;text-wrap:balance;}
 
-  .tr-steps{display:flex;flex-direction:column;gap:120px;margin-top:96px;}
-  .tr-step{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:80px;align-items:center;text-align:left;}
-  .tr-step:nth-child(even) .tr-text{order:2;}
-  .tr-text{max-width:420px;}
-  .tr-num{${css.meta}display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:1px solid rgba(38,36,32,0.25);color:${ink};margin-bottom:20px;}
-  .tr-text h3{font-family:var(--font-display);font-weight:400;font-size:clamp(26px,2.6vw,32px);line-height:1.15;letter-spacing:-0.015em;color:${ink};margin:0 0 12px;text-wrap:balance;}
-  .tr-text p{${css.body}color:${soft};margin:0;}
-  .tr-text p + p{margin-top:12px;}
-  .tr-ui{width:100%;}
-  .tr-list{display:flex;flex-direction:column;gap:8px;}
-  /* Under the list, out of the flow, so the row doesn't jump. */
+  /* Three columns; each step's text and screen share rows (subgrid), so
+     the three screens start on one line whatever the text length. */
+  .tr-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto;column-gap:48px;margin-top:80px;}
+  .tr-step{display:grid;grid-row:span 2;grid-template-rows:subgrid;row-gap:28px;}
+  .tr-num{${css.meta}display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:1px solid rgba(38,36,32,0.25);color:${ink};margin-bottom:16px;}
+  .tr-text h3{${css.display3}color:${ink};margin:0 0 10px;text-wrap:balance;}
+  .tr-text p{${css.body}color:${soft};margin:0 auto;max-width:320px;text-wrap:balance;}
+  .tr-ui{width:100%;max-width:400px;margin:0 auto;text-align:left;}
   .tr-manage{position:relative;}
+  .tr-list{display:flex;flex-direction:column;gap:8px;}
+  /* Under the list, out of the flow, so nothing jumps. */
   .tr-msg{${css.meta}position:absolute;left:0;right:0;top:calc(100% + 10px);color:#8a5a3d;background:#FBEEE8;padding:10px 14px;border-radius:10px;margin:0;}
   .tr-msg-in{animation:tr-fade var(--dur-ui) var(--ease) both;}
   @keyframes tr-fade{from{opacity:0;}to{opacity:1;}}
@@ -63,25 +51,21 @@ export const trackerCSS = `
   .tr-saved{${css.meta}color:#3D6B5C;display:flex;align-items:center;gap:6px;margin-top:14px;min-height:20px;}
   .tr-saved[hidden]{display:flex;visibility:hidden;}
 
-  .tr-close{max-width:680px;margin:144px auto 0;}
+  .tr-close{max-width:680px;margin:136px auto 0;}
   .tr-close p:first-child{font-family:var(--font-display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.2;letter-spacing:-0.02em;color:${ink};margin:0;text-wrap:balance;}
   .tr-close p + p{${css.body}font-size:18px;color:${soft};margin:20px auto 0;max-width:560px;text-wrap:balance;}
 
-  /* Entrances, once each as it comes into view; the week chips fill in. */
+  /* Entrances, once each as it comes into view. */
   .m-armed:not(.m-play) .tr-in{opacity:0;transform:translateY(14px);}
   .m-play .tr-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
-  .m-armed:not(.m-play) .tr-chip{opacity:0;}
-  .m-play .tr-chip{transition:opacity var(--dur-ui) var(--ease) calc(500ms + var(--i) * 100ms);}
 
-  @media(max-width:860px){
-    .tr-step{grid-template-columns:1fr;gap:32px;text-align:center;justify-items:center;}
-    .tr-step:nth-child(even) .tr-text{order:0;}
-    .tr-ui{max-width:400px;text-align:left;}
+  @media(max-width:900px){
+    .tr-steps{grid-template-columns:minmax(0,1fr);grid-template-rows:none;row-gap:80px;margin-top:64px;}
+    .tr-step{grid-row:auto;grid-template-rows:auto auto;}
   }
   @media(max-width:640px){
     .tr{padding:88px 16px 96px;}
     .tr-intro,.tr-close p + p{font-size:16px;}
-    .tr-steps{gap:80px;margin-top:64px;}
     .tr-close{margin-top:96px;}
   }
   @media(prefers-reduced-motion:reduce){ .tr-msg-in{animation:none;} }
@@ -102,16 +86,15 @@ const MANAGE_START = [
 // The app's own message (app/(app)/practice/manage/page.tsx).
 const CAP_MESSAGE = "You're at your check-in limit. Turn one off first to make room for this one."
 
-function Step({ n, title, children, ui }: { n: number; title: string; children: ReactNode; ui: ReactNode }) {
-  const ref = useEnterOnce<HTMLDivElement>()
+function Step({ n, title, text, children, delay }: { n: number; title: string; text: string; children: ReactNode; delay: number }) {
   return (
-    <div ref={ref} className="tr-step">
-      <div className="tr-text tr-in">
+    <div className="tr-step">
+      <div className="tr-text tr-in" style={{ ['--d' as string]: `${delay}ms` }}>
         <span className="tr-num" aria-hidden="true">{n}</span>
         <h3>{title}</h3>
-        {children}
+        <p>{text}</p>
       </div>
-      <div className="tr-ui tr-in" style={{ ['--d' as string]: '120ms' }}>{ui}</div>
+      <div className="tr-ui tr-in" style={{ ['--d' as string]: `${delay + 120}ms` }}>{children}</div>
     </div>
   )
 }
@@ -142,21 +125,9 @@ function ManageExample() {
 
 export default function Tracker() {
   const headRef = useEnterOnce<HTMLDivElement>()
+  const stepsRef = useEnterOnce<HTMLDivElement>()
   const closeRef = useEnterOnce<HTMLDivElement>()
   const ex = useMemo(() => buildJourneyExample(FIXTURE), [])
-  // The review page's numbers, worked out the way the page works them out.
-  const review = useMemo(() => {
-    const m = materializeFixture(FIXTURE)
-    const recent = computeRecentWeeksReport(m.after, m.periodStartedAt, m.now)
-    return {
-      recent,
-      windowLabel: recent.window.isFirstWindow ? 'Your first 4 weeks' : 'Last 4 weeks',
-      windowDateRange: `${format(recent.window.start, 'MMM d')} – ${format(recent.window.end, 'MMM d')}`,
-      distribution: formatDistribution(FIXTURE.facetId, computeDistribution(recent.checkIns)),
-      comparison: formatStartVsNow(compareStartToNowFromOptions(FIXTURE.startBand, recent.checkIns.map((c) => c.response_option)), FIXTURE.facetId),
-      notes: selectRecentNotes(m.after).slice(0, 2),
-    }
-  }, [])
   // The check-in answers can be tried; the example's own answer is picked.
   const [answer, setAnswer] = useState<CheckInOptionId | null>(ex.checkIn.selected)
   const [tried, setTried] = useState(false)
@@ -172,44 +143,22 @@ export default function Tracker() {
           </p>
         </div>
 
-        <div className="tr-steps">
-          <Step n={1} title="Choose what matters to you." ui={<ManageExample />}>
-            <p>Pick up to {ACTIVE_FACET_CAP} patterns from your report, the ones you want to work on now.</p>
-            <p>Switch them on or off whenever you like. Try it.</p>
+        <div ref={stepsRef} className="tr-steps">
+          <Step n={1} delay={0} title="Choose what matters to you." text={`Pick up to ${ACTIVE_FACET_CAP} patterns from your report. Switch them on or off whenever you like. Try it.`}>
+            <ManageExample />
           </Step>
 
-          <Step n={2} title="Check in at the end of the day." ui={
-            <div>
-              <p className="tr-q">{ex.checkIn.question}</p>
-              <CheckInAnswerRows options={ex.checkIn.options} selected={answer} onSelect={(o) => { setAnswer(o); setTried(true) }} />
-              <p className="tr-saved" hidden={!tried} aria-live="polite">
-                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                {tried ? 'That’s the whole check-in.' : ''}
-              </p>
-            </div>
-          }>
-            <p>One question about how the pattern showed up today, while you still remember. Add a short note if you like.</p>
-            <p>That’s it. It fits into any evening.</p>
+          <Step n={2} delay={120} title="Check in at the end of the day." text="One question about how the pattern showed up today, while you still remember.">
+            <p className="tr-q">{ex.checkIn.question}</p>
+            <CheckInAnswerRows options={ex.checkIn.options} selected={answer} onSelect={(o) => { setAnswer(o); setTried(true) }} />
+            <p className="tr-saved" hidden={!tried} aria-live="polite">
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {tried ? 'That’s the whole check-in.' : ''}
+            </p>
           </Step>
 
-          <Step n={3} title="See what changes." ui={
-            <PatternReportBody
-              titleAs="p"
-              facetId={FIXTURE.facetId}
-              label={facetDisplayLabel(FIXTURE.facetId)}
-              weekly={ex.recap.weekly}
-              windowLabel={review.windowLabel}
-              windowDateRange={review.windowDateRange}
-              distributionLine={review.distribution}
-              checkInCount={review.recent.checkInCount}
-              comparisonLine={review.comparison}
-              weeks={review.recent.weeks}
-              notes={review.notes}
-              chipClassName="tr-chip"
-            />
-          }>
-            <p>Each pattern gets its own review. After three check-ins in a week, you get a short read of that week.</p>
-            <p>Over four weeks you see where you lean, how that compares to your report, and what you wrote along the way.</p>
+          <Step n={3} delay={240} title="Get your weekly read." text={`After ${WEEKLY_CHECKIN_FLOOR} check-ins in a week, you get a short read of how that week went.`}>
+            <WeeklyReadExample />
           </Step>
         </div>
 

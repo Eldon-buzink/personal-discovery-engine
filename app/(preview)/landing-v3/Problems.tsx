@@ -86,6 +86,7 @@ export const problemsCSS = `
   @keyframes p2-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   .p2-foot{text-align:center;max-width:640px;margin:72px auto 0;}
   .p2-foot .pv-bridge{${css.display3}margin:0 auto;max-width:600px;}
+  @media(max-width:860px){
     .p2-grid{grid-template-columns:1fr;}
     .p2-cell{padding:20px 8px;}
   }
