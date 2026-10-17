@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { directionalAccent } from '@/lib/known/practiceTokens'
+import ManageRow from '@/components/known/practice/ManageRow'
 import { activateFacet, deactivateFacet } from '@/lib/known/facetActivationClient'
 import { fetchPracticeData, isActive, type PracticeData } from '@/lib/known/practiceData'
 import { type } from '@/lib/design/type'
@@ -161,42 +161,15 @@ export default function ManagePracticePage() {
           rows.map((row) => {
             const isToggling = togglingFacet === row.facetId
             return (
-              <div
+              <ManageRow
                 key={row.facetId}
-                style={{
-                  padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                }}
-              >
-                <div>
-                  <div className="font-sans font-medium text-ui text-charcoal" style={{ marginBottom: 2 }}>
-                    {facetDisplayLabel(row.facetId)}
-                  </div>
-                  <div
-                    className="font-sans text-meta"
-                    style={{ color: row.directional ? '#262420' : '#8C8A83', fontWeight: row.directional ? 500 : 400 }}
-                  >
-                    {row.sourceLabel}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleToggle(row)}
-                  disabled={isToggling}
-                  aria-label={`Toggle ${facetDisplayLabel(row.facetId)}`}
-                  style={{
-                    position: 'relative', width: 40, height: 24, borderRadius: 12, border: 'none', flexShrink: 0,
-                    cursor: 'pointer', padding: 0, opacity: isToggling ? 0.6 : 1,
-                    background: row.active ? directionalAccent : '#DAD3C3',
-                  }}
-                >
-                  <span
-                    style={{
-                      position: 'absolute', top: 3, left: row.active ? 19 : 3, width: 18, height: 18,
-                      borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.15s',
-                    }}
-                  />
-                </button>
-              </div>
+                label={facetDisplayLabel(row.facetId)}
+                sourceLabel={row.sourceLabel}
+                directional={row.directional}
+                active={row.active}
+                busy={isToggling}
+                onToggle={() => handleToggle(row)}
+              />
             )
           })
         )}

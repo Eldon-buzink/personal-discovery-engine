@@ -42,7 +42,7 @@ import { selectRecentNotes, type CheckInNote } from '@/lib/known/checkInNotes'
 import { fetchClaimedMiniAssessmentResult } from '@/lib/known/miniAssessmentResult'
 import { fetchBaseAssessmentBand } from '@/lib/known/baseAssessmentResult'
 import { formatDistribution } from '@/lib/known/reportCopy'
-import { RecentNotes, WeekCallout, WeeksStrip, WindowCard } from '@/components/known/practice/PatternReportParts'
+import { PatternReportBody } from '@/components/known/practice/PatternReportParts'
 
 interface ReportState {
   facetId: string
@@ -137,36 +137,18 @@ export default function PatternReportPage({ params }: { params: { activationId: 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center">
       <div className="w-full max-w-md" style={{ padding: '48px 28px 40px 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p className="font-sans text-meta text-muted">
-          Your report
-        </p>
-        <h1 className="font-display font-normal text-display-2 text-charcoal" style={{ marginBottom: 8 }}>
-          {label}
-        </h1>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 8 }}>
-          <WeekCallout facetId={state.facetId} weekly={weekly} />
-
-          <div>
-            <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
-              {windowLabel} · {windowDateRange}
-            </p>
-            <WindowCard
-              distributionLine={distributionLine}
-              checkInCount={recent.checkInCount}
-              comparisonLine={comparison ? formatStartVsNow(comparison, state.facetId) : null}
-            />
-            <WeeksStrip facetId={state.facetId} weeks={recent.weeks} />
-          </div>
-
-          {/* "What you wrote": check-in notes, exactly as typed; hidden
-              entirely when there's nothing to show. */}
-          <RecentNotes notes={notes} />
-        </div>
-
-        <p className="font-sans text-meta text-charcoal-soft" style={{ textAlign: 'center', padding: '28px 0 4px' }}>
-          No score. No verdict. Just what you noticed.
-        </p>
+        <PatternReportBody
+          facetId={state.facetId}
+          label={label}
+          weekly={weekly}
+          windowLabel={windowLabel}
+          windowDateRange={windowDateRange}
+          distributionLine={distributionLine}
+          checkInCount={recent.checkInCount}
+          comparisonLine={comparison ? formatStartVsNow(comparison, state.facetId) : null}
+          weeks={recent.weeks}
+          notes={notes}
+        />
 
         <Link href={`/practice/${activationId}`} className="font-sans text-meta text-muted" style={{ display: 'block', textAlign: 'center', padding: 8 }}>
           Back to your pattern

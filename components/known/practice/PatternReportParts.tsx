@@ -126,3 +126,54 @@ export function RecentNotes({ notes }: { notes: CheckInNote[] }) {
     </div>
   )
 }
+
+// The whole report body as the pattern's review page shows it: header, this
+// week, the recent-weeks window with its week strip, notes, and the closing
+// line. The page adds loading and the back link around it.
+export function PatternReportBody({ facetId, label, weekly, windowLabel, windowDateRange, distributionLine, checkInCount, comparisonLine, weeks, notes, chipClassName, titleAs = 'h1' }: {
+  facetId: string
+  label: string
+  weekly: WeeklyInsightResult
+  windowLabel: string
+  windowDateRange: string
+  distributionLine: string | null
+  checkInCount: number
+  comparisonLine: string | null
+  weeks: WeekSummary[]
+  notes: CheckInNote[]
+  chipClassName?: string
+  // The landing page shows this inside its own page, under its own h1.
+  titleAs?: 'h1' | 'p'
+}) {
+  const Title = titleAs
+  return (
+    <>
+      <p className="font-sans text-meta text-muted">
+        Your report
+      </p>
+      <Title className="font-display font-normal text-display-2 text-charcoal" style={{ marginBottom: 8 }}>
+        {label}
+      </Title>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 8 }}>
+        <WeekCallout facetId={facetId} weekly={weekly} />
+
+        <div>
+          <p className="font-sans text-meta text-muted" style={{ marginBottom: 10 }}>
+            {windowLabel} · {windowDateRange}
+          </p>
+          <WindowCard distributionLine={distributionLine} checkInCount={checkInCount} comparisonLine={comparisonLine} />
+          <WeeksStrip facetId={facetId} weeks={weeks} chipClassName={chipClassName} />
+        </div>
+
+        {/* "What you wrote": check-in notes, exactly as typed; hidden
+            entirely when there's nothing to show. */}
+        <RecentNotes notes={notes} />
+      </div>
+
+      <p className="font-sans text-meta text-charcoal-soft" style={{ textAlign: 'center', padding: '28px 0 4px' }}>
+        No score. No verdict. Just what you noticed.
+      </p>
+    </>
+  )
+}
