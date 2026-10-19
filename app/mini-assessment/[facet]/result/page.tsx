@@ -292,7 +292,6 @@ export default function MiniAssessmentResultPage({ params }: { params: { facet: 
         isAuthenticated={!!userId}
         userId={userId}
         traitCount={1}
-        onAuthenticated={(id) => setUserId(id)}
         onPaymentConfirmed={() => setPaywallOpen(false)}
       />
     </div>

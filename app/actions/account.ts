@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabase, getSessionUser } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
+import { emailLayout, sendEmail } from '@/lib/server/email'
 import { readAnonId } from '@/lib/server/anonymousVisitor'
 import { buildDataExport, type ExportInput } from '@/lib/account/dataExport'
 import { runAccountDeletion, type DeletionResult } from '@/lib/account/deleteAccount'
@@ -71,14 +72,37 @@ export async function exportMyData(): Promise<
 // ── Deletion ──────────────────────────────────────────────────────────
 
 // Sends a fresh 6-digit code to the account's own email (never an address
-// from the browser) to confirm the deletion.
+// from the browser) to confirm the deletion. The sign-in emails are link
+// only, so the code comes in its own email: the admin API makes the code
+// without sending anything (generateLink), and Resend sends this email.
+// deleteMyAccount checks the code with verifyOtp, as before.
 export async function sendAccountDeletionCode(): Promise<{ ok: true } | Failure<'signed-out' | 'rate' | 'error'>> {
   const user = await getSessionUser()
   if (!user?.email) return { ok: false, reason: 'signed-out' }
   if (!(await checkRateLimit(rateLimitKey('delete-code', user.id, null), 600, 3))) return { ok: false, reason: 'rate' }
-  const { error } = await createServerSupabase().auth.signInWithOtp({ email: user.email, options: { shouldCreateUser: false } })
-  if (error) {
-    console.error('[sendAccountDeletionCode] send failed:', error.message)
+  const { data, error } = await createAdminClient().auth.admin.generateLink({ type: 'magiclink', email: user.email })
+  const code = data?.properties?.email_otp
+  if (error || !code) {
+    console.error('[sendAccountDeletionCode] code failed:', error?.message ?? 'no code returned')
+    return { ok: false, reason: 'error' }
+  }
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Your code to delete your Bearing account',
+      html: emailLayout({
+        preheader: 'Your code to confirm deleting your account.',
+        heading: 'Confirm deleting your account',
+        body: 'Type this code on the account page to delete your account and everything in it. It works once, for 24 hours.',
+        code,
+        footer: "If you didn't ask for this, you can ignore this email. Nothing is deleted without the code.",
+      }),
+      text: `Your code to delete your Bearing account: ${code}
+
+Type it on the account page. It works once, for 24 hours. If you didn't ask for this, you can ignore this email.`,
+    })
+  } catch (err) {
+    console.error('[sendAccountDeletionCode] send failed:', err instanceof Error ? err.message : 'unknown error')
     return { ok: false, reason: 'error' }
   }
   return { ok: true }

@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 // Origins the app is served from. Anything that ends up in a redirect the
 // server builds (Stripe's return_url) must be on one of these, so a crafted
 // call can't send a paying customer somewhere else.
-const PRODUCTION_ORIGINS = ['https://www.getbearing.me', 'https://getbearing.me']
+export const PRODUCTION_ORIGINS = ['https://www.getbearing.me', 'https://getbearing.me']
 
 export function allowedOrigins(): string[] {
   const origins = [...PRODUCTION_ORIGINS]
