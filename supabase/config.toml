@@ -251,12 +251,19 @@ otp_expiry = 86400
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
-# Styled sign-in email — includes both {{ .Token }} (for the dormant inline-code
-# flow in PaywallModal) and {{ .ConfirmationURL }} (the active magic-link flow).
-# Requires custom SMTP to be configured on the remote project first — Supabase's
-# default mailer rejects/ignores custom template content entirely.
+# The two sign-in emails. Link only: the button goes to
+# {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email, which
+# signs the person in on whatever device opens it (app/auth/confirm).
+#   confirmation: a new email address (signInWithOtp creates the user, so
+#                 they get "Confirm signup" when email confirmations are on)
+#   magic_link:   an address that already has an account
+# The hosted project needs these too: scripts/push-auth-email-templates.mjs.
+[auth.email.template.confirmation]
+subject = "Your progress is saved"
+content_path = "./supabase/templates/confirm_signup.html"
+
 [auth.email.template.magic_link]
-subject = "Sign in to Bearing"
+subject = "Your link back to Bearing"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template
