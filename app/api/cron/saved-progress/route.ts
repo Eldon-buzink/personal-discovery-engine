@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/server/email'
-import { PRODUCTION_ORIGINS } from '@/lib/server/siteOrigin'
+import { SITE_ORIGIN } from '@/lib/server/siteOrigin'
 import { reminderEmail } from '@/lib/email/reminder'
 import {
   answeredCount,
@@ -100,7 +100,7 @@ async function sendReminders(admin: SupabaseClient, now: Date) {
       toNextTrait: answersToNextTraitFor(row.responses),
       hasTrait: revealedCount(row.responses) > 0,
       keptUntil: keptUntil(row.updated_at),
-      link: `${PRODUCTION_ORIGINS[0]}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`,
+      link: `${SITE_ORIGIN}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`,
     })
     try {
       await sendEmail({ to: row.email!, ...email, idempotencyKey: `saved-progress-reminder-${row.id}` })
