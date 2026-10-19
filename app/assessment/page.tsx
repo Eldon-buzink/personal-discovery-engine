@@ -8,7 +8,7 @@ import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
 import { saveSignedInProgress } from '@/app/actions/anonymousSession'
 import { answersToNextTrait } from '@/lib/known/savedProgress'
-import { SAVED_PROGRESS_KEY } from '@/lib/known/progressAutosave'
+import { SAVED_PROGRESS_KEY, scheduleProgressAutosave } from '@/lib/known/progressAutosave'
 import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
@@ -80,6 +80,8 @@ function loadSession(): KnownSession {
 
 function saveSession(session: KnownSession): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+  // Saved progress (Finish later) follows along on the server.
+  scheduleProgressAutosave()
 }
 
 function shuffle(ids: number[]): number[] {

@@ -117,7 +117,7 @@ export function keptUntil(updatedAt: string): Date {
 export function isReminderEligible(
   row: SavedProgressRow,
   now: Date,
-  ctx: { isPaid: boolean; finishedElsewhere: boolean },
+  ctx: { isPaid: boolean; resumedElsewhere: boolean },
 ): boolean {
   if (!row.email) return false
   if (row.reminder_sent_at) return false
@@ -125,7 +125,7 @@ export function isReminderEligible(
   if (row.updated_at >= reminderCutoff(now)) return false
   if (row.updated_at < retentionCutoff(now)) return false
   if (isFinished(row.responses)) return false
-  if (ctx.isPaid || ctx.finishedElsewhere) return false
+  if (ctx.isPaid || ctx.resumedElsewhere) return false
   return true
 }
 

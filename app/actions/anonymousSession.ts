@@ -62,7 +62,7 @@ export async function saveSignedInProgress(session: unknown): Promise<{ id: stri
     .from('anonymous_sessions')
     .select('id')
     .eq('claimed_by', user.id)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
@@ -134,10 +134,34 @@ export async function claimAnonymousSession(): Promise<{ claimed: boolean; saved
     .from('anonymous_sessions')
     .select('id, responses')
     .eq('claimed_by', user.id)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (readError) console.error('[claimAnonymousSession] read failed:', readError.message)
 
   return { claimed, saved: latest ? { id: latest.id as string, session: latest.responses } : null }
+}
+
+// Keeps saved progress up to date while the person keeps answering, once
+// it has been saved with an email (lib/known/progressAutosave.ts calls this,
+// debounced). Only the row this browser saved (its signed cookie) or a row
+// this account holds can be written. Each write moves updated_at forward
+// (a trigger), which is what the reminder and the 30-day deletion go by.
+export async function autosaveProgress(rowId: string, session: unknown): Promise<{ ok: boolean }> {
+  if (typeof rowId !== 'string' || !validSession(session)) return { ok: false }
+  const user = await getSessionUser()
+  const allowed = await checkRateLimit(rateLimitKey('autosave', user?.id ?? null, user ? null : requestIp()), 600, 400)
+  if (!allowed) return { ok: false }
+
+  const admin = createAdminClient()
+  let query = admin.from('anonymous_sessions').update({ responses: session }).eq('id', rowId)
+  if (user) {
+    query = query.eq('claimed_by', user.id)
+  } else {
+    if (readPendingSessionId() !== rowId) return { ok: false }
+    query = query.is('claimed_by', null)
+  }
+  const { error } = await query
+  if (error) console.error('[autosaveProgress] update failed:', error.message)
+  return { ok: !error }
 }
