@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
+import EmailLinkSent, { sendSignInLink } from '@/components/known/EmailLinkStep'
 import {
   USER_SEED as SHARED_USER_SEED,
   hashSeed as sharedHashSeed,
@@ -810,17 +810,17 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState(false)
 
-  // Welcome-back sign-in: the same 6-digit code screen as AuthModal and
-  // the paywall (EmailCodeStep), inline in the hero, so sign-in finishes in
-  // this browser; the link in the email is the fallback. A failed send now
-  // shows as an error instead of a false "check your email".
-  async function handleSendCode() {
+  // Welcome-back sign-in: the same link step as AuthModal and the paywall
+  // (EmailLinkSent), inline in the hero. The link works in any browser and
+  // /auth/claim brings saved progress back. A failed send shows as an
+  // error instead of a false "check your email".
+  async function handleSendLink() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200); return
     }
     setEmailLoading(true)
     try {
-      await sendSignInCode(email)
+      await sendSignInLink(email)
       setEmailSent(true)
     } catch {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200)
@@ -839,22 +839,21 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
         Welcome back. Pick up where you left off.
       </p>
       {emailSent ? (
-        <EmailCodeStep
+        <EmailLinkSent
           variant="inline"
           email={email}
-          onVerified={() => router.push('/auth/claim')}
           onChangeEmail={() => { setEmailSent(false); setEmail('') }}
         />
       ) : (
         <div style={{ display:'flex', gap:10, maxWidth:440 }}>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSendCode() }}
+            onKeyDown={e => { if (e.key === 'Enter') handleSendLink() }}
             placeholder="Your email address"
             style={{ flex:1, padding:'12px 16px', borderRadius:10, border:`1.5px solid ${emailError ? 'hsl(8,60%,55%)' : 'rgba(38,36,32,0.2)'}`, ...type.body, background:'white', outline:'none', color:mkCharcoal }}
           />
-          <button className="mk-btn" onClick={handleSendCode} disabled={emailLoading} style={{ padding:'12px 20px', whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
-            {emailLoading ? 'Sending…' : 'Email me a code'}
+          <button className="mk-btn" onClick={handleSendLink} disabled={emailLoading} style={{ padding:'12px 20px', whiteSpace:'nowrap', opacity:emailLoading ? 0.6 : 1 }}>
+            {emailLoading ? 'Sending…' : 'Email me a link'}
           </button>
         </div>
       )}

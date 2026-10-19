@@ -1154,10 +1154,6 @@ export default function AssessmentPage() {
         traitCount={completedFacets.length}
         initialView={paywallInitialView}
         resumeSessionId={resumeSessionId}
-        onAuthenticated={(uid) => {
-          setIsAuthenticated(true)
-          setUserId(uid)
-        }}
         onPaymentConfirmed={() => {
           fetchIsPaid(userId).then(setIsPaidState)
           setPaywallOpen(false)

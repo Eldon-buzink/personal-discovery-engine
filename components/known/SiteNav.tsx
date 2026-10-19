@@ -287,10 +287,6 @@ export default function SiteNav() {
           isAuthenticated={isAuthenticated}
           userId={userId}
           traitCount={traitCount}
-          onAuthenticated={(uid) => {
-            setIsAuthenticated(true)
-            setUserId(uid)
-          }}
           onPaymentConfirmed={() => setPaywallOpen(false)}
         />
       )}

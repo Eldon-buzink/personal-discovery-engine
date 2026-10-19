@@ -80,36 +80,64 @@ export async function saveSignedInProgress(session: unknown): Promise<{ id: stri
   return { id: data.id as string }
 }
 
-// Links the session saved by this browser to the signed-in user. Only an
-// unclaimed row (or one this user already claimed) is updated. On success
-// the pending cookie is cleared and the revealed facets are recorded.
-export async function claimAnonymousSession(): Promise<{ claimed: boolean }> {
+// After sign-in: links saved progress to the account, then returns the
+// account's newest saved session so the browser can restore it.
+//   - Same browser that saved it: the signed cookie names the row.
+//   - Another browser (the link opened in Safari after starting in an
+//     in-app browser): no cookie here, but the link just proved this email,
+//     so rows saved with it that nobody has claimed are claimed now.
+// Only rows with claimed_by = this user are ever read back. Revealed facets
+// from claimed rows are recorded, as before.
+export async function claimAnonymousSession(): Promise<{ claimed: boolean; saved: { id: string; session: unknown } | null }> {
   const user = await getSessionUser()
-  if (!user) return { claimed: false }
+  if (!user) return { claimed: false, saved: null }
+
+  const admin = createAdminClient()
+  const revealed = new Set<string>()
+  let claimed = false
+  const collect = (responses: unknown) => {
+    const r = (responses as { revealedFacets?: unknown } | null)?.revealedFacets
+    if (Array.isArray(r)) r.forEach((f) => { if (typeof f === 'string') revealed.add(f) })
+  }
 
   const sessionId = readPendingSessionId()
-  if (!sessionId) return { claimed: false }
+  if (sessionId) {
+    const { data, error } = await admin
+      .from('anonymous_sessions')
+      .update({ claimed_by: user.id })
+      .eq('id', sessionId)
+      .or(`claimed_by.is.null,claimed_by.eq.${user.id}`)
+      .select('responses')
+      .maybeSingle()
+    if (error) console.error('[claimAnonymousSession] update failed:', error.message)
+    // Either way this browser's pending session is settled: claimed now, or
+    // already claimed by someone else (then it can never be claimed here).
+    clearPendingSessionId()
+    if (data) { claimed = true; collect(data.responses) }
+  }
 
-  const { data, error } = await createAdminClient()
+  const email = normalEmail(user.email)
+  if (email) {
+    const { data, error } = await admin
+      .from('anonymous_sessions')
+      .update({ claimed_by: user.id })
+      .eq('email', email)
+      .is('claimed_by', null)
+      .select('responses')
+    if (error) console.error('[claimAnonymousSession] email claim failed:', error.message)
+    if (data && data.length > 0) { claimed = true; data.forEach((row) => collect(row.responses)) }
+  }
+
+  if (revealed.size > 0) await recordFacetReveals(Array.from(revealed))
+
+  const { data: latest, error: readError } = await admin
     .from('anonymous_sessions')
-    .update({ claimed_by: user.id })
-    .eq('id', sessionId)
-    .or(`claimed_by.is.null,claimed_by.eq.${user.id}`)
-    .select('responses')
+    .select('id, responses')
+    .eq('claimed_by', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
+  if (readError) console.error('[claimAnonymousSession] read failed:', readError.message)
 
-  if (error) {
-    console.error('[claimAnonymousSession] update failed:', error.message)
-    return { claimed: false }
-  }
-  // Either way this browser's pending session is settled: claimed now, or
-  // already claimed by someone else (then it can never be claimed here).
-  clearPendingSessionId()
-  if (!data) return { claimed: false }
-
-  const revealed = (data.responses as { revealedFacets?: unknown } | null)?.revealedFacets
-  if (Array.isArray(revealed) && revealed.length > 0) {
-    await recordFacetReveals(revealed.filter((f): f is string => typeof f === 'string'))
-  }
-  return { claimed: true }
+  return { claimed, saved: latest ? { id: latest.id as string, session: latest.responses } : null }
 }

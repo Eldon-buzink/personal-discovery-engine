@@ -231,7 +231,10 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# 24 hours: the saved-progress link, sign-in links and the reminder link
+# all say they work for 24 hours. Set the same on the hosted project
+# (Authentication -> Providers -> Email -> Email OTP Expiration).
+otp_expiry = 86400
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]

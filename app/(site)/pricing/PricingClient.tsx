@@ -276,10 +276,6 @@ export default function PricingClient() {
         traitCount={getTraitCount()}
         initialView={paywallInitialView}
         resumeSessionId={resumeSessionId}
-        onAuthenticated={(uid) => {
-          setIsAuthenticated(true)
-          setUserId(uid)
-        }}
         onPaymentConfirmed={() => {
           setPaywallOpen(false)
           setResumeSessionId(null)
