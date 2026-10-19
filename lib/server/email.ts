@@ -22,7 +22,8 @@ export async function sendEmail(email: OutgoingEmail): Promise<void> {
   const from = process.env.EMAIL_FROM
   if (!key || !from) throw new Error('RESEND_API_KEY or EMAIL_FROM is not set')
 
-  const res = await fetch('https://api.resend.com/emails', {
+  // RESEND_API_URL only for local testing against a stand-in server.
+  const res = await fetch(process.env.RESEND_API_URL ?? 'https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${key}`,
