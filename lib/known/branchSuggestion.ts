@@ -1,3 +1,5 @@
+import type { PatternContent as CardContent } from "./types";
+
 /**
  * lib/known/branchSuggestion.ts
  *
@@ -51,13 +53,8 @@ export interface PatternContent {
   branch: string; // 'ring1' for Ring 1 facets, or a branch id once branches produce their own patterns
   dimensionScores?: Record<string, number>;
   strongConditions?: { label: string; score: number }[];
-  content: {
-    trait_quote: string;
-    where_it_shows_up: string;
-    tags: string[];
-    go_deeper: string;
-    worth_trying: string;
-  };
+  // Not read by the suggestion logic; same shape the report stores.
+  content: CardContent;
 }
 
 export interface BranchSuggestion {
@@ -129,8 +126,8 @@ const DEFAULT_ORDER: Branch[] = [
 ];
 
 const FALLBACK_REASONS = [
-  "You've covered good ground — this one rounds out the picture.",
-  "There's more to see here — this branch fills in a different part of the picture.",
+  "You've covered good ground. This one rounds out the picture.",
+  "There's more to see here. This branch fills in a different part of the picture.",
   "Nothing's jumped out yet, but this one's worth exploring next.",
 ];
 
@@ -246,7 +243,7 @@ export function suggestQualifyingBranches(
 
 function buildTargetedReason(branch: Branch, facets: string[]): string {
   const facetList = formatFacetList(facets.slice(0, 2)); // cap at 2 for readable copy
-  return `Your ${facetList} came through strongly — worth seeing how that shows up in ${branchContext(branch)}.`;
+  return `Your ${facetList} came through strongly. It's worth seeing how that shows up in ${branchContext(branch)}.`;
 }
 
 function branchContext(branch: Branch): string {

@@ -3,7 +3,9 @@ import { buildMetadata } from '@/lib/seo'
 import { getRecentPosts, getPostsByCategory, BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog/content'
 import BentoGrid from '@/components/blog/BentoGrid'
 import MoreArticlesList from '@/components/blog/MoreArticlesList'
-import TopicBrowser from '@/components/blog/TopicBrowser'
+import TopicBrowser, { type FacetGroup } from '@/components/blog/TopicBrowser'
+import { allFacetReferences, facetAnchor } from '@/lib/known/facetReference'
+import { DOMAIN_FACETS } from '@/lib/known/ring1-questions'
 import GlowCard from '@/components/blog/GlowCard'
 import { blogCharcoal, blogCharcoalSoft, blogCoral, blogPeriwinkle, blogRose, blogSans, blogSerif } from '@/components/blog/tokens'
 
@@ -30,6 +32,18 @@ export default function BlogPage() {
     return acc
   }, {} as Record<BlogCategory, ReturnType<typeof getPostsByCategory>>)
 
+  // The Traits tab: all 30 facets by domain, each linking to its explainer
+  // when one is live, otherwise to its entry in the trait library.
+  const postByFacet = new Map(postsByCategory.traits.filter(p => p.frontmatter.facetId).map(p => [p.frontmatter.facetId as string, p]))
+  const references = allFacetReferences()
+  const facetGroups: FacetGroup[] = Object.keys(DOMAIN_FACETS).map(domain => ({
+    domain,
+    facets: references.filter(r => r.domain === domain).map(r => {
+      const post = postByFacet.get(r.facetId)
+      return { facetId: r.facetId, label: r.label, href: post ? `/blog/${post.slug}` : `/traits#${facetAnchor(r.facetId)}`, hasPost: !!post }
+    }),
+  }))
+
   return (
     <div style={{ background: '#F7F4ED', minHeight: '100vh', fontFamily: blogSans }}>
       <div className="blog-index-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '150px 32px 0' }}>
@@ -42,6 +56,11 @@ export default function BlogPage() {
           <h1 style={{ fontFamily: blogSerif, fontWeight: 500, fontStyle: 'italic', fontSize: 40, lineHeight: 1.15, letterSpacing: '-0.01em', maxWidth: 600, color: blogCharcoal }}>
             Understand yourself, one trait at a time.
           </h1>
+          <Link href="/traits" className="traits-entry" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 20, minHeight: 44, padding: '0 18px 0 14px', borderRadius: 100, border: `1px solid rgba(38,36,32,0.14)`, background: '#FFFEFB', color: blogCharcoal, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+            <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '60% 40% 55% 45% / 45% 55% 40% 60%', background: blogCoral }} />
+            Browse all 30 traits
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
 
         {bentoPosts.length > 0 && (
@@ -58,7 +77,7 @@ export default function BlogPage() {
 
         <MoreArticlesList posts={moreArticlesPosts} />
 
-        <TopicBrowser postsByCategory={postsByCategory} />
+        <TopicBrowser postsByCategory={postsByCategory} facetGroups={facetGroups} />
 
         <GlowCard
           variant="charcoal"
@@ -70,16 +89,18 @@ export default function BlogPage() {
           glowOpacity={0.5}
           borderRadius={24}
           padding="48px 52px"
-          className="strip-card"
-          style={{ marginBottom: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32 }}
+          style={{ marginBottom: 64 }}
         >
-          <div style={{ maxWidth: 480 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: blogRose, marginBottom: 10 }}>
-              Free to start · About 15 minutes
+          {/* The row is inside GlowCard's own wrapper div, so the two-column
+              layout has to live here, not on the card. */}
+          <div className="strip-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32 }}>
+          <div style={{ maxWidth: 520 }}>
+            <div style={{ fontSize: 13, color: blogRose, marginBottom: 10 }}>
+              Free to start · about 15 minutes
             </div>
             <h3 style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 24, marginBottom: 10, lineHeight: 1.25 }}>See where you actually land.</h3>
             <p style={{ fontSize: 14, color: '#C9C5BA', lineHeight: 1.55 }}>
-              Stop reading about traits in the abstract — see your own patterns, grounded in the same research these articles come from. Your first 5 are free; a one-time €49 unlocks all 30 facets.
+              Reading about traits only goes so far. See your own patterns, based on the same research as these articles. Your first 5 are free, and a one-time €49 unlocks all 30 facets.
             </p>
           </div>
           <div className="strip-cta-block" style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -88,16 +109,21 @@ export default function BlogPage() {
                 Start your assessment
               </button>
             </Link>
-            <div style={{ fontSize: 11.5, color: '#9C978C', marginTop: 10 }}>No account for your first 5 · No credit card to start</div>
+            <div style={{ fontSize: 13, color: '#9C978C', marginTop: 10 }}>No account for your first 5 · No credit card to start</div>
+          </div>
           </div>
         </GlowCard>
 
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        .traits-entry { transition: background-color 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+        .traits-entry:hover { background: #F2EEE4 !important; }
+        @media (max-width: 860px) {
+          .strip-row { flex-direction: column !important; align-items: flex-start !important; text-align: left !important; gap: 24px !important; }
+        }
         @media (max-width: 640px) {
           .blog-index-wrap { padding-top: 120px !important; padding-left: 20px !important; padding-right: 20px !important; }
-          .strip-card { flex-direction: column !important; align-items: flex-start !important; text-align: left !important; }
           .strip-cta-block { text-align: left !important; }
         }
       ` }} />

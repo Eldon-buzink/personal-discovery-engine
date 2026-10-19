@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { type } from '@/lib/design/type'
 
 // ── Blob engine (self-contained, matches report page implementation) ───────────
 
@@ -87,8 +88,7 @@ const gray         = '#8C8A83'
 const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
 const line         = '#E5E1D5'
-const sans         = 'var(--font-inter), system-ui, sans-serif'
-const serif        = 'var(--font-newsreader), serif'
+const sans         = 'var(--font-body)'
 
 export interface EnergyFieldItem {
   label:    string
@@ -163,8 +163,8 @@ export default function EnergyFieldVisual({ items }: { items: EnergyFieldItem[] 
 
           {/* Divider */}
           <line x1="200" y1="20" x2="200" y2="210" stroke={line} strokeWidth="1" />
-          <text x="110" y="22" textAnchor="middle" style={{ fontFamily: sans, fontSize: '10.5px', letterSpacing: '0.5px', fill: gray }}>FUELS YOU</text>
-          <text x="290" y="22" textAnchor="middle" style={{ fontFamily: sans, fontSize: '10.5px', letterSpacing: '0.5px', fill: gray }}>DRAINS YOU</text>
+          <text x="110" y="22" textAnchor="middle" style={{ fontFamily: sans, fontSize: '12px', fill: gray }}>Fuels you</text>
+          <text x="290" y="22" textAnchor="middle" style={{ fontFamily: sans, fontSize: '12px', fill: gray }}>Drains you</text>
 
           {blobs.map((b, i) => (
             <path
@@ -187,8 +187,8 @@ export default function EnergyFieldVisual({ items }: { items: EnergyFieldItem[] 
               left: `${(b.x / 400) * 100}%`,
               top: `${(b.y / 230) * 100}%`,
               transform: 'translate(-50%, -50%)',
-              fontFamily: serif, fontStyle: 'italic', fontWeight: 500,
-              fontSize: b.isActive ? 13 : 10,
+              ...type.traitWord,
+              fontSize: b.isActive ? 13 : 12,
               color: b.isActive ? `hsl(${b.hue},50%,26%)` : charcoalSoft,
               textAlign: 'center', width: 90,
               cursor: 'pointer', pointerEvents: 'auto',
@@ -201,24 +201,24 @@ export default function EnergyFieldVisual({ items }: { items: EnergyFieldItem[] 
 
       {/* Detail panel — swaps with the active blob, matches fillEnergyDetail() */}
       <div style={{ textAlign: 'center', marginTop: 4 }}>
-        <h3 style={{ fontFamily: serif, fontSize: 21, fontWeight: 600, color: charcoal, margin: '0 0 6px' }}>
+        <h3 style={{ ...type.traitWord, fontSize: 'var(--text-display-3)', color: charcoal, margin: '0 0 6px' }}>
           {active.label}
         </h3>
-        <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, lineHeight: 1.55, color: `hsl(${activeHue},45%,26%)`, maxWidth: 400, margin: '0 auto 6px' }}>
+        <p style={{ ...type.display4, color: `hsl(${activeHue},45%,26%)`, maxWidth: 400, margin: '0 auto 6px' }}>
           &ldquo;{active.quote}&rdquo;
         </p>
-        <p style={{ fontFamily: sans, fontSize: 12, color: gray, margin: '0 0 20px' }}>
+        <p style={{ ...type.meta, margin: '0 0 20px' }}>
           From your energy branch
         </p>
         <div style={{ margin: '0 0 4px' }}>
           <p style={{
-            fontFamily: sans, fontSize: 13, fontWeight: 600, margin: '0 0 8px',
+            ...type.ui, margin: '0 0 8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', display: 'inline-block', background: `hsl(${activeHue},58%,42%)` }} />
             Where this shows up
           </p>
-          <p style={{ fontFamily: sans, fontSize: 14.5, lineHeight: 1.7, color: charcoalSoft, maxWidth: 420, margin: '0 auto' }}>
+          <p style={{ ...type.body, color: charcoalSoft, maxWidth: 420, margin: '0 auto' }}>
             {active.evidence}
           </p>
         </div>

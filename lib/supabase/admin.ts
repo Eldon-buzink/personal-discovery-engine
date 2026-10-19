@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Service-role client — bypasses RLS. Only for trusted server-side contexts
-// that need to act across users: the Stripe webhook (the only place is_paid
-// ever gets written) and createCheckoutSession (looking up a user's email
-// server-side to prefill Stripe Checkout, rather than trusting a
-// client-supplied value).
+// Service-role client — bypasses RLS. Only for trusted server-side code:
+// the Stripe webhook (the only place is_paid ever gets written), server
+// actions that have already identified the caller from the session cookie
+// (lib/supabase/server.ts), and the rate limiter. Never import this from a
+// client component.
 export function createAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

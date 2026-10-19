@@ -38,5 +38,5 @@ export function formatWeeklyProgress(weekly: WeeklyInsightResult): string | null
   const { summary } = weekly
   if (summary.checkInCount === 0 || summary.qualifies) return null
   const remaining = WEEKLY_CHECKIN_FLOOR - summary.checkInCount
-  return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week — ${remaining} more for a weekly read.`
+  return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week. ${remaining} more for a weekly read.`
 }

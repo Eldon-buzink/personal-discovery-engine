@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripeClient } from '@/lib/stripe'
+import { buildMetaPurchaseEvent, NEUTRAL_EVENT_SOURCE_URL } from '@/lib/ads/adMatch'
 
 export const runtime = 'nodejs'
 
@@ -10,32 +11,27 @@ function sha256(value: string): string {
   return createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
 }
 
-// event_id is the Stripe session id — the same value the client passes as
-// eventID for the mirrored browser-side Purchase event (see PaywallModal's
-// confirmPayment), so Meta collapses the two into one event.
+// The only Purchase sent to Meta (the browser Purchase was dropped so the
+// page address never leaves the site). Built by lib/ads/adMatch.ts from the
+// session metadata: consent-gated, homepage as event_source_url, hashed
+// email plus — when checkout had them — _fbp/_fbc, IP and user agent.
+// event_id is the Stripe session id.
 async function sendMetaPurchase(session: Stripe.Checkout.Session, email: string) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID
   const token = process.env.META_CONVERSIONS_API_TOKEN
   if (!pixelId || !token) return
+  const event = buildMetaPurchaseEvent(session.id, email, session.metadata, Math.floor(Date.now() / 1000))
+  if (!event) return
 
   try {
     const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        data: [{
-          event_name: 'Purchase',
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: session.id,
-          action_source: 'website',
-          user_data: { em: [sha256(email)] },
-          custom_data: { value: 49.00, currency: 'EUR' },
-        }],
-      }),
+      body: JSON.stringify({ data: [event] }),
     })
     if (!res.ok) console.error('[stripe webhook] Meta CAPI failed:', res.status, await res.text())
   } catch (err) {
-    console.error('[stripe webhook] Meta CAPI request failed:', err)
+    console.error('[stripe webhook] Meta CAPI request failed:', err instanceof Error ? err.message : 'unknown error')
   }
 }
 
@@ -54,6 +50,7 @@ async function sendPinterestCheckout(session: Stripe.Checkout.Session, email: st
         data: [{
           event_name: 'checkout',
           action_source: 'web',
+          event_source_url: NEUTRAL_EVENT_SOURCE_URL,
           event_time: Math.floor(Date.now() / 1000),
           event_id: session.id,
           user_data: { em: [sha256(email)] },
@@ -122,14 +119,20 @@ export async function POST(request: NextRequest) {
       .upsert({ id: userId, is_paid: true, paid_at: new Date().toISOString() })
 
     if (error) {
-      console.error('[stripe webhook] failed to mark user paid:', error.message, 'userId:', userId)
+      console.error('[stripe webhook] failed to mark user paid:', error.message, 'session:', session.id)
       return NextResponse.json({ error: 'Failed to update paid status' }, { status: 500 })
     }
 
-    console.log('[stripe webhook] user marked paid:', userId, 'session:', session.id)
+    console.log('[stripe webhook] user marked paid, session:', session.id)
 
+    // Meta/Pinterest purchase events only when the buyer allowed ad
+    // measurement at checkout (metadata set by createCheckoutSession).
+    // Sessions without the field (created before consent existed) count
+    // as no.
     const email = session.customer_details?.email ?? session.customer_email
-    if (email) {
+    if (session.metadata?.adConsent !== 'granted') {
+      console.log('[stripe webhook] no ad-measurement consent, skipping Meta/Pinterest conversion events. session:', session.id)
+    } else if (email) {
       await Promise.all([sendMetaPurchase(session, email), sendPinterestCheckout(session, email)])
     } else {
       console.warn('[stripe webhook] no email on session, skipping Meta/Pinterest conversion events. session:', session.id)

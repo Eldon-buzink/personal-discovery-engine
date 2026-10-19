@@ -107,7 +107,7 @@ export default function QuestionCard({
   )
 }
 
-function DotScale({
+export function DotScale({
   value,
   onChange,
   labels,

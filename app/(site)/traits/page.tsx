@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { buildMetadata } from '@/lib/seo'
 import { getPostsByCategory, type BlogPost } from '@/lib/blog/content'
-import { allFacetReferences, isDescribedPublicly, type FacetReference } from '@/lib/known/facetReference'
+import { allFacetReferences, facetAnchor, isDescribedPublicly, type FacetReference } from '@/lib/known/facetReference'
 import { DOMAIN_FACETS } from '@/lib/known/ring1-questions'
 import { blogCard, blogCharcoal, blogCharcoalSoft, blogCoral, blogLine, blogSans, blogSerif } from '@/components/blog/tokens'
 
@@ -32,7 +32,7 @@ const breadcrumbJsonLd = {
 function FacetEntry({ facet, post }: { facet: FacetReference; post: BlogPost | undefined }) {
   const described = isDescribedPublicly(facet.facetId)
   return (
-    <li style={{ borderTop: `1px solid ${blogLine}`, padding: '14px 0' }}>
+    <li id={facetAnchor(facet.facetId)} className="facet-entry" style={{ borderTop: `1px solid ${blogLine}`, padding: '14px 0' }}>
       <div style={{ fontFamily: blogSerif, fontWeight: 500, fontSize: 18, color: blogCharcoal }}>{facet.label}</div>
       {described ? (
         <div style={{ fontSize: 13, color: blogCharcoalSoft, marginTop: 2 }}>
@@ -101,6 +101,8 @@ export default function TraitsPage() {
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        .facet-entry { scroll-margin-top: 110px; }
+        .facet-entry:target { background: rgba(216,90,48,0.07); box-shadow: 0 0 0 10px rgba(216,90,48,0.07); border-radius: 2px; }
         @media (max-width: 860px) {
           .traits-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }

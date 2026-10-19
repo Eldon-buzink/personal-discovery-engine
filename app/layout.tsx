@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader } from "next/font/google";
-import Script from "next/script";
+import MetaPixel from "@/components/known/MetaPixel";
+import ConsentBanner from "@/components/known/ConsentBanner";
+import ThemeLabHead from "@/components/known/ThemeLabHead";
 import "./globals.css";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
   variable: "--font-newsreader",
+});
+
+// The trait-word token (Newsreader italic 600) as its own small static file,
+// loaded for real instead of browser-faked, and not preloaded so it never
+// competes with the page's first paint (it swaps in when first used).
+const newsreaderTrait = Newsreader({
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["600"],
+  variable: "--font-newsreader-italic",
+  preload: false,
 });
 
 const inter = Inter({
@@ -41,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${newsreader.variable} ${newsreaderTrait.variable} ${inter.variable}`}>
       <head>
         {/* Supabase auth session check (SiteNav) runs on every page, including
             the landing page — this is the only third-party origin actually
@@ -50,21 +63,15 @@ export default function RootLayout({
             rendered once the paywall actually opens, not loaded eagerly. */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        {/* Dev-only theme lab; renders nothing (and ships nothing) unless the flag is set. */}
+        {process.env.NEXT_PUBLIC_THEME_LAB === "1" && <ThemeLabHead />}
       </head>
-      <body className={`${newsreader.variable} ${inter.variable} font-sans antialiased`}>
-        <Script id="meta-pixel" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID}');
-          fbq('track', 'PageView');`}
-        </Script>
+      <body className="font-sans antialiased">
+        {/* Meta Pixel loads only after the visitor allows ad measurement
+            (ConsentBanner); see components/known/MetaPixel.tsx. */}
+        <MetaPixel />
         {children}
+        <ConsentBanner />
       </body>
     </html>
   );

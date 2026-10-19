@@ -8,8 +8,14 @@ import { blogCharcoal, blogCharcoalSoft, blogCream, blogLine, blogSans, blogSeri
 
 const TAB_CATEGORIES: BlogCategory[] = ['traits', 'frameworks', 'relationships', 'work-direction']
 
+// The Traits tab is the trait library: every facet, by domain. A facet
+// with a live explainer links to it; the rest link to their entry on
+// /traits. Built on the server (app/(site)/blog/page.tsx).
+export interface FacetLink { facetId: string; label: string; href: string; hasPost: boolean }
+export interface FacetGroup { domain: string; facets: FacetLink[] }
+
 const TAB_DESCRIPTIONS: Record<BlogCategory, string> = {
-  traits: 'One explainer per IPIP-NEO facet, across all five domains.',
+  traits: 'All 30 facets Bearing measures, six in each of the five domains.',
   frameworks: 'The models behind Bearing: Big Five, SDT, ECR-R, RIASEC.',
   relationships: 'Attachment and connection, from the Relationships branch.',
   'work-direction': 'Working style and career fit, from Holland Codes.',
@@ -52,7 +58,41 @@ function DirRow({ post, wide }: { post: BlogPost; wide: boolean }) {
   )
 }
 
-export default function TopicBrowser({ postsByCategory }: { postsByCategory: Record<BlogCategory, BlogPost[]> }) {
+function FacetLibrary({ groups }: { groups: FacetGroup[] }) {
+  const explainers = groups.reduce((n, g) => n + g.facets.filter(f => f.hasPost).length, 0)
+  return (
+    <div>
+      <div className="facet-cols" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '28px 24px' }}>
+        {groups.map(g => (
+          <div key={g.domain}>
+            <div style={{ fontSize: 13, color: blogCharcoalSoft, paddingBottom: 10, borderBottom: `1px solid ${blogLine}`, marginBottom: 4 }}>{g.domain}</div>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {g.facets.map(f => (
+                <li key={f.facetId}>
+                  <Link href={f.href} className="facet-link" style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 40, textDecoration: 'none', color: blogCharcoal, fontFamily: blogSerif, fontSize: 16 }}>
+                    <span>{f.label}</span>
+                    {f.hasPost && <span aria-label="Has an explainer" title="Has an explainer" style={{ width: 6, height: 6, borderRadius: '50%', background: accentColorCss('coral'), flexShrink: 0 }} />}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="facet-foot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 28, paddingTop: 24, borderTop: `1px solid ${blogLine}` }}>
+        <p style={{ fontSize: 13, color: blogCharcoalSoft, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: accentColorCss('coral') }} />
+          {explainers} with an explainer so far. Every facet has its low and high trait words in the library.
+        </p>
+        <Link href="/traits" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 20px', borderRadius: 100, background: blogCharcoal, color: blogCream, fontFamily: blogSans, fontSize: 14, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          Open the trait library <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+export default function TopicBrowser({ postsByCategory, facetGroups }: { postsByCategory: Record<BlogCategory, BlogPost[]>; facetGroups: FacetGroup[] }) {
   const [activeTab, setActiveTab] = useState<BlogCategory>('traits')
   const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({})
 
@@ -63,14 +103,14 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
           Browse by topic
         </h2>
         <p style={{ fontSize: 14.5, color: blogCharcoalSoft, lineHeight: 1.6 }}>
-          Every explainer Bearing has published, organized the way the assessment itself is — by trait, by framework, and by the branch it feeds into.
+          Every explainer Bearing has published, sorted the way the assessment is: by trait, by framework and by the branch it feeds into.
         </p>
       </div>
 
       <div className="topic-tabs" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, paddingBottom: 32 }}>
         {TAB_CATEGORIES.map(cat => {
           const active = cat === activeTab
-          const count = postsByCategory[cat]?.length ?? 0
+          const count = cat === 'traits' ? facetGroups.reduce((n, g) => n + g.facets.length, 0) : postsByCategory[cat]?.length ?? 0
           return (
             <button
               key={cat}
@@ -99,6 +139,7 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
 
       {TAB_CATEGORIES.map(cat => {
         if (cat !== activeTab) return null
+        if (cat === 'traits') return <FacetLibrary key={cat} groups={facetGroups} />
         const posts = postsByCategory[cat] ?? []
         const wide = WIDE_CATEGORIES.has(cat)
         const initialCount = INITIAL_VISIBLE[cat]
@@ -123,15 +164,6 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
                 <span style={{ display: 'inline-block', transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>▾</span>
               </button>
             )}
-            {cat === 'traits' && (
-              <Link
-                href="/traits"
-                className="topic-all-facets"
-                style={{ gridColumn: '1 / 3', fontSize: 13.5, fontWeight: 600, color: blogCharcoal, marginTop: 18 }}
-              >
-                See all 30 facets →
-              </Link>
-            )}
           </div>
         )
       })}
@@ -148,10 +180,13 @@ export default function TopicBrowser({ postsByCategory }: { postsByCategory: Rec
              see BentoGrid.tsx: those characters inside a style-tag template
              break hydration, since React escapes them server-side but the
              client-side re-render does not re-escape identically. */
-          .topic-show-more, .topic-all-facets { grid-column: 1 !important; }
+          .topic-show-more { grid-column: 1 !important; }
+          .facet-cols { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
+        .facet-link:hover span:first-child { text-decoration: underline; text-underline-offset: 3px; }
         @media (max-width: 560px) {
           .topic-tabs { grid-template-columns: 1fr !important; }
+          .facet-cols { grid-template-columns: minmax(0, 1fr) !important; }
         }
       ` }} />
     </div>

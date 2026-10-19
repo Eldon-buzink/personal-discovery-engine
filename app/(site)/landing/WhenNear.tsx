@@ -13,6 +13,8 @@ export default function WhenNear({ className, children }: { className: string; c
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    // No IntersectionObserver: show the content straight away.
+    if (typeof IntersectionObserver === 'undefined') { setNear(true); return }
     const io = new IntersectionObserver((entries) => {
       if (entries.some((e) => e.isIntersecting)) { setNear(true); io.disconnect() }
     }, { rootMargin: '600px 0px' })

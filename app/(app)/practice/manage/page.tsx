@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { facetDisplayLabel } from '@/lib/known/miniAssessmentScoring'
-import { directionalAccent } from '@/lib/known/practiceTokens'
+import ManageRow from '@/components/known/practice/ManageRow'
 import { activateFacet, deactivateFacet } from '@/lib/known/facetActivationClient'
 import { fetchPracticeData, isActive, type PracticeData } from '@/lib/known/practiceData'
+import { type } from '@/lib/design/type'
 
 interface ManageRow {
   facetId: string
@@ -93,21 +94,21 @@ export default function ManagePracticePage() {
       const result = await deactivateFacet(supabase, row.activationId, userId)
       if (!result.ok) {
         console.error('[Manage] deactivate error:', result.message)
-        setMessage('Something went wrong — try again in a moment.')
+        setMessage('Something went wrong. Try again in a moment.')
       } else {
         const refreshed = await load(supabase, userId)
-        if (!refreshed) setMessage('Turned off — but the page could not refresh. Reload to see it.')
+        if (!refreshed) setMessage('Turned off, but the page could not refresh. Reload to see it.')
       }
     } else {
       const result = await activateFacet(supabase, userId, row.facetId, 'base_assessment')
       if (result.ok) {
         const refreshed = await load(supabase, userId)
-        if (!refreshed) setMessage('Turned on — but the page could not refresh. Reload to see it.')
+        if (!refreshed) setMessage('Turned on, but the page could not refresh. Reload to see it.')
       } else if (result.reason === 'cap') {
-        setMessage("You're at your check-in limit — turn one off first to make room for this one.")
+        setMessage("You're at your check-in limit. Turn one off first to make room for this one.")
       } else {
         console.error('[Manage] activate error:', result.message)
-        setMessage('Something went wrong — try again in a moment.')
+        setMessage('Something went wrong. Try again in a moment.')
       }
     }
 
@@ -117,7 +118,7 @@ export default function ManagePracticePage() {
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="font-sans text-sm text-muted">Loading…</p>
+        <p className="font-sans text-meta text-muted">Loading…</p>
       </div>
     )
   }
@@ -131,13 +132,13 @@ export default function ManagePracticePage() {
           for why. No-op below 448px. */}
       <div className="w-full max-w-md flex flex-col" style={{ minHeight: '100vh' }}>
       <div style={{ padding: '48px 28px 0 28px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <p className="font-sans font-semibold uppercase text-muted" style={{ fontSize: 13, letterSpacing: '0.04em' }}>
+        <p className="font-sans text-meta text-muted">
           Manage your practice
         </p>
-        <h1 className="font-serif font-medium text-charcoal" style={{ fontSize: 23, lineHeight: 1.3 }}>
+        <h1 className="font-display font-normal text-display-2 text-charcoal">
           What&apos;s part of your check-ins?
         </h1>
-        <p className="font-sans text-charcoal-soft" style={{ fontSize: 13, lineHeight: 1.5, paddingTop: 2 }}>
+        <p className="font-sans text-body text-charcoal-soft" style={{ paddingTop: 2 }}>
           We suggest a few, for focus. You decide what stays.
         </p>
       </div>
@@ -145,7 +146,7 @@ export default function ManagePracticePage() {
       {message && (
         <p
           className="font-sans"
-          style={{ margin: '16px 28px 0 28px', fontSize: 13, color: '#8a5a3d', padding: '10px 14px', borderRadius: 10, background: '#FBEEE8' }}
+          style={{ ...type.meta, margin: '16px 28px 0 28px', color: '#8a5a3d', padding: '10px 14px', borderRadius: 10, background: '#FBEEE8' }}
         >
           {message}
         </p>
@@ -153,49 +154,22 @@ export default function ManagePracticePage() {
 
       <div style={{ padding: '22px 28px 0 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {rows.length === 0 ? (
-          <p className="font-sans text-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-            Nothing to manage yet — patterns will show up here once your report reveals them.
+          <p className="font-sans text-body text-muted">
+            Nothing to manage yet. Patterns will show up here once your report reveals them.
           </p>
         ) : (
           rows.map((row) => {
             const isToggling = togglingFacet === row.facetId
             return (
-              <div
+              <ManageRow
                 key={row.facetId}
-                style={{
-                  padding: '14px 16px', borderRadius: 12, border: '1px solid #DAD3C3', background: '#FFFFFF',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                }}
-              >
-                <div>
-                  <div className="font-sans font-medium text-charcoal" style={{ fontSize: 14, marginBottom: 2, lineHeight: 1.3 }}>
-                    {facetDisplayLabel(row.facetId)}
-                  </div>
-                  <div
-                    className="font-sans"
-                    style={{ fontSize: 12, color: row.directional ? directionalAccent : '#8a8375', fontWeight: row.directional ? 500 : 400 }}
-                  >
-                    {row.sourceLabel}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleToggle(row)}
-                  disabled={isToggling}
-                  aria-label={`Toggle ${facetDisplayLabel(row.facetId)}`}
-                  style={{
-                    position: 'relative', width: 40, height: 24, borderRadius: 12, border: 'none', flexShrink: 0,
-                    cursor: 'pointer', padding: 0, opacity: isToggling ? 0.6 : 1,
-                    background: row.active ? directionalAccent : '#DAD3C3',
-                  }}
-                >
-                  <span
-                    style={{
-                      position: 'absolute', top: 3, left: row.active ? 19 : 3, width: 18, height: 18,
-                      borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.15s',
-                    }}
-                  />
-                </button>
-              </div>
+                label={facetDisplayLabel(row.facetId)}
+                sourceLabel={row.sourceLabel}
+                directional={row.directional}
+                active={row.active}
+                busy={isToggling}
+                onToggle={() => handleToggle(row)}
+              />
             )
           })
         )}
@@ -205,7 +179,7 @@ export default function ManagePracticePage() {
         <Link
           href="/practice"
           className="font-sans font-medium"
-          style={{ display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED', fontSize: 15 }}
+          style={{ ...type.ui, display: 'block', textAlign: 'center', padding: 15, borderRadius: 10, background: '#262420', color: '#F7F4ED' }}
         >
           Done
         </Link>

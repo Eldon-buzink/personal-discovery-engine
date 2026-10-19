@@ -28,6 +28,15 @@ export default defineConfig({
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
+    // The same two sizes in WebKit (Safari's engine).
+    {
+      name: 'mobile-webkit',
+      use: { ...devices['Desktop Safari'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'desktop-webkit',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 800 } },
+    },
   ],
   ...(BASE_URL
     ? {}

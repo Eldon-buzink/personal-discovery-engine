@@ -29,6 +29,12 @@ export function isDescribedPublicly(facetId: string): boolean {
   return !FACETS_NOT_DESCRIBED_PUBLICLY.includes(facetId)
 }
 
+// The id of a facet's entry on /traits ("Self-Discipline" -> "self-discipline"),
+// so other pages can link straight to it.
+export function facetAnchor(facetId: string): string {
+  return facetId.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+}
+
 export interface FacetReferenceItem {
   id: number
   text: string

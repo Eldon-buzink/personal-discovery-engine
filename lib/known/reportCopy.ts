@@ -16,11 +16,11 @@ export function formatWeekHeadline(facetId: string, weekly: WeeklyInsightResult)
   if (summary.checkInCount === 0) return 'No check-ins logged this week yet.'
   if (!summary.qualifies) return `${summary.checkInCount} of ${WEEKLY_CHECKIN_FLOOR} check-ins this week.`
   if (summary.lean.type === 'option') return `${summary.checkInCount} check-ins this week, leaning toward "${checkInOptionWord(facetId, summary.lean.value)}."`
-  if (summary.lean.type === 'tie') return `${summary.checkInCount} check-ins this week, evenly split — no clear lean.`
+  if (summary.lean.type === 'tie') return `${summary.checkInCount} check-ins this week, evenly split. No clear lean.`
   return `${summary.checkInCount} check-ins this week.`
 }
 
-// Every option's count, highest first — "Attuned 5 · Anxious 3 · Grounded
+// Every option's count, highest first — "Alert 5 · Watchful 3 · Untroubled
 // 1" — not just the single winning option. Null when there's nothing in
 // the window yet, so the caller can show an honest empty state instead of
 // an empty string.

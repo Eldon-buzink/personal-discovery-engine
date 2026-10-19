@@ -9,8 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        serif: ["var(--font-newsreader)", "serif"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        serif: ["var(--font-display)"],
+        display: ["var(--font-display)"],
+        trait: ["var(--font-trait)"],
+        sans: ["var(--font-body)"],
+      },
+      // Type tokens (app/globals.css). Use these, not raw sizes.
+      fontSize: {
+        "display-1": ["var(--text-display-1)", { lineHeight: "1.12", letterSpacing: "-0.02em" }],
+        "display-2": ["var(--text-display-2)", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
+        "display-3": ["var(--text-display-3)", { lineHeight: "1.3" }],
+        "display-4": ["var(--text-display-4)", { lineHeight: "1.35" }],
+        "trait-word": ["var(--text-trait-word)", { lineHeight: "1.2" }],
+        body: ["var(--text-body)", { lineHeight: "var(--leading-body)" }],
+        ui: ["var(--text-ui)", { lineHeight: "1.4" }],
+        meta: ["var(--text-meta)", { lineHeight: "1.5" }],
       },
       colors: {
         cream: "#F7F4ED",

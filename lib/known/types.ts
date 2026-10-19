@@ -1,9 +1,16 @@
 export interface PatternContent {
   trait_quote: string
-  where_it_shows_up: string
+  // Ring 1 cards: 2–3 sentences of prose — where the pattern shows up, what it
+  // gives, what it costs. Replaces where_it_shows_up/go_deeper/worth_trying
+  // for Ring 1. Absent on branch content and on Ring 1 content cached before
+  // this format existed (those still render from where_it_shows_up).
+  body?: string
+  // Branch cards, and Ring 1 content cached before `body` existed.
+  where_it_shows_up?: string
   tags: string[]
-  go_deeper: string
-  worth_trying: string
+  // Branch cards only (and old cached Ring 1 content, which no longer shows them).
+  go_deeper?: string
+  worth_trying?: string
   // Multi-item branches only (Energy, Working Style, Direction): per-item content,
   // positionally matched to strongConditions. Energy: fuel[0], fuel[1], drain[0],
   // drain[1]. Working Style: the 3 axes (structure, independence, directness).
@@ -16,6 +23,9 @@ export interface PatternContent {
   // the mid-assessment teaser blob — distinct from trait_quote's full sentence,
   // since every other branch's teaser word comes from a deterministic label, not AI.
   teaserWord?: string
+  // Set on branch fallback text (generation failed) so it can be told apart
+  // from real copy. Ring 1 never stores fallback text.
+  fallback?: boolean
 }
 
 export interface PatternContentEntry {
@@ -39,4 +49,8 @@ export interface CompletedFacetRecord {
   hueOffset: number
   answeredCount: number
   content: PatternContent | null  // null while AI is generating
+  // UI only, never saved: the card couldn't be written. The screen shows a
+  // neutral line and lets the user move on; content stays null so the
+  // report tries again.
+  copyFailed?: boolean
 }

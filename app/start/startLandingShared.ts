@@ -21,13 +21,13 @@ export const mkTeal = '#7FD9C4'
 export const mkPeriwinkle = '#AEBBE8'
 export const mkRose = '#E9AFC0'
 
-export const sans = 'var(--font-inter), -apple-system, sans-serif'
-export const serif = 'var(--font-newsreader), Georgia, serif'
+export const sans = 'var(--font-body)'
+export const serif = 'var(--font-display)'
 
 export const START_LANDING_CSS = `
   .wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
   .section-head{max-width:600px;margin:0 auto 40px;text-align:center;}
-  .section-head h2{font-family:Newsreader,serif;font-size:30px;font-weight:500;line-height:1.2;margin:0;}
+  .section-head h2{font-family:var(--font-display);font-size:30px;font-weight:500;line-height:1.2;margin:0;}
 
   .hero{padding:64px 32px 8px;}
   .hero-inner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;}
@@ -38,14 +38,14 @@ export const START_LANDING_CSS = `
 
   .mk-eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:${mkCharcoalSoft};margin-bottom:14px;}
   .mk-microcopy{font-size:13px;color:${mkCharcoalSoft};}
-  .mk-btn{background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:13px 24px;font-size:15px;font-weight:500;cursor:pointer;font-family:Inter,var(--font-inter),sans-serif;}
+  .mk-btn{background:${mkCharcoal};color:${mkCream};border:none;border-radius:999px;padding:13px 24px;font-size:15px;font-weight:500;cursor:pointer;font-family:var(--font-body);}
 
   /* First-statement preview — sits directly under the hero (no section
      padding of its own above it) so there's no dead gap between the hero
      and the first real, concrete thing on the page. */
   .start-preview-section{padding:20px 0 48px;}
   .start-preview-card{background:${mkCard};border:1px solid ${mkLine};border-radius:20px;padding:24px 26px;max-width:560px;margin:0 auto;text-align:left;}
-  .start-preview-text{font-family:Newsreader,serif;font-size:20px;line-height:1.4;margin:0 0 16px;}
+  .start-preview-text{font-family:var(--font-display);font-size:20px;line-height:1.4;margin:0 0 16px;}
   .start-preview-scale{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:${mkCharcoalSoft};}
   .start-preview-dots{display:flex;gap:8px;}
   .start-preview-dots span{width:10px;height:10px;border-radius:50%;border:1.5px solid ${mkCharcoalSoft};background:none;padding:0;cursor:default;}
@@ -56,18 +56,18 @@ export const START_LANDING_CSS = `
      (same classes, same visuals): subtitle + three cards in one row,
      centered like the home page's, written per facet. */
   .problem-section{padding:8px 0 56px;}
-  .problem-heading{font-family:Newsreader,serif;font-size:30px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
+  .problem-heading{font-family:var(--font-display);font-size:30px;font-weight:500;line-height:1.2;margin:0;text-align:left;}
   .problem-subtitle{font-size:15px;color:${mkCharcoalSoft};line-height:1.6;margin:10px 0 0;text-align:left;}
   .problem-visual{position:relative;height:84px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
-  .problem-title{font-family:Newsreader,serif;font-size:22px;font-weight:500;line-height:1.2;margin:0 0 8px;}
-  .problem-line{font-family:Newsreader,serif;font-style:italic;font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
+  .problem-title{font-family:var(--font-display);font-size:22px;font-weight:500;line-height:1.2;margin:0 0 8px;}
+  .problem-line{font-family:var(--font-display);font-style:italic;font-size:16px;color:${mkCharcoalSoft};line-height:1.6;margin:0;}
   .final-glow{position:absolute;border-radius:50%;opacity:0.55;z-index:0;}
   .sound-familiar-grid{max-width:1056px;margin:32px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
   .problem-section .step{text-align:center;}
 
   .how-steps{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
   .step{border:1px solid ${mkLine};border-radius:18px;padding:24px 20px;background:${mkCard};text-align:left;}
-  .step-mark{width:26px;height:26px;border-radius:50%;background:${mkCharcoal};color:${mkCream};display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:14px;font-family:Newsreader,serif;}
+  .step-mark{width:26px;height:26px;border-radius:50%;background:${mkCharcoal};color:${mkCream};display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:14px;font-family:var(--font-display);}
   .step h3{font-size:15px;font-weight:600;margin:0 0 6px;}
   .step p{font-size:13.5px;line-height:1.55;color:${mkCharcoalSoft};margin:0;}
 
@@ -76,7 +76,7 @@ export const START_LANDING_CSS = `
   .get-section{padding:8px 0 56px;}
   .get-card{background:${mkCard};border:1px solid ${mkLine};border-radius:20px;padding:28px 26px;max-width:560px;margin:0 auto;text-align:left;}
   .get-bands{display:flex;justify-content:space-between;margin:0 0 20px;padding-bottom:20px;border-bottom:1px solid ${mkLine};}
-  .get-band-word{font-family:Newsreader,serif;font-style:italic;font-size:16px;color:${mkCharcoal};}
+  .get-band-word{font-family:var(--font-display);font-style:italic;font-size:16px;color:${mkCharcoal};}
   .get-checkin-question{font-size:16px;line-height:1.4;margin:0 0 12px;}
   .get-checkin-option{font-size:13px;color:${mkCharcoalSoft};line-height:1.5;padding:8px 12px;background:#ffffff;border:1px solid ${mkLine};border-radius:8px;margin-bottom:8px;}
 

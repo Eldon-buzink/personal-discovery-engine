@@ -2,6 +2,7 @@
 
 import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
+import { hasAdConsent } from '@/lib/server/consent'
 
 // Fire-and-forget Pinterest Conversions API "lead" event for the Ring-1
 // assessment start. Server-side only — PINTEREST_CONVERSIONS_TOKEN must
@@ -11,7 +12,13 @@ import { headers } from 'next/headers'
 // hashed_maids, or the client_ip_address + client_user_agent pair to accept
 // an event at all), so IP/UA from the request are included as the real
 // match signal and external_id rides along as a supplementary one.
+//
+// Sends nothing unless the visitor allowed ad measurement (bearing_consent
+// cookie) — checked here as well as in the browser, since a server action
+// can be called directly.
 export async function trackPinterestLead(anonId: string): Promise<void> {
+  if (!hasAdConsent()) return
+  if (typeof anonId !== 'string' || anonId.length === 0 || anonId.length > 100) return
   const adAccountId = process.env.PINTEREST_AD_ACCOUNT_ID
   const token = process.env.PINTEREST_CONVERSIONS_TOKEN
   if (!adAccountId || !token) return
@@ -42,6 +49,6 @@ export async function trackPinterestLead(anonId: string): Promise<void> {
     })
     if (!res.ok) console.error('[trackPinterestLead] failed:', res.status, await res.text())
   } catch (err) {
-    console.error('[trackPinterestLead] request failed:', err)
+    console.error('[trackPinterestLead] request failed:', err instanceof Error ? err.message : 'unknown error')
   }
 }

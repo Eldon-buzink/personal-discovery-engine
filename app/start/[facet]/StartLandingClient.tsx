@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -29,7 +28,7 @@ import {
   landingReassurance,
   type LandingAngle,
 } from '@/lib/known/miniAssessmentLanding'
-import WhenNear from '@/app/(site)/landing/WhenNear'
+import JourneyStory from '@/app/(site)/landing/JourneyStory'
 import { practiceFixtureFor } from '@/app/(site)/landing/landingPracticeFixture'
 import WhyDifferentSection from '@/app/(site)/landing/WhyDifferentSection'
 import FaqSection from '@/app/(site)/landing/FaqSection'
@@ -48,10 +47,6 @@ const HERO_VW = 520, HERO_VH = 500
 const GENERIC_WORDS = ['Work', 'Relationships', 'Personal'] as const
 
 interface HeroBlobSpec { word: string; hueOff: number; cx: number; cy: number; r: number; active: boolean }
-
-// The home page's "Your practice" phone screens, lazy-loaded (below the
-// fold), shown with this page's facet.
-const PracticePhoneScreens = dynamic(() => import('@/app/(site)/landing/PracticePhoneScreens'), { ssr: false })
 
 function heroBlobSpecs(activeWord: string): HeroBlobSpec[] {
   return [
@@ -274,19 +269,9 @@ export default function StartLandingClient({ slug, angle }: { slug: MiniAssessme
               <p>{landingPracticeBody(label, checkInPrompt.question)}</p>
             </div>
 
-            <WhenNear className="practice-hold">
-              <PracticePhoneScreens fixture={practiceFixture} />
-            </WhenNear>
+            <JourneyStory fixture={practiceFixture} />
 
-            <div className="practice-cadence">
-              <div><b>Weekly</b><p>A summary of what you logged.</p></div>
-              <div><b>Monthly</b><p>Your own patterns reflected back, with counts and shifts in how you describe things.</p></div>
-              <div><b>Quarterly</b><p>A review of how far you&apos;ve come, and whether these are still the right patterns to work on.</p></div>
-            </div>
-
-            <p className="practice-closing">
-              No praise, no predictions. A suggested next step appears only after a consistent multi-week trend, and it&apos;s always optional.
-            </p>
+            <p className="practice-closing">No score. No verdict. Just what you noticed.</p>
 
             <div style={{ textAlign: 'center', marginTop: 32 }}>
               <Link href={quizHref}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { type } from '@/lib/design/type'
 
 // Matches reference/known-full-flow.html's .direction-card/.direction-expand CSS
 // exactly (colors, sizes, the 0→240px max-height transition, the 45° icon rotate).
@@ -12,8 +13,6 @@ const charcoalSoft = '#56534D'
 const charcoal     = '#262420'
 const line         = '#E5E1D5'
 const white        = '#FDFCF9'
-const sans         = 'var(--font-inter), system-ui, sans-serif'
-const serif        = 'var(--font-newsreader), serif'
 
 export interface DirectionAccordionItem {
   tier:    string // "Closest match" | "Worth exploring" — passed through as-is
@@ -47,11 +46,11 @@ export default function DirectionAccordion({ items }: { items: DirectionAccordio
               padding: '20px 22px', cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <p style={{ fontFamily: sans, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: gray, fontWeight: 700, margin: '0 0 8px' }}>
+            <p style={{ ...type.meta, margin: '0 0 8px' }}>
               {item.tier}
             </p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-              <h3 style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, margin: 0, color: charcoal }}>
+              <h3 style={{ ...type.traitWord, fontSize: 'var(--text-display-4)', margin: 0, color: charcoal }}>
                 {item.word}
               </h3>
               <span style={{
@@ -62,7 +61,7 @@ export default function DirectionAccordion({ items }: { items: DirectionAccordio
                 +
               </span>
             </div>
-            <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoalSoft, margin: '9px 0 0' }}>
+            <p style={{ ...type.body, color: charcoalSoft, margin: '9px 0 0' }}>
               {item.summary}
             </p>
             <div style={{
@@ -70,10 +69,10 @@ export default function DirectionAccordion({ items }: { items: DirectionAccordio
               transition: 'max-height 0.35s ease',
             }}>
               <div style={{ paddingTop: 13, marginTop: 13, borderTop: `1px solid ${line}` }}>
-                <p style={{ fontFamily: sans, fontSize: 13.5, lineHeight: 1.6, color: charcoalSoft, margin: '0 0 10px' }}>
+                <p style={{ ...type.body, color: charcoalSoft, margin: '0 0 10px' }}>
                   {item.body}
                 </p>
-                <p style={{ fontFamily: sans, fontSize: 11.5, color: gray, margin: 0 }}>
+                <p style={{ ...type.meta, margin: 0 }}>
                   From your direction branch
                 </p>
               </div>
