@@ -2,25 +2,22 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import EmailCodeStep, { sendSignInCode } from '@/components/known/EmailCodeStep'
+import EmailLinkSent, { sendSignInLink } from '@/components/known/EmailLinkStep'
 import { saveAnonymousSession } from '@/app/actions/anonymousSession'
 import { POST_AUTH_REOPEN_KEY, POST_AUTH_PATH_KEY } from '@/components/known/PaywallModal'
+import { SAVED_PROGRESS_KEY } from '@/lib/known/progressAutosave'
 
-// 'code' is the main path: the user types the 6-digit code from the email
-// right here, so sign-in finishes in the same browser that started it. That
-// matters for ad traffic, which lands in Instagram/Pinterest in-app
-// browsers: a magic link opens in a different browser (the system one),
-// where the PKCE code verifier and this visitor's progress don't exist, so
-// the link can't sign them in. The link in the email stays as a fallback.
-type ModalView = 'email' | 'code'
+// Sign-in is by link (components/known/EmailLinkStep.tsx): the link works in
+// any browser, and /auth/claim brings saved progress over to it.
+type ModalView = 'email' | 'sent'
 
-// Two known triggers now — each its own `context`, both free (no payment
+// Two known triggers — each its own `context`, both free (no payment
 // step, that's PaywallModal's job):
-//   - 'save-progress' (original, only trigger until the mini-assessment
-//     signup gate needed a second one): the pre-cap "keep going" prompt
-//     after the first Ring 1 reveal. Persists the in-progress full
-//     assessment session to anonymous_sessions so it survives the
-//     magic-link round trip.
+//   - 'save-progress': saving the in-progress full assessment so it can be
+//     picked up later, on any device. Opened from "Finish later" in the
+//     assessment's top bar at any question count (`leaving`), and after
+//     the first trait reveal (the "keep going" prompt). Saves the session
+//     to anonymous_sessions with the email, then emails the link.
 //   - 'mini-assessment-signup': fires when a logged-out mini-assessment
 //     user taps "Add to your daily check-ins" on the mini-assessment result
 //     screen (handover §6). No assessment session to persist — instead
@@ -38,7 +35,7 @@ type ModalView = 'email' | 'code'
 export type AuthModalContext = 'save-progress' | 'mini-assessment-signup'
 
 // Read by app/auth/claim/page.tsx — set only for the mini-assessment-signup
-// context, mirroring known_pending_session_id's role for the save-progress
+// context, mirroring the saved session's role for the save-progress
 // context. Claiming that row (and creating the facet_activation from it) is
 // the claim page's job, not this modal's — this modal's only responsibility
 // is authenticating the user and leaving a breadcrumb to what should be
@@ -50,8 +47,11 @@ export interface AuthModalProps {
   onClose: () => void
   onSuccess: () => void
   context?: AuthModalContext
-  // 'save-progress' only.
+  // 'save-progress' only: answers so far.
   questionCount?: number
+  // 'save-progress' only: opened by "Finish later", so the way out leaves
+  // the assessment instead of closing back into it.
+  leaving?: boolean
   // 'mini-assessment-signup' only — the mini_assessment_results row id to
   // claim once auth resolves.
   miniAssessmentResultId?: string
@@ -62,12 +62,16 @@ export interface AuthModalProps {
   returnPath?: string
 }
 
+// Where "Finish later" and "Exit without saving" take the person.
+const EXIT_PATH = '/onboarding'
+
 export default function AuthModal({
   isOpen,
   onClose,
   onSuccess,
   context = 'save-progress',
-  questionCount,
+  questionCount = 0,
+  leaving = false,
   miniAssessmentResultId,
   returnPath,
 }: AuthModalProps) {
@@ -86,12 +90,7 @@ export default function AuthModal({
   if (!isOpen) return null
 
   const isMiniAssessment = context === 'mini-assessment-signup'
-
-  const headline = isReturning
-    ? 'Sign in to keep going'
-    : isMiniAssessment
-      ? 'Create a free account to track this'
-      : 'Save your progress to keep going'
+  const nextQuestion = questionCount + 1
 
   function flashError() {
     setInputError(true)
@@ -103,7 +102,8 @@ export default function AuthModal({
   }
 
   async function handleSubmit() {
-    if (!isValidEmail(email)) {
+    const address = email.trim()
+    if (!isValidEmail(address)) {
       flashError()
       return
     }
@@ -121,21 +121,20 @@ export default function AuthModal({
           localStorage.setItem(POST_AUTH_PATH_KEY, returnPath)
         }
       } else {
+        // The whole local session (answers, question order, revealed
+        // traits, report text) is saved with the email, so the link can
+        // bring it back on another device. From here on the assessment
+        // keeps that saved copy up to date (lib/known/progressAutosave.ts).
         const raw = localStorage.getItem('known_session')
-        // Store the full session object (responses + questionOrder + patternShown)
-        // The responses jsonb column holds the entire session so it can be restored later
         const session = raw ? JSON.parse(raw) : { questionOrder: [], responses: [] }
-
-        // Saved server-side; the server remembers this browser's row in a
-        // signed cookie for the claim. The id is kept locally only as the
-        // report text's assessment id.
-        const { id } = await saveAnonymousSession(session)
+        const { id } = await saveAnonymousSession(session, address)
         localStorage.setItem('known_pending_session_id', id)
+        localStorage.setItem(SAVED_PROGRESS_KEY, id)
       }
 
-      await sendSignInCode(email)
-      setSubmittedEmail(email)
-      setView('code')
+      await sendSignInLink(address)
+      setSubmittedEmail(address)
+      setView('sent')
       onSuccess()
     } catch (err) {
       console.error('[AuthModal] handleSubmit error:', err instanceof Error ? err.message : 'unknown error')
@@ -145,17 +144,38 @@ export default function AuthModal({
     }
   }
 
+  function exitWithoutSaving() {
+    if (leaving) router.push(EXIT_PATH)
+    else onClose()
+  }
+
+  const eyebrow = isReturning ? 'Welcome back' : isMiniAssessment ? 'One more step' : 'Finish later'
+  const headline = isReturning
+    ? 'Sign in to keep going'
+    : isMiniAssessment
+      ? 'Create a free account to track this'
+      : 'Your progress is safe with us'
+  const body = isReturning
+    ? "Enter your email and we'll send you a link back in."
+    : isMiniAssessment
+      ? "No payment, no verdict, just a daily check-in on what you noticed. Leave your email and we'll set you up."
+      : `You're ${questionCount} ${questionCount === 1 ? 'question' : 'questions'} in, nicely done. Leave your email and we'll send a link that takes you back to exactly where you stopped.`
+  const submitLabel = isReturning ? 'Send my link' : isMiniAssessment ? 'Continue' : 'Save and send my link'
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-6"
       style={{ background: 'rgba(38,36,32,0.55)', backdropFilter: 'blur(3px)', zIndex: 3000 }}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-modal-heading"
     >
       <div
-        className="bg-cream w-full max-w-[400px] flex flex-col"
+        className="bg-cream w-full max-w-[420px] flex flex-col"
         style={{
           borderRadius: 18,
-          padding: '32px 28px 26px',
+          padding: '32px 28px 24px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
           animation: 'modalReveal 0.3s ease both',
         }}
@@ -163,29 +183,14 @@ export default function AuthModal({
       >
         {view === 'email' ? (
           <>
-            <p
-              className="font-sans font-semibold uppercase text-muted text-center"
-              style={{ fontSize: 11, letterSpacing: '0.07em', marginBottom: 10 }}
-            >
-              {isReturning ? 'Welcome back' : isMiniAssessment ? 'One more step' : 'Save your progress'}
+            <p className="font-sans text-meta text-muted text-center" style={{ marginBottom: 8 }}>
+              {eyebrow}
             </p>
-
-            <p
-              className="font-serif font-medium text-charcoal text-center"
-              style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 12 }}
-            >
+            <p id="auth-modal-heading" className="font-display font-normal text-display-3 text-charcoal text-center" style={{ marginBottom: 10 }}>
               {headline}
             </p>
-
-            <p
-              className="font-sans text-charcoal-soft text-center"
-              style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 24 }}
-            >
-              {isReturning
-                ? "Enter your email and we'll send you a code to get back in."
-                : isMiniAssessment
-                  ? "No payment, no verdict — just a daily check-in on what you noticed. Leave your email and we'll set you up."
-                  : `You've answered ${questionCount} questions. Leave your email and we'll make sure none of it disappears.`}
+            <p className="font-sans text-body text-charcoal-soft text-center" style={{ marginBottom: 22 }}>
+              {body}
             </p>
 
             <input
@@ -196,62 +201,84 @@ export default function AuthModal({
                 if (e.key === 'Enter') handleSubmit()
               }}
               placeholder="Your email address"
-              className="w-full font-sans text-charcoal bg-white outline-none"
+              aria-label="Your email address"
+              autoComplete="email"
+              className="w-full font-sans text-body text-charcoal bg-white outline-none"
               style={{
-                fontSize: 15,
-                padding: '14px 16px',
+                padding: '13px 16px',
                 borderRadius: 10,
                 border: `1.5px solid ${inputError ? 'hsl(8, 60%, 55%)' : '#E5E1D5'}`,
-                marginBottom: 12,
+                marginBottom: 10,
                 transition: 'border-color 0.15s',
               }}
             />
 
+            {!isMiniAssessment && !isReturning && (
+              <p className="font-sans text-meta text-muted" style={{ marginBottom: 14 }}>
+                We only use your email to save your answers, send you this link, and send one reminder if you
+                haven&apos;t finished. Unfinished progress is deleted after 30 days.
+              </p>
+            )}
+
             <button
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full font-sans font-medium text-cream bg-charcoal"
-              style={{ fontSize: 15, borderRadius: 10, padding: 15, marginBottom: 12 }}
+              className="w-full font-sans font-medium text-ui text-cream bg-charcoal"
+              style={{ borderRadius: 999, padding: 15, marginBottom: 6, opacity: isLoading ? 0.7 : 1 }}
             >
-              {isLoading ? 'Sending…' : isReturning ? 'Send sign-in code' : isMiniAssessment ? 'Continue →' : 'Save and continue'}
+              {isLoading ? 'Sending…' : submitLabel}
             </button>
-
-            <p
-              className="font-sans text-muted text-center"
-              style={{ fontSize: 12, marginBottom: 16 }}
-            >
-              No password needed. We&apos;ll email you a 6-digit code.
-            </p>
 
             <button
               onClick={() => setIsReturning((v) => !v)}
-              className="font-sans text-muted underline text-center w-full"
-              style={{ fontSize: 12.5, marginBottom: 16 }}
+              className="font-sans text-meta text-muted underline text-center w-full"
+              style={{ minHeight: 44 }}
             >
-              {isReturning ? 'New here? Create an account instead' : 'Already have an account? Sign in'}
+              {isReturning ? 'New here? Save your progress instead' : 'Already have an account? Sign in'}
             </button>
 
-            <div className="w-full h-px bg-line" style={{ marginBottom: 16 }} />
+            <div className="w-full h-px bg-line" style={{ margin: '4px 0 6px' }} />
 
-            <button
-              onClick={onClose}
-              className="font-sans text-muted underline text-center w-full"
-              style={{ fontSize: 12.5 }}
-            >
-              {isMiniAssessment ? 'Not now' : "Skip — I don't mind starting over"}
-            </button>
+            {isMiniAssessment ? (
+              <button onClick={onClose} className="font-sans text-meta text-muted underline text-center w-full" style={{ minHeight: 44 }}>
+                Not now
+              </button>
+            ) : (
+              <>
+                <button onClick={exitWithoutSaving} className="font-sans text-meta text-charcoal underline text-center w-full" style={{ minHeight: 44 }}>
+                  {leaving ? 'Exit without saving' : 'Not now, keep going'}
+                </button>
+                <p className="font-sans text-meta text-muted text-center">
+                  Without an email, your progress is kept on this device only.
+                </p>
+              </>
+            )}
           </>
-        ) : (
-          // On success the session cookie is set in this browser; /auth/claim
-          // then links the saved progress (or the mini-assessment result) to
-          // the account and returns the user to where they were.
-          <EmailCodeStep
+        ) : isMiniAssessment || isReturning ? (
+          <EmailLinkSent
             email={submittedEmail}
-            onVerified={() => router.push('/auth/claim')}
-            onChangeEmail={() => {
-              setView('email')
-              setEmail('')
-            }}
+            onChangeEmail={() => { setView('email'); setEmail('') }}
+          />
+        ) : (
+          <EmailLinkSent
+            email={submittedEmail}
+            heading="Saved. Check your inbox"
+            body={
+              <>
+                We sent a link to <span className="font-medium text-charcoal">{submittedEmail}</span>. Open it on any device to
+                continue from question {nextQuestion}. Your progress is kept for 30 days.
+              </>
+            }
+            onChangeEmail={() => { setView('email'); setEmail('') }}
+            actions={
+              <button
+                onClick={() => (leaving ? router.push(EXIT_PATH) : onClose())}
+                className="w-full font-sans font-medium text-ui text-cream bg-charcoal"
+                style={{ borderRadius: 999, padding: 15 }}
+              >
+                {leaving ? 'Done' : 'Keep going'}
+              </button>
+            }
           />
         )}
       </div>

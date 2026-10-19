@@ -94,6 +94,12 @@ export default function PrivacyPage() {
               are linked to your account.
             </li>
             <li style={liStyle}>
+              <strong>Saved progress.</strong> If you choose &quot;Finish later&quot; during the
+              assessment and leave your email, we save your answers so far together with that
+              email. That is how the link we send you can take you back to the same question on
+              any device. While you keep answering, the saved copy is kept up to date.
+            </li>
+            <li style={liStyle}>
               <strong>Account information.</strong> Your email address, collected when you
               sign in via a passwordless &quot;magic link&quot; email. We do not collect or
               store passwords.
@@ -121,6 +127,11 @@ export default function PrivacyPage() {
           <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
             <li style={liStyle}>To generate and display your personality report.</li>
             <li style={liStyle}>To authenticate you and keep your report tied to your account.</li>
+            <li style={liStyle}>
+              If you save your progress: to keep your answers, send you the link back, and send
+              one reminder about a day later if you haven&apos;t finished. We use that email for
+              nothing else, and we send only that one reminder.
+            </li>
             <li style={liStyle}>To process payment for the full report unlock.</li>
             <li style={liStyle}>To respond if you contact us for support.</li>
           </ul>
@@ -135,8 +146,13 @@ export default function PrivacyPage() {
           <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
             <li style={liStyle}>
               <strong>Supabase</strong> — hosts our database (your assessment responses,
-              account record, and payment status) and handles magic-link authentication
-              (sending sign-in emails, verifying your session).
+              saved progress, account record, and payment status) and handles sign-in
+              (creating sign-in links, verifying your session).
+            </li>
+            <li style={liStyle}>
+              <strong>Resend</strong> — sends our emails: sign-in and saved-progress links,
+              the one reminder about unfinished progress, and the code to confirm deleting your
+              account. Resend receives your email address and the content of those emails.
             </li>
             <li style={liStyle}>
               <strong>Stripe</strong> — processes the one-time €49 payment. Stripe
@@ -170,9 +186,12 @@ export default function PrivacyPage() {
 
         <Section title="Data retention">
           <p style={pStyle}>
-            We currently retain assessment responses, report content, and account records
-            indefinitely, for as long as your account exists — there is no automatic
-            deletion schedule. <span style={placeholder}>[Confirm whether this is the
+            Saved progress you haven&apos;t finished, and haven&apos;t come back to through the
+            link, is deleted automatically 30 days after your last answer.
+          </p>
+          <p style={pStyle}>
+            Otherwise we currently retain assessment responses, report content, and account
+            records for as long as your account exists. <span style={placeholder}>[Confirm whether this is the
             retention policy you want, or whether a fixed retention/deletion schedule
             should be added.]</span>
           </p>

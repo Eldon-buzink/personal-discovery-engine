@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { trackPinterestLead } from '@/app/actions/trackPinterestLead'
 import { readConsent, trackMetaEvent } from '@/lib/consent'
@@ -47,13 +47,18 @@ const trustItems = [
   },
   {
     bold: 'Go at your own pace.',
-    rest: "You can stop and pick up later — nothing is lost.",
+    rest: "Take your time. Leave whenever you like and we'll keep your place for 30 days.",
   },
 ]
 
 export default function OnboardingClient() {
   const router = useRouter()
   const [exiting, setExiting] = useState(false)
+  // Back from "Finish later" while signed in (app/assessment/page.tsx).
+  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    setSaved(new URLSearchParams(window.location.search).get('saved') === '1')
+  }, [])
 
   function handleStart() {
     setExiting(true)
@@ -84,6 +89,13 @@ export default function OnboardingClient() {
       }}
     >
       <div className="max-w-[480px] mx-auto flex flex-col gap-10 pb-28 sm:pb-0">
+
+        {saved && (
+          <div role="status" className="rounded-[14px] bg-white border border-line px-5 py-4 text-center">
+            <p className="font-sans font-medium text-ui text-charcoal">Saved. Your place is kept on your account.</p>
+            <p className="font-sans text-meta text-muted" style={{ marginTop: 4 }}>Sign in on any device and you&apos;ll continue where you stopped.</p>
+          </div>
+        )}
 
         {/* 1. Wordmark */}
         <div style={fade(0)} className="text-center">

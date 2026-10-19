@@ -402,7 +402,6 @@ export default function FacetDetailPage({ params }: { params: { activationId: st
         isAuthenticated={true}
         userId={userId}
         traitCount={1}
-        onAuthenticated={() => {}}
         onPaymentConfirmed={() => setPaywallOpen(false)}
       />
     </div>
