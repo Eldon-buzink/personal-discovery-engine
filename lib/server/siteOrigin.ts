@@ -4,12 +4,12 @@ import { headers } from 'next/headers'
 
 // The site's address for links Bearing emails itself (the saved-progress
 // reminder in app/api/cron/saved-progress). One place to change it.
-export const SITE_ORIGIN = 'https://getbearing.me'
+export const SITE_ORIGIN = 'https://www.getbearing.me'
 
 // Origins the app is served from. Anything that ends up in a redirect the
 // server builds (Stripe's return_url) must be on one of these, so a crafted
 // call can't send a paying customer somewhere else.
-const PRODUCTION_ORIGINS = [SITE_ORIGIN, 'https://www.getbearing.me']
+const PRODUCTION_ORIGINS = [SITE_ORIGIN, 'https://getbearing.me']
 
 export function allowedOrigins(): string[] {
   const origins = [...PRODUCTION_ORIGINS]

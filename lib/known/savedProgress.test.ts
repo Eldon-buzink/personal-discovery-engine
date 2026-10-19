@@ -123,7 +123,7 @@ test('keeps claimed rows (they belong to an account) and finished ones', () => {
 
 test('reminder copy: first trait, the count, the kept-until date, one link', async () => {
   const { reminderEmail } = await import('../email/reminder')
-  const e = reminderEmail({ answered: 25, toNextTrait: 7, hasTrait: false, keptUntil: new Date('2026-11-19T12:00:00Z'), link: 'https://getbearing.me/auth/confirm?token_hash=x&type=magiclink' })
+  const e = reminderEmail({ answered: 25, toNextTrait: 7, hasTrait: false, keptUntil: new Date('2026-11-19T12:00:00Z'), link: 'https://www.getbearing.me/auth/confirm?token_hash=x&type=magiclink' })
   assert.equal(e.subject, "You're 25 questions in, your first trait is close")
   assert.match(e.text, /your first trait is about 7 answers away/)
   assert.match(e.text, /This is the only reminder we'll send\. Your progress is kept until November 19\./)

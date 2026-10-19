@@ -50,7 +50,7 @@ function report(c) {
   console.log('Email confirmations:', c.mailer_autoconfirm ? 'OFF (new addresses get the magic link email)' : 'ON (new addresses get "Confirm signup")')
   console.log('Link expiry (seconds):', c.mailer_otp_exp)
   console.log('Custom SMTP:', c.smtp_host ? `yes (${c.smtp_host}, sender ${c.smtp_admin_email ?? '?'})` : 'no, so Supabase sends its default emails')
-  console.log('Site URL:', c.site_url, '(the email links use it: it must be https://getbearing.me, the same as SITE_ORIGIN in lib/server/siteOrigin.ts)')
+  console.log('Site URL:', c.site_url, '(the email links use it: it must be https://www.getbearing.me, the same as SITE_ORIGIN in lib/server/siteOrigin.ts)')
   console.log('Subjects:', JSON.stringify(c.mailer_subjects_confirmation), '|', JSON.stringify(c.mailer_subjects_magic_link))
 }
 
