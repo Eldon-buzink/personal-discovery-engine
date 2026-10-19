@@ -6,6 +6,9 @@ import type { CSSProperties } from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import AnimatedBlob from '@/components/known/AnimatedBlob'
 import AuthModal from '@/components/known/AuthModal'
+import { saveSignedInProgress } from '@/app/actions/anonymousSession'
+import { answersToNextTrait } from '@/lib/known/savedProgress'
+import { SAVED_PROGRESS_KEY } from '@/lib/known/progressAutosave'
 import PaywallModal, { POST_AUTH_REOPEN_KEY } from '@/components/known/PaywallModal'
 import PatternToast from '@/components/known/PatternToast'
 import QuestionCard from '@/components/known/QuestionCard'
@@ -105,28 +108,65 @@ function scoreDirection(score: number): 'high' | 'mid' | 'low' {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function TopBar({ answeredCount, hasPatterns }: { answeredCount: number; hasPatterns: boolean }) {
+// The bar above the questions: back on the left, progress in the middle (the
+// most prominent thing here), "Finish later" on the right, quieter. Before
+// the first trait, progress counts down to it (worked out from the actual
+// reveal rule, lib/known/savedProgress.ts); after that it shows the traits
+// discovered so far and links to the report.
+function TopBar({
+  answeredCount, revealedCount, isPaid, toNextTrait, onBack, onFinishLater,
+}: {
+  answeredCount: number
+  revealedCount: number
+  isPaid: boolean
+  toNextTrait: number | null
+  onBack?: () => void
+  onFinishLater: () => void
+}) {
   const progress = (answeredCount / TOTAL) * 100
+  const label = revealedCount > 0
+    ? isPaid ? `${revealedCount} ${revealedCount === 1 ? 'trait' : 'traits'} discovered` : `${revealedCount} of ${REVEAL_CAP} traits discovered`
+    : toNextTrait !== null
+      ? `${toNextTrait} ${toNextTrait === 1 ? 'answer' : 'answers'} to your first trait`
+      : 'Your first trait is next'
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-cream border-b border-line flex items-center justify-between px-6">
-      <Link href="/onboarding" className="font-sans text-sm text-muted">
-        ← Save and exit
-      </Link>
-      {hasPatterns ? (
-        <Link href="/report" className="font-sans text-[12px] text-muted" style={{ textDecoration: 'none' }}>
-          View report →
-        </Link>
-      ) : (
-        <div className="flex items-center gap-3">
-          <span className="font-sans text-[13px] text-muted">Getting closer</span>
-          <div className="w-[120px] h-[3px] rounded-full bg-line overflow-hidden">
-            <div
-              className="h-full rounded-full bg-charcoal transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+    <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-cream border-b border-line grid items-center px-3 sm:px-6" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+      <div>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Previous question"
+            className="font-sans text-ui text-charcoal-soft hover:text-charcoal inline-flex items-center gap-1.5"
+            style={{ minHeight: 44, minWidth: 44, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <span aria-hidden="true">←</span>
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col items-center gap-1.5" aria-live="polite">
+        {revealedCount > 0 ? (
+          <Link href="/report" className="font-sans font-medium text-ui text-charcoal" style={{ textDecoration: 'none' }}>
+            {label} <span aria-hidden="true">→</span>
+          </Link>
+        ) : (
+          <span className="font-sans font-medium text-ui text-charcoal">{label}</span>
+        )}
+        <div className="w-[140px] h-[3px] rounded-full bg-line overflow-hidden" aria-hidden="true">
+          <div className="h-full rounded-full bg-charcoal transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
-      )}
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={onFinishLater}
+          className="font-sans text-meta text-muted hover:text-charcoal"
+          style={{ minHeight: 44, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          Finish later
+        </button>
+      </div>
     </header>
   )
 }
@@ -464,7 +504,8 @@ export default function AssessmentPage() {
   // Overlay when user taps "See it →" on a toast
   const [overlayFacet, setOverlayFacet] = useState<string | null>(null)
 
-  const [modalOpen, setModalOpen] = useState(false) // AuthModal — pre-cap "keep going" only
+  const [modalOpen, setModalOpen] = useState(false) // AuthModal, save-progress
+  const [modalLeaving, setModalLeaving] = useState(false) // opened by Finish later
 
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook); isAuthenticated is
@@ -749,8 +790,32 @@ export default function AssessmentPage() {
     // Only worth showing if there's not already an account to save to.
     // AuthModal is scoped to exactly this one trigger now.
     if (!isAuthenticated) {
+      setModalLeaving(false)
       setModalOpen(true)
     }
+  }
+
+  // "Finish later" in the top bar, at any point. Signed out: the save
+  // prompt (email, then the link). Signed in: the progress already belongs
+  // to the account, so it is saved there and the person goes back to the
+  // start page, which says it's saved.
+  async function handleFinishLater() {
+    if (!isAuthenticated) {
+      setModalLeaving(true)
+      setModalOpen(true)
+      return
+    }
+    let saved = false
+    try {
+      const result = await saveSignedInProgress(loadSession())
+      if (result) {
+        localStorage.setItem(SAVED_PROGRESS_KEY, result.id)
+        saved = true
+      }
+    } catch (err) {
+      console.error('[assessment] finish later save error:', err instanceof Error ? err.message : 'unknown error')
+    }
+    router.push(saved ? '/onboarding?saved=1' : '/onboarding')
   }
 
   function handleReport() {
@@ -958,7 +1023,14 @@ export default function AssessmentPage() {
         transition: `opacity ${creamDuration} ease`,
       }} />
 
-      <TopBar answeredCount={answeredMap.size} hasPatterns={completedFacets.length > 0} />
+      <TopBar
+        answeredCount={answeredMap.size}
+        revealedCount={completedFacets.length}
+        isPaid={isPaid}
+        toNextTrait={answersToNextTrait(questionOrder, new Set(answeredMap.keys()))}
+        onBack={!viewingPattern && !isLocked && !allDone && previousAnsweredIndex() >= 0 ? handleBack : undefined}
+        onFinishLater={handleFinishLater}
+      />
 
       <div className="pt-14" style={entryStyle}>
         {viewingPattern && firstPattern ? (
@@ -1010,7 +1082,6 @@ export default function AssessmentPage() {
               question={currentQuestion.text}
               format="dot-scale"
               onNext={handleNext}
-              onBack={previousAnsweredIndex() >= 0 ? handleBack : undefined}
               initialAnswer={answeredMap.has(currentQuestion.id) ? String(answeredMap.get(currentQuestion.id)) : ''}
               centered={false}
               scaleLabels={['Very Inaccurate', 'Very Accurate']}
@@ -1071,6 +1142,7 @@ export default function AssessmentPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         questionCount={answeredMap.size}
+        leaving={modalLeaving}
         onSuccess={() => {}}
       />
 
