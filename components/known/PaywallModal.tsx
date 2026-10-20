@@ -144,6 +144,7 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
   const [view, setView] = useState<PaywallView>('payment')
   const [email, setEmail] = useState('')
   const [submittedEmail, setSubmittedEmail] = useState('')
+  const [waitSeconds, setWaitSeconds] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [inputError, setInputError] = useState(false)
   // No server-side account lookup — this just flips the copy on the login
@@ -294,7 +295,8 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
       const { id } = await saveAnonymousSession(session, email)
       localStorage.setItem('known_pending_session_id', id)
 
-      await sendSignInLink(email)
+      const { waitSeconds: wait } = await sendSignInLink(email)
+      setWaitSeconds(wait)
 
       // When the link opens in this browser, /auth/claim resumes straight
       // into checkout. Set once the email actually sent, so a failed
@@ -433,6 +435,7 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
         {view === 'sent' && (
           <EmailLinkSent
             email={submittedEmail}
+            waitSeconds={waitSeconds}
             detail="Open it to sign in, and you'll come straight back here to finish. It works for 24 hours."
             onChangeEmail={() => setView('login')}
           />

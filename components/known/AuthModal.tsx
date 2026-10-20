@@ -79,6 +79,7 @@ export default function AuthModal({
   const [view, setView] = useState<ModalView>('email')
   const [email, setEmail] = useState('')
   const [submittedEmail, setSubmittedEmail] = useState('')
+  const [waitSeconds, setWaitSeconds] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [inputError, setInputError] = useState(false)
   // No server-side account lookup — this just flips the copy so a returning
@@ -132,7 +133,8 @@ export default function AuthModal({
         localStorage.setItem(SAVED_PROGRESS_KEY, id)
       }
 
-      await sendSignInLink(address)
+      const { waitSeconds: wait } = await sendSignInLink(address)
+      setWaitSeconds(wait)
       setSubmittedEmail(address)
       setView('sent')
       onSuccess()
@@ -257,11 +259,13 @@ export default function AuthModal({
         ) : isMiniAssessment || isReturning ? (
           <EmailLinkSent
             email={submittedEmail}
+            waitSeconds={waitSeconds}
             onChangeEmail={() => { setView('email'); setEmail('') }}
           />
         ) : (
           <EmailLinkSent
             email={submittedEmail}
+            waitSeconds={waitSeconds}
             heading="Saved. Check your inbox"
             detail={<>Open it on any device to continue from question {nextQuestion}. Your progress is kept for 30 days.</>}
             onChangeEmail={() => { setView('email'); setEmail('') }}

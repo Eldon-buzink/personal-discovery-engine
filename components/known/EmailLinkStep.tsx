@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { sendWaitSeconds } from '@/lib/auth/sendWait'
 
 // Sign-in is by link only. The emails (supabase/templates) link to
 // /auth/confirm with a token hash, which signs the person in in whatever
@@ -9,14 +10,32 @@ import { createClient } from '@/lib/supabase/client'
 // opening the email in Safari works: /auth/claim then brings their saved
 // progress over.
 
-export async function sendSignInLink(email: string): Promise<void> {
+// Sends the sign-in link. Resolves with how long until another can be asked
+// for: 0 when it was just sent, or Supabase's wait when a link went to this
+// address moments ago (that link is still good, so callers carry on to
+// "check your inbox"). Throws for anything else.
+export async function sendSignInLink(email: string): Promise<{ waitSeconds: number }> {
   // emailRedirectTo is only used by the default Supabase templates
   // ({{ .ConfirmationURL }}); ours build the /auth/confirm link themselves.
   const { error } = await createClient().auth.signInWithOtp({
     email,
     options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
   })
-  if (error) throw error
+  if (!error) return { waitSeconds: 0 }
+  const wait = sendWaitSeconds(error)
+  if (wait !== null) return { waitSeconds: wait }
+  throw error
+}
+
+// Counts down to 0 once a second; start(n) restarts it.
+function useCountdown(initial: number) {
+  const [left, setLeft] = useState(initial)
+  useEffect(() => {
+    if (left <= 0) return
+    const t = setTimeout(() => setLeft((n) => n - 1), 1000)
+    return () => clearTimeout(t)
+  }, [left])
+  return [left, setLeft] as const
 }
 
 const sage = '#3D6B5C'
@@ -46,6 +65,7 @@ export default function EmailLinkSent({
   onChangeEmail,
   actions,
   variant = 'modal',
+  waitSeconds = 0,
 }: {
   email: string
   heading?: string
@@ -55,7 +75,10 @@ export default function EmailLinkSent({
   // 'modal': centred (AuthModal, PaywallModal, the expired-link page).
   // 'inline': left-aligned, for the home page's welcome-back box.
   variant?: 'modal' | 'inline'
+  // Seconds until another link can be asked for (from sendSignInLink).
+  waitSeconds?: number
 }) {
+  const [wait, setWait] = useCountdown(waitSeconds)
   const [resent, setResent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -65,8 +88,9 @@ export default function EmailLinkSent({
     setBusy(true)
     setFailed(false)
     try {
-      await sendSignInLink(email)
-      setResent(true)
+      const { waitSeconds: next } = await sendSignInLink(email)
+      if (next > 0) setWait(next)
+      else { setResent(true); setWait(60) }
     } catch (err) {
       console.error('[EmailLinkSent] resend error:', err instanceof Error ? err.message : 'unknown error')
       setFailed(true)
@@ -97,11 +121,12 @@ export default function EmailLinkSent({
         <button
           type="button"
           onClick={resend}
-          disabled={busy || resent}
-          className="font-sans text-meta text-muted hover:text-charcoal underline underline-offset-2"
-          style={{ ...linkStyle, cursor: busy || resent ? 'default' : 'pointer' }}
+          disabled={busy || wait > 0}
+          aria-live="polite"
+          className="font-sans text-meta text-muted hover:text-charcoal disabled:hover:text-muted underline underline-offset-2"
+          style={{ ...linkStyle, cursor: busy || wait > 0 ? 'default' : 'pointer', textDecorationLine: wait > 0 ? 'none' : undefined }}
         >
-          {failed ? 'Could not send. Try again' : resent ? 'Sent again' : busy ? 'Sending…' : 'Send it again'}
+          {failed ? 'Could not send. Try again' : busy ? 'Sending…' : wait > 0 ? `${resent ? 'Sent again. ' : ''}Send another in ${wait}s` : 'Send it again'}
         </button>
         <span aria-hidden="true" className="text-meta text-muted">·</span>
         <button
