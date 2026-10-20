@@ -52,7 +52,7 @@ export const solutionCSS = `
   .m-armed:not(.m-play) .sv-in{opacity:0;transform:translateY(16px);}
   .m-play .sv-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
   @media(max-width:640px){
-    .sv{padding:0 16px 88px;}
+    .sv{padding:0 16px 64px;}
     .sv-thread{height:56px;margin:28px auto;}
     .sv-intro{font-size:16px;}
     .sv-card{margin-top:40px;padding:22px 14px 28px;border-radius:22px;}
