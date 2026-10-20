@@ -102,7 +102,7 @@ const HERO_CSS = `
   .m-play .v3-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
 
   @media(max-width:640px){
-    .v3-hero{min-height:0;padding:128px 16px 96px;}
+    .v3-hero{min-height:0;padding:120px 16px 56px;}
     .v3-sub{font-size:16px;}
   }
 `

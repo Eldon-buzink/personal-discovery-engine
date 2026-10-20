@@ -56,7 +56,7 @@ export default function SiteFooter() {
     <footer style={{ background: charcoal, fontFamily: sans }}>
 
       {/* ── Three-column grid ─────────────────────────────────────────────── */}
-      <div style={{
+      <div className="sf-grid" style={{
         maxWidth: 1100, margin: '0 auto',
         padding: '64px 48px 52px',
         display: 'grid',
@@ -98,7 +98,7 @@ export default function SiteFooter() {
       </div>
 
       {/* ── Bottom bar ───────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="sf-bottom" style={{
         maxWidth: 1100, margin: '0 auto',
         padding: '20px 48px',
         borderTop: `1px solid ${cream14}`,
@@ -118,7 +118,8 @@ export default function SiteFooter() {
 
       <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 640px) {
-          .sf-grid { grid-template-columns: 1fr 1fr !important; }
+          .sf-grid { grid-template-columns: 1fr 1fr !important; padding: 48px 24px 40px !important; gap: 32px 24px !important; }
+          .sf-bottom { padding: 20px 24px !important; }
         }
       ` }} />
     </footer>

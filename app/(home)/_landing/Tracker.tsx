@@ -64,9 +64,10 @@ export const trackerCSS = `
     .tr-step{grid-row:auto;grid-template-rows:auto auto;}
   }
   @media(max-width:640px){
-    .tr{padding:88px 16px 96px;}
+    .tr{padding:64px 16px 72px;}
+    .tr-steps{row-gap:64px;}
     .tr-intro,.tr-close p + p{font-size:16px;}
-    .tr-close{margin-top:96px;}
+    .tr-close{margin-top:72px;}
   }
   @media(prefers-reduced-motion:reduce){ .tr-msg-in{animation:none;} }
 `

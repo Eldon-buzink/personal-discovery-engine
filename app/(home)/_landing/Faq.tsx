@@ -31,7 +31,7 @@ export const faqV3CSS = `
   .vf .faq-body p{${css.body}color:${soft};margin:0;}
   .m-armed:not(.m-play) .vf-in{opacity:0;transform:translateY(14px);}
   .m-play .vf-in{transition:opacity var(--dur-enter) var(--ease) var(--d,0ms),transform var(--dur-enter) var(--ease) var(--d,0ms);}
-  @media(max-width:640px){ .vf{padding:0 16px 96px;} .vf h2{margin-bottom:32px;} .vf .faq-body-inner{padding-right:0;} }
+  @media(max-width:640px){ .vf{padding:0 16px 72px;} .vf h2{margin-bottom:32px;} .vf .faq-body-inner{padding-right:0;} }
   @media(prefers-reduced-motion:reduce){ .vf .faq-body,.vf .faq-icon{transition:none;} }
 `
 
