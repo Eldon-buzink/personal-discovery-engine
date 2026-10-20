@@ -106,13 +106,30 @@ const TRAITS: ExampleTrait[] = [
 const check = <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 const arrow = <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 
-export default function Solution() {
-  const ref = useEnterOnce<HTMLDivElement>()
+// The example report itself (the six traits above in the report's own
+// carousel and trait card). Also shown on /how-it-works.
+export function ExampleReport() {
   const [i, setI] = useState(0)
   const traits: CarouselTrait[] = useMemo(() => TRAITS.map((t, n) => ({
     key: t.facet, traitWord: t.traitWord, hue: userCuratedHue(`ring1-pattern-${t.traitWord.toLowerCase()}`, n), domain: 'Conscientiousness',
   })), [])
   const t = TRAITS[i]
+  return (
+    <TraitCarousel traits={traits} activeIdx={i} onSelect={setI}>
+      <div style={{ marginTop: 12 }}>
+        <UnlockedContent
+          traitWord={t.traitWord} content={t.content} hue={traits[i].hue}
+          subtitle={patternSubtitle(i)} subtitleNote={domainNote('Conscientiousness') ?? undefined}
+          source={null} variant="ring1"
+          evidence={<EvidenceDialog key={t.facet} data={sampleEvidencePanel(t.facet)} />}
+        />
+      </div>
+    </TraitCarousel>
+  )
+}
+
+export default function Solution() {
+  const ref = useEnterOnce<HTMLDivElement>()
   return (
     <section id="solution" className="sv">
       <style dangerouslySetInnerHTML={{ __html: solutionCSS }} />
@@ -124,16 +141,7 @@ export default function Solution() {
         </p>
         <div className="sv-card sv-in" style={{ ['--d' as string]: '400ms' }}>
           <p className="sv-label">Example report</p>
-          <TraitCarousel traits={traits} activeIdx={i} onSelect={setI}>
-            <div style={{ marginTop: 12 }}>
-              <UnlockedContent
-                traitWord={t.traitWord} content={t.content} hue={traits[i].hue}
-                subtitle={patternSubtitle(i)} subtitleNote={domainNote('Conscientiousness') ?? undefined}
-                source={null} variant="ring1"
-                evidence={<EvidenceDialog key={t.facet} data={sampleEvidencePanel(t.facet)} />}
-              />
-            </div>
-          </TraitCarousel>
+          <ExampleReport />
         </div>
         <ul className="sv-facts sv-in" style={{ ['--d' as string]: '300ms' }}>
           <li>{check}30 patterns, each with its own word</li>

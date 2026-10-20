@@ -1,12 +1,15 @@
-// How Bearing works — the method page, converted from content/drafts/method.md.
+// How Bearing works: the journey (HowItWorksJourney, the three steps with real
+// product pieces), then the method as "The details", converted from
+// content/drafts/method.md.
 // Every factual sentence carries its source as a JSX comment (source only,
 // never rendered). Sentences that would stop being true when the
 // relationships branch merges (model name, card format, answers sent to the
 // model, fallback text, stored text) were left out; see the PR description.
 
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { buildMetadata } from '@/lib/seo'
+import HowItWorksJourney from './HowItWorksJourney'
 
 export const metadata = buildMetadata({
   path: '/how-it-works',
@@ -14,49 +17,38 @@ export const metadata = buildMetadata({
   description: 'How Bearing turns 120 statements into 30 facet scores, which text in your report is written by AI, the limits of self-report, and what is free.',
 })
 
-// Same page tokens and styles as the Privacy and Terms pages.
-const cream    = '#F5F2EB'
-const charcoal = '#1C1C1A'
-const c40      = 'rgba(28,28,26,0.4)'
-const c80      = 'rgba(28,28,26,0.8)'
-const sans     = 'var(--font-inter), system-ui, sans-serif'
-const serif    = 'var(--font-newsreader), Georgia, serif'
-
-const h2Style: CSSProperties = {
-  fontFamily: serif, fontSize: 22, fontWeight: 500, color: charcoal,
-  marginTop: 40, marginBottom: 12, letterSpacing: '-0.01em',
-}
-const pStyle: CSSProperties = {
-  fontSize: 15, lineHeight: 1.7, color: c80, fontWeight: 300, marginBottom: 14,
-}
-
+// The details: one readable column on the site's type tokens.
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section>
-      <h2 style={h2Style}>{title}</h2>
-      {children}
+    <section style={{ marginTop: 40 }}>
+      <h3 className="font-display font-normal text-display-3 text-charcoal" style={{ marginBottom: 12 }}>{title}</h3>
+      <div className="font-sans text-body text-charcoal-soft">{children}</div>
     </section>
   )
 }
 
+const arrow = <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+
 export default function HowItWorksPage() {
   return (
-    <div style={{ background: cream, color: charcoal, fontFamily: sans, minHeight: '100vh' }}>
-      <article className="hiw-wrap" style={{ padding: '140px 48px 96px', maxWidth: 640, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: c40, marginBottom: 20 }}>
-          How it works
+    <div className="bg-cream text-charcoal min-h-screen">
+      <HowItWorksJourney />
+
+      <article id="details" className="hiw-details mx-auto" style={{ maxWidth: 680, padding: '136px 24px 0' }}>
+        <h2 className="font-display font-normal text-display-1 text-charcoal" style={{ marginBottom: 12 }}>
+          The details
+        </h2>
+        <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: 8 }}>
+          How the scores are made, which text is written by AI, and what a questionnaire can and can&apos;t tell you.
         </p>
-        <h1 style={{ fontFamily: serif, fontSize: 42, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1.15, color: charcoal, marginBottom: 32 }}>
-          How Bearing works.
-        </h1>
 
         <Section title="What it is">
-          <p style={pStyle}>
+          <p>
             {/* source: app/(site)/page.tsx (metadata description) */}
             Bearing is a Big Five personality assessment.{' '}
             {/* source: lib/known/ring1-questions.ts (RING1_QUESTIONS: 120 items; DOMAIN_FACETS: 30 facets) */}
             You rate 120 short statements, and Bearing reads your answers as scores on{' '}
-            <Link href="/traits" style={{ color: charcoal }}>30 facets of personality</Link>.{' '}
+            <Link href="/traits">30 facets of personality</Link>.{' '}
             {/* source: lib/known/ring1-questions.ts (Domain type, DOMAIN_FACETS) */}
             The 30 facets are grouped into the five Big Five domains: Neuroticism, Extraversion, Openness, Agreeableness and Conscientiousness, six facets each.{' '}
             {/* source: lib/known/ring1-questions.ts (FACET_QUESTIONS); lib/known/facetReference.test.ts */}
@@ -65,7 +57,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section title="Where the statements come from">
-          <p style={pStyle}>
+          <p>
             {/* source: Johnson (2014), title and citation checked via OpenAlex: https://api.openalex.org/works/https://doi.org/10.1016/j.jrp.2014.05.003; the inventory is named in app/(site)/landing/FaqSection.tsx */}
             The statements are the IPIP-NEO-120, a 120-item public-domain inventory that measures thirty facets of the Five Factor Model (Johnson, 2014).{' '}
             {/* source: https://ipip.ori.org/ ("The items and scales are in the public domain") */}
@@ -78,7 +70,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section title="How answers become scores">
-          <p style={pStyle}>
+          <p>
             {/* source: lib/known/scoring.ts (computeFacetScore) */}
             A facet score is the average of its four answers, on the same 1 to 5 scale.{' '}
             {/* source: lib/known/scoring.ts (reverseScore); lib/known/ring1-questions.ts (reverseScored) */}
@@ -86,7 +78,7 @@ export default function HowItWorksPage() {
             {/* source: lib/known/scoring.ts (TRAIT_WORD_THRESHOLDS, getTraitWord) */}
             A score of 3.5 or above reads as high, 2.5 to below 3.5 as mid, and below 2.5 as low.
           </p>
-          <p style={pStyle}>
+          <p>
             {/* source: lib/known/scoring.ts (TRAIT_WORDS) */}
             Each of the three bands has its own trait word for every facet, so a high Modesty score is shown as &ldquo;Modest&rdquo;, a mid one as &ldquo;Humble&rdquo; and a low one as &ldquo;Confident&rdquo;.{' '}
             {/* source: app/assessment/page.tsx (allAnswered check before a reveal); app/(site)/LandingPageClient.tsx ("usually before the halfway point") */}
@@ -95,7 +87,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section title="Which text is written by AI">
-          <p style={pStyle}>
+          <p>
             {/* source: lib/known/scoring.ts; lib/known/ring1-questions.ts; lib/known/checkInOptions.ts */}
             The scores, the trait words, the statements and the daily check-in questions are fixed in the code and are not written by AI.{' '}
             {/* source: app/actions/generatePatternCopy.ts (Anthropic messages.create) */}
@@ -103,7 +95,7 @@ export default function HowItWorksPage() {
             {/* source: app/actions/generatePatternCopy.ts (buildUserPrompt, FACET_BEHAVIORAL_CONTEXT, SCORE_DIRECTION_DESCRIPTIONS) */}
             The model is given the facet&apos;s name, a fixed description of what the facet measures, whether your score is high, mid or low, and your trait word.
           </p>
-          <p style={pStyle}>
+          <p>
             {/* source: app/actions/generatePatternCopy.ts (buildUserPrompt branches: energy, working_style, direction and environment use strongConditions scores; relationships uses traitWord only) */}
             The deeper assessments work the same way: the model is given that section&apos;s result words, plus their scores for energy, working style, direction and environment (relationships gets only the pattern name), and writes the explanation around them.{' '}
             {/* source: app/actions/generatePatternCopy.ts (returns text only; scores are computed in lib/known/scoring.ts before the call); app/(site)/landing/FaqSection.tsx */}
@@ -112,7 +104,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section title="The limits of a self-report questionnaire">
-          <p style={pStyle}>
+          <p>
             {/* source: lib/known/scoring.ts (scores computed only from responses); app/(site)/landing/FaqSection.tsx ("it reflects how you answer") */}
             Every score comes from your own answers, so it describes how you see and rate yourself, not behaviour anyone has observed.{' '}
             {/* source: lib/known/scoring.ts (computeFacetScore: mean of 4 items on 1-5; a change of 4 on one item changes the mean by 1) */}
@@ -120,7 +112,7 @@ export default function HowItWorksPage() {
             {/* source: lib/known/scoring.ts (bands are 1 point wide: 2.5 to below 3.5) */}
             That is enough to move a score across a band boundary.
           </p>
-          <p style={pStyle}>
+          <p>
             {/* source: app/assessment/page.tsx (handleNext stores each answer once, with answeredAt); lib/known/scoring.ts (scores computed from those stored answers) */}
             A result reflects how you answered at the time you took the assessment.{' '}
             {/* source: app/(site)/landing/FaqSection.tsx ("it describes patterns rather than diagnosing you"; "Is this therapy or a diagnosis?") */}
@@ -129,7 +121,7 @@ export default function HowItWorksPage() {
         </Section>
 
         <Section title="What is free and what is paid">
-          <p style={pStyle}>
+          <p>
             {/* source: lib/known/paywall.ts (REVEAL_CAP = 5); app/(site)/landing/FaqSection.tsx */}
             Your first 5 patterns are free, and they need no account.{' '}
             {/* source: app/(site)/landing/FaqSection.tsx; app/(site)/pricing/PricingClient.tsx (€49) */}
@@ -139,16 +131,29 @@ export default function HowItWorksPage() {
             {/* source: app/(site)/landing/FaqSection.tsx */}
             An account is needed when you unlock the full report.
           </p>
-          <p style={pStyle}>
-            <Link href="/pricing" style={{ color: charcoal }}>See pricing</Link>
+          <p>
+            <Link href="/pricing">See pricing</Link>
           </p>
         </Section>
       </article>
 
+      <section className="text-center mx-auto" style={{ maxWidth: 560, padding: '120px 24px 128px' }}>
+        <h2 className="font-display font-normal text-display-1 text-charcoal" style={{ marginBottom: 14 }}>
+          Ready to see yours?
+        </h2>
+        <p className="font-sans text-body text-charcoal-soft">
+          About 15 minutes. Your first 5 patterns are free, and you don&apos;t need an account to start.
+        </p>
+        <Link href="/onboarding" className="hiw-btn">Start the assessment {arrow}</Link>
+      </section>
+
       <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 560px) {
-          .hiw-wrap { padding: 120px 20px 72px !important; }
-        }
+        .hiw-details p { margin: 0 0 14px; }
+        .hiw-details a { color: #262420; text-decoration: underline; text-underline-offset: 3px; }
+        .hiw-btn { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 26px; margin-top: 28px; border-radius: 999px;
+          background: #262420; color: #F7F4ED; font-size: var(--text-ui); font-weight: 500; text-decoration: none;
+          box-shadow: 0 1px 2px rgba(38,36,32,0.2), 0 8px 24px -10px rgba(38,36,32,0.45); }
+        @media (max-width: 640px) { .hiw-details { padding-top: 96px !important; } }
       ` }} />
     </div>
   )
