@@ -433,7 +433,7 @@ export default function PaywallModal({ isOpen, onClose, isAuthenticated, userId,
         {view === 'sent' && (
           <EmailLinkSent
             email={submittedEmail}
-            body={<>We sent a link to <span className="font-medium text-charcoal">{submittedEmail}</span>. Open it to sign in, and you&apos;ll come straight back here to finish. It works for 24 hours.</>}
+            detail="Open it to sign in, and you'll come straight back here to finish. It works for 24 hours."
             onChangeEmail={() => setView('login')}
           />
         )}
