@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { linkErrorPath, linkErrorReason, type LinkErrorReason } from '@/lib/auth/linkError'
 
 // Where the sign-in emails link to (supabase/templates, and the reminder in
 // app/api/cron/saved-progress): /auth/confirm?token_hash=...&type=email.
@@ -15,9 +16,12 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const linkError = NextResponse.redirect(new URL('/auth/link-error', origin))
+  const linkError = (reason: LinkErrorReason) => NextResponse.redirect(new URL(linkErrorPath(reason), origin))
 
-  if (!tokenHash || !type || !TYPES.includes(type)) return linkError
+  if (!tokenHash || !type || !TYPES.includes(type)) {
+    console.warn('[confirm] missing or unknown params, type:', type)
+    return linkError('invalid')
+  }
 
   const response = NextResponse.redirect(new URL('/auth/claim', origin))
   const cookieStore = cookies()
@@ -38,8 +42,8 @@ export async function GET(request: NextRequest) {
 
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
   if (error) {
-    console.warn('[confirm] verifyOtp failed:', error.message)
-    return linkError
+    console.warn('[confirm] verifyOtp failed:', error.code ?? '', error.message)
+    return linkError(linkErrorReason(error))
   }
   return response
 }

@@ -263,12 +263,7 @@ export default function AuthModal({
           <EmailLinkSent
             email={submittedEmail}
             heading="Saved. Check your inbox"
-            body={
-              <>
-                We sent a link to <span className="font-medium text-charcoal">{submittedEmail}</span>. Open it on any device to
-                continue from question {nextQuestion}. Your progress is kept for 30 days.
-              </>
-            }
+            detail={<>Open it on any device to continue from question {nextQuestion}. Your progress is kept for 30 days.</>}
             onChangeEmail={() => { setView('email'); setEmail('') }}
             actions={
               <button

@@ -19,31 +19,47 @@ export async function sendSignInLink(email: string): Promise<void> {
   if (error) throw error
 }
 
-// The "check your inbox" step after the email is sent: what was sent and to
-// whom, send it again, or use another address. `heading` and `body` let the
-// caller say what the link does; `actions` adds the caller's own buttons.
+const sage = '#3D6B5C'
+
+function MailMark() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex items-center justify-center"
+      style={{ width: 48, height: 48, borderRadius: 999, background: 'rgba(61,107,92,0.1)', color: sage, marginBottom: 16 }}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+        <path d="M4 7.5l8 6 8-6" />
+      </svg>
+    </span>
+  )
+}
+
+// The "check your inbox" step after the email is sent: who it went to,
+// what the link does (`detail`), the caller's own buttons (`actions`), then
+// send it again or use another address.
 export default function EmailLinkSent({
   email,
   heading = 'Check your inbox',
-  body,
+  detail = 'It works for 24 hours, on any device.',
   onChangeEmail,
   actions,
   variant = 'modal',
 }: {
   email: string
   heading?: string
-  body?: ReactNode
+  detail?: ReactNode
   onChangeEmail: () => void
   actions?: ReactNode
-  // 'modal': centred (AuthModal, PaywallModal). 'inline': left-aligned, for
-  // the home page's welcome-back box.
+  // 'modal': centred (AuthModal, PaywallModal, the expired-link page).
+  // 'inline': left-aligned, for the home page's welcome-back box.
   variant?: 'modal' | 'inline'
 }) {
   const [resent, setResent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const inline = variant === 'inline'
-  const align = inline ? 'text-left' : 'text-center'
 
   async function resend() {
     setBusy(true)
@@ -59,32 +75,40 @@ export default function EmailLinkSent({
     }
   }
 
+  const linkStyle = { background: 'none', border: 'none', padding: 0, minHeight: 44 } as const
+
   return (
-    <div className={align}>
+    <div className={inline ? 'text-left' : 'flex flex-col items-center text-center'}>
+      {!inline && <MailMark />}
       {!inline && (
         <p className="font-display font-normal text-display-3 text-charcoal" style={{ marginBottom: 10 }}>
           {heading}
         </p>
       )}
-      <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: inline ? 12 : 22 }}>
-        {body ?? <>We sent a link to <span className="font-medium text-charcoal">{email}</span>. It works for 24 hours, on any device.</>}
+      <p className="font-sans text-body text-charcoal-soft">
+        We sent a link to{inline ? ' ' : <br />}
+        <span className="font-medium text-charcoal" style={{ overflowWrap: 'anywhere' }}>{email}</span>
       </p>
-      {actions}
-      <div className={inline ? 'flex gap-5' : 'flex justify-center gap-5'} style={{ marginTop: actions ? 14 : 0 }}>
+      <p className="font-sans text-ui font-normal text-muted" style={{ marginTop: 8, marginBottom: inline ? 4 : 24, maxWidth: 320 }}>
+        {detail}
+      </p>
+      {actions && <div className="w-full">{actions}</div>}
+      <div className={`flex items-center gap-3 ${inline ? '' : 'justify-center'}`} style={{ marginTop: actions ? 8 : 0 }}>
         <button
           type="button"
           onClick={resend}
           disabled={busy || resent}
-          className="font-sans text-meta text-muted underline"
-          style={{ background: 'none', border: 'none', padding: 0, minHeight: 44, cursor: busy || resent ? 'default' : 'pointer' }}
+          className="font-sans text-meta text-muted hover:text-charcoal underline underline-offset-2"
+          style={{ ...linkStyle, cursor: busy || resent ? 'default' : 'pointer' }}
         >
           {failed ? 'Could not send. Try again' : resent ? 'Sent again' : busy ? 'Sending…' : 'Send it again'}
         </button>
+        <span aria-hidden="true" className="text-meta text-muted">·</span>
         <button
           type="button"
           onClick={onChangeEmail}
-          className="font-sans text-meta text-muted underline"
-          style={{ background: 'none', border: 'none', padding: 0, minHeight: 44, cursor: 'pointer' }}
+          className="font-sans text-meta text-muted hover:text-charcoal underline underline-offset-2"
+          style={{ ...linkStyle, cursor: 'pointer' }}
         >
           Use a different email
         </button>
