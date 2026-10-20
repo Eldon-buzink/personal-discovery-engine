@@ -3,11 +3,12 @@
 
 import { buildMetadata } from '@/lib/seo'
 import Link from 'next/link'
+import { LEGAL } from '@/lib/legal'
 
 export const metadata = buildMetadata({
   path: '/contact',
   title: 'Contact — Bearing',
-  description: "Questions, feedback, or something else — get in touch and we'll get back to you.",
+  description: "Questions, feedback, or something else? Get in touch and we'll get back to you.",
 })
 
 const cream    = '#F5F2EB'
@@ -28,10 +29,10 @@ export default function ContactPage() {
           Get in touch.
         </h1>
         <p style={{ fontSize: 16, lineHeight: 1.7, color: c80, fontWeight: 300, maxWidth: 400, margin: '0 auto 40px' }}>
-          Questions, feedback, or something else — we read everything and respond to most things.
+          Questions, feedback, or something else? We read everything and reply to most of it.
         </p>
         <Link
-          href="mailto:support@bearing.me"
+          href={`mailto:${LEGAL.email}`}
           style={{
             display: 'inline-block',
             background: charcoal, color: cream,
@@ -41,7 +42,7 @@ export default function ContactPage() {
             letterSpacing: '0.01em',
           }}
         >
-          support@bearing.me
+          {LEGAL.email}
         </Link>
         <p style={{ fontSize: 12, color: c40, marginTop: 16 }}>
           We typically respond within a day or two.

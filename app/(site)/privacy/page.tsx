@@ -1,253 +1,226 @@
-// ⚠ AI-DRAFTED, NOT REVIEWED BY A LAWYER.
-// Written from a direct grep of this codebase (Supabase schema, Stripe webhook,
-// Anthropic API usage) so the factual claims below match what the product
-// actually does as of the date in LAST_UPDATED. It has NOT been reviewed by
-// counsel, and contains placeholder fields (legal entity name, business
-// address, governing jurisdiction) that must be filled in before this is
-// legally binding. Do not treat this as ready to ship — see the visible
-// banner on the page itself.
+// Written from the codebase: what is stored (Supabase tables), what each
+// provider receives (app/actions, lib/ads, lib/server), the cookies set
+// (lib/consent.ts, lib/server/anonymousVisitor.ts, lib/server/entitlement.ts)
+// and the retention jobs (app/api/cron/saved-progress). Keep it in step when
+// any of those change, and move LAST_UPDATED.
+// Who runs Bearing comes from lib/legal.ts.
 
-import type { CSSProperties, ReactNode } from 'react'
+import Link from 'next/link'
 import { buildMetadata } from '@/lib/seo'
+import { LEGAL, operatorSentence } from '@/lib/legal'
+import { LegalPage, LegalSection } from '@/components/known/LegalPage'
+import ConsentSettingsLink from '@/components/known/ConsentSettingsLink'
 
 export const metadata = buildMetadata({
   path: '/privacy',
   title: 'Privacy Policy — Bearing',
-  description: 'How Bearing collects, uses, and protects your data.',
+  description: 'What Bearing stores, why, who processes it, how long it is kept, and your rights.',
 })
 
-const cream    = '#F5F2EB'
-const charcoal = '#1C1C1A'
-const c40      = 'rgba(28,28,26,0.4)'
-const c80      = 'rgba(28,28,26,0.8)'
-const sans     = 'var(--font-inter), system-ui, sans-serif'
-const serif    = 'var(--font-newsreader), Georgia, serif'
-
-const LAST_UPDATED = 'October 13, 2026'
-
-const h2Style: CSSProperties = {
-  fontFamily: serif, fontSize: 22, fontWeight: 500, color: charcoal,
-  marginTop: 40, marginBottom: 12, letterSpacing: '-0.01em',
-}
-const pStyle: CSSProperties = {
-  fontSize: 15, lineHeight: 1.7, color: c80, fontWeight: 300, marginBottom: 14,
-}
-const liStyle: CSSProperties = {
-  fontSize: 15, lineHeight: 1.7, color: c80, fontWeight: 300, marginBottom: 8,
-}
-const placeholder: CSSProperties = {
-  background: 'rgba(200,80,50,0.12)', padding: '1px 6px', borderRadius: 4,
-  fontFamily: 'monospace', fontSize: 14,
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section>
-      <h2 style={h2Style}>{title}</h2>
-      {children}
-    </section>
-  )
-}
+const LAST_UPDATED = 'October 20, 2026'
+const mail = <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>
 
 export default function PrivacyPage() {
   return (
-    <div style={{ background: cream, color: charcoal, fontFamily: sans, minHeight: '100vh' }}>
-      <section style={{ padding: '140px 48px 24px', maxWidth: 640, margin: '0 auto' }}>
-        <div style={{
-          border: '1.5px solid rgba(200,80,50,0.4)', background: 'rgba(200,80,50,0.06)',
-          borderRadius: 10, padding: '16px 20px', marginBottom: 40,
-        }}>
-          <p style={{ fontSize: 13, lineHeight: 1.6, color: charcoal, fontWeight: 500, margin: 0 }}>
-            Draft — not legal advice. This page was AI-drafted from the actual codebase
-            (what data is collected, where it&apos;s stored, which third parties process it)
-            but has not been reviewed by a lawyer, and still has placeholder fields
-            (legal entity name, business address, governing jurisdiction) marked{' '}
-            <span style={placeholder}>like this</span>. Do not publish this as final
-            without review.
+    <LegalPage
+      title="Privacy policy"
+      updated={LAST_UPDATED}
+      intro={
+        <>
+          <p>
+            {operatorSentence()} We are responsible for the personal data described here (the &quot;controller&quot;,
+            in GDPR terms). You can reach us at {mail}.
           </p>
-        </div>
-
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: c40, marginBottom: 20 }}>
-          Privacy Policy
+          <p>
+            Bearing is a self-reflection product built around a personality assessment. This policy explains what we
+            store, why, who helps us run the product, how long we keep things, and what you can do about it.
+          </p>
+        </>
+      }
+    >
+      <LegalSection title="What we store">
+        <ul>
+          <li>
+            <strong>Your answers.</strong> Your answers to the assessment and the short checks, so we can work out
+            your results and show your report. You can answer without an account; if you sign in later, your
+            answers are linked to it.
+          </li>
+          <li>
+            <strong>Saved progress.</strong> If you choose &quot;Finish later&quot; and leave your email, we save your
+            answers so far together with that email, so the link we send can take you back to the same question on
+            any device. While you keep answering, the saved copy is kept up to date.
+          </li>
+          <li>
+            <strong>Your account.</strong> Your email address. You sign in with a link we email you; there is no
+            password.
+          </li>
+          <li>
+            <strong>Your report.</strong> The written descriptions in your report, made from your results and stored
+            so your report stays the same each time you open it.
+          </li>
+          <li>
+            <strong>Your practice.</strong> The traits you choose to follow, your daily check-ins, and any notes you
+            add to them.
+          </li>
+          <li>
+            <strong>Payment.</strong> Whether you have paid, and when. Stripe handles the payment itself; we never see
+            your card or bank details.
+          </li>
+          <li>
+            <strong>Abuse protection.</strong> To limit how often some actions can be repeated, we keep short-lived
+            counters keyed to a scrambled (hashed) version of your account or IP address.
+          </li>
+        </ul>
+        <p>
+          We treat your answers as sensitive. They describe how you see yourself, not a diagnosis, and we never use
+          them for advertising.
         </p>
-        <h1 style={{ fontFamily: serif, fontSize: 42, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1.15, color: charcoal, marginBottom: 12 }}>
-          Privacy.
-        </h1>
-        <p style={{ fontSize: 13, color: c40, marginBottom: 32 }}>Last updated: {LAST_UPDATED}</p>
+      </LegalSection>
 
-        <p style={pStyle}>
-          Bearing (<span style={placeholder}>[LEGAL ENTITY NAME]</span>, &quot;we,&quot;
-          &quot;us&quot;) operates getbearing.me, a self-reflection product built around a
-          personality assessment (based on established research models, including the
-          IPIP-NEO-120 and ECR-R attachment-style framework). This policy describes what
-          information we collect, how we use it, who we share it with, and the choices
-          you have.
+      <LegalSection title="Why we use it">
+        <ul>
+          <li>
+            <strong>To provide Bearing to you:</strong> working out your results, showing your report and practice,
+            signing you in, and taking payment. This is needed to do what you ask of us (performance of a contract).
+          </li>
+          <li>
+            <strong>To save your progress:</strong> keeping your answers with your email, sending you the link back,
+            and one reminder about a day later if you haven&apos;t finished. You ask for this by leaving your email;
+            we use that email for nothing else and send only that one reminder.
+          </li>
+          <li>
+            <strong>To measure our ads,</strong> only if you say yes (consent). See &quot;Ads and cookies&quot; below.
+          </li>
+          <li>
+            <strong>To keep Bearing safe and working:</strong> preventing abuse and fixing problems (our legitimate
+            interest).
+          </li>
+          <li>
+            <strong>To answer you</strong> when you contact us, and to keep records the law requires, such as for
+            payments.
+          </li>
+        </ul>
+        <p>We don&apos;t sell your data, and we don&apos;t share your answers with advertisers or data brokers.</p>
+      </LegalSection>
+
+      <LegalSection title="Ads and cookies">
+        <p>
+          We don&apos;t use analytics tools. We do use ad measurement to see which ads bring people to Bearing, but
+          only if you choose &quot;Allow&quot; when we ask. Without your yes, none of it runs.
         </p>
+        <p>With your yes:</p>
+        <ul>
+          <li>
+            <strong>Meta (Facebook, Instagram):</strong> the Meta Pixel in your browser notes page visits and when
+            you start the assessment. It never runs on the blog, the quick checks, your report or your practice.
+            When you buy, our server tells Meta about the purchase, with your email in scrambled (hashed) form, your
+            IP address, your browser type, and Meta&apos;s own cookies.
+          </li>
+          <li>
+            <strong>Pinterest:</strong> when you start the assessment, our server tells Pinterest, with a scrambled
+            (hashed) random visitor id, your IP address and your browser type.
+          </li>
+        </ul>
+        <p>Cookies we use:</p>
+        <ul>
+          <li><strong>bearing_consent:</strong> remembers your answer about ad measurement, for about 6 months.</li>
+          <li><strong>bearing_anon:</strong> a random id for this browser, so your answers stay together before you sign in.</li>
+          <li><strong>bearing_pending_session:</strong> remembers which saved progress belongs to this browser, for up to a week.</li>
+          <li><strong>bearing_free_reveals:</strong> remembers which free traits this browser has already opened.</li>
+          <li><strong>Sign-in cookies</strong> (from Supabase): keep you signed in.</li>
+          <li><strong>Meta&apos;s _fbp and _fbc:</strong> only if you allowed ad measurement.</li>
+          <li><strong>Stripe</strong> sets its own cookies during checkout, to process the payment and prevent fraud.</li>
+        </ul>
+        <p>
+          You can change your answer any time: <ConsentSettingsLink style={{ color: '#262420', textDecoration: 'underline', textUnderlineOffset: 3, font: 'inherit' }} />.
+        </p>
+      </LegalSection>
 
-        <Section title="Information we collect">
-          <p style={pStyle}>We collect the following categories of information:</p>
-          <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
-            <li style={liStyle}>
-              <strong>Assessment responses.</strong> Your answers to the assessment
-              questions, stored so your report can be generated and revisited. These are
-              initially recorded without requiring an account; if you later sign in, they
-              are linked to your account.
-            </li>
-            <li style={liStyle}>
-              <strong>Saved progress.</strong> If you choose &quot;Finish later&quot; during the
-              assessment and leave your email, we save your answers so far together with that
-              email. That is how the link we send you can take you back to the same question on
-              any device. While you keep answering, the saved copy is kept up to date.
-            </li>
-            <li style={liStyle}>
-              <strong>Account information.</strong> Your email address, collected when you
-              sign in via a passwordless &quot;magic link&quot; email. We do not collect or
-              store passwords.
-            </li>
-            <li style={liStyle}>
-              <strong>Payment information.</strong> If you unlock the full report (a
-              one-time €49 payment), payment is handled entirely by Stripe. We never
-              receive or store your card number or bank details — we only receive
-              confirmation that payment succeeded.
-            </li>
-            <li style={liStyle}>
-              <strong>Generated report content.</strong> The written descriptions in your
-              report, generated from your assessment results and stored so your report
-              persists across visits.
-            </li>
-          </ul>
-          <p style={pStyle}>
-            We do not use analytics, advertising, or tracking scripts of any kind — there
-            is no Google Analytics, ad pixel, or similar tool anywhere in the product as
-            of {LAST_UPDATED}.
-          </p>
-        </Section>
+      <LegalSection title="Who helps us run Bearing">
+        <p>These companies process data for us, under their own agreements with us:</p>
+        <ul>
+          <li><strong>Supabase:</strong> our database and sign-in.</li>
+          <li><strong>Vercel:</strong> hosts the website.</li>
+          <li>
+            <strong>Resend:</strong> sends our emails (sign-in and saved-progress links, the one reminder, and the
+            code to confirm deleting your account). It receives your email address and the email&apos;s content.
+          </li>
+          <li><strong>Stripe:</strong> takes the one-time payment and stores your payment details itself.</li>
+          <li>
+            <strong>Anthropic</strong> (Claude): writes the short descriptions in your report. For each trait we send
+            the trait name, whether your answers leaned high, low or in the middle, and up to two of your answers on
+            that trait. We never send your name, email, account or session ids, or your IP address. For some
+            sensitive traits (currently low mood) we send no answers at all. See{' '}
+            <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noreferrer">Anthropic&apos;s privacy policy</a>.
+          </li>
+          <li><strong>Meta and Pinterest:</strong> ad measurement, only with your yes (see above).</li>
+        </ul>
+        <p>
+          Some of these companies are based in, or process data in, the United States. Where data leaves the EU,
+          they rely on the safeguards EU law provides for that, such as the EU&apos;s Standard Contractual Clauses
+          or the EU-U.S. Data Privacy Framework.
+        </p>
+      </LegalSection>
 
-        <Section title="How we use your information">
-          <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
-            <li style={liStyle}>To generate and display your personality report.</li>
-            <li style={liStyle}>To authenticate you and keep your report tied to your account.</li>
-            <li style={liStyle}>
-              If you save your progress: to keep your answers, send you the link back, and send
-              one reminder about a day later if you haven&apos;t finished. We use that email for
-              nothing else, and we send only that one reminder.
-            </li>
-            <li style={liStyle}>To process payment for the full report unlock.</li>
-            <li style={liStyle}>To respond if you contact us for support.</li>
-          </ul>
-          <p style={pStyle}>
-            We do not sell your data, and we do not use your assessment responses for
-            advertising or share them with data brokers.
-          </p>
-        </Section>
+      <LegalSection title="How long we keep it">
+        <ul>
+          <li>
+            <strong>Saved progress</strong> you haven&apos;t finished, and haven&apos;t come back to through the link,
+            is deleted automatically 30 days after your last answer.
+          </li>
+          <li>
+            <strong>Your account,</strong> answers, report and practice are kept until you delete your account.
+          </li>
+          <li>
+            <strong>Payment records</strong> are kept by Stripe for as long as tax and accounting law requires.
+          </li>
+        </ul>
+      </LegalSection>
 
-        <Section title="Third parties who process your data">
-          <p style={pStyle}>We rely on the following processors to run the product:</p>
-          <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
-            <li style={liStyle}>
-              <strong>Supabase</strong> — hosts our database (your assessment responses,
-              saved progress, account record, and payment status) and handles sign-in
-              (creating sign-in links, verifying your session).
-            </li>
-            <li style={liStyle}>
-              <strong>Resend</strong> — sends our emails: sign-in and saved-progress links,
-              the one reminder about unfinished progress, and the code to confirm deleting your
-              account. Resend receives your email address and the content of those emails.
-            </li>
-            <li style={liStyle}>
-              <strong>Stripe</strong> — processes the one-time €49 payment. Stripe
-              collects and stores your payment details directly; we never see or store
-              your card or bank account number.
-            </li>
-            <li style={liStyle}>
-              <strong>Anthropic</strong> (Claude API): writes the short descriptions in your
-              report. For each trait we send Anthropic the trait name, whether your answers
-              leaned high, low or in the middle, and up to two of your answers on that trait
-              (the statement and whether you agreed or disagreed). We never send your name,
-              email, account or session identifiers, or your IP address, and we don&apos;t
-              send your answers to other traits in the same request. For some sensitive
-              traits (currently low mood) we send no answers at all. For the optional
-              sections we send your results, not your answers. For the short notes about how
-              your traits relate, we send trait names, your word for each trait, and whether
-              each leaned high or low, never your answers, name, email or account details.
-              Anthropic handles this data under its own terms:{' '}
-              {/* TODO: link to Anthropic's privacy policy (URL to be confirmed, not guessed). */}
-              <span style={placeholder}>[link to Anthropic&apos;s privacy policy]</span>.
-            </li>
-          </ul>
-          <p style={pStyle}>
-            Each of these processors has its own privacy policy governing how it handles
-            data on our behalf. Where any of these providers store or process data outside
-            your country of residence, standard contractual safeguards should apply —{' '}
-            <span style={placeholder}>confirm the specifics of each provider&apos;s
-            data-transfer terms with a lawyer</span> before relying on this statement.
-          </p>
-        </Section>
+      <LegalSection title="Your rights">
+        <p>You can:</p>
+        <ul>
+          <li>
+            <strong>Download</strong> everything we store for your account, and <strong>delete your account</strong>{' '}
+            and everything in it, yourself, on your <Link href="/account">account page</Link>.
+          </li>
+          <li>Ask us to correct or limit what we hold, or object to how we use it.</li>
+          <li>Withdraw your yes to ad measurement at any time, through Cookie settings.</li>
+        </ul>
+        <p>
+          For anything else, email {mail}. We&apos;ll answer within a month. You can also complain to the Dutch data
+          protection authority, the{' '}
+          <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noreferrer">Autoriteit Persoonsgegevens</a>,
+          or the one where you live.
+        </p>
+      </LegalSection>
 
-        <Section title="Data retention">
-          <p style={pStyle}>
-            Saved progress you haven&apos;t finished, and haven&apos;t come back to through the
-            link, is deleted automatically 30 days after your last answer.
-          </p>
-          <p style={pStyle}>
-            Otherwise we currently retain assessment responses, report content, and account
-            records for as long as your account exists. <span style={placeholder}>[Confirm whether this is the
-            retention policy you want, or whether a fixed retention/deletion schedule
-            should be added.]</span>
-          </p>
-        </Section>
+      <LegalSection title="Age">
+        <p>
+          Bearing is for people aged {LEGAL.minimumAge} and over. We don&apos;t knowingly collect data from anyone
+          younger. If you think someone under {LEGAL.minimumAge} has used Bearing, email us and we&apos;ll delete
+          their data.
+        </p>
+      </LegalSection>
 
-        <Section title="Your rights">
-          <p style={pStyle}>
-            You can request access to, correction of, or deletion of your data at any time
-            by emailing{' '}
-            <a href="mailto:support@bearing.me" style={{ color: charcoal }}>support@bearing.me</a>.
-            Deletion requests are currently handled manually — there is no self-serve
-            &quot;delete my account&quot; option in the product yet.
-          </p>
-          <p style={pStyle}>
-            Depending on where you live, you may have additional rights under applicable
-            law (for example, the GDPR if you&apos;re in the EU/EEA, or state privacy laws
-            in the US). <span style={placeholder}>[A lawyer should confirm whether
-            personality/assessment data of this kind is treated as a special/sensitive
-            category under the laws that apply to your users, which would trigger
-            additional obligations.]</span>
-          </p>
-        </Section>
+      <LegalSection title="Security">
+        <p>
+          Your data is stored with access controls: only your own account can read your answers and report, and only
+          our payment system can mark an account as paid. No system is perfectly secure, but we work to keep yours
+          safe and will tell you if something goes wrong that affects you.
+        </p>
+      </LegalSection>
 
-        <Section title="Children's privacy">
-          <p style={pStyle}>
-            Bearing is not directed at children, and we do not knowingly collect
-            information from anyone under 16. The product does not currently verify age.{' '}
-            <span style={placeholder}>[Confirm minimum age and whether an age-gate is
-            needed.]</span>
-          </p>
-        </Section>
+      <LegalSection title="Changes">
+        <p>
+          When Bearing changes in a way that affects this policy, we update it and the date at the top. If a change
+          matters for how we use your data, we&apos;ll tell you before it applies.
+        </p>
+      </LegalSection>
 
-        <Section title="Security">
-          <p style={pStyle}>
-            Your data is stored in Supabase&apos;s managed Postgres database with access
-            controls restricting who can read or write it. Only your own account can read
-            your own assessment/report data; only our payment-processing system can mark
-            your account as paid. No method of storage or transmission is 100% secure, and
-            we can&apos;t guarantee absolute security.
-          </p>
-        </Section>
-
-        <Section title="Changes to this policy">
-          <p style={pStyle}>
-            We may update this policy as the product changes. We&apos;ll update the
-            &quot;Last updated&quot; date above when we do.
-          </p>
-        </Section>
-
-        <Section title="Contact">
-          <p style={{ ...pStyle, marginBottom: 60 }}>
-            Questions about this policy, or a request about your data? Email{' '}
-            <a href="mailto:support@bearing.me" style={{ color: charcoal }}>support@bearing.me</a>.
-          </p>
-        </Section>
-      </section>
-    </div>
+      <LegalSection title="Contact">
+        <p>Questions about this policy, or about your data? Email {mail}.</p>
+      </LegalSection>
+    </LegalPage>
   )
 }

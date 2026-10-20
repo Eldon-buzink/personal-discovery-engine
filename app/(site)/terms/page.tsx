@@ -1,177 +1,145 @@
-// ⚠ AI-DRAFTED, NOT REVIEWED BY A LAWYER.
-// Written from a direct grep of this codebase (Stripe checkout config, webhook
-// handler, refund policy as confirmed by the user: case-by-case, at Bearing's
-// discretion, via support@bearing.me) so the factual claims match what the
-// product actually does as of the date in LAST_UPDATED. It has NOT been
-// reviewed by counsel, and contains placeholder fields (legal entity name,
-// governing jurisdiction) that must be filled in before this is legally
-// binding. Do not treat this as ready to ship — see the visible banner on the
-// page itself.
+// Terms of use, written to match the product as built (free tier, one-time
+// payment in app/actions/createCheckoutSession.ts, sign-in by link, account
+// deletion on /account) and Dutch consumer law (the 14-day right to cancel
+// applies: checkout doesn't ask buyers to waive it). Keep it in step when
+// any of those change, and move LAST_UPDATED.
+// Who runs Bearing comes from lib/legal.ts.
 
-import type { CSSProperties, ReactNode } from 'react'
+import Link from 'next/link'
 import { buildMetadata } from '@/lib/seo'
+import { LEGAL, operatorSentence } from '@/lib/legal'
+import { LegalPage, LegalSection } from '@/components/known/LegalPage'
 
 export const metadata = buildMetadata({
   path: '/terms',
-  title: 'Terms of Service — Bearing',
-  description: 'The terms that govern your use of Bearing.',
+  title: 'Terms of Use — Bearing',
+  description: 'The terms for using Bearing: what it is, the free and paid parts, cancelling and refunds, and your rights.',
 })
 
-const cream    = '#F5F2EB'
-const charcoal = '#1C1C1A'
-const c40      = 'rgba(28,28,26,0.4)'
-const c80      = 'rgba(28,28,26,0.8)'
-const sans     = 'var(--font-inter), system-ui, sans-serif'
-const serif    = 'var(--font-newsreader), Georgia, serif'
-
-const LAST_UPDATED = 'July 23, 2026'
-
-const h2Style: CSSProperties = {
-  fontFamily: serif, fontSize: 22, fontWeight: 500, color: charcoal,
-  marginTop: 40, marginBottom: 12, letterSpacing: '-0.01em',
-}
-const pStyle: CSSProperties = {
-  fontSize: 15, lineHeight: 1.7, color: c80, fontWeight: 300, marginBottom: 14,
-}
-const liStyle: CSSProperties = {
-  fontSize: 15, lineHeight: 1.7, color: c80, fontWeight: 300, marginBottom: 8,
-}
-const placeholder: CSSProperties = {
-  background: 'rgba(200,80,50,0.12)', padding: '1px 6px', borderRadius: 4,
-  fontFamily: 'monospace', fontSize: 14,
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section>
-      <h2 style={h2Style}>{title}</h2>
-      {children}
-    </section>
-  )
-}
+const LAST_UPDATED = 'October 20, 2026'
+const mail = <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>
 
 export default function TermsPage() {
   return (
-    <div style={{ background: cream, color: charcoal, fontFamily: sans, minHeight: '100vh' }}>
-      <section style={{ padding: '140px 48px 24px', maxWidth: 640, margin: '0 auto' }}>
-        <div style={{
-          border: '1.5px solid rgba(200,80,50,0.4)', background: 'rgba(200,80,50,0.06)',
-          borderRadius: 10, padding: '16px 20px', marginBottom: 40,
-        }}>
-          <p style={{ fontSize: 13, lineHeight: 1.6, color: charcoal, fontWeight: 500, margin: 0 }}>
-            Draft — not legal advice. This page was AI-drafted from the actual codebase
-            and your stated refund policy, but has not been reviewed by a lawyer, and
-            still has placeholder fields (legal entity name, governing jurisdiction)
-            marked <span style={placeholder}>like this</span>. Do not publish this as
-            final without review.
+    <LegalPage
+      title="Terms of use"
+      updated={LAST_UPDATED}
+      intro={
+        <>
+          <p>{operatorSentence()} You can reach us at {mail}.</p>
+          <p>
+            These terms apply when you use Bearing. By using it, you agree to them. Our{' '}
+            <Link href="/privacy">privacy policy</Link> explains what we do with your data.
           </p>
-        </div>
-
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: c40, marginBottom: 20 }}>
-          Terms of Service
+        </>
+      }
+    >
+      <LegalSection title="What Bearing is">
+        <p>
+          Bearing is a self-reflection tool. You answer a personality assessment (built on the public-domain
+          IPIP-NEO-120) and get a report about your patterns, and you can follow chosen traits day to day in the
+          practice.
         </p>
-        <h1 style={{ fontFamily: serif, fontSize: 42, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1.15, color: charcoal, marginBottom: 12 }}>
-          Terms.
-        </h1>
-        <p style={{ fontSize: 13, color: c40, marginBottom: 32 }}>Last updated: {LAST_UPDATED}</p>
-
-        <p style={pStyle}>
-          These Terms of Service govern your use of Bearing (getbearing.me), operated by{' '}
-          <span style={placeholder}>[LEGAL ENTITY NAME]</span> (&quot;we,&quot;
-          &quot;us&quot;). By using Bearing, you agree to these terms.
+        <p>
+          Bearing is for personal insight. It is <strong>not</strong> a medical or psychological test, it gives no
+          diagnosis, and it is no substitute for professional help. If you&apos;re struggling, please talk to a
+          doctor or a mental health professional.
         </p>
+      </LegalSection>
 
-        <Section title="What Bearing is">
-          <p style={pStyle}>
-            Bearing is a self-reflection tool that generates a personality report from
-            your answers to an assessment built on established research models (including
-            the IPIP-NEO-120 and the ECR-R attachment-style framework).
-          </p>
-          <p style={pStyle}>
-            Bearing is intended for self-reflection and personal insight. It is{' '}
-            <strong>not</strong> a medical, psychological, or clinical diagnostic tool, and
-            is not a substitute for professional advice, therapy, or treatment. If
-            you&apos;re dealing with a mental health concern, please consult a qualified
-            professional.
-          </p>
-        </Section>
+      <LegalSection title="Who can use it">
+        <p>
+          You need to be {LEGAL.minimumAge} or older to use Bearing. If you&apos;re under 18, you need a
+          parent&apos;s or guardian&apos;s permission to pay.
+        </p>
+      </LegalSection>
 
-        <Section title="Accounts">
-          <p style={pStyle}>
-            You sign in with your email address using a passwordless &quot;magic
-            link&quot; — there is no separate password to manage. You&apos;re responsible
-            for keeping access to that email address secure, since it&apos;s how your
-            account is authenticated.
-          </p>
-        </Section>
+      <LegalSection title="Your account">
+        <p>
+          You sign in with a link we email you; there is no password. Anyone who can open your email can sign in
+          as you, so keep your email account secure. You can delete your account, and everything in it, at any time
+          on your <Link href="/account">account page</Link>.
+        </p>
+      </LegalSection>
 
-        <Section title="Payment">
-          <p style={pStyle}>
-            The full report unlock is a <strong>one-time payment of €49</strong> — not a
-            subscription, and you will not be charged again automatically. Payment is
-            processed by Stripe; we never see or store your card or bank details directly.
-          </p>
-        </Section>
+      <LegalSection title="Free and paid">
+        <p>
+          The assessment and your first 5 patterns are free. A <strong>one-time payment of €49</strong> unlocks all
+          30 facets and the deeper assessments. It is not a subscription, and you won&apos;t be charged again. The
+          price you pay is the one shown at checkout. Stripe handles the payment.
+        </p>
+      </LegalSection>
 
-        <Section title="Refunds">
-          <p style={pStyle}>
-            Refunds are handled case-by-case, at our discretion. If you&apos;re unhappy
-            with your purchase, email{' '}
-            <a href="mailto:support@bearing.me" style={{ color: charcoal }}>support@bearing.me</a>{' '}
-            and we&apos;ll take a look.
-          </p>
-        </Section>
+      <LegalSection title="Cancelling and refunds">
+        <p>
+          You can cancel your purchase within 14 days of paying, without giving a reason, and get your money back.
+          Email {mail} with the address you used, and we&apos;ll refund you within 14 days, the same way you paid.
+        </p>
+        <p>After those 14 days, we look at refund requests one by one. If something isn&apos;t right, tell us.</p>
+      </LegalSection>
 
-        <Section title="Acceptable use">
-          <ul style={{ paddingLeft: 20, marginBottom: 14 }}>
-            <li style={liStyle}>Don&apos;t use Bearing for any unlawful purpose.</li>
-            <li style={liStyle}>Don&apos;t attempt to access other users&apos; accounts or data.</li>
-            <li style={liStyle}>Don&apos;t attempt to disrupt, reverse-engineer, or abuse the service.</li>
-          </ul>
-        </Section>
+      <LegalSection title="The text in your report">
+        <p>
+          Your scores and trait words come straight from your answers. The short descriptions are written by an AI
+          model from your results. We check how they&apos;re made, but they can still be off. Read them as a
+          starting point for your own thinking, not as facts about you.
+        </p>
+      </LegalSection>
 
-        <Section title="Intellectual property">
-          <p style={pStyle}>
-            The Bearing product, its design, and its underlying assessment methodology
-            belong to us. The report generated <em>for you</em>, based on your own
-            answers, is yours to keep and use personally.{' '}
-            <span style={placeholder}>[Confirm exact ownership/license language with a
-            lawyer if you want to restrict resale/redistribution of report content.]</span>
-          </p>
-        </Section>
+      <LegalSection title="Using Bearing fairly">
+        <ul>
+          <li>Don&apos;t use Bearing for anything unlawful.</li>
+          <li>Don&apos;t try to get into other people&apos;s accounts or data.</li>
+          <li>Don&apos;t try to disrupt, overload, copy or reverse-engineer the service.</li>
+        </ul>
+        <p>If someone breaks these rules, we may suspend or close their account.</p>
+      </LegalSection>
 
-        <Section title="Disclaimer of warranties">
-          <p style={pStyle}>
-            Bearing is provided &quot;as is,&quot; without warranties of any kind. We
-            don&apos;t guarantee the assessment or report will be accurate, complete, or
-            suited to your particular situation.{' '}
-            <span style={placeholder}>[Standard warranty-disclaimer and
-            limitation-of-liability boilerplate should be reviewed and finalized by a
-            lawyer — the exact enforceable language varies by jurisdiction.]</span>
-          </p>
-        </Section>
+      <LegalSection title="What belongs to whom">
+        <p>
+          Bearing, its design, its texts and its software belong to us. Your report is yours to keep, read and share
+          for personal use. Your answers and notes stay yours.
+        </p>
+      </LegalSection>
 
-        <Section title="Governing law">
-          <p style={pStyle}>
-            These terms are governed by the laws of{' '}
-            <span style={placeholder}>[JURISDICTION]</span>.
-          </p>
-        </Section>
+      <LegalSection title="Keeping Bearing running">
+        <p>
+          We work to keep Bearing available and your data safe, but we can&apos;t promise it will always be online or
+          free of mistakes. We may change, improve or stop parts of it. If we ever stop the paid part, we&apos;ll
+          tell you in advance and you can download your data first.
+        </p>
+      </LegalSection>
 
-        <Section title="Changes to these terms">
-          <p style={pStyle}>
-            We may update these terms as the product changes. We&apos;ll update the
-            &quot;Last updated&quot; date above when we do.
-          </p>
-        </Section>
+      <LegalSection title="Liability">
+        <p>
+          Bearing is a self-reflection tool, and decisions you make with it are your own. We aren&apos;t liable for
+          indirect loss, and our total liability to you is limited to the amount you paid us in the 12 months before
+          the problem.
+        </p>
+        <p>
+          This doesn&apos;t limit liability that the law doesn&apos;t allow us to limit, such as for intent or gross
+          negligence, and it doesn&apos;t affect your rights as a consumer.
+        </p>
+      </LegalSection>
 
-        <Section title="Contact">
-          <p style={{ ...pStyle, marginBottom: 60 }}>
-            Questions about these terms? Email{' '}
-            <a href="mailto:support@bearing.me" style={{ color: charcoal }}>support@bearing.me</a>.
-          </p>
-        </Section>
-      </section>
-    </div>
+      <LegalSection title="Law and disputes">
+        <p>
+          Dutch law applies to these terms. If you live in another EU country, you keep the protection of that
+          country&apos;s consumer law, and you can take a dispute to the courts where you live.
+        </p>
+        <p>If something goes wrong, please email {mail} first. Most things are quicker to sort out that way.</p>
+      </LegalSection>
+
+      <LegalSection title="Changes">
+        <p>
+          We may update these terms when Bearing changes. We&apos;ll change the date at the top, and tell you before a
+          change that affects you applies.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Contact">
+        <p>Questions about these terms? Email {mail}.</p>
+      </LegalSection>
+    </LegalPage>
   )
 }
