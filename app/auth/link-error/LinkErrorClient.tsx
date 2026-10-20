@@ -42,14 +42,23 @@ export default function LinkErrorClient({ reason: serverReason }: { reason: Link
   const [reason, setReason] = useState<LinkErrorReason>(serverReason)
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
+  const [waitSeconds, setWaitSeconds] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
+  // Answers kept in this browser. A link works once, so after it was used
+  // in another browser this one says "expired", but its own progress is
+  // still right here.
+  const [localAnswers, setLocalAnswers] = useState(0)
 
   // Links from Supabase's own templates report an expired link in the URL
   // fragment (#error_code=otp_expired), which never reaches the server.
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
     if (hash.get('error_code') === 'otp_expired') setReason('expired')
+    try {
+      const saved = JSON.parse(localStorage.getItem('known_session') ?? 'null') as { responses?: unknown } | null
+      if (Array.isArray(saved?.responses)) setLocalAnswers(saved!.responses.length)
+    } catch {}
   }, [])
 
   async function send() {
@@ -58,7 +67,8 @@ export default function LinkErrorClient({ reason: serverReason }: { reason: Link
     setBusy(true)
     setError(false)
     try {
-      await sendSignInLink(address)
+      const { waitSeconds: wait } = await sendSignInLink(address)
+      setWaitSeconds(wait)
       setSent(true)
     } catch (err) {
       console.error('[link-error] send error:', err instanceof Error ? err.message : 'unknown error')
@@ -86,6 +96,7 @@ export default function LinkErrorClient({ reason: serverReason }: { reason: Link
           {sent ? (
             <EmailLinkSent
               email={email.trim()}
+              waitSeconds={waitSeconds}
               detail="It works for 24 hours, on any device, and takes you back to where you stopped."
               onChangeEmail={() => { setSent(false); setEmail('') }}
             />
@@ -98,9 +109,27 @@ export default function LinkErrorClient({ reason: serverReason }: { reason: Link
               <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: 6 }}>
                 {copy.why}
               </p>
-              <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: 24 }}>
-                If you saved your answers, they&apos;re still here. Send yourself a new link and you&apos;ll go straight back to where you stopped.
-              </p>
+              {localAnswers > 0 ? (
+                <>
+                  <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: 24 }}>
+                    Your {localAnswers} {localAnswers === 1 ? 'answer is' : 'answers are'} still saved in this browser.
+                  </p>
+                  <Link
+                    href="/assessment"
+                    className="w-full inline-flex justify-center font-sans font-medium text-ui text-cream bg-charcoal"
+                    style={{ borderRadius: 999, padding: 15 }}
+                  >
+                    Continue on this device
+                  </Link>
+                  <p className="font-sans text-meta text-muted" style={{ margin: '24px 0 10px' }}>
+                    Or get a new link for another device
+                  </p>
+                </>
+              ) : (
+                <p className="font-sans text-body text-charcoal-soft" style={{ marginBottom: 24 }}>
+                  If you saved your answers, they&apos;re still here. Send yourself a new link and you&apos;ll go straight back to where you stopped.
+                </p>
+              )}
               <input
                 type="email"
                 value={email}
@@ -116,8 +145,8 @@ export default function LinkErrorClient({ reason: serverReason }: { reason: Link
                 type="button"
                 onClick={send}
                 disabled={busy}
-                className="w-full font-sans font-medium text-ui text-cream bg-charcoal"
-                style={{ borderRadius: 999, padding: 15, opacity: busy ? 0.7 : 1 }}
+                className={`w-full font-sans font-medium text-ui ${localAnswers > 0 ? 'text-charcoal bg-white' : 'text-cream bg-charcoal'}`}
+                style={{ borderRadius: 999, padding: 15, opacity: busy ? 0.7 : 1, border: localAnswers > 0 ? '1.5px solid #262420' : 'none' }}
               >
                 {busy ? 'Sending…' : 'Send me a new link'}
               </button>

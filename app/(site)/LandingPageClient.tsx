@@ -807,6 +807,7 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [emailSent, setEmailSent] = useState(false)
+  const [waitSeconds, setWaitSeconds] = useState(0)
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState(false)
 
@@ -820,7 +821,8 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
     }
     setEmailLoading(true)
     try {
-      await sendSignInLink(email)
+      const { waitSeconds: wait } = await sendSignInLink(email)
+      setWaitSeconds(wait)
       setEmailSent(true)
     } catch {
       setEmailError(true); setTimeout(() => setEmailError(false), 1200)
@@ -841,6 +843,7 @@ export function HeroCta({ welcomeBack, startedUnfinished }: { welcomeBack: boole
       {emailSent ? (
         <EmailLinkSent
           variant="inline"
+          waitSeconds={waitSeconds}
           email={email}
           onChangeEmail={() => { setEmailSent(false); setEmail('') }}
         />
