@@ -12,8 +12,8 @@ import Closing from './_landing/Closing'
 // is kept for reference at /landing-old (noindex).
 export const metadata = buildMetadata({
   path: '/',
-  title: 'Bearing — Big Five Personality Assessment, Free to Start',
-  description: 'Bearing is a Big Five personality assessment: rate 120 short statements in about 15 minutes. Your first 5 patterns are free, no account needed.',
+  title: 'Bearing — Personality report and daily practice',
+  description: 'Know why you do what you do. A report on your 30 personality patterns, then a daily check-in to notice them in your days. Your first 5 patterns are free.',
 })
 
 // No logo asset or internal search feature exists yet (checked public/ and
@@ -25,7 +25,7 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'Bearing',
   url: 'https://www.getbearing.me',
-  description: "Bearing is a Big Five personality assessment: rate 120 short statements in about 15 minutes. Your first 5 patterns are free, no account needed.",
+  description: "Know why you do what you do. A report on your 30 personality patterns, then a daily check-in to notice them in your days. Your first 5 patterns are free.",
 }
 
 const websiteJsonLd = {
