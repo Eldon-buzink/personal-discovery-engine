@@ -25,7 +25,7 @@ import { CLUSTER_DESCRIPTIONS, CLUSTER_READING_MIN_TRAITS, SUMMARY_MIN_TRAITS } 
 import { familyLabel } from '@/lib/lab/filterLab'
 import {
   buildClusterPrompt, buildSummaryPrompt, checkClusterReading, checkSummary, cleanInput, CLUSTER_SCHEMA, SUMMARY_SCHEMA,
-  type ContentCheck, type ContentTension, type ContentTrait,
+  type ContentCheck, type ContentTension, type ContentTrait, type TracedSentence,
 } from '@/lib/lab/contentGeneration'
 
 // Same model and voice as the trait cards (generatePatternCopy.ts).
@@ -41,7 +41,7 @@ const RATE_WINDOW_SECONDS = 600
 const RATE_MAX = 20
 
 export type LabContentResult =
-  | { status: 'ok'; headline?: string; text: string; pointer: { facet: string; phrase: string } | null; drawsOn: string[] }
+  | { status: 'ok'; headline?: string; text: string; sentences: TracedSentence[]; pointer: { facet: string; phrase: string } | null; drawsOn: string[] }
   | { status: 'failed'; reason: string }
   | { status: 'disabled' }
 
@@ -94,7 +94,7 @@ async function generate(prompt: string, schema: Record<string, unknown>, check: 
       messages = [first]
     }
   }
-  return best ? { status: 'ok', headline: best.headline, text: best.text, pointer: best.pointer, drawsOn: best.drawsOn } : { status: 'failed', reason: lastReason }
+  return best ? { status: 'ok', headline: best.headline, text: best.text, sentences: best.sentences, pointer: best.pointer, drawsOn: best.drawsOn } : { status: 'failed', reason: lastReason }
 }
 
 export async function generateLabSummary(traits: ContentTrait[], tensions: ContentTension[]): Promise<LabContentResult> {
@@ -120,6 +120,6 @@ export async function generateLabClusterReading(cluster: string, traits: Content
   const [tension] = cleanTensions(tensions, input)
   return generate(
     buildClusterPrompt(familyLabel(cluster).replace('[LAB COPY] ', ''), drafts[1].text, input, tension ?? null),
-    CLUSTER_SCHEMA, (text) => checkClusterReading(text, input), 'generateLabClusterReading',
+    CLUSTER_SCHEMA, (text) => checkClusterReading(text, input, tension ? [tension] : []), 'generateLabClusterReading',
   )
 }

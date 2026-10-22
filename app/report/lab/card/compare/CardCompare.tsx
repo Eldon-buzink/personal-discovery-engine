@@ -9,7 +9,10 @@ import { useState } from 'react'
 import { type } from '@/lib/design/type'
 import { generateLabCardPair, type CardPair } from '../actions'
 
-export const COMPARE_FACETS = ['Achievement-Striving', 'Assertiveness', 'Vulnerability', 'Depression', 'Self-Discipline', 'Trust']
+export const COMPARE_FACETS = [
+  'Achievement-Striving', 'Assertiveness', 'Vulnerability', 'Depression', 'Self-Discipline', 'Trust',
+  'Self-Efficacy', 'Sympathy', 'Intellect', 'Gregariousness', 'Cooperation', 'Anxiety',
+]
 
 function SplitCard({ c }: { c: { trait_quote: string; shows_up: string; tradeoff: string } }) {
   return (
@@ -36,7 +39,7 @@ export default function CardCompare() {
   return (
     <main style={{ minHeight: '100vh', background: '#F7F4ED', padding: '28px 16px 64px' }}>
       <h1 style={{ ...type.display3, textAlign: 'center', margin: '0 0 8px' }}>Report lab: card format, old and new</h1>
-      <p style={{ ...type.meta, textAlign: 'center', margin: '0 0 16px' }}>Six traits from the example. Needs LAB_CONTENT_GENERATION=1 and a key on the server.</p>
+      <p style={{ ...type.meta, textAlign: 'center', margin: '0 0 16px' }}>Twelve traits from the example. Needs LAB_CONTENT_GENERATION=1 and a key on the server.</p>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <button type="button" id="cc-run" disabled={running} onClick={run} style={{ minHeight: 44, padding: '0 18px', borderRadius: 999, border: '1px solid #E5E1D5', background: '#FFFFFF', cursor: 'pointer' }}>
           {running ? `Running (${results.length} of ${COMPARE_FACETS.length})` : 'Generate old and new'}

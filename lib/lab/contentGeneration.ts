@@ -3,10 +3,12 @@
 // The server action (app/report/lab/content/actions.ts) builds the prompt,
 // calls the model and keeps an output only if the check here passes.
 //
-// Inputs are trait words, directions and the cards' own headline sentences;
-// no answers are sent, and CONTENT_EXCLUDED_FACETS are removed before
-// anything is built. FACET_BEHAVIORAL_CONTEXT and the score-direction
-// prompt text stay private in generatePatternCopy.ts and are not used here.
+// Per-sentence tracing: the model returns every sentence with the trait
+// words it draws on, and a sentence with no source is rejected. Inputs are
+// trait words, whether each leans or sits near the middle, and the cards'
+// own headline sentences; no answers are sent, and CONTENT_EXCLUDED_FACETS
+// are removed before anything is built. FACET_BEHAVIORAL_CONTEXT and the
+// score-direction prompt text stay private and are not used here.
 
 import { DOMAIN_FACETS } from '@/lib/known/ring1-questions'
 import { facetTraitWords } from '@/lib/known/scoring'
@@ -17,11 +19,14 @@ export type Direction = 'low' | 'mid' | 'high'
 
 export interface ContentTrait { facet: string; word: string; direction: Direction; cluster: string; headline: string }
 export interface ContentTension { facets: [string, string]; words: [string, string] }
+export interface TracedSentence { text: string; facets: string[] }
 
 export const SUMMARY_MAX_WORDS = 70
 export const SUMMARY_HEADLINE_MAX_WORDS = 14
 export const READING_MAX_WORDS = 55
 export const DRAWS_ON_MAX = 8
+
+const leans = (t: ContentTrait) => t.direction !== 'mid'
 
 // ── Input validation (before any model call) ───────────────────────────────
 
@@ -37,76 +42,79 @@ export function cleanInput(traits: ContentTrait[]): ContentTrait[] {
   })
 }
 
-// ── Shared rules ───────────────────────────────────────────────────────────
+// ── Prompts ────────────────────────────────────────────────────────────────
 
 const RULES = `Rules:
 - Second person ("you"), present tense. Describe only. No advice, no predictions, no praise, no reassurance.
-- Use only what is listed above. Do not add traits, events, people, jobs or outcomes that are not in the list.
+- Every sentence must come straight from the listed descriptions. List the trait words each sentence uses in its "draws_on". A sentence with nothing to list must not be written.
+- Do not add traits, events, people, jobs, outcomes or reasons that are not in the list. Never say how other people see, read or react to the person.
+- Do not join traits into a combined effect or contrast them: no "together", "combined", "makes you", "yet", "but", "so" or "which pulls against". The one exception is a pair listed below as pulling against each other: one sentence may name that pair.
 - Use the trait words as given. Never use the names of personality theories, domains or facets.
 - Never say or imply a score, a level, a percentage, "high in", "low in", or a comparison with other people.
 - Plain everyday words a 12-year-old would follow. Sentences under about 18 words.
 - No dashes of any kind between words, no semicolons. Never write "it's not X, it's Y" or "not just X".
 - Never tell the reader what to do: no "try", "should", "consider", "make sure", "remember to".`
 
-const line = (t: ContentTrait) => `- ${t.word}: "${t.headline}"`
+const line = (t: ContentTrait) => `- ${t.word} (${leans(t) ? 'leans clearly' : 'near the middle'}): "${t.headline}"`
 
 export function buildSummaryPrompt(traits: ContentTrait[], tensions: ContentTension[], groupLabel: (cluster: string) => string): string {
   const byCluster = Object.keys(DOMAIN_FACETS)
     .map((c) => ({ c, ts: traits.filter((t) => t.cluster === c) }))
     .filter((g) => g.ts.length)
+  const mostlyMiddle = traits.filter(leans).length * 2 < traits.length
   return `Write a short summary of what stands out in this person's results.
 
-Their traits, grouped, each with the one-line description they already have:
+Their traits, grouped, each marked as leaning clearly one way or sitting near the middle, with the one-line description they already have:
 ${byCluster.map((g) => `${groupLabel(g.c)}:\n${g.ts.map(line).join('\n')}`).join('\n\n')}
 ${tensions.length ? `\nPairs that pull against each other (inside one group only):\n${tensions.map((x) => `- ${x.words[0]} and ${x.words[1]}`).join('\n')}` : ''}
 
 What to write:
-- "headline": one sentence, at most ${SUMMARY_HEADLINE_MAX_WORDS} words, on what stands out most.
-- "text": three or four sentences, at most ${SUMMARY_MAX_WORDS} words. You may say what stands out in each group side by side. Never say that one group explains, causes or drives another.
-- "pointer": only if one listed pair matters for the summary: {"word": the trait word the reader should open, "phrase": the exact words in your text to turn into a link}. Otherwise null.
-- "draws_on": the trait words you used, at most ${DRAWS_ON_MAX}.
-Traits that are near the middle are not distinctive: do not write about them.
+- "headline": {"text": one sentence, at most ${SUMMARY_HEADLINE_MAX_WORDS} words, on what stands out most, "draws_on": [trait words]}. Build it only from traits that lean clearly.
+- "sentences": ${mostlyMiddle ? 'two' : 'three or four'} sentences, at most ${SUMMARY_MAX_WORDS} words in all, each {"text": "...", "draws_on": [trait words]}. Lead with the traits that lean clearly. You may say what stands out in each group side by side. Never say that one group explains, causes or drives another.
+- Traits near the middle are not what stands out: never build the summary around them, and leave them out unless a sentence needs one.${mostlyMiddle ? ' Most of these traits are near the middle, so write less.' : ''}
+- "pointer": only if one listed pair matters for the summary: {"word": the trait word the reader should open, "phrase": the exact words of one of your sentences to turn into a link}. Otherwise null.
+At most ${DRAWS_ON_MAX} different trait words in all.
 
 ${RULES}
 
-Return JSON only: {"headline": "...", "text": "...", "pointer": null, "draws_on": ["..."]}`
+Return JSON only.`
 }
 
 export function buildClusterPrompt(groupName: string, description: string, traits: ContentTrait[], tension: ContentTension | null): string {
-  return `Write a short reading of how this person's traits in one group show up together.
+  const mostlyMiddle = traits.filter(leans).length * 2 < traits.length
+  return `Write a short reading of how this person's traits in one group show up.
 
 The group: ${groupName}. It covers: ${description}
 
-Their traits in this group, each with the one-line description they already have:
+Their traits in this group, each marked as leaning clearly one way or sitting near the middle, with the one-line description they already have:
 ${traits.map(line).join('\n')}
-${tension ? `\nThese two pull against each other: ${tension.words[0]} and ${tension.words[1]}. You may mention it in one sentence.` : ''}
+${tension ? `\nThese two pull against each other: ${tension.words[0]} and ${tension.words[1]}. One sentence may name it.` : ''}
 
 What to write:
-- "text": two or three sentences, at most ${READING_MAX_WORDS} words, on how these traits sit together day to day. Never describe the group as something they have more or less of.
-- "draws_on": the trait words you used, at most ${DRAWS_ON_MAX}.
-If a trait is near the middle, mention it only if it matters to the others.
+- "sentences": ${mostlyMiddle ? 'two' : 'two or three'} sentences, at most ${READING_MAX_WORDS} words in all, each {"text": "...", "draws_on": [trait words]}. Lead with the traits that lean clearly. Never describe the group as something they have more or less of.${mostlyMiddle ? ' Most of these traits are near the middle, so write less and keep to what is clear.' : ''}
 
 ${RULES}
 
-Return JSON only: {"text": "...", "draws_on": ["..."]}`
+Return JSON only.`
 }
+
+const SENTENCE = { type: 'object', properties: { text: { type: 'string' }, draws_on: { type: 'array', items: { type: 'string' } } }, required: ['text', 'draws_on'], additionalProperties: false }
 
 export const SUMMARY_SCHEMA = {
   type: 'object',
   properties: {
-    headline: { type: 'string' },
-    text: { type: 'string' },
+    headline: SENTENCE,
+    sentences: { type: 'array', items: SENTENCE },
     pointer: { anyOf: [{ type: 'null' }, { type: 'object', properties: { word: { type: 'string' }, phrase: { type: 'string' } }, required: ['word', 'phrase'], additionalProperties: false }] },
-    draws_on: { type: 'array', items: { type: 'string' } },
   },
-  required: ['headline', 'text', 'pointer', 'draws_on'],
+  required: ['headline', 'sentences', 'pointer'],
   additionalProperties: false,
 }
 
 export const CLUSTER_SCHEMA = {
   type: 'object',
-  properties: { text: { type: 'string' }, draws_on: { type: 'array', items: { type: 'string' } } },
-  required: ['text', 'draws_on'],
+  properties: { sentences: { type: 'array', items: SENTENCE } },
+  required: ['sentences'],
   additionalProperties: false,
 }
 
@@ -115,79 +123,108 @@ export const CLUSTER_SCHEMA = {
 const THEORY_WORDS = /\b(neuroticism|extraversion|extroversion|introvert\w*|extravert\w*|extrovert\w*|openness|agreeableness|conscientiousness|big five|ocean|facet|domain|trait theory)\b/i
 const SCORE_WORDS = /\b(score\w*|(your|a|high|low|the) levels?|percent\w*|percentile|\d+ ?%|(high|low)(er)? (in|on)|above average|below average|more than most|less than most|compared (to|with) (others|most))\b/i
 const ADVICE_WORDS = /\b(try|should|consider|make sure|remember to|you need to|you must|will (help|make|lead))\b/i
-const CAUSAL_ACROSS = /\b(because of your|explains? (your|why)|causes?|leads? to|drives? your|is why|that's why|thanks to your)\b/i
+const CAUSAL = /\b(because of your|explains? (your|why)|causes?|leads? to|drives? your|is why|that's why|thanks to your)\b/i
 const PRAISE = /\b(amazing|impressive|great strength|wonderful|you should be proud|admirable|rare gift)\b/i
+// Combining or contrasting two traits; allowed only for a fired same-cluster pair.
+export const CONNECTORS = /\b(together|combined?|combination|makes you|yet|but|which pulls against|so)\b/i
 
 export type ContentCheck =
-  | { ok: true; headline?: string; text: string; pointer: { facet: string; phrase: string } | null; drawsOn: string[]; violations: string[] }
+  | { ok: true; headline?: string; text: string; sentences: TracedSentence[]; pointer: { facet: string; phrase: string } | null; drawsOn: string[]; violations: string[] }
   | { ok: false; reason: string }
 
-function common(text: string, maxWords: number, minSentences: number, maxSentences: number): string | null {
+function sentenceProblem(text: string): string | null {
   if (THEORY_WORDS.test(text)) return 'names a theory, domain or facet'
   if (SCORE_WORDS.test(text)) return 'implies a score or level'
   if (ADVICE_WORDS.test(text)) return 'gives advice or a prediction'
-  if (CAUSAL_ACROSS.test(text)) return 'makes a causal claim'
+  if (CAUSAL.test(text)) return 'makes a causal claim'
   if (PRAISE.test(text)) return 'praises'
   if (hasDash(text) || /;/.test(text)) return 'dash or semicolon'
   if (hasContrastPattern(text)) return '"it\'s not X, it\'s Y"'
-  const n = splitSentences(text).length
-  if (n < minSentences || n > maxSentences) return `${n} sentences`
-  if (countWords(text) > maxWords + 15) return `${countWords(text)} words`
   return null
 }
 
-/** draws_on arrives as trait words; map to facets via the input, then validate. */
-function drawsOnFacets(words: unknown, input: ContentTrait[]) {
-  if (!Array.isArray(words)) return validateDrawsOn(words, input.map((t) => t.facet), DRAWS_ON_MAX)
-  const facets = words.map((w) => input.find((t) => t.word.toLowerCase() === String(w).toLowerCase())?.facet ?? `?${String(w)}`)
-  return validateDrawsOn(facets, input.map((t) => t.facet), DRAWS_ON_MAX)
-}
+const wordRe = (w: string) => new RegExp(`\\b${w.replace(/[-]/g, '\\-')}\\b`, 'i')
 
-/** Every trait word that appears in the text must be in draws_on (no silent claims). */
-function unlistedWord(text: string, input: ContentTrait[], drawsOn: string[]): string | null {
-  for (const t of input) {
-    if (!drawsOn.includes(t.facet) && new RegExp(`\\b${t.word.replace(/[-]/g, '\\-')}\\b`, 'i').test(text)) return t.word
+/** One traced sentence: non-empty, sourced, only known traits, every named trait listed, connectors only for a fired pair. */
+function checkSentence(raw: unknown, input: ContentTrait[], tensions: ContentTension[]): { ok: true; s: TracedSentence } | { ok: false; reason: string } {
+  const o = raw as { text?: unknown; draws_on?: unknown }
+  const text = typeof o?.text === 'string' ? o.text.trim().replace(/\s+/g, ' ') : ''
+  if (!text) return { ok: false, reason: 'empty sentence' }
+  if (!Array.isArray(o.draws_on) || o.draws_on.length === 0) return { ok: false, reason: `sentence with no source: "${text}"` }
+  const facets = o.draws_on.map((w) => input.find((t) => t.word.toLowerCase() === String(w).toLowerCase())?.facet ?? `?${String(w)}`)
+  const v = validateDrawsOn(facets, input.map((t) => t.facet), DRAWS_ON_MAX)
+  if (!v.ok) return { ok: false, reason: `${v.reason} in "${text}"` }
+  const bad = sentenceProblem(text)
+  if (bad) return { ok: false, reason: `${bad}: "${text}"` }
+  for (const t of input) if (!v.facets.includes(t.facet) && wordRe(t.word).test(text)) return { ok: false, reason: `uses ${t.word} without listing it: "${text}"` }
+  if (CONNECTORS.test(text)) {
+    const pair = tensions.some((x) => x.facets.every((f) => v.facets.includes(f)) && v.facets.every((f) => x.facets.includes(f)))
+    if (!pair) return { ok: false, reason: `combining or contrast word (${text.match(CONNECTORS)![0]}) outside a fired pair: "${text}"` }
   }
-  return null
+  return { ok: true, s: { text, facets: v.facets } }
+}
+
+function parse(raw: string): Record<string, unknown> | null {
+  try { const o = JSON.parse(raw); return o && typeof o === 'object' ? o : null } catch { return null }
 }
 
 export function checkSummary(raw: string, input: ContentTrait[], tensions: ContentTension[]): ContentCheck {
-  let o: Record<string, unknown>
-  try { o = JSON.parse(raw) } catch { return { ok: false, reason: 'not JSON' } }
-  const headline = typeof o.headline === 'string' ? o.headline.trim() : ''
-  const text = typeof o.text === 'string' ? o.text.trim().replace(/\s+/g, ' ') : ''
-  if (!headline || !text) return { ok: false, reason: 'headline or text missing' }
-  const bad = common(`${headline} ${text}`, SUMMARY_MAX_WORDS + SUMMARY_HEADLINE_MAX_WORDS, 4, 6)
-  if (bad) return { ok: false, reason: bad }
-  const draws = drawsOnFacets(o.draws_on, input)
-  if (!draws.ok) return { ok: false, reason: draws.reason }
-  const unlisted = unlistedWord(`${headline} ${text}`, input, draws.facets)
-  if (unlisted) return { ok: false, reason: `uses ${unlisted} without listing it` }
+  const o = parse(raw)
+  if (!o) return { ok: false, reason: 'not JSON' }
+  const h = checkSentence(o.headline, input, tensions)
+  if (!h.ok) return { ok: false, reason: `headline: ${h.reason}` }
+  if (!Array.isArray(o.sentences) || o.sentences.length === 0) return { ok: false, reason: 'no sentences' }
+  const sentences: TracedSentence[] = []
+  for (const raw of o.sentences) {
+    const c = checkSentence(raw, input, tensions)
+    if (!c.ok) return { ok: false, reason: c.reason }
+    sentences.push(c.s)
+  }
+  const leaning = new Set(input.filter(leans).map((t) => t.facet))
+  // Never built around middle traits: the headline and at least half the sentences rest on a leaning trait.
+  if (!h.s.facets.some((f) => leaning.has(f))) return { ok: false, reason: 'headline rests only on middle traits' }
+  if (sentences.filter((s) => s.facets.some((f) => leaning.has(f))).length * 2 < sentences.length) return { ok: false, reason: 'summary built around middle traits' }
+  const text = sentences.map((s) => s.text).join(' ')
+  const violations: string[] = []
+  const mostlyMiddle = leaning.size * 2 < input.length
+  const want = mostlyMiddle ? [2, 2] : [3, 4]
+  if (sentences.length < want[0] || sentences.length > want[1]) violations.push(`Write ${want[0] === want[1] ? want[0] : `${want[0]} or ${want[1]}`} sentences, not ${sentences.length}.`)
+  if (countWords(h.s.text) > SUMMARY_HEADLINE_MAX_WORDS) violations.push(`The headline is ${countWords(h.s.text)} words: keep it to ${SUMMARY_HEADLINE_MAX_WORDS}.`)
+  if (countWords(text) > SUMMARY_MAX_WORDS) violations.push(`The sentences are ${countWords(text)} words: keep them to ${SUMMARY_MAX_WORDS}.`)
+  if (!sentences[0].facets.some((f) => leaning.has(f))) violations.push('Lead with a trait that leans clearly.')
   let pointer: { facet: string; phrase: string } | null = null
   if (o.pointer && typeof o.pointer === 'object') {
     const p = o.pointer as { word?: unknown; phrase?: unknown }
     const t = input.find((x) => x.word.toLowerCase() === String(p.word).toLowerCase())
-    const phrase = typeof p.phrase === 'string' ? p.phrase : ''
-    if (!t || !phrase || !text.includes(phrase)) return { ok: false, reason: 'pointer does not match the text' }
-    if (!tensions.some((x) => x.facets.includes(t.facet))) return { ok: false, reason: 'pointer is not part of a listed pair' }
-    if (!draws.facets.includes(t.facet)) return { ok: false, reason: 'pointer is not in draws_on' }
+    const phrase = typeof p.phrase === 'string' ? p.phrase.trim().replace(/[.]$/, '') : ''
+    const host = phrase ? sentences.find((s) => s.text.includes(phrase)) : undefined
+    if (!t || !host) return { ok: false, reason: 'pointer does not match a sentence' }
+    if (!tensions.some((x) => x.facets.includes(t.facet) && x.facets.every((f) => host.facets.includes(f)))) return { ok: false, reason: 'pointer is not on a sentence about a listed pair' }
     pointer = { facet: t.facet, phrase }
   }
-  const violations = countWords(text) > SUMMARY_MAX_WORDS ? [`${countWords(text)} words`] : []
-  return { ok: true, headline, text, pointer, drawsOn: draws.facets, violations }
+  const drawsOn = Array.from(new Set([h.s, ...sentences].flatMap((s) => s.facets)))
+  if (drawsOn.length > DRAWS_ON_MAX) return { ok: false, reason: `draws on ${drawsOn.length} traits` }
+  return { ok: true, headline: h.s.text, text, sentences: [h.s, ...sentences], pointer, drawsOn, violations }
 }
 
-export function checkClusterReading(raw: string, input: ContentTrait[]): ContentCheck {
-  let o: Record<string, unknown>
-  try { o = JSON.parse(raw) } catch { return { ok: false, reason: 'not JSON' } }
-  const text = typeof o.text === 'string' ? o.text.trim().replace(/\s+/g, ' ') : ''
-  if (!text) return { ok: false, reason: 'text missing' }
-  const bad = common(text, READING_MAX_WORDS, 2, 3)
-  if (bad) return { ok: false, reason: bad }
-  const draws = drawsOnFacets(o.draws_on, input)
-  if (!draws.ok) return { ok: false, reason: draws.reason }
-  const unlisted = unlistedWord(text, input, draws.facets)
-  if (unlisted) return { ok: false, reason: `uses ${unlisted} without listing it` }
-  const violations = countWords(text) > READING_MAX_WORDS ? [`${countWords(text)} words`] : []
-  return { ok: true, text, pointer: null, drawsOn: draws.facets, violations }
+export function checkClusterReading(raw: string, input: ContentTrait[], tensions: ContentTension[] = []): ContentCheck {
+  const o = parse(raw)
+  if (!o) return { ok: false, reason: 'not JSON' }
+  if (!Array.isArray(o.sentences) || o.sentences.length === 0) return { ok: false, reason: 'no sentences' }
+  const sentences: TracedSentence[] = []
+  for (const raw of o.sentences) {
+    const c = checkSentence(raw, input, tensions)
+    if (!c.ok) return { ok: false, reason: c.reason }
+    sentences.push(c.s)
+  }
+  const text = sentences.map((s) => s.text).join(' ')
+  const leaning = new Set(input.filter(leans).map((t) => t.facet))
+  const mostlyMiddle = leaning.size * 2 < input.length
+  const violations: string[] = []
+  const max = mostlyMiddle ? 2 : 3
+  if (sentences.length < 2 || sentences.length > max) violations.push(`Write ${max === 2 ? '2' : '2 or 3'} sentences, not ${sentences.length}.`)
+  if (countWords(text) > READING_MAX_WORDS) violations.push(`The reading is ${countWords(text)} words: keep it to ${READING_MAX_WORDS}.`)
+  if (leaning.size > 0 && !sentences[0].facets.some((f) => leaning.has(f))) violations.push('Lead with a trait that leans clearly.')
+  if (splitSentences(text).length !== sentences.length) violations.push('Write each sentence as its own item.')
+  return { ok: true, text, sentences, pointer: null, drawsOn: Array.from(new Set(sentences.flatMap((s) => s.facets))), violations }
 }

@@ -17,9 +17,7 @@
 // the lab server action; needs LAB_CONTENT_GENERATION=1), menu 1, ev 1.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import EvidenceDialog from '@/components/known/EvidenceDialog'
 import { patternSubtitle } from '@/components/known/TraitCarousel'
-import { evidencePanelData } from '@/lib/known/evidencePanel'
 import { exampleResponses } from '@/lib/known/exampleReport'
 import { evidenceSentence, type FiredRelationship } from '@/lib/known/relationships'
 import { type } from '@/lib/design/type'
@@ -32,10 +30,10 @@ import { slugToFacet, slugToView, traitToSlug, viewToSlug } from '@/lib/lab/slug
 import type { ContentTension, ContentTrait } from '@/lib/lab/contentGeneration'
 import { ReportCluster } from '../../filter/ReportCluster'
 import { ShowingMenu } from '../../filter/ShowingMenu'
-import { MultiEvidence } from '../MultiEvidence'
+import { MultiEvidence, TraitEvidence } from '../MultiEvidence'
 import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
 
-export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string }
+export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string }
 
 const ink = '#262420'
 const soft = '#56534D'
@@ -91,7 +89,7 @@ function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
 }) {
   const content = cardFor(t.facet)
   return (
-    <div style={{ textAlign: 'center' }} data-hue={hue}>
+    <div style={{ textAlign: 'center' }}>
       <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>{t.word}</h2>
       {/* The reveal order only matters to free users; paid users see the cluster link instead. */}
       {!paid && <p style={{ ...type.meta, margin: '0 0 22px' }}>{patternSubtitle(t.revealIndex)}</p>}
@@ -111,8 +109,7 @@ function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
         </>
       ) : content.body && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.body}</p>}
       {insight && <p style={{ ...type.body, color: '#8C8A83', maxWidth: 420, margin: '14px auto 0' }}>{insight}</p>}
-      <EvidenceDialog key={t.facet} data={evidencePanelData(t.facet, bandOf(t.facet), responses, true)} />
-      <Ai />
+      <TraitEvidence key={t.facet} t={t} hue={hue} responses={responses} footer={<Ai />} />
       {paid && <button type="button" className="cf-track">[LAB COPY] Track this</button>}
     </div>
   )
@@ -131,7 +128,7 @@ function useGenerated(enabled: boolean, key: string, run: () => Promise<LabConte
     if (!enabled) { setState({ status: 'idle' }); return }
     const cache = browserContentCache()
     const hit = cache.get(key)
-    if (hit) { setState({ status: 'ready', headline: hit.headline, text: hit.text, pointer: hit.pointer ?? null, drawsOn: hit.drawsOn }); return }
+    if (hit) { setState({ status: 'ready', headline: hit.headline, text: hit.text, sentences: hit.sentences ?? [], pointer: hit.pointer ?? null, drawsOn: hit.drawsOn }); return }
     if (cache.attempts(key) >= MAX_CONTENT_ATTEMPTS) { setState({ status: 'failed' }); return }
     let live = true
     setState({ status: 'loading' })
@@ -139,8 +136,8 @@ function useGenerated(enabled: boolean, key: string, run: () => Promise<LabConte
     runRef.current().then((r) => {
       if (!live) return
       if (r.status === 'ok') {
-        cache.set({ key, kind: key.includes('|summary|') ? 'summary' : 'cluster', text: r.text, headline: r.headline, pointer: r.pointer, drawsOn: r.drawsOn, createdAt: new Date().toISOString() })
-        setState({ status: 'ready', headline: r.headline, text: r.text, pointer: r.pointer, drawsOn: r.drawsOn })
+        cache.set({ key, kind: key.includes('|summary|') ? 'summary' : 'cluster', text: r.text, headline: r.headline, pointer: r.pointer, sentences: r.sentences, drawsOn: r.drawsOn, createdAt: new Date().toISOString() })
+        setState({ status: 'ready', headline: r.headline, text: r.text, sentences: r.sentences, pointer: r.pointer, drawsOn: r.drawsOn })
       } else setState({ status: 'failed' })
     }).catch(() => { if (live) setState({ status: 'failed' }) })
     return () => { live = false }
@@ -269,7 +266,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   const clusterIn = view !== 'overview' ? clusterTraits(revealed, view) : []
   const clusterKey = contentKey('cluster', sendable(clusterIn).map((t) => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet) })), { cluster: view })
   const clusterTension = rels.find((r) => r.signals.every((s) => clusterIn.some((t) => t.facet === s.facet)))
-  const clusterGen = useGenerated(live && paid && view !== 'overview' && clusterReadingEligible(clusterIn), clusterKey,
+  const clusterGen = useGenerated(live && paid && view !== 'overview' && q.alt !== '1' && clusterReadingEligible(clusterIn), clusterKey,
     () => generateLabClusterReading(view, sendable(clusterIn).map(toInput), clusterTension ? [toTension(clusterTension)] : []))
   const stateOf = (g: GenState) => (forced ?? (live ? g.status : 'placeholder'))
 
@@ -306,12 +303,22 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
           <WithPointer text={g.text} pointer={g.pointer} onPick={select} href={(f) => `?view=${viewToSlug(byFacet.get(f)!.cluster)}&trait=${traitToSlug(byFacet.get(f)!.word)}`} />
           {revealed.length < 30 && <> [LAB COPY] This uses the {revealed.length} traits you have so far.</>}
         </p>
-        <MultiEvidence traits={evidenceRows(g.drawsOn, summaryInput.map((t) => t.facet))} paid={paid} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
+        <MultiEvidence traits={evidenceRows(g.drawsOn, summaryInput.map((t) => t.facet))} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
       </div>
     )
   }
 
+  // Alternative, no generation: the static description plus the headline
+  // sentences of the two most pronounced traits in the cluster.
+  const clusterAlt = (c: string) => (
+    <div className="cf-text">
+      <p style={{ ...type.body, color: soft, margin: '0 0 16px' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
+      <Headlines traits={clusterIn.slice(0, 2)} onPick={select} />
+    </div>
+  )
+
   const clusterBlock = (c: string) => {
+    if (q.alt === '1') return clusterAlt(c)
     const eligible = clusterReadingEligible(clusterIn)
     const s = stateOf(clusterGen)
     const sendableFacets = sendable(clusterIn).map((t) => t.facet)
@@ -324,7 +331,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
       reading = (
         <>
           <p style={{ ...type.body, color: ink, margin: 0 }}>{g.text}</p>
-          <MultiEvidence traits={evidenceRows(g.drawsOn, sendableFacets)} paid={paid} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
+          <MultiEvidence traits={evidenceRows(g.drawsOn, sendableFacets)} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
         </>
       )
     }

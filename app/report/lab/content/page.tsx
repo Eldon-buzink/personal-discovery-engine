@@ -20,6 +20,13 @@ const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
     { label: 'Emotional range (Depression is never sent: 5 rows)', q: 'view=emotional-range&ev=1' },
     { label: 'A blob selected (Ambitious, with its relationship insight)', q: 'view=drive-and-discipline&trait=ambitious' },
   ] },
+  { section: 'Clusters, alternative without generation: description + the two most pronounced headlines', items: [
+    { label: 'Emotional range', q: 'view=emotional-range&alt=1' },
+    { label: 'Social energy', q: 'view=social-energy&alt=1' },
+    { label: '[LAB COPY] Curiosity', q: 'view=curiosity&alt=1' },
+    { label: 'Getting along', q: 'view=getting-along&alt=1' },
+    { label: 'Drive and discipline', q: 'view=drive-and-discipline&alt=1' },
+  ] },
   { section: 'Loading, failure, fewer traits', items: [
     { label: 'Summary loading', q: 'view=overview&st=loading' },
     { label: 'Summary failed: the most pronounced headlines', q: 'view=overview&st=failed' },

@@ -19,7 +19,7 @@ import {
 } from '@/lib/known/ring1Card'
 
 export type CardPair =
-  | { status: 'ok'; facet: string; word: string; direction: string; old: LabRun<Ring1Card>; split: LabRun<Ring1SplitCard> }
+  | { status: 'ok'; facet: string; word: string; direction: string; evidence: { text: string; direction: string }[]; old: LabRun<Ring1Card>; split: LabRun<Ring1SplitCard> }
   | { status: 'failed'; reason: string }
 
 export async function generateLabCardPair(facet: string): Promise<CardPair> {
@@ -40,5 +40,5 @@ export async function generateLabCardPair(facet: string): Promise<CardPair> {
       return c.ok ? { ok: true, value: finishRing1SplitCard(c.card), violations: c.violations } : c
     }),
   ])
-  return { status: 'ok', facet, word, direction, old, split }
+  return { status: 'ok', facet, word, direction, evidence, old, split }
 }

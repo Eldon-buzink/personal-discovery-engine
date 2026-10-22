@@ -17,6 +17,8 @@ export interface CachedContent {
   headline?: string
   /** Summary only: the inline link to a trait card. */
   pointer?: { facet: string; phrase: string } | null
+  /** Each sentence with the facets it draws on (per-sentence tracing). */
+  sentences?: { text: string; facets: string[] }[]
   drawsOn: string[]
   createdAt: string
 }
@@ -28,7 +30,7 @@ export interface ContentCache {
   recordAttempt(key: string): void
 }
 
-export const CONTENT_PROMPT_VERSION = 'lab-1'
+export const CONTENT_PROMPT_VERSION = 'lab-2'
 export const MAX_CONTENT_ATTEMPTS = 2
 
 export function contentKey(

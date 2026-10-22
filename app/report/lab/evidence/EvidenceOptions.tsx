@@ -8,7 +8,8 @@
 // Multi-trait panels never show answers; the per-trait panel keeps its two
 // answers and the statement-count line.
 //
-// (A) A blob on a quiet track per trait, with the two end words.
+// (A) A blob on a quiet track per trait, with the two end words. (Picked;
+//     the per-trait panel drops the generic "runs between two ends" line.)
 // (B) Two groups: "Leans toward" (blob, trait word, the other end) and
 //     "Near the middle" (one quiet line of names). No tracks.
 
@@ -148,8 +149,7 @@ function Single({ t, hue, option, responses }: { t: FilterTrait; hue: number; op
   return (
     <Panel title="What this is based on">
       <p style={{ ...type.body, color: soft, margin: 0 }}>[LAB COPY] This is based on {data?.itemCount ?? 4} statements you answered.</p>
-      <p style={{ ...type.body, color: soft, margin: '4px 0 18px' }}>[LAB COPY] The trait runs between two ends. Your answers put you near one end or in the middle.</p>
-      <div style={{ ...sep, paddingTop: 16 }}>
+      <div style={{ ...sep, paddingTop: 16, marginTop: 18 }}>
         {option === 'A' ? (
           <>
             <span style={{ ...type.traitWord, fontSize: 20, color: ink }}>{t.word}</span>

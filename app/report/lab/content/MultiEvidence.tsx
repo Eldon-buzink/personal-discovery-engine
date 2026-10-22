@@ -1,23 +1,23 @@
 'use client'
 
-// Report lab: "See what this is based on" for a Summary or a cluster
-// reading. The same pill and dialog as the trait card (EvidenceDialog, the
-// .ev-* styles in app/globals.css), with one compact row per trait the text
-// draws on: hue dot (paid only), trait word, the 3-point scale the trait
-// panel uses (BandSpectrum), and "See this trait". No answers, no position
-// sentence, at most 8 rows. The list is the validated draws_on, so excluded
-// facets never appear.
-//
-// Dialog behaviour copied from EvidenceDialog: portal, focus in on open and
-// back to the pill on close, Tab stays inside, Escape and the backdrop close
-// it, body scroll locked.
+// Report lab: "See what this is based on", one pattern everywhere (the same
+// pill and dialog as the product's EvidenceDialog, .ev-* in globals.css),
+// with the picked option A inside:
+// - MultiEvidence (Summary, cluster reading): two plain sentences, then a
+//   blob-on-a-track row per trait it draws on (validated draws_on, so
+//   excluded facets never appear), at most 8, no answers. Tapping a row
+//   opens that trait.
+// - TraitEvidence (trait card): the statements sentence, the track and the
+//   position sentence, the two answers, the statements line.
+// Dialog behaviour as EvidenceDialog: portal, focus in on open and back to
+// the pill on close, Tab stays inside, Escape and the backdrop close it,
+// body scroll locked.
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import BandSpectrum from '@/components/known/BandSpectrum'
-import { facetTraitWords } from '@/lib/known/scoring'
 import { type } from '@/lib/design/type'
-import { bandOf, FAMILY_HUES, type FilterTrait } from '@/lib/lab/filterLab'
+import type { FilterTrait } from '@/lib/lab/filterLab'
+import { MultiRows, SingleBody } from '../evidence/parts'
 
 export const MAX_EVIDENCE_ROWS = 8
 
@@ -34,35 +34,45 @@ export function EvidencePill({ onOpen, expanded, pillRef }: { onOpen: () => void
   )
 }
 
-export function MultiEvidence({ traits, paid, onSeeTrait, startOpen = false, footer }: {
-  traits: FilterTrait[]
-  paid: boolean
-  onSeeTrait: (facet: string) => void
-  startOpen?: boolean
-  /** Shown directly under the pill (the AI-written line). */
-  footer?: React.ReactNode
-}) {
+function WithPill({ startOpen, footer, children }: { startOpen: boolean; footer?: ReactNode; children: (close: () => void) => ReactNode }) {
   const [open, setOpen] = useState(startOpen)
   const pillRef = useRef<HTMLButtonElement>(null)
   const close = useCallback(() => setOpen(false), [])
-  const rows = traits.slice(0, MAX_EVIDENCE_ROWS)
-  if (rows.length === 0) return null
   return (
     <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <EvidencePill onOpen={() => setOpen(true)} expanded={open} pillRef={pillRef} />
       {footer}
-      {open && <Dialog rows={rows} paid={paid} onClose={close} returnFocusTo={pillRef} onSeeTrait={(f) => { setOpen(false); onSeeTrait(f) }} />}
+      {open && <Dialog onClose={close} returnFocusTo={pillRef}>{children(close)}</Dialog>}
     </div>
   )
 }
 
-function Dialog({ rows, paid, onClose, returnFocusTo, onSeeTrait }: {
-  rows: FilterTrait[]
-  paid: boolean
-  onClose: () => void
-  returnFocusTo: React.RefObject<HTMLButtonElement>
+export function MultiEvidence({ traits, hueOf, onSeeTrait, startOpen = false, footer }: {
+  traits: FilterTrait[]
+  hueOf: (t: FilterTrait) => number
   onSeeTrait: (facet: string) => void
+  startOpen?: boolean
+  /** Shown directly under the pill (the AI-written line). */
+  footer?: ReactNode
 }) {
+  const rows = traits.slice(0, MAX_EVIDENCE_ROWS)
+  if (rows.length === 0) return null
+  return (
+    <WithPill startOpen={startOpen} footer={footer}>
+      {(close) => <MultiRows traits={rows} hueOf={hueOf} onPick={(f) => { close(); onSeeTrait(f) }} />}
+    </WithPill>
+  )
+}
+
+export function TraitEvidence({ t, hue, responses, startOpen = false, footer }: { t: FilterTrait; hue: number; responses: Map<number, number>; startOpen?: boolean; footer?: ReactNode }) {
+  return (
+    <WithPill startOpen={startOpen} footer={footer}>
+      {() => <SingleBody t={t} hue={hue} responses={responses} />}
+    </WithPill>
+  )
+}
+
+function Dialog({ onClose, returnFocusTo, children }: { onClose: () => void; returnFocusTo: React.RefObject<HTMLButtonElement>; children: ReactNode }) {
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -101,8 +111,8 @@ function Dialog({ rows, paid, onClose, returnFocusTo, onSeeTrait }: {
 
   return createPortal(
     <div className="ev-backdrop" onClick={(e) => { e.stopPropagation(); if (e.target === e.currentTarget) onClose() }} onKeyDown={onKeyDown}>
-      <style dangerouslySetInnerHTML={{ __html: ME_CSS }} />
-      <div ref={dialogRef} className="ev-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <style dangerouslySetInnerHTML={{ __html: '.evr-row:focus-visible{outline:2px solid #262420;outline-offset:2px;}' }} />
+      <div ref={dialogRef} className="ev-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} style={{ textAlign: 'center' }}>
         <div className="ev-head">
           <h2 id={titleId} style={{ ...type.display3, color: '#262420', margin: 0 }}>What this is based on</h2>
           <button type="button" className="ev-close" aria-label="Close" onClick={onClose}>
@@ -111,37 +121,9 @@ function Dialog({ rows, paid, onClose, returnFocusTo, onSeeTrait }: {
             </svg>
           </button>
         </div>
-        <ul className="me-rows">
-          {rows.map((t) => {
-            const words = facetTraitWords(t.facet)
-            return (
-              <li key={t.facet} className="me-row">
-                <div className="me-top">
-                  {paid && <span aria-hidden="true" className="me-dot" style={{ background: `hsl(${FAMILY_HUES[t.cluster]},70%,60%)` }} />}
-                  <span style={{ ...type.traitWord, fontSize: 18, color: '#262420' }}>{t.word}</span>
-                  <button type="button" className="me-see" onClick={() => onSeeTrait(t.facet)}>See this trait</button>
-                </div>
-                {words && (
-                  <div style={{ width: '100%', padding: '0 11px', boxSizing: 'border-box' }}>
-                    <BandSpectrum band={bandOf(t.facet)} labels={words} />
-                  </div>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+        <div style={{ marginTop: 10 }}>{children}</div>
       </div>
     </div>,
     document.body,
   )
 }
-
-const ME_CSS = `
-  .me-rows{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;}
-  .me-row{padding:12px 14px 2px;border-radius:12px;background:#FFFFFF;border:1px solid #E5E1D5;}
-  .me-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-  .me-dot{width:9px;height:9px;border-radius:999px;flex-shrink:0;}
-  .me-see{margin-left:auto;min-height:44px;padding:0 4px;border:0;background:none;cursor:pointer;color:#262420;
-    font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;text-decoration:underline;text-underline-offset:3px;}
-  .me-see:focus-visible{outline:2px solid #262420;outline-offset:2px;}
-`
