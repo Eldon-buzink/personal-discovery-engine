@@ -2,23 +2,26 @@ import 'server-only'
 
 // Report lab: who may run lab generation. Lab only, but it spends money on
 // the model, so it is gated like the real thing:
-// 1. LAB_CONTENT_GENERATION=1 must be set on the server (never in production
-//    unless someone sets it on purpose).
+// 0. Lab routes must be enabled (lib/lab/labRoutes.ts): never on any Vercel
+//    deployment. Server actions run even when a page's layout would 404, so
+//    the action checks this itself.
+// 1. LAB_CONTENT_GENERATION=1 must be set on the server.
 // 2. Paid check: the signed-in user must have users.is_paid, the same
 //    isPaidUser lookup generateRelationshipInsight uses.
 //    Local escape hatch: LAB_CONTENT_ALLOW_UNPAID=1 skips the paid check,
-//    and only when NODE_ENV is not 'production', so the lab can be run
-//    without signing in as a paid account on a dev machine.
+//    only where lab routes are enabled (a developer's machine), so the lab
+//    can run without signing in as a paid account.
 
 import { getSessionUser } from '@/lib/supabase/server'
 import { isPaidUser } from '@/lib/server/entitlement'
+import { labRoutesEnabled } from './labRoutes'
 
 export type LabGate = { ok: true; userId: string | null } | { ok: false; reason: 'disabled' | 'payment required' }
 
 export async function labGenerationGate(): Promise<LabGate> {
-  if (process.env.LAB_CONTENT_GENERATION !== '1') return { ok: false, reason: 'disabled' }
+  if (!labRoutesEnabled() || process.env.LAB_CONTENT_GENERATION !== '1') return { ok: false, reason: 'disabled' }
   const user = await getSessionUser().catch(() => null)
   if (user && (await isPaidUser(user.id))) return { ok: true, userId: user.id }
-  if (process.env.NODE_ENV !== 'production' && process.env.LAB_CONTENT_ALLOW_UNPAID === '1') return { ok: true, userId: user?.id ?? null }
+  if (process.env.LAB_CONTENT_ALLOW_UNPAID === '1') return { ok: true, userId: user?.id ?? null }
   return { ok: false, reason: 'payment required' }
 }
