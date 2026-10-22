@@ -262,7 +262,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   const summaryInput = sendable(revealed)
   const tensions = rels.map(toTension)
   const summaryKey = contentKey('summary', summaryInput.map((t) => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet) })), { relationshipIds: rels.map((r) => r.id) })
-  const summaryGen = useGenerated(live && paid && summaryEligible(revealed), summaryKey, () => generateLabSummary(summaryInput.map(toInput), tensions))
+  const summaryGen = useGenerated(live && paid && view === 'overview' && summaryEligible(revealed), summaryKey, () => generateLabSummary(summaryInput.map(toInput), tensions))
   const clusterIn = view !== 'overview' ? clusterTraits(revealed, view) : []
   const clusterKey = contentKey('cluster', sendable(clusterIn).map((t) => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet) })), { cluster: view })
   const clusterTension = rels.find((r) => r.signals.every((s) => clusterIn.some((t) => t.facet === s.facet)))
