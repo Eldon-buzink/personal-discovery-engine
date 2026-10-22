@@ -10,9 +10,9 @@ import OptionA2 from '../OptionA2'
 const OPTIONS = { a: OptionA, a2: OptionA2, b: OptionB, c: OptionC } as const
 const NAMES = { a: 'One story', a2: 'One story, iteration 2', b: 'Chapters', c: 'A month with Bearing' } as const
 
-export function generateStaticParams() {
-  return Object.keys(OPTIONS).map((option) => ({ option }))
-}
+// Rendered per request (not prerendered), so the layout's local-only check
+// runs on every request.
+export const dynamic = 'force-dynamic'
 
 export function generateMetadata({ params }: { params: { option: string } }) {
   const name = NAMES[params.option as keyof typeof NAMES] ?? 'Landing option'
