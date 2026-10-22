@@ -43,6 +43,23 @@ function satelliteRange(count: number): [number, number] {
 
 interface Placed { t: FilterTrait; x: number; y: number; r: number; centre: boolean }
 
+// Overview (nothing selected): every blob the same size, on fixed places,
+// none of them in the middle, so nothing reads as ranked or chosen.
+const OVERVIEW_SLOTS: Record<number, [number, number][]> = {
+  1: [[250, 160]],
+  2: [[180, 160], [320, 160]],
+  3: [[250, 95], [170, 225], [330, 225]],
+  4: [[175, 95], [325, 95], [175, 225], [325, 225]],
+  5: [[250, 80], [110, 105], [390, 105], [180, 235], [320, 235]],
+  6: [[250, 78], [110, 98], [390, 98], [250, 248], [110, 228], [390, 228]],
+}
+const OVERVIEW_R = 46
+
+function overviewLayout(traits: FilterTrait[]): Placed[] {
+  const slots = OVERVIEW_SLOTS[Math.min(6, Math.max(1, traits.length))]
+  return traits.slice(0, 6).map((t, i) => ({ t, x: slots[i][0], y: slots[i][1], r: OVERVIEW_R, centre: false }))
+}
+
 /** `traits[0]` is the centre; the rest go around it in the order given. */
 function layout(traits: FilterTrait[]): Placed[] {
   const [centre, ...rest] = traits
@@ -58,7 +75,10 @@ function layout(traits: FilterTrait[]): Placed[] {
   ]
 }
 
-export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
+export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton }: {
+  /** Nothing selected: equal blobs, names on them, no centre. */
+  overview?: boolean
+  registerButton?: (facet: string, el: HTMLButtonElement | null) => void
   /** Optional intensity per trait (0 … 1), applied to the blob only. */
   opacityOf?: (t: FilterTrait) => number
   /** In place order: the first is the selected (centre) trait. */
@@ -79,7 +99,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
   }, [])
   const s = w / VB_W
 
-  const placed = useMemo(() => layout(traits), [traits])
+  const placed = useMemo(() => (overview ? overviewLayout(traits) : layout(traits)), [traits, overview])
   const [moving, setMoving] = useState(false)
   const firstLayout = useRef(true)
   useEffect(() => {
@@ -91,7 +111,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
   }, [placed])
 
   const profiles = useMemo(() => new Map(traits.map((t) => [t.facet, buildPointMotionProfile(hashSeed(`${t.word}-shape`), 9)])), [traits])
-  const centre = placed[0]
+  const centre = placed.find((p) => p.centre)
   useBlobAnimation((t) => {
     if (!centre || !centreRef.current) return
     centreRef.current.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(centre.t.facet)!, 0.3, t))
@@ -119,7 +139,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
               d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
               fill={`url(#rc-g-${uid}-${hueOf(p.t)})`}
               filter={`url(#rc-f-${uid})`}
-              opacity={opacityOf ? opacityOf(p.t) : 1}
+              opacity={opacityOf && !overview ? opacityOf(p.t) : 1}
               style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
             />
           </g>
@@ -130,6 +150,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
         return (
           <button
             key={p.t.facet}
+            ref={(el) => registerButton?.(p.t.facet, el)}
             type="button"
             className={`rc-btn${p.centre ? ' rc-centre' : ''}`}
             aria-label={p.t.word}
@@ -142,7 +163,9 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
               data-moving={moving ? '1' : undefined}
               style={p.centre
                 ? { ...type.traitWord, fontSize: 30, color: `hsl(${hueOf(p.t)},45%,24%)` }
-                : { ...type.meta, color: '#56534D', top: '100%', transform: 'translate(-50%, 2px)' }}
+                : overview
+                  ? { ...type.traitWord, fontSize: 17, color: '#262420' }
+                  : { ...type.meta, color: '#56534D', top: '100%', transform: 'translate(-50%, 2px)' }}
             >
               {p.t.word}
             </span>

@@ -15,6 +15,8 @@ export interface CachedContent {
   kind: ContentKind
   text: string
   headline?: string
+  /** Summary only: the inline link to a trait card. */
+  pointer?: { facet: string; phrase: string } | null
   drawsOn: string[]
   createdAt: string
 }

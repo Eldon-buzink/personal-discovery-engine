@@ -1,18 +1,22 @@
 'use client'
 
-// Report lab: content under the visual, per selection. Low fidelity; every
-// generated piece is a [LAB COPY] placeholder and nothing calls a model.
+// Report lab: the report's first section, built from the picks.
 //
-// Query (fixed settings): f paid|free, m a (Summary and Most pronounced as
-// separate states) | b (one merged Overview), s summary structure a|b,
-// cl cluster layout a|b, d description draft 1|2, n revealed traits (paid,
-// default 30), st ready|loading|failed, ev 1 (evidence panel open),
-// fs 1 (free user gets a short Summary), menu 1.
-// Live state: the filter and the selected trait (none = the level's own
-// content), mirrored into the URL with replaceState.
+// Paid: a "Showing" menu with Overview (the five most pronounced) and the
+// five clusters. In a view nothing is selected: equal blobs, and the text
+// underneath is the Summary (Overview) or the cluster reading. Tapping a
+// blob moves it to the middle with the others around it and shows its
+// card. "Back to …", Esc and the browser Back button zoom out (zooming in
+// pushes a history entry; switching trait while zoomed replaces it). URL:
+// ?view=<neutral slug>&trait=<trait word slug>.
+// Free: five blobs in per-trait hues, the first in the middle with its
+// card, no menu, no cluster language, no Summary.
+//
+// Fixed query settings: f paid|free, n revealed traits (paid, default 30),
+// st ready|loading|failed (forces a state), gen 1 (live generation through
+// the lab server action; needs LAB_CONTENT_GENERATION=1), menu 1, ev 1.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { UnlockedContent } from '@/components/known/ReportVisuals'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import EvidenceDialog from '@/components/known/EvidenceDialog'
 import { patternSubtitle } from '@/components/known/TraitCarousel'
 import { evidencePanelData } from '@/lib/known/evidencePanel'
@@ -20,57 +24,27 @@ import { exampleResponses } from '@/lib/known/exampleReport'
 import { evidenceSentence, type FiredRelationship } from '@/lib/known/relationships'
 import { type } from '@/lib/design/type'
 import {
-  bandOf, cardFor, clusterTraits, CLUSTERS, familyLabel, filterTraits, freeTraits, mostPronounced, relationshipsFor,
-  topTieCount, topTraits, type FilterTrait,
+  bandOf, cardFor, clusterTraits, CLUSTERS, familyLabel, filterTraits, freeTraits, relationshipsFor, topTieCount, topTraits, type FilterTrait,
 } from '@/lib/lab/filterLab'
-import {
-  AI_LINE, CLUSTER_DESCRIPTIONS, clusterReadingEligible, CLUSTER_READING_MIN_TRAITS, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn,
-} from '@/lib/lab/contentLab'
+import { AI_LINE, CLUSTER_DESCRIPTIONS, clusterReadingEligible, CLUSTER_READING_MIN_TRAITS, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn } from '@/lib/lab/contentLab'
+import { browserContentCache, contentKey, MAX_CONTENT_ATTEMPTS } from '@/lib/lab/contentCache'
+import { slugToFacet, slugToView, traitToSlug, viewToSlug } from '@/lib/lab/slugs'
+import type { ContentTension, ContentTrait } from '@/lib/lab/contentGeneration'
 import { ReportCluster } from '../../filter/ReportCluster'
 import { ShowingMenu } from '../../filter/ShowingMenu'
-import { EvidenceList } from '../EvidenceList'
+import { MultiEvidence } from '../MultiEvidence'
+import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
 
-export interface ContentQuery {
-  f?: string; m?: string; s?: string; cl?: string; d?: string; n?: string; st?: string; ev?: string; fs?: string; menu?: string
-  view?: string; trait?: string
-}
+export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string }
 
 const ink = '#262420'
 const soft = '#56534D'
 
-const LEVELS = new Set(['summary', 'top', 'overview'])
+const viewLabel = (v: string) => (v === 'overview' ? 'Overview' : familyLabel(v))
 
-const viewLabel = (v: string) =>
-  v === 'top' ? 'Most pronounced' : v === 'summary' ? '[LAB COPY] Summary' : v === 'overview' ? '[LAB COPY] Overview' : familyLabel(v)
-// Summary/Overview drop their marker in running text; a cluster's working
-// label (Curiosity) keeps it.
-const plainLabel = (v: string) => (LEVELS.has(v) ? viewLabel(v).replace('[LAB COPY] ', '') : familyLabel(v))
+// ── Small pieces ───────────────────────────────────────────────────────────
 
-function writeUrl(view: string, trait: string | null) {
-  const p = new URLSearchParams(window.location.search)
-  p.set('view', view)
-  if (trait) p.set('trait', trait); else p.delete('trait')
-  window.history.replaceState(window.history.state, '', `${window.location.pathname}?${p.toString()}`)
-}
-
-function placeOrder(traits: FilterTrait[], first?: string | null): string[] {
-  const order = traits.map((t) => t.facet)
-  const i = first ? order.indexOf(first) : -1
-  if (i > 0) [order[0], order[i]] = [order[i], order[0]]
-  return order
-}
-
-// ── Pieces ─────────────────────────────────────────────────────────────────
-
-const Ai = () => <p style={{ ...type.meta, margin: '10px 0 0' }}>{AI_LINE}</p>
-
-function EvidenceRow({ count, onOpen }: { count: number; onOpen: () => void }) {
-  return (
-    <button type="button" className="cf-evidence" onClick={onOpen}>
-      [LAB COPY] Based on {count} of your traits · See what this draws on
-    </button>
-  )
-}
+const Ai = () => <p style={{ ...type.meta, margin: '8px 0 0' }}>{AI_LINE}</p>
 
 function Skeleton({ label }: { label: string }) {
   return (
@@ -81,13 +55,14 @@ function Skeleton({ label }: { label: string }) {
   )
 }
 
+/** Fallback when there's no generated text: each trait's own headline sentence, plain. */
 function Headlines({ traits, onPick }: { traits: FilterTrait[]; onPick: (f: string) => void }) {
   return (
     <ul className="cf-heads">
       {traits.map((t) => (
         <li key={t.facet}>
           <button type="button" className="cf-head" onClick={() => onPick(t.facet)}>
-            <span style={{ ...type.traitWord, fontSize: 18, color: ink }}>{t.word}</span>
+            <span style={{ ...type.traitWord, fontSize: 17, color: ink }}>{t.word}</span>{' '}
             <span style={{ ...type.body, color: soft }}>{cardFor(t.facet).trait_quote}</span>
           </button>
         </li>
@@ -96,12 +71,85 @@ function Headlines({ traits, onPick }: { traits: FilterTrait[]; onPick: (f: stri
   )
 }
 
+/** A paragraph with one phrase turned into an inline link (the relationship pointer). */
+function WithPointer({ text, pointer, onPick, href }: { text: string; pointer: { facet: string; phrase: string } | null; onPick: (f: string) => void; href: (f: string) => string }) {
+  if (!pointer || !text.includes(pointer.phrase)) return <>{text}</>
+  const i = text.indexOf(pointer.phrase)
+  return (
+    <>
+      {text.slice(0, i)}
+      <a href={href(pointer.facet)} className="cf-inline" onClick={(e) => { e.preventDefault(); onPick(pointer.facet) }}>{pointer.phrase}</a>
+      {text.slice(i + pointer.phrase.length)}
+    </>
+  )
+}
+
+// The trait card, as the report's Ring 1 card without the tags, with the
+// cluster link (paid) under the subtitle and the AI line under the pill.
+function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
+  t: FilterTrait; hue: number; paid: boolean; responses: Map<number, number>; insight?: string; onCluster: () => void
+}) {
+  const content = cardFor(t.facet)
+  return (
+    <div style={{ textAlign: 'center' }} data-hue={hue}>
+      <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>{t.word}</h2>
+      <p style={{ ...type.meta, margin: paid ? '0 0 2px' : '0 0 22px' }}>{patternSubtitle(t.revealIndex)}</p>
+      {paid && (
+        <p style={{ margin: '0 0 18px' }}>
+          <button type="button" className="cf-inline cf-cluster-link" onClick={onCluster}>
+            This trait is part of {familyLabel(t.cluster)}
+          </button>
+        </p>
+      )}
+      <p style={{ ...type.display4, color: soft, maxWidth: 420, margin: '0 auto 24px' }}>{content.trait_quote}</p>
+      {content.body && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.body}</p>}
+      {insight && <p style={{ ...type.body, color: '#8C8A83', maxWidth: 420, margin: '14px auto 0' }}>{insight}</p>}
+      <EvidenceDialog key={t.facet} data={evidencePanelData(t.facet, bandOf(t.facet), responses, true)} />
+      <Ai />
+      {paid && <button type="button" className="cf-track">[LAB COPY] Track this</button>}
+    </div>
+  )
+}
+
+// ── Generation (lab flag) with the browser cache ───────────────────────────
+
+type Ready = Extract<LabContentResult, { status: 'ok' }>
+type GenState = { status: 'idle' } | { status: 'loading' } | { status: 'failed' } | (Omit<Ready, 'status'> & { status: 'ready' })
+
+function useGenerated(enabled: boolean, key: string, run: () => Promise<LabContentResult>): GenState {
+  const [state, setState] = useState<GenState>({ status: 'idle' })
+  const runRef = useRef(run)
+  runRef.current = run
+  useEffect(() => {
+    if (!enabled) { setState({ status: 'idle' }); return }
+    const cache = browserContentCache()
+    const hit = cache.get(key)
+    if (hit) { setState({ status: 'ready', headline: hit.headline, text: hit.text, pointer: hit.pointer ?? null, drawsOn: hit.drawsOn }); return }
+    if (cache.attempts(key) >= MAX_CONTENT_ATTEMPTS) { setState({ status: 'failed' }); return }
+    let live = true
+    setState({ status: 'loading' })
+    cache.recordAttempt(key)
+    runRef.current().then((r) => {
+      if (!live) return
+      if (r.status === 'ok') {
+        cache.set({ key, kind: key.includes('|summary|') ? 'summary' : 'cluster', text: r.text, headline: r.headline, pointer: r.pointer, drawsOn: r.drawsOn, createdAt: new Date().toISOString() })
+        setState({ status: 'ready', headline: r.headline, text: r.text, pointer: r.pointer, drawsOn: r.drawsOn })
+      } else setState({ status: 'failed' })
+    }).catch(() => { if (live) setState({ status: 'failed' }) })
+    return () => { live = false }
+  }, [enabled, key])
+  return state
+}
+
+const toInput = (t: FilterTrait): ContentTrait => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet), cluster: t.cluster, headline: cardFor(t.facet).trait_quote })
+const toTension = (r: FiredRelationship): ContentTension => ({ facets: [r.signals[0].facet, r.signals[1].facet], words: [r.signals[0].traitWord, r.signals[1].traitWord] })
+
 // ── The frame ──────────────────────────────────────────────────────────────
 
 export default function ContentFrame({ q }: { q: ContentQuery }) {
   const paid = q.f !== 'free'
-  const merged = q.m === 'b'
-  const st = q.st ?? 'ready'
+  const forced = q.st && q.st !== 'ready' ? q.st : null
+  const live = q.gen === '1' && !forced
   const [mobile, setMobile] = useState(false)
   useEffect(() => { const m = () => setMobile(window.innerWidth < 700); m(); window.addEventListener('resize', m); return () => window.removeEventListener('resize', m) }, [])
   const all = useMemo(filterTraits, [])
@@ -109,229 +157,211 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   const n = paid ? Math.max(1, Math.min(30, Number(q.n ?? 30))) : 5
   const revealed = useMemo(() => (paid ? all.filter((t) => t.revealIndex < n) : freeTraits(all)), [all, paid, n])
   const rels = useMemo(() => relationshipsFor(revealed), [revealed])
-  const clusters = CLUSTERS.filter((c) => revealed.some((t) => t.cluster === c))
-  const options = merged ? ['overview', ...clusters] : ['summary', 'top', ...clusters]
+  const options = useMemo(() => ['overview', ...CLUSTERS.filter((c) => revealed.some((t) => t.cluster === c))], [revealed])
+  const byFacet = useMemo(() => new Map(all.map((t) => [t.facet, t])), [all])
 
-  const defaultView = merged ? 'overview' : 'summary'
-  const [view, setViewState] = useState(paid ? (q.view && options.includes(q.view) ? q.view : defaultView) : 'top')
-  const setOf = (v: string) => (!paid ? revealed : LEVELS.has(v) ? topTraits(revealed) : clusterTraits(revealed, v))
-  const [selected, setSelected] = useState<string | null>(paid ? q.trait ?? null : null)
-  const [order, setOrder] = useState(() => placeOrder(setOf(view), q.trait))
-  const [evOpen, setEvOpen] = useState(q.ev === '1')
-  const byFacet = new Map(all.map((t) => [t.facet, t]))
-  const traits = order.map((k) => byFacet.get(k)!).filter(Boolean)
-  const hueOf = (t: FilterTrait) => (paid ? t.clusterHue : t.traitHue)
+  const setFor = useCallback((v: string): FilterTrait[] => (!paid ? revealed : v === 'overview' ? topTraits(revealed) : clusterTraits(revealed, v)), [paid, revealed])
+  const parse = useCallback((search: string) => {
+    const p = new URLSearchParams(search)
+    const v = slugToView(p.get('view'))
+    const view = v && options.includes(v) ? v : 'overview'
+    const facet = slugToFacet(p.get('trait'), revealed)
+    return { view, selected: facet && setFor(view).some((t) => t.facet === facet) ? facet : null }
+  }, [options, revealed, setFor])
+
+  const [initial] = useState(() => (paid ? parse(`?view=${q.view ?? 'overview'}&trait=${q.trait ?? ''}`) : { view: 'overview', selected: null as string | null }))
+  const [view, setViewState] = useState(initial.view)
+  const [selected, setSelected] = useState<string | null>(initial.selected)
+  const [order, setOrder] = useState<string[]>(() => {
+    const base = setFor(initial.view).map((t) => t.facet)
+    const first = paid ? initial.selected : base[0]
+    return first ? [first, ...base.filter((f) => f !== first)] : base
+  })
+  const pushed = useRef(false)
+
+  const write = useCallback((v: string, facet: string | null, mode: 'push' | 'replace') => {
+    const p = new URLSearchParams(window.location.search)
+    p.set('view', viewToSlug(v))
+    const w = facet ? byFacet.get(facet)?.word : null
+    if (w) p.set('trait', traitToSlug(w)); else p.delete('trait')
+    const url = `${window.location.pathname}?${p.toString()}`
+    if (mode === 'push') window.history.pushState({ lab: true }, '', url); else window.history.replaceState(window.history.state, '', url)
+  }, [byFacet])
+
+  useEffect(() => {
+    if (!paid) return
+    const onPop = () => {
+      pushed.current = false
+      const s = parse(window.location.search)
+      const base = setFor(s.view).map((t) => t.facet)
+      setViewState(s.view)
+      setSelected(s.selected)
+      setOrder(s.selected ? [s.selected, ...base.filter((f) => f !== s.selected)] : base)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [paid, parse, setFor])
 
   const select = (facet: string) => {
-    const next = [...order]
-    const i = next.indexOf(facet)
-    if (i < 0) return
-    ;[next[0], next[i]] = [next[i], next[0]]
-    setOrder(next)
-    if (paid) { setSelected(facet); writeUrl(view, facet) }
+    if (!paid) {
+      const next = [...order]; const i = next.indexOf(facet)
+      if (i > 0) { [next[0], next[i]] = [next[i], next[0]]; setOrder(next) }
+      return
+    }
+    if (!setFor(view).some((t) => t.facet === facet)) {
+      // A trait outside this view (from the evidence panel): open it in its own cluster.
+      const t = byFacet.get(facet)!
+      const base = setFor(t.cluster).map((x) => x.facet)
+      setViewState(t.cluster); setSelected(facet); setOrder([facet, ...base.filter((f) => f !== facet)])
+      write(t.cluster, facet, 'push'); pushed.current = true
+      return
+    }
+    if (selected) {
+      // Switching while zoomed: swap with the centre, the others keep their place.
+      const next = [...order]; const i = next.indexOf(facet)
+      ;[next[0], next[i]] = [next[i], next[0]]
+      setOrder(next); setSelected(facet); write(view, facet, 'replace')
+    } else {
+      const base = setFor(view).map((t) => t.facet)
+      setOrder([facet, ...base.filter((f) => f !== facet)]); setSelected(facet)
+      write(view, facet, 'push'); pushed.current = true
+    }
   }
-  const backToLevel = () => { setSelected(null); writeUrl(view, null) }
-  const setView = (v: string, pick?: string) => {
-    setViewState(v)
-    setOrder(placeOrder(setOf(v), pick))
-    setSelected(pick ?? null)
-    setEvOpen(false)
-    writeUrl(v, pick ?? null)
-  }
-
-  // ── content for the current selection ───────────────────────────────────
-  const freeCentre = !paid ? traits[0] : undefined
-  const selectedTrait = paid ? (selected ? byFacet.get(selected) : undefined) : freeCentre
-  const relFor = (facet: string): FiredRelationship | undefined => rels.find((r) => r.signals.some((s) => s.facet === facet))
-
-  const traitCard = (t: FilterTrait) => {
-    const rel = paid ? relFor(t.facet) : undefined
-    return (
-      <div>
-        {paid && <button type="button" className="cf-back" onClick={backToLevel}>← [LAB COPY] Back to {plainLabel(view)}</button>}
-        <UnlockedContent
-          traitWord={t.word}
-          content={cardFor(t.facet)}
-          hue={hueOf(t)}
-          subtitle={patternSubtitle(t.revealIndex)}
-          source={null}
-          variant="ring1"
-          insight={rel ? `[LAB COPY] Relationship insight: the cached generated text for this pair. ${evidenceSentence(rel)}` : undefined}
-          evidence={<EvidenceDialog key={t.facet} data={evidencePanelData(t.facet, bandOf(t.facet), responses, true)} />}
-        />
-        <Ai />
-        {paid && <button type="button" className="cf-track">[LAB COPY] Track this</button>}
-      </div>
-    )
+  const zoomOut = useCallback(() => {
+    if (pushed.current) { window.history.back(); return }
+    setSelected(null); setOrder(setFor(view).map((t) => t.facet)); write(view, null, 'replace')
+  }, [view, setFor, write])
+  const setView = (v: string) => {
+    setViewState(v); setSelected(null); setOrder(setFor(v).map((t) => t.facet)); write(v, null, 'replace'); pushed.current = false
   }
 
-  // Summary: needs SUMMARY_MIN_TRAITS revealed; draws only on revealed, sendable traits.
+  // Esc zooms out; focus: Back on zoom in, the chosen blob on zoom out.
+  const backRef = useRef<HTMLButtonElement>(null)
+  const btns = useRef<Record<string, HTMLButtonElement | null>>({})
+  const last = useRef<string | null>(selected)
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return }
+    if (selected) { backRef.current?.focus(); last.current = selected }
+    else if (last.current) btns.current[last.current]?.focus()
+  }, [selected])
+  useEffect(() => {
+    if (!paid || !selected) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('.ev-backdrop')) zoomOut() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [paid, selected, zoomOut])
+  const register = useCallback((f: string, el: HTMLButtonElement | null) => { btns.current[f] = el }, [])
+
+  // ── content ──────────────────────────────────────────────────────────────
   const top = topTraits(revealed)
-  const pointerRel = rels.find((r) => r.signals.some((s) => top.some((t) => t.facet === s.facet)))
-  const pointerTrait = pointerRel ? top.find((t) => pointerRel.signals.some((s) => s.facet === t.facet)) : undefined
-  const summaryInput = sendable(revealed).map((t) => t.facet)
-  const summaryDraws = validateDrawsOn(
-    Array.from(new Set([...top.map((t) => t.facet), ...(pointerRel?.signals.map((s) => s.facet) ?? [])])).filter((f) => summaryInput.includes(f)),
-    summaryInput,
-  )
-  const summaryDrawTraits = summaryDraws.ok ? summaryDraws.facets.map((f) => byFacet.get(f)!) : []
+  const summaryInput = sendable(revealed)
+  const tensions = rels.map(toTension)
+  const summaryKey = contentKey('summary', summaryInput.map((t) => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet) })), { relationshipIds: rels.map((r) => r.id) })
+  const summaryGen = useGenerated(live && paid && summaryEligible(revealed), summaryKey, () => generateLabSummary(summaryInput.map(toInput), tensions))
+  const clusterIn = view !== 'overview' ? clusterTraits(revealed, view) : []
+  const clusterKey = contentKey('cluster', sendable(clusterIn).map((t) => ({ facet: t.facet, word: t.word, direction: bandOf(t.facet) })), { cluster: view })
+  const clusterTension = rels.find((r) => r.signals.every((s) => clusterIn.some((t) => t.facet === s.facet)))
+  const clusterGen = useGenerated(live && paid && view !== 'overview' && clusterReadingEligible(clusterIn), clusterKey,
+    () => generateLabClusterReading(view, sendable(clusterIn).map(toInput), clusterTension ? [toTension(clusterTension)] : []))
+  const stateOf = (g: GenState) => (forced ?? (live ? g.status : 'placeholder'))
+
+  const evidenceRows = (facets: string[], inputFacets: string[]) => {
+    const v = validateDrawsOn(facets, inputFacets)
+    return v.ok ? v.facets.map((f) => byFacet.get(f)!) : []
+  }
 
   const summaryBlock = () => {
     if (!summaryEligible(revealed)) {
       return (
         <div className="cf-text">
-          <p style={{ ...type.meta, margin: '0 0 12px' }}>[LAB COPY] Your summary appears once you have {SUMMARY_MIN_TRAITS} traits. You have {revealed.length} so far. Here are your most pronounced ones.</p>
+          <p style={{ ...type.meta, margin: '0 0 12px' }}>[LAB COPY] Your summary appears once you have {SUMMARY_MIN_TRAITS} traits. You have {revealed.length} so far.</p>
           <Headlines traits={top} onPick={select} />
         </div>
       )
     }
-    if (st === 'loading') return <Skeleton label="[LAB COPY] Writing your summary." />
-    if (st === 'failed') {
-      return (
-        <div className="cf-text">
-          <Headlines traits={top} onPick={select} />
-        </div>
-      )
+    const s = stateOf(summaryGen)
+    if (s === 'loading' || s === 'idle') return <Skeleton label="[LAB COPY] Writing your summary." />
+    if (s === 'failed') return <div className="cf-text"><Headlines traits={top} onPick={select} /></div>
+    const pointerRel = rels.find((r) => r.signals.some((x) => top.some((t) => t.facet === x.facet)))
+    const phrase = pointerRel ? `${pointerRel.signals[0].traitWord} and ${pointerRel.signals[1].traitWord} pull in different directions` : ''
+    const placeholder = {
+      headline: '[LAB COPY] Summary headline: one sentence on what stands out most.',
+      text: `[LAB COPY] Three or four sentences on what stands out across your ${revealed.length} traits, each group side by side.${pointerRel ? ` ${phrase}.` : ''}`,
+      pointer: pointerRel ? { facet: pointerRel.signals[0].facet, phrase } : null,
+      drawsOn: Array.from(new Set([...top.map((t) => t.facet), ...(pointerRel?.signals.map((x) => x.facet) ?? [])])),
     }
-    const standouts = clusters.map((c) => {
-      const inC = mostPronounced(revealed.filter((t) => t.cluster === c))
-      const best = inC[0]
-      const words = best && best.strength >= 1 ? inC.filter((t) => t.strength === best.strength).map((t) => t.word) : []
-      return { c, words }
-    }).filter((x) => x.words.length)
+    const g = summaryGen.status === 'ready' && live ? summaryGen : placeholder
     return (
       <div className="cf-text">
-        <p style={{ ...type.display4, color: ink, margin: '0 0 8px' }}>[LAB COPY] Summary headline: one sentence on what stands out most.</p>
+        <p style={{ ...type.display4, color: ink, margin: '0 0 8px' }}>{g.headline}</p>
         <p style={{ ...type.body, color: soft, margin: 0 }}>
-          [LAB COPY] {q.s === 'b' ? 'Two short sentences on what stands out across your report.' : 'A short paragraph, three or four sentences, on what stands out across your report. Each cluster side by side, never one explaining another.'}
+          <WithPointer text={g.text} pointer={g.pointer} onPick={select} href={(f) => `?view=${viewToSlug(byFacet.get(f)!.cluster)}&trait=${traitToSlug(byFacet.get(f)!.word)}`} />
+          {revealed.length < 30 && <> [LAB COPY] This uses the {revealed.length} traits you have so far.</>}
         </p>
-        {q.s === 'b' && (
-          <ul className="cf-standouts">
-            {standouts.map(({ c, words }) => (
-              <li key={c}>
-                <button type="button" className="cf-standout" onClick={() => setView(c)}>
-                  <span style={{ ...type.meta, color: soft }}>{plainLabel(c)}</span>
-                  <span style={{ ...type.body, color: ink }}>[LAB COPY] {words.join(', ')} {words.length > 1 ? 'stand' : 'stands'} out.</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {pointerRel && pointerTrait && (
-          <button type="button" className="cf-pointer" onClick={() => select(pointerTrait.facet)}>
-            [LAB COPY] {pointerRel.signals.map((s) => s.traitWord).join(' and ')} pull in different directions. Read more on {pointerTrait.word}.
-          </button>
-        )}
-        {revealed.length < 30 && <p style={{ ...type.meta, margin: '10px 0 0' }}>[LAB COPY] Based on the {revealed.length} traits you have so far.</p>}
-        <Ai />
-        <EvidenceRow count={summaryDrawTraits.length} onOpen={() => setEvOpen(true)} />
-      </div>
-    )
-  }
-
-  const mostPronouncedBlock = (withFraming = true) => {
-    const ties = topTieCount(revealed)
-    return (
-      <div className="cf-text">
-        {withFraming && <p style={{ ...type.body, color: soft, margin: '0 0 6px' }}>[LAB COPY] The five traits your answers lean on most.</p>}
-        {ties > 5 && <p style={{ ...type.meta, margin: '0 0 12px' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>}
-        <Headlines traits={top} onPick={select} />
+        <MultiEvidence traits={evidenceRows(g.drawsOn, summaryInput.map((t) => t.facet))} paid={paid} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
       </div>
     )
   }
 
   const clusterBlock = (c: string) => {
-    const inC = clusterTraits(revealed, c)
-    const draft = CLUSTER_DESCRIPTIONS[c][q.d === '2' ? 1 : 0]
-    const input = sendable(inC).map((t) => t.facet)
-    const draws = validateDrawsOn(input, input)
-    const drawTraits = draws.ok ? draws.facets.map((f) => byFacet.get(f)!) : []
-    const tension = rels.find((r) => r.signals.every((s) => inC.some((t) => t.facet === s.facet)))
-    const tensionTrait = tension ? inC.find((t) => t.facet === tension.signals[0].facet) : undefined
-    const eligible = clusterReadingEligible(inC)
-    const reading = !eligible
-      ? <p style={{ ...type.meta, margin: 0 }}>[LAB COPY] A reading for this group appears once you have {CLUSTER_READING_MIN_TRAITS} of its traits.</p>
-      : st === 'loading'
-        ? <Skeleton label="[LAB COPY] Writing your reading." />
-        : st === 'failed'
-          ? <Headlines traits={inC} onPick={select} />
-          : (
-            <>
-              <p style={{ ...type.body, color: ink, margin: 0 }}>[LAB COPY] Personal reading: two or three sentences on how your {inC.length} traits in this group show up together. Never a score or a level.</p>
-              <Ai />
-              <EvidenceRow count={drawTraits.length} onOpen={() => setEvOpen(true)} />
-            </>
-          )
-    const tensionBlock = tension && tensionTrait && eligible && st === 'ready' ? (
-      q.cl === 'b'
-        ? <button type="button" className="cf-pointer" onClick={() => select(tensionTrait.facet)}>[LAB COPY] {tension.signals.map((s) => s.traitWord).join(' and ')} pull in different directions. Read more on {tensionTrait.word}.</button>
-        : (
+    const eligible = clusterReadingEligible(clusterIn)
+    const s = stateOf(clusterGen)
+    const sendableFacets = sendable(clusterIn).map((t) => t.facet)
+    let reading: ReactNode
+    if (!eligible) reading = <p style={{ ...type.meta, margin: 0 }}>[LAB COPY] A reading for this group appears once you have {CLUSTER_READING_MIN_TRAITS} of its traits.</p>
+    else if (s === 'loading' || s === 'idle') reading = <Skeleton label="[LAB COPY] Writing your reading." />
+    else if (s === 'failed') reading = <Headlines traits={clusterIn} onPick={select} />
+    else {
+      const g = clusterGen.status === 'ready' && live ? clusterGen : { text: `[LAB COPY] Personal reading: two or three sentences on how your ${clusterIn.length} traits in this group show up together. Never a score or a level.`, drawsOn: sendableFacets }
+      reading = (
+        <>
+          <p style={{ ...type.body, color: ink, margin: 0 }}>{g.text}</p>
+          <MultiEvidence traits={evidenceRows(g.drawsOn, sendableFacets)} paid={paid} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
+        </>
+      )
+    }
+    return (
+      <div className="cf-text">
+        {reading}
+        {clusterTension && eligible && (
           <div className="cf-tension">
             <p style={{ ...type.ui, color: ink, margin: '0 0 4px' }}>[LAB COPY] Where two of these pull apart</p>
             <p style={{ ...type.body, color: soft, margin: 0 }}>[LAB COPY] Relationship insight: the cached generated text for this pair.</p>
-            <p style={{ ...type.meta, margin: '4px 0 0' }}>{evidenceSentence(tension)}</p>
+            <p style={{ ...type.meta, margin: '4px 0 0' }}>{evidenceSentence(clusterTension)}</p>
           </div>
-        )
-    ) : null
-    const evidence = <EvidenceList open={evOpen} onClose={() => setEvOpen(false)} title="[LAB COPY] What this reading draws on" traits={drawTraits} responses={responses} onPick={select} />
-    if (q.cl === 'b') {
-      // Layout b: the reading leads; the static description sits under it, quieter.
-      return (
-        <div className="cf-text">
-          {reading}
-          {tensionBlock}
-          <details className="cf-about">
-            <summary>[LAB COPY] What this group covers</summary>
-            <p style={{ ...type.meta, margin: '6px 0 0' }}>{draft.text}</p>
-          </details>
-          {evidence}
-        </div>
-      )
-    }
-    // Layout a: static description first, then the reading, then the tension.
-    return (
-      <div className="cf-text">
-        <p style={{ ...type.meta, margin: '0 0 14px' }}>{draft.text}</p>
-        {reading}
-        {tensionBlock}
-        {evidence}
+        )}
+        <details className="cf-about">
+          <summary>[LAB COPY] What this group covers</summary>
+          <p style={{ ...type.meta, margin: '6px 0 0' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
+        </details>
       </div>
     )
   }
 
-  let under: ReactNode
-  if (!paid) {
-    under = (
-      <>
-        {q.fs === '1' && (
-          <div className="cf-text" style={{ marginBottom: 24 }}>
-            <p style={{ ...type.display4, color: ink, margin: '0 0 8px' }}>[LAB COPY] Free summary headline.</p>
-            <p style={{ ...type.body, color: soft, margin: 0 }}>[LAB COPY] Two sentences on what stands out in your first five traits, each trait described on its own.</p>
-            <p style={{ ...type.meta, margin: '10px 0 0' }}>[LAB COPY] Based on the 5 traits you have so far.</p>
-            <Ai />
-          </div>
-        )}
-        {freeCentre && traitCard(freeCentre)}
-      </>
-    )
-  } else if (selectedTrait) {
-    under = traitCard(selectedTrait)
-  } else if (view === 'summary') {
-    under = summaryBlock()
-  } else if (view === 'overview') {
-    under = summaryBlock()
-  } else if (view === 'top') {
-    under = mostPronouncedBlock()
-  } else {
-    under = clusterBlock(view)
-  }
+  // Paid: hue = cluster; inside a cluster view, small steps within the
+  // family by rank (kept to about ±10 so they never reach a neighbouring
+  // cluster's hue). Free: the live per-trait hues.
+  const HUE_STEPS = [0, 10, -10, 6, -6, 3]
+  const rankInView = new Map((view === 'overview' ? [] : clusterTraits(revealed, view)).map((t, i) => [t.facet, i]))
+  const hueOf = (t: FilterTrait) => (!paid ? t.traitHue : (t.clusterHue + (HUE_STEPS[rankInView.get(t.facet) ?? 0] ?? 0) + 360) % 360)
+  const shown = order.map((f) => byFacet.get(f)!).filter(Boolean)
+  const selectedTrait = paid ? (selected ? byFacet.get(selected) : undefined) : shown[0]
+  const relFor = (facet: string) => rels.find((r) => r.signals.some((x) => x.facet === facet))
+  const ties = topTieCount(revealed)
 
-  const caption = !paid
-    ? `Free, 5 traits${q.fs === '1' ? ', with a short Summary' : ''}`
-    : [merged ? 'Overview merged (b)' : 'Separate Summary and Most pronounced (a)', viewLabel(view), selectedTrait ? `${selectedTrait.word} selected` : null,
-      LEVELS.has(view) && view !== 'top' && !selectedTrait ? `summary ${q.s === 'b' ? 'b' : 'a'}` : null,
-      !LEVELS.has(view) && !selectedTrait ? `cluster layout ${q.cl === 'b' ? 'b' : 'a'}, description ${q.d === '2' ? '2' : '1'}` : null,
-      n < 30 ? `${n} traits revealed` : null, st !== 'ready' ? st : null].filter(Boolean).join(', ')
+  let under: ReactNode
+  if (selectedTrait) {
+    const rel = paid ? relFor(selectedTrait.facet) : undefined
+    under = (
+      <TraitCard t={selectedTrait} hue={hueOf(selectedTrait)} paid={paid} responses={responses}
+        insight={rel ? `[LAB COPY] Relationship insight: the cached generated text for this pair. ${evidenceSentence(rel)}` : undefined}
+        onCluster={() => setView(selectedTrait.cluster)} />
+    )
+  } else if (view === 'overview') under = summaryBlock()
+  else under = clusterBlock(view)
+
+  const caption = !paid ? 'Free, 5 traits' : [viewLabel(view), selectedTrait ? `${selectedTrait.word} selected` : 'nothing selected', n < 30 ? `${n} traits revealed` : null, forced, live ? 'live generation' : null].filter(Boolean).join(', ')
 
   return (
     <main className="cf">
@@ -339,14 +369,21 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
       <p style={{ ...type.meta, textAlign: 'center', margin: '0 0 20px' }}>Report lab · {caption}</p>
       {paid && (
         <div className="cf-control">
-          <ShowingMenu view={view} options={options} labelOf={viewLabel} onChange={(v) => setView(v)} mobile={mobile} startOpen={q.menu === '1'} />
+          <ShowingMenu view={view} options={options} labelOf={viewLabel} onChange={setView} mobile={mobile} startOpen={q.menu === '1'} />
         </div>
       )}
-      <div className="cf-col"><ReportCluster traits={traits} hueOf={hueOf} onSelect={select} /></div>
-      <div className="cf-under">{under}</div>
-      {paid && LEVELS.has(view) && !selectedTrait && (
-        <EvidenceList open={evOpen} onClose={() => setEvOpen(false)} title="[LAB COPY] What your summary draws on" traits={summaryDrawTraits} responses={responses} onPick={select} />
+      {paid && (
+        <div className="cf-backrow">
+          {selectedTrait && <button ref={backRef} type="button" className="cf-back" onClick={zoomOut}>← Back to {viewLabel(view)}</button>}
+        </div>
       )}
+      <div className="cf-col">
+        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} />
+      </div>
+      {paid && view === 'overview' && !selectedTrait && ties > 5 && (
+        <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>
+      )}
+      <div className="cf-under">{under}</div>
     </main>
   )
 }
@@ -355,18 +392,18 @@ const CF_CSS = `
   body{background:#F7F4ED;}
   .cf{min-height:100vh;background:#F7F4ED;color:${ink};padding:28px 16px 64px;text-align:center;}
   .cf-col{max-width:520px;margin:0 auto;}
-  .cf-control{max-width:760px;margin:0 auto 16px;}
-  .cf-under{max-width:520px;margin:24px auto 0;}
+  .cf-control{max-width:760px;margin:0 auto 4px;}
+  .cf-backrow{height:52px;display:flex;align-items:center;justify-content:center;}
+  .cf-under{max-width:520px;margin:20px auto 0;}
   .cf-text{max-width:480px;margin:0 auto;}
   .cf button:focus-visible,.cf summary:focus-visible{outline:2px solid #D85A30;outline-offset:2px;}
-  .cf-heads,.cf-standouts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
-  .cf-standouts{margin-top:16px;}
-  .cf-head,.cf-standout{width:100%;min-height:44px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 14px;border:0;border-radius:14px;background:#FFFFFF;cursor:pointer;text-align:center;}
-  .cf-pointer,.cf-evidence,.cf-back{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:0 4px;border:0;background:none;cursor:pointer;color:${ink};
-    font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(38,36,32,0.35);}
-  .cf-back{margin:0 0 8px;text-decoration:none;}
+  .cf-back{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #E5E1D5;background:#FFFFFF;color:${ink};cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;}
+  .cf-heads{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+  .cf-head{width:100%;min-height:44px;padding:8px 4px;border:0;background:none;cursor:pointer;text-align:center;}
+  .cf-inline{display:inline;padding:0;border:0;background:none;cursor:pointer;color:${ink};font:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(38,36,32,0.4);}
+  .cf-cluster-link{font-family:var(--font-body);font-size:var(--text-meta);color:${soft};min-height:44px;padding:0 4px;}
   .cf-track{min-height:44px;margin-top:16px;padding:0 18px;border-radius:999px;border:1px solid #E5E1D5;background:#FFFFFF;color:${ink};cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;}
-  .cf-tension{margin-top:20px;padding:16px;border-radius:14px;background:#FFFFFF;}
+  .cf-tension{margin-top:24px;padding:16px;border-radius:14px;background:#FFFFFF;}
   .cf-about{margin-top:20px;}
   .cf-about summary{min-height:44px;display:inline-flex;align-items:center;cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;color:${soft};}
   .cf-skel{display:flex;flex-direction:column;align-items:center;gap:10px;}

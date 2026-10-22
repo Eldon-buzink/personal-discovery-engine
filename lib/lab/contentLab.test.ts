@@ -48,3 +48,8 @@ test('cache key ignores order and changes with inputs; storage round-trips and c
   assert.equal(cache.get(key)?.text, 't')
   assert.equal(cache.attempts(key), 1)
 })
+
+test('trait-word slugs never collide', async () => {
+  const { allWordsDistinct } = await import('./slugs')
+  assert.ok(allWordsDistinct())
+})
