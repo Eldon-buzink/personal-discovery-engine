@@ -5,6 +5,12 @@ export interface PatternContent {
   // for Ring 1. Absent on branch content and on Ring 1 content cached before
   // this format existed (those still render from where_it_shows_up).
   body?: string
+  // Ring 1 cards in the split format (lab): the body as two parts, shown as
+  // two paragraphs. shows_up: 2-3 sentences, where it shows up and what it
+  // gives. tradeoff: 1 sentence on what it can cost, or '' when the answers
+  // don't support one. Cards without them render `body` as one block.
+  shows_up?: string
+  tradeoff?: string
   // Branch cards, and Ring 1 content cached before `body` existed.
   where_it_shows_up?: string
   tags: string[]
