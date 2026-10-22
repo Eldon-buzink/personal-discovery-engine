@@ -93,7 +93,8 @@ function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
   return (
     <div style={{ textAlign: 'center' }} data-hue={hue}>
       <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>{t.word}</h2>
-      <p style={{ ...type.meta, margin: paid ? '0 0 2px' : '0 0 22px' }}>{patternSubtitle(t.revealIndex)}</p>
+      {/* The reveal order only matters to free users; paid users see the cluster link instead. */}
+      {!paid && <p style={{ ...type.meta, margin: '0 0 22px' }}>{patternSubtitle(t.revealIndex)}</p>}
       {paid && (
         <p style={{ margin: '0 0 18px' }}>
           <button type="button" className="cf-inline cf-cluster-link" onClick={onCluster}>
@@ -102,7 +103,13 @@ function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
         </p>
       )}
       <p style={{ ...type.display4, color: soft, maxWidth: 420, margin: '0 auto 24px' }}>{content.trait_quote}</p>
-      {content.body && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.body}</p>}
+      {content.shows_up ? (
+        // Split format: two short paragraphs, no headings.
+        <>
+          <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.shows_up}</p>
+          {content.tradeoff && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '14px auto 8px' }}>{content.tradeoff}</p>}
+        </>
+      ) : content.body && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.body}</p>}
       {insight && <p style={{ ...type.body, color: '#8C8A83', maxWidth: 420, margin: '14px auto 0' }}>{insight}</p>}
       <EvidenceDialog key={t.facet} data={evidencePanelData(t.facet, bandOf(t.facet), responses, true)} />
       <Ai />

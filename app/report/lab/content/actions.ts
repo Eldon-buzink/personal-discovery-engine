@@ -11,11 +11,12 @@
 // kept only when the check in lib/lab/contentGeneration.ts passes. Soft
 // violations get one retry with a note, like the trait cards.
 //
-// No paid check here: the lab has no accounts. A real version would check
-// isPaidUser before anything else, as generateRelationshipInsight does.
+// Paid check first (lib/lab/labGate.ts): the flag, then users.is_paid via
+// isPaidUser, as generateRelationshipInsight does. Lab only, still gated.
 
 import Anthropic from '@anthropic-ai/sdk'
 import { getSessionUser } from '@/lib/supabase/server'
+import { labGenerationGate } from '@/lib/lab/labGate'
 import { checkRateLimit, rateLimitKey } from '@/lib/server/rateLimit'
 import { requestIp } from '@/lib/server/siteOrigin'
 import { attemptTimeout } from '@/lib/known/modelOptions'
@@ -43,8 +44,6 @@ export type LabContentResult =
   | { status: 'ok'; headline?: string; text: string; pointer: { facet: string; phrase: string } | null; drawsOn: string[] }
   | { status: 'failed'; reason: string }
   | { status: 'disabled' }
-
-const enabled = () => process.env.LAB_CONTENT_GENERATION === '1'
 
 async function allowed(scope: string): Promise<boolean> {
   const user = await getSessionUser().catch(() => null)
@@ -97,7 +96,8 @@ async function generate(prompt: string, schema: Record<string, unknown>, check: 
 }
 
 export async function generateLabSummary(traits: ContentTrait[], tensions: ContentTension[]): Promise<LabContentResult> {
-  if (!enabled()) return { status: 'disabled' }
+  const gate = await labGenerationGate()
+  if (!gate.ok) return gate.reason === 'disabled' ? { status: 'disabled' } : { status: 'failed', reason: gate.reason }
   if (!Array.isArray(traits) || traits.length > 30) return { status: 'failed', reason: 'bad input' }
   const input = cleanInput(traits)
   if (input.length < SUMMARY_MIN_TRAITS - 1) return { status: 'failed', reason: 'too few traits' }
@@ -107,7 +107,8 @@ export async function generateLabSummary(traits: ContentTrait[], tensions: Conte
 }
 
 export async function generateLabClusterReading(cluster: string, traits: ContentTrait[], tensions: ContentTension[]): Promise<LabContentResult> {
-  if (!enabled()) return { status: 'disabled' }
+  const gate = await labGenerationGate()
+  if (!gate.ok) return gate.reason === 'disabled' ? { status: 'disabled' } : { status: 'failed', reason: gate.reason }
   const drafts = CLUSTER_DESCRIPTIONS[cluster]
   if (!drafts || !Array.isArray(traits) || traits.length > 6) return { status: 'failed', reason: 'bad input' }
   const input = cleanInput(traits).filter((t) => t.cluster === cluster)

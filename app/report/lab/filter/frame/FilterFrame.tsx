@@ -53,13 +53,14 @@ function initialOrder(traits: FilterTrait[], trait?: string | null): string[] {
 
 // The trait card under the visual, for the centre trait. Placeholder: what
 // goes here is still open.
-function TraitDetail({ t, hue, responses }: { t: FilterTrait; hue: number; responses: Map<number, number> }) {
+function TraitDetail({ t, hue, responses, paid }: { t: FilterTrait; hue: number; responses: Map<number, number>; paid: boolean }) {
   return (
     <UnlockedContent
       traitWord={t.word}
       content={cardFor(t.facet)}
       hue={hue}
-      subtitle={patternSubtitle(t.revealIndex)}
+      // Reveal order matters to free users only.
+      subtitle={paid ? '' : patternSubtitle(t.revealIndex)}
       source={null}
       variant="ring1"
       evidence={<EvidenceDialog key={t.facet} data={evidencePanelData(t.facet, bandOf(t.facet), responses, true)} />}
@@ -129,7 +130,7 @@ export default function FilterFrame({ q }: { q: FrameQuery }) {
       <div className="ff-col">
         <ReportCluster traits={traits} hueOf={hueOf} opacityOf={opacityOf} onSelect={select} />
       </div>
-      <div className="ff-under"><TraitDetail t={centre} hue={hueOf(centre)} responses={responses} /></div>
+      <div className="ff-under"><TraitDetail t={centre} hue={hueOf(centre)} responses={responses} paid={f !== 'free'} /></div>
     </Shell>
   )
 }

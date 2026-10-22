@@ -12,7 +12,7 @@
  */
 
 import type { PatternContent, PatternContentEntry } from './types'
-import { CONTRAST_NOTE, PUNCTUATION_NOTE, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasContrastPattern, hasDash, hasDashOrSemicolon, hasLabelledTradeoff } from './copyChecks'
+import { CONTRAST_NOTE, PUNCTUATION_NOTE, checkSentenceLengths, countTagWords, countWords, fixPunctuation, hasContrastPattern, hasDash, hasDashOrSemicolon, hasLabelledTradeoff, splitSentences } from './copyChecks'
 
 // trait_quote + body: ~70 words is the target; over RING1_RETRY_WORDS is a
 // soft violation (retried once with a note, never dropped).
@@ -104,6 +104,72 @@ export function checkRing1CardText(text: string): Ring1CardCheck {
   } catch {
     return { ok: false, reason: 'not JSON' }
   }
+}
+
+// ── Split format (lab): shows_up + tradeoff instead of body and tags ────────
+// The body as two fields, shown as two short paragraphs; no tags. tradeoff
+// may be '' when the description and answers support no cost (harder traits
+// especially), so the card never has to invent one. Only lab code uses this
+// for now; generateRing1Copy still writes RING1_CARD_SCHEMA cards.
+
+export const RING1_CARD_SCHEMA_SPLIT = {
+  type: 'object',
+  properties: {
+    trait_quote: { type: 'string', description: '1-2 sentences, second person, present tense.' },
+    shows_up: { type: 'string', description: '2-3 sentences: where it tends to show up and what it gives.' },
+    tradeoff: { type: 'string', description: "1 sentence on what the same behaviour can cost, or '' if the answers don't support one." },
+  },
+  required: ['trait_quote', 'shows_up', 'tradeoff'],
+  additionalProperties: false,
+}
+
+export type Ring1SplitCard = { trait_quote: string; shows_up: string; tradeoff: string }
+
+export type Ring1SplitCardCheck =
+  | { ok: true; card: Ring1SplitCard; violations: string[]; words: number }
+  | { ok: false; reason: string }
+
+// Openers that make the trade-off sentence read like a template.
+const STOCK_TRADEOFF_OPENER = /^(on the flip side|the flip side|on the other hand|the other side|however|the downside|the catch|but)\b/i
+export const STOCK_OPENER_NOTE = 'Start the trade-off sentence plainly, without "On the flip side", "However", "But" or a similar opener.'
+
+export function checkRing1SplitCard(input: unknown): Ring1SplitCardCheck {
+  if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
+  const { trait_quote, shows_up, tradeoff } = input as Record<string, unknown>
+  if (typeof trait_quote !== 'string' || !trait_quote.trim()) return { ok: false, reason: 'trait_quote missing' }
+  if (typeof shows_up !== 'string' || !shows_up.trim()) return { ok: false, reason: 'shows_up missing' }
+  if (typeof tradeoff !== 'string') return { ok: false, reason: 'tradeoff missing' }
+  const card: Ring1SplitCard = { trait_quote: trait_quote.trim(), shows_up: shows_up.trim(), tradeoff: tradeoff.trim() }
+  const violations: string[] = []
+  const showsN = splitSentences(card.shows_up).length
+  if (showsN > 4) return { ok: false, reason: `shows_up has ${showsN} sentences` }
+  if (showsN === 1 || showsN === 4) violations.push(`shows_up has ${showsN} sentences: write 2-3.`)
+  const tradeN = card.tradeoff ? splitSentences(card.tradeoff).length : 0
+  if (tradeN > 2) return { ok: false, reason: `tradeoff has ${tradeN} sentences` }
+  if (tradeN === 2) violations.push('tradeoff has 2 sentences: write one.')
+  if (card.tradeoff && STOCK_TRADEOFF_OPENER.test(card.tradeoff)) violations.push(STOCK_OPENER_NOTE)
+  const text = [card.trait_quote, card.shows_up, card.tradeoff].filter(Boolean).join(' ')
+  if (hasLabelledTradeoff(text)) return { ok: false, reason: 'labelled payoff/cost' }
+  const lengths = checkSentenceLengths(text)
+  if (lengths.hardFail) return { ok: false, reason: lengths.hardFail }
+  violations.unshift(...lengths.soft)
+  const words = countWords(text)
+  if (words > RING1_RETRY_WORDS) violations.push(`The quote, shows_up and tradeoff are ${words} words together: cut to about ${RING1_TARGET_WORDS}.`)
+  if (hasDashOrSemicolon(text) || hasDash(text)) violations.push(PUNCTUATION_NOTE)
+  if (hasContrastPattern(text)) violations.push(CONTRAST_NOTE)
+  return { ok: true, card, violations, words }
+}
+
+export function checkRing1SplitCardText(text: string): Ring1SplitCardCheck {
+  try {
+    return checkRing1SplitCard(JSON.parse(text))
+  } catch {
+    return { ok: false, reason: 'not JSON' }
+  }
+}
+
+export function finishRing1SplitCard(card: Ring1SplitCard): Ring1SplitCard {
+  return { trait_quote: fixPunctuation(card.trait_quote), shows_up: fixPunctuation(card.shows_up), tradeoff: fixPunctuation(card.tradeoff) }
 }
 
 // What to write to known_session.patternContents after a Ring 1 generation:
