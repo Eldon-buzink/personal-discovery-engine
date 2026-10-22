@@ -81,7 +81,9 @@ async function generate(prompt: string, schema: Record<string, unknown>, check: 
       const block = message.content.find((b) => b.type === 'text')
       const text = block && block.type === 'text' ? block.text : ''
       const c = check(text)
-      if (!c.ok) { lastReason = c.reason; console.error(`[${tag}] rejected:`, c.reason); messages = [first]; continue }
+      // Lab only: the rejected text is logged too, to spot false rejections.
+      if (!c.ok) { lastReason = c.reason; console.error(`[${tag}] rejected:`, c.reason, '::', text); messages = [first]; continue }
+      console.log(`[${tag}] attempt ${attempt + 1}:`, c.violations.length ? `kept with notes: ${c.violations.join(' | ')}` : 'passed', '::', text)
       if (!best || c.violations.length < best.violations.length) best = c
       if (c.violations.length === 0) break
       messages = [first, { role: 'assistant', content: text }, { role: 'user', content: retryFeedback(c.violations) }]
