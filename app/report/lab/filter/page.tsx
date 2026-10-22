@@ -8,10 +8,15 @@ import { CLUSTERS, familyLabel } from '@/lib/lab/filterLab'
 export const metadata = buildMetadata({ path: '/report/lab/filter', title: 'Report lab: filter | Bearing', description: 'Report lab, filter concept.', noindex: true })
 
 const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
-  { section: 'Free user: 5 traits, no filter', items: [
-    { label: 'Cluster hues', q: 'f=free&hue=cluster' },
-    { label: 'Per-trait hues (as live)', q: 'f=free&hue=trait' },
+  { section: 'Free user: 5 traits, no filter, per-trait hues (as live)', items: [
+    { label: 'Free (a trait changes colour when the user pays)', q: 'f=free' },
   ] },
+  { section: 'Colour inside a cluster', items: ['Conscientiousness', 'Agreeableness'].flatMap((k) => [
+    { label: `${familyLabel(k)}: flat (one hue)`, q: `f=paid&view=${k}&tone=flat` },
+    { label: `${familyLabel(k)}: hue steps within the family`, q: `f=paid&view=${k}&tone=hue` },
+    { label: `${familyLabel(k)}: intensity by how pronounced`, q: `f=paid&view=${k}&tone=intensity` },
+    { label: `${familyLabel(k)}: both`, q: `f=paid&view=${k}&tone=both` },
+  ]) },
   { section: 'Paid user: "Showing" menu', items: [
     { label: 'Most pronounced (default)', q: 'f=paid&view=top' },
     { label: 'Menu open', q: 'f=paid&view=top&menu=1' },

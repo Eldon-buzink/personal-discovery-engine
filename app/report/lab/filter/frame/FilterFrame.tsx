@@ -22,7 +22,8 @@ import ReferenceAPlus from '../reference/ReferenceAPlus'
 
 export interface FrameQuery {
   f?: string     // paid | free | ref
-  hue?: string   // cluster | trait
+  hue?: string   // free: trait (default, as live) | cluster
+  tone?: string  // paid, inside a cluster: hue | intensity | both | flat
   view?: string  // top | <cluster>
   trait?: string // the centre trait
   menu?: string  // 1 = menu open
@@ -146,8 +147,11 @@ export default function FilterFrame({ q }: { q: FrameQuery }) {
   useEffect(() => { const m = () => setMobile(window.innerWidth < 700); m(); window.addEventListener('resize', m); return () => window.removeEventListener('resize', m) }, [])
   const all = useMemo(filterTraits, [])
   const responses = useMemo(exampleResponses, [])
-  const hueMode = q.hue === 'trait' ? 'trait' : 'cluster'
-  const hueOf = (t: FilterTrait) => (hueMode === 'trait' ? t.traitHue : t.clusterHue)
+  // Free users keep the live per-trait hues (no clusters for them). Paid:
+  // hue = cluster; inside one cluster the six blobs can vary by a small hue
+  // step within the family and/or by intensity (how pronounced).
+  const hueMode = f === 'free' && q.hue !== 'cluster' ? 'trait' : 'cluster'
+  const tone = q.tone ?? 'both'
 
   const [view, setViewState] = useState(f === 'free' ? 'top' : q.view ?? 'top')
   const setOf = (v: string) => (f === 'free' ? freeTraits(all) : v === 'top' ? topTraits(all) : clusterTraits(all, v))
@@ -155,6 +159,17 @@ export default function FilterFrame({ q }: { q: FrameQuery }) {
   const byFacet = new Map(all.map((t) => [t.facet, t]))
   const traits = order.map((k) => byFacet.get(k)!)
   const centre = traits[0]
+  const inCluster = f !== 'free' && view !== 'top'
+  const rank = new Map(setOf(view).map((t, i) => [t.facet, i]))
+  const HUE_STEPS = [0, 10, -10, 18, -18, 5]
+  const hueOf = (t: FilterTrait) => {
+    if (hueMode === 'trait') return t.traitHue
+    if (inCluster && (tone === 'hue' || tone === 'both')) return (t.clusterHue + HUE_STEPS[rank.get(t.facet) ?? 0] + 360) % 360
+    return t.clusterHue
+  }
+  const opacityOf = inCluster && (tone === 'intensity' || tone === 'both')
+    ? (t: FilterTrait) => 0.45 + 0.55 * Math.sqrt(t.strength / 2)
+    : undefined
 
   const select = (facet: string) => {
     const next = [...order]
@@ -174,7 +189,7 @@ export default function FilterFrame({ q }: { q: FrameQuery }) {
 
   const caption = f === 'free'
     ? `Free, 5 traits, ${hueMode === 'trait' ? 'per-trait hues (as live)' : 'cluster hues'}, no filter`
-    : `Paid, ${viewLabel(view)}, ${centre.word} in the centre`
+    : `Paid, ${viewLabel(view)}, ${centre.word} in the centre${inCluster ? `, colour: ${tone}` : ''}`
 
   return (
     <Shell caption={caption}>
@@ -184,7 +199,7 @@ export default function FilterFrame({ q }: { q: FrameQuery }) {
         </div>
       )}
       <div className="ff-col">
-        <ReportCluster traits={traits} hueOf={hueOf} onSelect={select} />
+        <ReportCluster traits={traits} hueOf={hueOf} opacityOf={opacityOf} onSelect={select} />
       </div>
       <div className="ff-under"><TraitDetail t={centre} hue={hueOf(centre)} responses={responses} /></div>
     </Shell>

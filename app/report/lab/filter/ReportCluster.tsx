@@ -58,7 +58,9 @@ function layout(traits: FilterTrait[]): Placed[] {
   ]
 }
 
-export function ReportCluster({ traits, hueOf, onSelect }: {
+export function ReportCluster({ traits, hueOf, onSelect, opacityOf }: {
+  /** Optional intensity per trait (0 … 1), applied to the blob only. */
+  opacityOf?: (t: FilterTrait) => number
   /** In place order: the first is the selected (centre) trait. */
   traits: FilterTrait[]
   hueOf: (t: FilterTrait) => number
@@ -117,6 +119,8 @@ export function ReportCluster({ traits, hueOf, onSelect }: {
               d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
               fill={`url(#rc-g-${uid}-${hueOf(p.t)})`}
               filter={`url(#rc-f-${uid})`}
+              opacity={opacityOf ? opacityOf(p.t) : 1}
+              style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
             />
           </g>
         ))}
