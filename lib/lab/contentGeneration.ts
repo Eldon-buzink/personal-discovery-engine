@@ -126,7 +126,9 @@ const ADVICE_WORDS = /\b(try|should|consider|make sure|remember to|you need to|y
 const CAUSAL = /\b(because of your|explains? (your|why)|causes?|leads? to|drives? your|is why|that's why|thanks to your)\b/i
 const PRAISE = /\b(amazing|impressive|great strength|wonderful|you should be proud|admirable|rare gift)\b/i
 // Combining or contrasting two traits; allowed only for a fired same-cluster pair.
-export const CONNECTORS = /\b(together|combined?|combination|makes you|yet|but|which pulls against|so)\b/i
+// "so" only as a link between two things (", so", "so that", "so you …"),
+// not the pronoun in "saying so".
+export const CONNECTORS = /\b(together|combined?|combination|makes you|yet|but|which pulls against)\b|,\s*so\b|\bso (that|you|your|it|they|people|others)\b/i
 
 export type ContentCheck =
   | { ok: true; headline?: string; text: string; sentences: TracedSentence[]; pointer: { facet: string; phrase: string } | null; drawsOn: string[]; violations: string[] }

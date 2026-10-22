@@ -54,6 +54,8 @@ test('combining and contrast connectors only for a fired same-cluster pair', () 
   assert.equal(bad('Together, leading and pace make you quick.', 'Take-charge', 'Energized').ok, false)
   assert.equal(bad('You lead, so people follow.', 'Take-charge').ok, false)
   assert.ok(bad('You set a high bar, but starting waits for the mood.', 'Ambitious', 'Fluid').ok)
+  assert.ok(bad('You know what you lead well, and you are comfortable saying so.', 'Take-charge').ok)
+  assert.equal(bad('You lead so you get things done.', 'Take-charge').ok, false)
 })
 
 test('never built around middle traits', () => {
