@@ -132,6 +132,9 @@ export type Ring1SplitCardCheck =
 // Openers that make the trade-off sentence read like a template.
 const STOCK_TRADEOFF_OPENER = /^(on the flip side|the flip side|on the other hand|the other side|however|the downside|the catch|but)\b/i
 export const STOCK_OPENER_NOTE = 'Start the trade-off sentence plainly, without "On the flip side", "However", "But" or a similar opener.'
+// The opener every card used to share.
+const STOCK_SHOWS_UP_OPENER = /^it (often |usually |tends to )?shows?( up)?\b/i
+export const SHOWS_UP_OPENER_NOTE = 'Open shows_up with the situation or the behaviour itself, not "It often shows up".'
 
 export function checkRing1SplitCard(input: unknown): Ring1SplitCardCheck {
   if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
@@ -148,6 +151,7 @@ export function checkRing1SplitCard(input: unknown): Ring1SplitCardCheck {
   if (tradeN > 2) return { ok: false, reason: `tradeoff has ${tradeN} sentences` }
   if (tradeN === 2) violations.push('tradeoff has 2 sentences: write one.')
   if (card.tradeoff && STOCK_TRADEOFF_OPENER.test(card.tradeoff)) violations.push(STOCK_OPENER_NOTE)
+  if (STOCK_SHOWS_UP_OPENER.test(card.shows_up)) violations.push(SHOWS_UP_OPENER_NOTE)
   const text = [card.trait_quote, card.shows_up, card.tradeoff].filter(Boolean).join(' ')
   if (hasLabelledTradeoff(text)) return { ok: false, reason: 'labelled payoff/cost' }
   const lengths = checkSentenceLengths(text)

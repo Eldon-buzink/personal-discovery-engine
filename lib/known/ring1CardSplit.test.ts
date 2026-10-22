@@ -1,11 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { checkRing1SplitCard, checkRing1SplitCardText, STOCK_OPENER_NOTE } from './ring1Card'
+import { checkRing1SplitCard, checkRing1SplitCardText, SHOWS_UP_OPENER_NOTE, STOCK_OPENER_NOTE } from './ring1Card'
 import { buildRing1Prompt, buildRing1PromptSplit } from './ring1Prompt'
 
 const good = {
   trait_quote: 'You push yourself toward high standards.',
-  shows_up: 'It often shows up when there is a goal to chase. You tend to keep going where others ease off.',
+  shows_up: 'When there is a goal to chase, you keep going. You tend to stay with it on long tasks.',
   tradeoff: 'It can also leave you tired.',
 }
 
@@ -25,7 +25,9 @@ test('split card: shape and hard rules', () => {
 })
 
 test('split card: soft rules become retry notes', () => {
-  const one = checkRing1SplitCard({ ...good, shows_up: 'It often shows up when there is a goal to chase.' })
+  const opener = checkRing1SplitCard({ ...good, shows_up: 'It often shows up when there is a goal. You keep going.' })
+  assert.ok(opener.ok && opener.violations.includes(SHOWS_UP_OPENER_NOTE))
+  const one = checkRing1SplitCard({ ...good, shows_up: 'When there is a goal to chase, you keep going.' })
   assert.ok(one.ok && one.violations.some((v) => v.includes('write 2-3')))
   const stock = checkRing1SplitCard({ ...good, tradeoff: 'On the flip side, it can leave you tired.' })
   assert.ok(stock.ok && stock.violations.includes(STOCK_OPENER_NOTE))

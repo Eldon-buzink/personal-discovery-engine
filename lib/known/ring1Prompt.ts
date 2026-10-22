@@ -156,19 +156,20 @@ Return JSON only, no markdown: {"trait_quote": "...", "body": "...", "tags": [".
 // and no tags. Built from buildRing1Prompt with exact replacements, each of
 // which must match, so the two can't drift apart silently.
 
-export const RING1_SPLIT_RULE = `- shows_up: 2-3 sentences of flowing prose with no labels. Where the behaviour tends to show up, and what it gives the person. Each sentence must follow directly from the behaviour description and the answers above.
-- tradeoff: 1 sentence on what the same behaviour can cost, only if the description and answers support it. If they don't, return an empty string. Never invent a cost to fill the field. Start it plainly: no "On the flip side", "However", "But" or "The downside".`
+export const RING1_SPLIT_RULE = `- shows_up: 2-3 sentences of flowing prose with no labels. Where the behaviour tends to show up, and what it gives the person. Each sentence must follow directly from the behaviour description and the answers above. Open with the situation or the behaviour itself: do not start with "It often shows up" or "It shows up". End on the behaviour: no closing sentence that only sums up or adds a mood (like "That gives your days a lighter feel").
+- tradeoff: 1 sentence on what the same behaviour can cost, only if the description and answers support it. If they don't, return an empty string. Never invent a cost to fill the field. Start it plainly: no "On the flip side", "However", "But" or "The downside", and do not default to "It can also mean".
+- In shows_up and tradeoff, never say what other people would prefer, set, want, expect or do. Describe only this person's own behaviour.`
 
-export const RING1_EXAMPLES_SPLIT = `Examples of the quality to aim for. Use your own wording:
+export const RING1_EXAMPLES_SPLIT = `Examples of the quality to aim for. Use your own wording, and vary how each part opens:
 
 Cautiousness, high
-{"trait_quote": "You like to think a decision all the way through before you commit.", "shows_up": "It often shows when a choice has to be made and you still have one more question. That care tends to make your choices solid.", "tradeoff": "It can also mean missing the moment when waiting was the bigger risk."}
+{"trait_quote": "You like to think a decision all the way through before you commit.", "shows_up": "When a choice has to be made, you still want one more question answered first. That care tends to make your choices solid.", "tradeoff": "Waiting can mean missing the moment when acting sooner was the safer bet."}
 
 Anxiety, mid
-{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "shows_up": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. That keeps you alert without running your day.", "tradeoff": "It can also make it hard to tell, in the moment, which kind of worry you're feeling."}
+{"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "shows_up": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. Worry keeps you alert without running your day.", "tradeoff": "In the moment, it can be hard to tell which kind of worry you're feeling."}
 
 Vulnerability, high (a harder trait: no strength is invented, and no extra cost is added)
-{"trait_quote": "When a lot lands at once, it can feel like more than you can handle.", "shows_up": "It often shows up when pressure builds or several things go wrong together. In those moments the feeling tends to take over your day, and calm can be slow to come back.", "tradeoff": ""}`
+{"trait_quote": "When a lot lands at once, it can feel like more than you can handle.", "shows_up": "Pressure that builds, or several things going wrong at once, tends to bring it on. In those moments the feeling takes over your day, and calm can be slow to come back.", "tradeoff": ""}`
 
 function replaceOnce(text: string, from: string, to: string): string {
   if (!text.includes(from)) throw new Error(`ring1Prompt split: expected text not found: ${from.slice(0, 60)}`)
@@ -185,6 +186,7 @@ export function buildRing1PromptSplit(
   p = replaceOnce(p, `- body: 2-3 sentences of flowing prose with no labels. First describe where the behaviour tends to show up, then the upside and the downside of that same behaviour. Each of these must follow directly from the behaviour description and the answers above. If they support only one side, write only that side. Never invent the other.
 - tags: exactly 3 tags, 2-3 words each, never more than 3. Natural phrases someone would say about themselves, not participle fragments or abstract nouns.`, RING1_SPLIT_RULE)
   p = replaceOnce(p, '- trait_quote and body together: about 70 words at most.', '- trait_quote, shows_up and tradeoff together: about 70 words at most.')
+  p = replaceOnce(p, '- Situations are framed as tendencies ("it often shows up when…"), never as events that happened.', '- Situations are framed as tendencies ("when a plan is loose, you tend to…"), never as events that happened.')
   p = replaceOnce(p, `Tags, good examples (2-3 words, never more than 3): "Starts quickly", "Slow to trust", "Likes variety", "Weighs it first", "Stays alert".\n\n`, '')
   p = replaceOnce(p, RING1_EXAMPLES, RING1_EXAMPLES_SPLIT)
   p = replaceOnce(p, `Return JSON only, no markdown: {"trait_quote": "...", "body": "...", "tags": ["...", "...", "..."]}`, `Return JSON only, no markdown: {"trait_quote": "...", "shows_up": "...", "tradeoff": "..."}`)
