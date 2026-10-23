@@ -89,23 +89,27 @@ export function PaidFirstSection({ traits, responses, relationships, insightFor,
   const ready = useRef(false)
 
   // Read the URL once traits are in (they arrive after the first render).
+  const traitsKey = traits.map((t) => t.facet).join('|')
+  const seenKey = useRef('')
   useEffect(() => {
     if (ready.current || traits.length === 0) return
     ready.current = true
+    seenKey.current = traitsKey
     const s = parse(window.location.search)
     const base = setFor(s.view).map((t) => t.facet)
     setViewState(s.view); setSelected(s.selected)
     setOrder(s.selected ? [s.selected, ...base.filter((f) => f !== s.selected)] : base)
-  }, [traits, parse, setFor])
+  }, [traits, parse, setFor, traitsKey])
   // More traits revealed: keep the view, refresh what it shows.
   useEffect(() => {
-    if (!ready.current) return
+    if (!ready.current || seenKey.current === traitsKey) return
+    seenKey.current = traitsKey
     const base = setFor(view).map((t) => t.facet)
     setOrder((o) => {
       const kept = o.filter((f) => base.includes(f))
       return [...kept, ...base.filter((f) => !kept.includes(f))]
     })
-  }, [traits]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [traitsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const write = useCallback((v: string, facet: string | null, mode: 'push' | 'replace') => {
     const p = new URLSearchParams(window.location.search)
