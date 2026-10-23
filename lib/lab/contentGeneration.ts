@@ -246,8 +246,11 @@ const CLUSTER_TAKEAWAY_MAX_WORDS = 22
 const REACHING = /\b(always|never|overall|generally|in general|everything|all in all|in short)\b/i
 const MEANING = /\b(at heart|at your core|deep down|who you are|what (this|it all) means|this means|that means|says about you|the kind of person|you are someone who|sums you up)\b/i
 
-function generalisingProblem(text: string, cited: number): string | null {
-  if (REACHING.test(text)) return `generalising word (${text.match(REACHING)![0]}) reaches past the traits cited`
+// A reaching word is fine when it comes from a cited trait's own
+// description (e.g. "the way things have always been done").
+function generalisingProblem(text: string, cited: number, citedHeadlines: string[] = []): string | null {
+  const reach = text.match(REACHING)?.[0]
+  if (reach && !citedHeadlines.some((h) => new RegExp(`\\b${reach}\\b`, 'i').test(h))) return `generalising word (${reach}) reaches past the traits cited`
   if (/\bboth\b/i.test(text) && cited !== 2) return `"both" with ${cited} traits cited`
   if (/\ball three\b/i.test(text) && cited !== 3) return `"all three" with ${cited} traits cited`
   if (/\b(all|each|every)\b/i.test(text) && cited < 2) return `"${text.match(/\b(all|each|every)\b/i)![0]}" with ${cited} trait cited`
@@ -258,7 +261,7 @@ function checkTakeawaySentence(raw: unknown, input: ContentTrait[], tensions: Co
   const c = checkSentence(raw, input, tensions)
   if (!c.ok) return c
   if (c.s.facets.length > SENTENCE_MAX_TRAITS) return { ok: false, reason: `cites ${c.s.facets.length} traits (at most ${SENTENCE_MAX_TRAITS}): "${c.s.text}"` }
-  const g = generalisingProblem(c.s.text, c.s.facets.length)
+  const g = generalisingProblem(c.s.text, c.s.facets.length, input.filter((t) => c.s.facets.includes(t.facet)).map((t) => t.headline))
   if (g) return { ok: false, reason: `${g}: "${c.s.text}"` }
   if (summary && MEANING.test(c.s.text)) return { ok: false, reason: `says what it all means: "${c.s.text}"` }
   return c

@@ -92,6 +92,8 @@ test('takeaways: at most 3 traits a sentence, generalising words must match, no 
   assert.ok(sum({ ...base, takeaway: S('Both leading and a fast pace stand out.', 'Take-charge', 'Energized') }).ok)
   assert.equal(sum({ ...base, takeaway: S('Both leading and pace stand out.', 'Take-charge') }).ok, false)
   assert.equal(sum({ ...base, takeaway: S('You always take the lead.', 'Take-charge') }).ok, false)
+  const quoting = checkSummaryTakeaway(JSON.stringify({ ...base, takeaway: S('You question the way things have always been done.', 'Ambitious') }), input.map((t) => (t.word === 'Ambitious' ? { ...t, headline: 'You question the way things have always been done.' } : t)), [tension])
+  assert.ok(quoting.ok, JSON.stringify(quoting))
   assert.equal(sum({ ...base, takeaway: S('At heart, you take the lead.', 'Take-charge') }).ok, false)
   assert.equal(sum({ ...base, takeaway: S('You think before you act.', 'Deliberate') }).ok, false)
   const three = sum({ ...base, support: [S('You lead.', 'Take-charge'), S('You move fast.', 'Energized'), S('You aim high.', 'Ambitious')] })
