@@ -29,6 +29,8 @@ import type { WorkingStyleAxis } from '@/lib/known/workingStyleScoring'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
+import { FreeTraitCluster } from '@/components/known/report/FreeTraitCluster'
+import { REPORT_FREE_CLUSTER } from '@/lib/known/reportFlags'
 import { BRANCH_DISPLAY_NAMES, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
@@ -516,6 +518,34 @@ export default function ReportPage() {
     return evidencePanelData(activeFacet.facet, direction, responseMap, !!activeFacet.content.body)
   })()
 
+  // The selected trait's card, under either visual.
+  const strengthByKey = Object.fromEntries(facets.map((f) => [f.facet, traitStrength(facetScores[f.facet])]))
+  const activeCard = (
+    <div style={{ marginTop: 12 }}>
+      {activeFacet?.content ? (
+        <UnlockedContent
+          traitWord={activeFacet.traitWord}
+          content={activeFacet.content}
+          hue={activeHue}
+          subtitle={patternSubtitle(activeFacet.hueOffset)}
+          // Free users see no cluster language (and the cluster names are not final).
+          subtitleNote={isPaid ? domainNote(domainOf(activeFacet.facet)) ?? undefined : undefined}
+          source={null}
+          variant="ring1"
+          insight={activeInsight}
+          evidence={<EvidenceDialog key={activeFacet.facet} data={activeEvidence} />}
+        />
+      ) : (
+        <PatternLoadingState
+          traitWord={activeFacet?.traitWord ?? ''}
+          isLoading={true}
+          failed={activeFacet?.copyFailed}
+          onRetry={() => activeFacet && retryCopy(activeFacet.facet)}
+        />
+      )}
+    </div>
+  )
+
   const completedBranches: Branch[] = [
     ...(envEntry    ? ['environment'   as Branch] : []),
     ...(relEntry    ? ['relationships' as Branch] : []),
@@ -811,31 +841,15 @@ export default function ReportPage() {
 
             {isUnlocked ? (
               <>
-                <TraitCarousel traits={carouselTraits} activeIdx={safeIdx} onSelect={setActiveIdx}>
-                  <div style={{ marginTop: 12 }}>
-                    {activeFacet?.content ? (
-                      <UnlockedContent
-                        traitWord={activeFacet.traitWord}
-                        content={activeFacet.content}
-                        hue={activeHue}
-                        subtitle={patternSubtitle(activeFacet.hueOffset)}
-                        // Free users see no cluster language (and the cluster names are not final).
-                        subtitleNote={isPaid ? domainNote(domainOf(activeFacet.facet)) ?? undefined : undefined}
-                        source={null}
-                        variant="ring1"
-                        insight={activeInsight}
-                        evidence={<EvidenceDialog key={activeFacet.facet} data={activeEvidence} />}
-                      />
-                    ) : (
-                      <PatternLoadingState
-                        traitWord={activeFacet?.traitWord ?? ''}
-                        isLoading={true}
-                        failed={activeFacet?.copyFailed}
-                        onRetry={() => activeFacet && retryCopy(activeFacet.facet)}
-                      />
-                    )}
-                  </div>
-                </TraitCarousel>
+                {REPORT_FREE_CLUSTER && !isPaid ? (
+                  <FreeTraitCluster traits={carouselTraits} strengths={strengthByKey} activeIdx={safeIdx} onSelect={setActiveIdx}>
+                    {activeCard}
+                  </FreeTraitCluster>
+                ) : (
+                  <TraitCarousel traits={carouselTraits} activeIdx={safeIdx} onSelect={setActiveIdx}>
+                    {activeCard}
+                  </TraitCarousel>
+                )}
               </>
             ) : (
               <EmptyReportState />
