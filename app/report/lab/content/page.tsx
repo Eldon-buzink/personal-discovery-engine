@@ -7,6 +7,12 @@ import { CLUSTER_DESCRIPTIONS } from '@/lib/lab/contentLab'
 export const metadata = buildMetadata({ path: '/report/lab/content', title: 'Report lab: content | Bearing', description: 'Report lab, content per selection.', noindex: true })
 
 const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
+  { section: 'Summary without generation (one most pronounced trait per cluster)', items: [
+    { label: 'Layout 1, a short list: 30 traits', q: 'view=overview&sl=1' },
+    { label: 'Layout 1, a short list: 12 traits', q: 'view=overview&sl=1&n=12' },
+    { label: 'Layout 2, one paragraph: 30 traits', q: 'view=overview&sl=2' },
+    { label: 'Layout 2, one paragraph: 12 traits', q: 'view=overview&sl=2&n=12' },
+  ] },
   { section: 'Overview (merged): nothing selected, Summary underneath', items: [
     { label: 'Overview', q: 'view=overview' },
     { label: 'Overview, evidence panel open', q: 'view=overview&ev=1' },

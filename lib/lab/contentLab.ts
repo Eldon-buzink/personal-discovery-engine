@@ -13,7 +13,7 @@ import { RELATIONSHIP_EXCLUDED_FACETS } from '@/lib/known/relationshipDefinition
 import { DOMAIN_FACETS } from '@/lib/known/ring1-questions'
 import type { FilterTrait } from './filterLab'
 
-export const AI_LINE = '[LAB COPY] Written by AI from your answers.'
+export const AI_LINE = 'Written by AI, based on your answers.'
 
 export const SUMMARY_MIN_TRAITS = 8
 export const CLUSTER_READING_MIN_TRAITS = 3

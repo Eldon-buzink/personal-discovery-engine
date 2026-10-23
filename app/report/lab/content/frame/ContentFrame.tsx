@@ -24,7 +24,7 @@ import { type } from '@/lib/design/type'
 import {
   bandOf, cardFor, clusterTraits, CLUSTERS, familyLabel, filterTraits, freeTraits, relationshipsFor, topTieCount, topTraits, type FilterTrait,
 } from '@/lib/lab/filterLab'
-import { AI_LINE, CLUSTER_DESCRIPTIONS, clusterReadingEligible, CLUSTER_READING_MIN_TRAITS, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn } from '@/lib/lab/contentLab'
+import { AI_LINE, CLUSTER_DESCRIPTIONS, clusterReadingEligible, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn } from '@/lib/lab/contentLab'
 import { browserContentCache, contentKey, MAX_CONTENT_ATTEMPTS } from '@/lib/lab/contentCache'
 import { slugToFacet, slugToView, traitToSlug, viewToSlug } from '@/lib/lab/slugs'
 import type { ContentTension, ContentTrait } from '@/lib/lab/contentGeneration'
@@ -33,7 +33,7 @@ import { ShowingMenu } from '../../filter/ShowingMenu'
 import { MultiEvidence, TraitEvidence } from '../MultiEvidence'
 import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
 
-export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string }
+export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string; sl?: string }
 
 const ink = '#262420'
 const soft = '#56534D'
@@ -43,15 +43,6 @@ const viewLabel = (v: string) => (v === 'overview' ? 'Overview' : familyLabel(v)
 // ── Small pieces ───────────────────────────────────────────────────────────
 
 const Ai = () => <p style={{ ...type.meta, margin: '8px 0 0' }}>{AI_LINE}</p>
-
-function Skeleton({ label }: { label: string }) {
-  return (
-    <div aria-busy="true" aria-live="polite" className="cf-skel">
-      <span className="cf-bar" style={{ width: '70%' }} /><span className="cf-bar" style={{ width: '92%' }} /><span className="cf-bar" style={{ width: '84%' }} />
-      <p style={{ ...type.meta, margin: '8px 0 0' }}>{label}</p>
-    </div>
-  )
-}
 
 /** Fallback when there's no generated text: each trait's own headline sentence, plain. */
 function Headlines({ traits, onPick }: { traits: FilterTrait[]; onPick: (f: string) => void }) {
@@ -268,11 +259,74 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   const clusterTension = rels.find((r) => r.signals.every((s) => clusterIn.some((t) => t.facet === s.facet)))
   const clusterGen = useGenerated(live && paid && view !== 'overview' && q.alt !== '1' && clusterReadingEligible(clusterIn), clusterKey,
     () => generateLabClusterReading(view, sendable(clusterIn).map(toInput), clusterTension ? [toTension(clusterTension)] : []))
-  const stateOf = (g: GenState) => (forced ?? (live ? g.status : 'placeholder'))
 
   const evidenceRows = (facets: string[], inputFacets: string[]) => {
     const v = validateDrawsOn(facets, inputFacets)
     return v.ok ? v.facets.map((f) => byFacet.get(f)!) : []
+  }
+  const cardHref = (f: string) => `?view=${viewToSlug(byFacet.get(f)!.cluster)}&trait=${traitToSlug(byFacet.get(f)!.word)}`
+
+  // ── Deterministic Summary (no generation): the most pronounced trait in
+  // each cluster, fixed cluster order, ties by strength, then score, then
+  // reveal order (clusterTraits is already in that order); the fired pair as
+  // an inline pointer. Also the loading state and the fallback for the
+  // generated takeaway.
+  const perCluster = CLUSTERS.map((c) => ({ c, t: clusterTraits(revealed, c)[0] })).filter((x) => !!x.t)
+  const pairFor = (facet: string) => rels.find((r) => r.signals.some((x) => x.facet === facet))
+  const pairLine = (r: FiredRelationship) => `${r.signals[0].traitWord} and ${r.signals[1].traitWord} pull in different directions`
+  const fixedSummary = () => {
+    const shownPairs = new Set<string>()
+    const rows = perCluster.map(({ c, t }) => {
+      const r = pairFor(t.facet)
+      const showPair = r && !shownPairs.has(r.id)
+      if (r) shownPairs.add(r.id)
+      return { c, t, r: showPair ? r : undefined }
+    })
+    const facets = rows.flatMap((x) => [x.t.facet, ...(x.r?.signals.map((s) => s.facet) ?? [])])
+    const pill = <MultiEvidence traits={evidenceRows(Array.from(new Set(facets)).filter((f) => summaryInput.some((t) => t.facet === f)), summaryInput.map((t) => t.facet))} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} />
+    const partial = revealed.length < 30 ? <p style={{ ...type.meta, margin: '10px 0 0' }}>[LAB COPY] This uses the {revealed.length} traits you have so far.</p> : null
+    if (q.sl === '2') {
+      // Layout 2: one paragraph, the headline sentences in cluster order.
+      return (
+        <div className="cf-text">
+          <p style={{ ...type.meta, margin: '0 0 8px' }}>[LAB COPY] What stands out most in each part of your results</p>
+          <p style={{ ...type.body, color: ink, margin: 0 }}>
+            {rows.map(({ t, r }) => (
+              <span key={t.facet}>
+                {cardFor(t.facet).trait_quote}{' '}
+                {r && <><a href={cardHref(r.signals[0].facet)} className="cf-inline" onClick={(e) => { e.preventDefault(); select(r.signals[0].facet) }}>[LAB COPY] {pairLine(r)}</a>. </>}
+              </span>
+            ))}
+          </p>
+          {partial}
+          {pill}
+        </div>
+      )
+    }
+    // Layout 1: a short list, the group name over each trait's headline sentence.
+    return (
+      <div className="cf-text">
+        <p style={{ ...type.meta, margin: '0 0 4px' }}>[LAB COPY] What stands out most in each part of your results</p>
+        <ul className="cf-sumlist">
+          {rows.map(({ c, t, r }) => (
+            <li key={t.facet}>
+              <p style={{ ...type.meta, margin: '0 0 2px' }}>{familyLabel(c)}</p>
+              <button type="button" className="cf-head" onClick={() => select(t.facet)}>
+                <span style={{ ...type.traitWord, fontSize: 17, color: ink }}>{t.word}</span>{' '}
+                <span style={{ ...type.body, color: soft }}>{cardFor(t.facet).trait_quote}</span>
+              </button>
+              {r && (
+                <p style={{ ...type.body, color: soft, margin: '2px 0 0' }}>
+                  <a href={cardHref(r.signals[0].facet)} className="cf-inline" onClick={(e) => { e.preventDefault(); select(r.signals[0].facet) }}>[LAB COPY] {pairLine(r)}</a>.
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+        {partial}
+        {pill}
+      </div>
+    )
   }
 
   const summaryBlock = () => {
@@ -284,81 +338,59 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
         </div>
       )
     }
-    const s = stateOf(summaryGen)
-    if (s === 'loading' || s === 'idle') return <Skeleton label="[LAB COPY] Writing your summary." />
-    if (s === 'failed') return <div className="cf-text"><Headlines traits={top} onPick={select} /></div>
-    const pointerRel = rels.find((r) => r.signals.some((x) => top.some((t) => t.facet === x.facet)))
-    const phrase = pointerRel ? `${pointerRel.signals[0].traitWord} and ${pointerRel.signals[1].traitWord} pull in different directions` : ''
-    const placeholder = {
-      headline: '[LAB COPY] Summary headline: one sentence on what stands out most.',
-      text: `[LAB COPY] Three or four sentences on what stands out across your ${revealed.length} traits, each group side by side.${pointerRel ? ` ${phrase}.` : ''}`,
-      pointer: pointerRel ? { facet: pointerRel.signals[0].facet, phrase } : null,
-      drawsOn: Array.from(new Set([...top.map((t) => t.facet), ...(pointerRel?.signals.map((x) => x.facet) ?? [])])),
-    }
-    const g = summaryGen.status === 'ready' && live ? summaryGen : placeholder
+    // Generated takeaway only when generation is on and it came back; the
+    // fixed version is shown while it loads and if it fails.
+    if (!(live && summaryGen.status === 'ready')) return fixedSummary()
+    const g = summaryGen
     return (
       <div className="cf-text">
-        <p style={{ ...type.display4, color: ink, margin: '0 0 8px' }}>{g.headline}</p>
-        <p style={{ ...type.body, color: soft, margin: 0 }}>
-          <WithPointer text={g.text} pointer={g.pointer} onPick={select} href={(f) => `?view=${viewToSlug(byFacet.get(f)!.cluster)}&trait=${traitToSlug(byFacet.get(f)!.word)}`} />
-          {revealed.length < 30 && <> [LAB COPY] This uses the {revealed.length} traits you have so far.</>}
+        <p style={{ ...type.display4, color: ink, margin: '0 0 8px' }}>
+          <WithPointer text={g.headline ?? ''} pointer={g.pointer} onPick={select} href={cardHref} />
         </p>
+        {g.text && (
+          <p style={{ ...type.body, color: soft, margin: 0 }}>
+            <WithPointer text={g.text} pointer={g.pointer} onPick={select} href={cardHref} />
+          </p>
+        )}
+        {revealed.length < 30 && <p style={{ ...type.meta, margin: '10px 0 0' }}>[LAB COPY] This uses the {revealed.length} traits you have so far.</p>}
         <MultiEvidence traits={evidenceRows(g.drawsOn, summaryInput.map((t) => t.facet))} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
       </div>
     )
   }
 
-  // Alternative, no generation: the static description plus the headline
-  // sentences of the two most pronounced traits in the cluster.
-  const clusterAlt = (c: string) => (
-    <div className="cf-text">
-      <p style={{ ...type.body, color: soft, margin: '0 0 16px' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
-      <Headlines traits={clusterIn.slice(0, 2)} onPick={select} />
-    </div>
-  )
-
+  // ── Cluster view: the no-generation content (description draft b, the two
+  // most pronounced headline sentences, the tension box when a pair fires,
+  // the evidence pill for the traits shown), with the generated one-sentence
+  // takeaway on top only when generation is on and it came back. The AI line
+  // goes with the takeaway only.
   const clusterBlock = (c: string) => {
-    if (q.alt === '1') return clusterAlt(c)
-    const eligible = clusterReadingEligible(clusterIn)
-    const s = stateOf(clusterGen)
+    const two = clusterIn.slice(0, 2)
+    const g = live && clusterGen.status === 'ready' && q.alt !== '1' ? clusterGen : null
     const sendableFacets = sendable(clusterIn).map((t) => t.facet)
-    let reading: ReactNode
-    if (!eligible) reading = <p style={{ ...type.meta, margin: 0 }}>[LAB COPY] A reading for this group appears once you have {CLUSTER_READING_MIN_TRAITS} of its traits.</p>
-    else if (s === 'loading' || s === 'idle') reading = <Skeleton label="[LAB COPY] Writing your reading." />
-    else if (s === 'failed') reading = <Headlines traits={clusterIn} onPick={select} />
-    else {
-      const g = clusterGen.status === 'ready' && live ? clusterGen : { text: `[LAB COPY] Personal reading: two or three sentences on how your ${clusterIn.length} traits in this group show up together. Never a score or a level.`, drawsOn: sendableFacets }
-      reading = (
-        <>
-          <p style={{ ...type.body, color: ink, margin: 0 }}>{g.text}</p>
-          <MultiEvidence traits={evidenceRows(g.drawsOn, sendableFacets)} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} footer={<Ai />} />
-        </>
-      )
-    }
     return (
       <div className="cf-text">
-        {reading}
-        {clusterTension && eligible && (
+        {g && (
+          <div style={{ marginBottom: 18 }}>
+            <p style={{ ...type.display4, color: ink, margin: 0 }}>{g.headline}</p>
+            <p style={{ ...type.meta, margin: '6px 0 0' }}>{AI_LINE}</p>
+          </div>
+        )}
+        <p style={{ ...type.body, color: soft, margin: '0 0 16px' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
+        <Headlines traits={two} onPick={select} />
+        {clusterTension && (
           <div className="cf-tension">
             <p style={{ ...type.ui, color: ink, margin: '0 0 4px' }}>[LAB COPY] Where two of these pull apart</p>
             <p style={{ ...type.body, color: soft, margin: 0 }}>[LAB COPY] Relationship insight: the cached generated text for this pair.</p>
             <p style={{ ...type.meta, margin: '4px 0 0' }}>{evidenceSentence(clusterTension)}</p>
           </div>
         )}
-        <details className="cf-about">
-          <summary>[LAB COPY] What this group covers</summary>
-          <p style={{ ...type.meta, margin: '6px 0 0' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
-        </details>
+        <MultiEvidence traits={evidenceRows(Array.from(new Set([...two.map((t) => t.facet), ...(g?.drawsOn ?? [])])).filter((f) => sendableFacets.includes(f)), sendableFacets)} hueOf={hueOf} onSeeTrait={select} startOpen={q.ev === '1'} />
       </div>
     )
   }
 
-  // Paid: hue = cluster; inside a cluster view, small steps within the
-  // family by rank (kept to about ±10 so they never reach a neighbouring
-  // cluster's hue). Free: the live per-trait hues.
-  const HUE_STEPS = [0, 10, -10, 6, -6, 3]
-  const rankInView = new Map((view === 'overview' ? [] : clusterTraits(revealed, view)).map((t, i) => [t.facet, i]))
-  const hueOf = (t: FilterTrait) => (!paid ? t.traitHue : (t.clusterHue + (HUE_STEPS[rankInView.get(t.facet) ?? 0] ?? 0) + 360) % 360)
+  // Paid: hue = cluster (no steps within a cluster). Free: the live per-trait hues.
+  const hueOf = (t: FilterTrait) => (!paid ? t.traitHue : t.clusterHue)
   const shown = order.map((f) => byFacet.get(f)!).filter(Boolean)
   const selectedTrait = paid ? (selected ? byFacet.get(selected) : undefined) : shown[0]
   const relFor = (facet: string) => rels.find((r) => r.signals.some((x) => x.facet === facet))
@@ -413,6 +445,9 @@ const CF_CSS = `
   .cf button:focus-visible,.cf summary:focus-visible{outline:2px solid #D85A30;outline-offset:2px;}
   .cf-back{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #E5E1D5;background:#FFFFFF;color:${ink};cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;}
   .cf-heads{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+  .cf-sumlist{list-style:none;margin:0;padding:0;}
+  .cf-sumlist li{padding:12px 0;border-top:1px solid #E5E1D5;}
+  .cf-sumlist li:first-child{border-top:0;}
   .cf-head{width:100%;min-height:44px;padding:8px 4px;border:0;background:none;cursor:pointer;text-align:center;}
   .cf-inline{display:inline;padding:0;border:0;background:none;cursor:pointer;color:${ink};font:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(38,36,32,0.4);}
   .cf-cluster-link{font-family:var(--font-body);font-size:var(--text-meta);color:${soft};min-height:44px;padding:0 4px;}

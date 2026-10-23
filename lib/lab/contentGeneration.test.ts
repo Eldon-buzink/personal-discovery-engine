@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildClusterPrompt, buildSummaryPrompt, checkClusterReading, checkSummary, cleanInput, type ContentTrait } from './contentGeneration'
+import { buildClusterPrompt, buildSummaryPrompt, checkClusterReading, checkClusterTakeaway, checkSummary, checkSummaryTakeaway, cleanInput, type ContentTrait } from './contentGeneration'
 
 const T = (facet: string, word: string, direction: 'low' | 'mid' | 'high', cluster: string): ContentTrait => ({ facet, word, direction, cluster, headline: `${word} line.` })
 const input = [
@@ -82,4 +82,22 @@ test('cluster reading checks', () => {
   assert.equal(checkClusterReading(JSON.stringify({ sentences: [S('Together, that makes you easy to read.', 'Ambitious', 'Deliberate'), S('You set a bar.', 'Ambitious')] }), cl, [tension]).ok, false)
   const middleFirst = checkClusterReading(JSON.stringify({ sentences: [S('You think first.', 'Deliberate'), S('You set a high bar.', 'Ambitious')] }), cl, [tension])
   assert.ok(middleFirst.ok && middleFirst.violations.includes('Lead with a trait that leans clearly.'))
+})
+
+test('takeaways: at most 3 traits a sentence, generalising words must match, no "what it means"', () => {
+  const base = { takeaway: S('You take the lead and keep a fast pace.', 'Take-charge', 'Energized'), support: [S('You step in when a group needs direction.', 'Take-charge')], pointer: null }
+  const sum = (o: unknown) => checkSummaryTakeaway(JSON.stringify(o), input, [tension])
+  assert.ok(sum(base).ok)
+  assert.equal(sum({ ...base, takeaway: S('You lead, move fast and aim high.', 'Take-charge', 'Energized', 'Ambitious', 'Fluid') }).ok, false)
+  assert.ok(sum({ ...base, takeaway: S('Both leading and a fast pace stand out.', 'Take-charge', 'Energized') }).ok)
+  assert.equal(sum({ ...base, takeaway: S('Both leading and pace stand out.', 'Take-charge') }).ok, false)
+  assert.equal(sum({ ...base, takeaway: S('You always take the lead.', 'Take-charge') }).ok, false)
+  assert.equal(sum({ ...base, takeaway: S('At heart, you take the lead.', 'Take-charge') }).ok, false)
+  assert.equal(sum({ ...base, takeaway: S('You think before you act.', 'Deliberate') }).ok, false)
+  const three = sum({ ...base, support: [S('You lead.', 'Take-charge'), S('You move fast.', 'Energized'), S('You aim high.', 'Ambitious')] })
+  assert.ok(three.ok && three.violations.length > 0 && three.sentences.length === 3)
+  const cl = (o: unknown) => checkClusterTakeaway(JSON.stringify(o), input.slice(2), [tension])
+  assert.ok(cl({ takeaway: S('You set a high bar, but starting waits for the right mood.', 'Ambitious', 'Fluid') }).ok)
+  assert.equal(cl({ takeaway: S('You set a high bar, but you think first.', 'Ambitious', 'Deliberate') }).ok, false)
+  assert.equal(cl({ takeaway: S('You think before you act.', 'Deliberate') }).ok, false)
 })

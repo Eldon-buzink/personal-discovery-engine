@@ -230,3 +230,137 @@ export function checkClusterReading(raw: string, input: ContentTrait[], tensions
   if (splitSentences(text).length !== sentences.length) violations.push('Write each sentence as its own item.')
   return { ok: true, text, sentences, pointer: null, drawsOn: Array.from(new Set(sentences.flatMap((s) => s.facets))), violations }
 }
+
+// ── Takeaways (picked): one sentence per cluster, one plus at most two for the Summary ──
+// Each sentence cites at most 3 traits. A generalising word must match what
+// is cited ("both" = exactly 2; "all", "each", "every" = 2 or more); words
+// that reach past the cited traits ("always", "never", "overall",
+// "generally", "in general", "everything") are rejected. The Summary says
+// what stands out most, not what it all means.
+
+export const SENTENCE_MAX_TRAITS = 3
+export const SUMMARY_SUPPORT_MAX = 2
+const SUMMARY_TAKEAWAY_MAX_WORDS = 18
+const CLUSTER_TAKEAWAY_MAX_WORDS = 22
+
+const REACHING = /\b(always|never|overall|generally|in general|everything|all in all|in short)\b/i
+const MEANING = /\b(at heart|at your core|deep down|who you are|what (this|it all) means|this means|that means|says about you|the kind of person|you are someone who|sums you up)\b/i
+
+function generalisingProblem(text: string, cited: number): string | null {
+  if (REACHING.test(text)) return `generalising word (${text.match(REACHING)![0]}) reaches past the traits cited`
+  if (/\bboth\b/i.test(text) && cited !== 2) return `"both" with ${cited} traits cited`
+  if (/\ball three\b/i.test(text) && cited !== 3) return `"all three" with ${cited} traits cited`
+  if (/\b(all|each|every)\b/i.test(text) && cited < 2) return `"${text.match(/\b(all|each|every)\b/i)![0]}" with ${cited} trait cited`
+  return null
+}
+
+function checkTakeawaySentence(raw: unknown, input: ContentTrait[], tensions: ContentTension[], summary: boolean): { ok: true; s: TracedSentence } | { ok: false; reason: string } {
+  const c = checkSentence(raw, input, tensions)
+  if (!c.ok) return c
+  if (c.s.facets.length > SENTENCE_MAX_TRAITS) return { ok: false, reason: `cites ${c.s.facets.length} traits (at most ${SENTENCE_MAX_TRAITS}): "${c.s.text}"` }
+  const g = generalisingProblem(c.s.text, c.s.facets.length)
+  if (g) return { ok: false, reason: `${g}: "${c.s.text}"` }
+  if (summary && MEANING.test(c.s.text)) return { ok: false, reason: `says what it all means: "${c.s.text}"` }
+  return c
+}
+
+const TAKEAWAY_RULES = `${RULES}
+- Each sentence cites at most ${SENTENCE_MAX_TRAITS} trait words in its "draws_on".
+- A word like "both", "all" or "each" must cover exactly the traits that sentence cites. Never use "always", "never", "overall", "generally", "in general" or "everything".`
+
+export function buildSummaryTakeawayPrompt(traits: ContentTrait[], tensions: ContentTension[], groupLabel: (cluster: string) => string): string {
+  const byCluster = Object.keys(DOMAIN_FACETS).map((c) => ({ c, ts: traits.filter((t) => t.cluster === c) })).filter((g) => g.ts.length)
+  return `Write the takeaway for this person's results: what stands out most. Say what stands out, not what it all means about them.
+
+Their traits, grouped, each marked as leaning clearly one way or sitting near the middle, with the one-line description they already have:
+${byCluster.map((g) => `${groupLabel(g.c)}:\n${g.ts.map(line).join('\n')}`).join('\n\n')}
+${tensions.length ? `\nPairs that pull against each other (inside one group only):\n${tensions.map((x) => `- ${x.words[0]} and ${x.words[1]}`).join('\n')}` : ''}
+
+What to write:
+- "takeaway": {"text": one sentence, at most ${SUMMARY_TAKEAWAY_MAX_WORDS} words, on what stands out most, "draws_on": [at most ${SENTENCE_MAX_TRAITS} trait words that lean clearly]}.
+- "support": at most ${SUMMARY_SUPPORT_MAX} short sentences that back the takeaway up, each {"text": "...", "draws_on": [at most ${SENTENCE_MAX_TRAITS} trait words]}. Fewer is fine.
+- Traits near the middle are not what stands out: never build on them.
+- Groups may sit side by side; never say one group explains, causes or drives another.
+- "pointer": only if one listed pair is part of what stands out: {"word": the trait word the reader should open, "phrase": the exact words of one of your sentences to turn into a link}. Otherwise null.
+
+${TAKEAWAY_RULES}
+
+Return JSON only.`
+}
+
+export function buildClusterTakeawayPrompt(groupName: string, description: string, traits: ContentTrait[], tension: ContentTension | null): string {
+  return `Write the takeaway for one group of this person's traits: what stands out most in it, in one sentence.
+
+The group: ${groupName}. It covers: ${description}
+
+Their traits in this group, each marked as leaning clearly one way or sitting near the middle, with the one-line description they already have:
+${traits.map(line).join('\n')}
+${tension ? `\nThese two pull against each other: ${tension.words[0]} and ${tension.words[1]}. The takeaway may name it.` : ''}
+
+What to write:
+- "takeaway": {"text": one sentence, at most ${CLUSTER_TAKEAWAY_MAX_WORDS} words, "draws_on": [at most ${SENTENCE_MAX_TRAITS} trait words, at least one that leans clearly]}. Never describe the group as something they have more or less of.
+
+${TAKEAWAY_RULES}
+
+Return JSON only.`
+}
+
+export const SUMMARY_TAKEAWAY_SCHEMA = {
+  type: 'object',
+  properties: {
+    takeaway: SENTENCE,
+    support: { type: 'array', items: SENTENCE },
+    pointer: { anyOf: [{ type: 'null' }, { type: 'object', properties: { word: { type: 'string' }, phrase: { type: 'string' } }, required: ['word', 'phrase'], additionalProperties: false }] },
+  },
+  required: ['takeaway', 'support', 'pointer'],
+  additionalProperties: false,
+}
+
+export const CLUSTER_TAKEAWAY_SCHEMA = {
+  type: 'object',
+  properties: { takeaway: SENTENCE },
+  required: ['takeaway'],
+  additionalProperties: false,
+}
+
+export function checkSummaryTakeaway(raw: string, input: ContentTrait[], tensions: ContentTension[]): ContentCheck {
+  const o = parse(raw)
+  if (!o) return { ok: false, reason: 'not JSON' }
+  const t = checkTakeawaySentence(o.takeaway, input, tensions, true)
+  if (!t.ok) return { ok: false, reason: `takeaway: ${t.reason}` }
+  const leaning = new Set(input.filter(leans).map((x) => x.facet))
+  if (!t.s.facets.some((f) => leaning.has(f))) return { ok: false, reason: 'takeaway rests only on middle traits' }
+  const support: TracedSentence[] = []
+  for (const raw of Array.isArray(o.support) ? o.support : []) {
+    const c = checkTakeawaySentence(raw, input, tensions, true)
+    if (!c.ok) return { ok: false, reason: `support: ${c.reason}` }
+    support.push(c.s)
+  }
+  const violations: string[] = []
+  if (support.length > SUMMARY_SUPPORT_MAX) violations.push(`Write at most ${SUMMARY_SUPPORT_MAX} supporting sentences, not ${support.length}.`)
+  if (countWords(t.s.text) > SUMMARY_TAKEAWAY_MAX_WORDS) violations.push(`The takeaway is ${countWords(t.s.text)} words: keep it to ${SUMMARY_TAKEAWAY_MAX_WORDS}.`)
+  const kept = support.slice(0, SUMMARY_SUPPORT_MAX)
+  let pointer: { facet: string; phrase: string } | null = null
+  if (o.pointer && typeof o.pointer === 'object') {
+    const p = o.pointer as { word?: unknown; phrase?: unknown }
+    const trait = input.find((x) => x.word.toLowerCase() === String(p.word).toLowerCase())
+    const phrase = typeof p.phrase === 'string' ? p.phrase.trim().replace(/[.]$/, '') : ''
+    const host = phrase ? [t.s, ...kept].find((s) => s.text.includes(phrase)) : undefined
+    if (!trait || !host) return { ok: false, reason: 'pointer does not match a sentence' }
+    if (!tensions.some((x) => x.facets.includes(trait.facet) && x.facets.every((f) => host.facets.includes(f)))) return { ok: false, reason: 'pointer is not on a sentence about a listed pair' }
+    pointer = { facet: trait.facet, phrase }
+  }
+  const sentences = [t.s, ...kept]
+  return { ok: true, headline: t.s.text, text: kept.map((s) => s.text).join(' '), sentences, pointer, drawsOn: Array.from(new Set(sentences.flatMap((s) => s.facets))), violations }
+}
+
+export function checkClusterTakeaway(raw: string, input: ContentTrait[], tensions: ContentTension[] = []): ContentCheck {
+  const o = parse(raw)
+  if (!o) return { ok: false, reason: 'not JSON' }
+  const t = checkTakeawaySentence(o.takeaway, input, tensions, false)
+  if (!t.ok) return { ok: false, reason: `takeaway: ${t.reason}` }
+  const leaning = new Set(input.filter(leans).map((x) => x.facet))
+  if (leaning.size > 0 && !t.s.facets.some((f) => leaning.has(f))) return { ok: false, reason: 'takeaway rests only on middle traits' }
+  const violations = countWords(t.s.text) > CLUSTER_TAKEAWAY_MAX_WORDS ? [`The takeaway is ${countWords(t.s.text)} words: keep it to ${CLUSTER_TAKEAWAY_MAX_WORDS}.`] : []
+  return { ok: true, headline: t.s.text, text: '', sentences: [t.s], pointer: null, drawsOn: t.s.facets, violations }
+}

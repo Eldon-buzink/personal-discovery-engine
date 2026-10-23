@@ -24,7 +24,7 @@ import { retryFeedback } from '@/lib/known/copyChecks'
 import { CLUSTER_DESCRIPTIONS, CLUSTER_READING_MIN_TRAITS, SUMMARY_MIN_TRAITS } from '@/lib/lab/contentLab'
 import { familyLabel } from '@/lib/lab/filterLab'
 import {
-  buildClusterPrompt, buildSummaryPrompt, checkClusterReading, checkSummary, cleanInput, CLUSTER_SCHEMA, SUMMARY_SCHEMA,
+  buildClusterTakeawayPrompt, buildSummaryTakeawayPrompt, checkClusterTakeaway, checkSummaryTakeaway, cleanInput, CLUSTER_TAKEAWAY_SCHEMA, SUMMARY_TAKEAWAY_SCHEMA,
   type ContentCheck, type ContentTension, type ContentTrait, type TracedSentence,
 } from '@/lib/lab/contentGeneration'
 
@@ -77,6 +77,8 @@ async function generate(prompt: string, schema: Record<string, unknown>, check: 
         output_config: { format: { type: 'json_schema', schema } },
         messages,
       }, { timeout, maxRetries: 0 })
+      // Lab only: token use per call, to work out the cost per paid user.
+      console.log(`[${tag}] usage: in ${message.usage.input_tokens} out ${message.usage.output_tokens}`)
       if (message.stop_reason === 'refusal' || message.stop_reason === 'max_tokens') { lastReason = String(message.stop_reason); messages = [first]; continue }
       const block = message.content.find((b) => b.type === 'text')
       const text = block && block.type === 'text' ? block.text : ''
@@ -105,7 +107,7 @@ export async function generateLabSummary(traits: ContentTrait[], tensions: Conte
   if (input.length < SUMMARY_MIN_TRAITS - 1) return { status: 'failed', reason: 'too few traits' }
   if (!(await allowed('lab-summary'))) return { status: 'failed', reason: 'rate limited' }
   const ts = cleanTensions(tensions, input)
-  return generate(buildSummaryPrompt(input, ts, (c) => familyLabel(c).replace('[LAB COPY] ', '')), SUMMARY_SCHEMA, (text) => checkSummary(text, input, ts), 'generateLabSummary')
+  return generate(buildSummaryTakeawayPrompt(input, ts, (c) => familyLabel(c).replace('[LAB COPY] ', '')), SUMMARY_TAKEAWAY_SCHEMA, (text) => checkSummaryTakeaway(text, input, ts), 'generateLabSummary')
 }
 
 export async function generateLabClusterReading(cluster: string, traits: ContentTrait[], tensions: ContentTension[]): Promise<LabContentResult> {
@@ -119,7 +121,7 @@ export async function generateLabClusterReading(cluster: string, traits: Content
   if (!(await allowed('lab-cluster'))) return { status: 'failed', reason: 'rate limited' }
   const [tension] = cleanTensions(tensions, input)
   return generate(
-    buildClusterPrompt(familyLabel(cluster).replace('[LAB COPY] ', ''), drafts[1].text, input, tension ?? null),
-    CLUSTER_SCHEMA, (text) => checkClusterReading(text, input, tension ? [tension] : []), 'generateLabClusterReading',
+    buildClusterTakeawayPrompt(familyLabel(cluster).replace('[LAB COPY] ', ''), drafts[1].text, input, tension ?? null),
+    CLUSTER_TAKEAWAY_SCHEMA, (text) => checkClusterTakeaway(text, input, tension ? [tension] : []), 'generateLabClusterReading',
   )
 }
