@@ -1,5 +1,6 @@
 import { buildMetadata } from '@/lib/seo'
-import BarFrame, { BAR_STATES, type BarState } from '../BarFrame'
+import BarFrame from '../BarFrame'
+import { BAR_STATES, type BarState } from '@/lib/lab/barStates'
 
 // Report lab: one sticky bar / closing panel option. Not indexed.
 export const metadata = buildMetadata({ path: '/report/lab/bar/frame', title: 'Report lab | Bearing', description: 'Report lab.', noindex: true })

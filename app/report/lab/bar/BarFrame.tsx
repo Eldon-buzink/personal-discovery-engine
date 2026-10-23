@@ -21,8 +21,7 @@ import { facetTraitWords } from '@/lib/known/scoring'
 import { BRANCH_DISPLAY_NAMES } from '@/components/known/ReportSections'
 import { LAB_PRACTICE_COUNT } from '@/lib/lab/filterLab'
 
-export type BarState = 'not-started' | 'in-progress' | 'locked' | 'paid-unfinished' | 'paid-done'
-export const BAR_STATES: BarState[] = ['not-started', 'in-progress', 'locked', 'paid-unfinished', 'paid-done']
+import type { BarState } from '@/lib/lab/barStates'
 
 const ink = '#262420'
 const soft = '#56534D'

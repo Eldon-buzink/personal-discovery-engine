@@ -1,5 +1,5 @@
 import { buildMetadata } from '@/lib/seo'
-import { BAR_STATES } from './BarFrame'
+import { BAR_STATES } from '@/lib/lab/barStates'
 
 // Report lab: sticky bar and closing panel options, every state at 390 and 1280.
 export const metadata = buildMetadata({ path: '/report/lab/bar', title: 'Report lab: bar | Bearing', description: 'Report lab, sticky bar and closing panel.', noindex: true })
