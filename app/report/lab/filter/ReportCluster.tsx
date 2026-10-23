@@ -81,7 +81,9 @@ function layout(traits: FilterTrait[]): Placed[] {
 //   staggered), on the shared blob clock; no extra loop. Still under reduced motion.
 // - soft: lighter (60% opacity), so the centre is the only solid blob.
 // - ring: a thin ring in the trait's colour, a cue that it can be tapped.
-export type SatelliteStyle = 'none' | 'breathe' | 'soft' | 'ring'
+// - drift: the outer blobs slowly change shape too, gentler than the centre.
+// Options combine with '+', e.g. 'breathe+soft'.
+export type SatelliteStyle = string
 
 export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton, satellites = 'none', labelsInside = false }: {
   satellites?: SatelliteStyle
@@ -125,16 +127,19 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
   const profiles = useMemo(() => new Map(traits.map((t) => [t.facet, buildPointMotionProfile(hashSeed(`${t.word}-shape`), 9)])), [traits])
   const centre = placed.find((p) => p.centre)
   const breathRefs = useRef<Record<string, SVGGElement | null>>({})
-  const breathing = satellites === 'breathe' && !overview
+  const has = (k: string) => !overview && satellites.split('+').includes(k)
+  const breathing = has('breathe')
+  const drifting = has('drift')
+  const satRefs = useRef<Record<string, SVGPathElement | null>>({})
   useBlobAnimation((t) => {
     if (centre && centreRef.current) centreRef.current.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(centre.t.facet)!, 0.3, t))
-    if (!breathing) return
+    if (!breathing && !drifting) return
     placed.forEach((p, i) => {
       if (p.centre) return
-      const k = 1 + 0.06 * Math.sin((t / 5) * Math.PI * 2 + i * 1.3)
-      breathRefs.current[p.t.facet]?.setAttribute('transform', `scale(${k.toFixed(4)})`)
+      if (breathing) breathRefs.current[p.t.facet]?.setAttribute('transform', `scale(${(1 + 0.06 * Math.sin((t / 5) * Math.PI * 2 + i * 1.3)).toFixed(4)})`)
+      if (drifting) satRefs.current[p.t.facet]?.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.22, t * 0.6 + i))
     })
-  }, [centre?.t.facet, profiles, breathing, placed], wrapRef, { respectReducedMotion: true })
+  }, [centre?.t.facet, profiles, breathing, drifting, placed], wrapRef, { respectReducedMotion: true })
 
   const colours = Array.from(new Map(traits.map((t) => [colourKey(hueOf(t)), hueOf(t)] as [string, Colour])).entries())
   const move: CSSProperties = { transition: `transform ${DUR_ENTER}ms ${EASE}` }
@@ -155,14 +160,14 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
           <g key={p.t.facet} className="rc-move" style={{ ...move, transform: `translate(${p.x}px, ${p.y}px) scale(${p.r / BASE_R})` }}>
             <g ref={(el) => { breathRefs.current[p.t.facet] = el }}>
               <path
-                ref={p.centre ? (el) => { centreRef.current = el } : undefined}
+                ref={p.centre ? (el) => { centreRef.current = el } : (el) => { satRefs.current[p.t.facet] = el }}
                 d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
                 fill={`url(#rc-g-${uid}-${colourKey(hueOf(p.t))})`}
                 filter={`url(#rc-f-${uid})`}
-                opacity={!p.centre && !overview && satellites === 'soft' ? 0.6 : opacityOf && !overview ? opacityOf(p.t) : 1}
+                opacity={!p.centre && has('soft') ? 0.6 : opacityOf && !overview ? opacityOf(p.t) : 1}
                 style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
               />
-              {!p.centre && !overview && satellites === 'ring' && (
+              {!p.centre && has('ring') && (
                 <circle r={BASE_R * 1.05} fill="none" stroke={hslCss(toHsl(hueOf(p.t)), 0, -18)} strokeOpacity={0.55} strokeWidth={2.2 * (BASE_R / p.r)} />
               )}
             </g>

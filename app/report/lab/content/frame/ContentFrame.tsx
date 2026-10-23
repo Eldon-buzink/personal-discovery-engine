@@ -299,7 +299,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
     const c = cardFor(first.facet)
     return (
       <div className="cf-text">
-        <h2 style={{ ...type.display2, fontWeight: 600, color: ink, margin: '0 0 2px' }}>What stands out</h2>
+        <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>What stands out</h2>
         <p style={{ ...type.meta, margin: '0 0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Dot t={first} /> Your most pronounced pattern: {first.word}</p>
         <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{c.trait_quote}</p>
         {(c.shows_up ?? c.body) && <p style={{ ...type.body, color: soft, margin: '0 auto', maxWidth: 420 }}>{c.shows_up ?? c.body}</p>}
@@ -373,7 +373,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
           </div>
         )}
         {/* Same structure as a trait card: title, a subtitle line, the lead sentence, then the body. */}
-        <h2 style={{ ...type.display2, fontWeight: 600, color: ink, margin: '0 0 2px' }}>{familyLabel(c)}</h2>
+        <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>{familyLabel(c)}</h2>
         <p style={{ ...type.meta, margin: '0 0 18px' }}>[LAB COPY] {clusterIn.length} of your traits</p>
         <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
         <p style={{ ...type.body, color: soft, margin: '0 auto 12px', maxWidth: 420 }}>{CLUSTER_ABOUT[c]}</p>
@@ -427,7 +427,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
         </div>
       )}
       <div className="cf-col">
-        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={(['none', 'breathe', 'soft', 'ring'] as const).find((x) => x === q.sat) ?? 'breathe'} labelsInside={q.lab === 'in'} />
+        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={q.sat ?? 'breathe'} labelsInside={q.lab !== 'out'} />
       </div>
       {paid && view === 'overview' && !selectedTrait && ties > 5 && (
         <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>
