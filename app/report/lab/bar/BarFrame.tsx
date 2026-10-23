@@ -177,7 +177,7 @@ const BF_CSS = `
   .bf{min-height:100vh;background:#F7F4ED;color:${ink};padding:28px 16px 140px;text-align:center;}
   .bf-fake{max-width:520px;margin:0 auto;height:420px;border-radius:16px;background:#EFEBE2;display:flex;align-items:center;justify-content:center;color:#8C8A83;font-family:var(--font-body);font-size:13px;}
   .bf-fake.tall{height:900px;margin-top:24px;}
-  .bf-hero{max-width:520px;margin:0 auto 24px;height:300px;border-radius:16px;background:#EFEBE2;display:flex;align-items:center;justify-content:center;color:#8C8A83;font-family:var(--font-body);font-size:13px;}
+  .bf-hero{max-width:520px;margin:0 auto 24px;height:880px;border-radius:16px;background:#EFEBE2;display:flex;align-items:center;justify-content:center;color:#8C8A83;font-family:var(--font-body);font-size:13px;}
   .bf-card{max-width:520px;margin:0 auto;}
   .bf-primary{min-height:44px;padding:0 20px;border-radius:999px;border:0;background:${ink};color:#F7F4ED;cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;white-space:nowrap;}
   .bf-secondary{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid ${line};background:#FFFFFF;color:${ink};cursor:pointer;font-family:var(--font-body);font-size:var(--text-ui);font-weight:500;white-space:nowrap;}
