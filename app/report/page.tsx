@@ -33,6 +33,10 @@ import { FreeTraitCluster } from '@/components/known/report/FreeTraitCluster'
 import { REPORT_CTA, REPORT_FREE_CLUSTER, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
 import { PaidFirstSection, mostPronounced, type ReportTrait } from '@/components/known/report/PaidFirstSection'
 import { manageHref } from '@/lib/known/practicePicks'
+import { branchInProgressFrom, reportCta, type CtaAction } from '@/lib/known/reportCta'
+import { ctaCopy } from '@/lib/known/reportCtaCopy'
+import { ReportCtaBar, ReportCtaPanel, useCtaBarHidden } from '@/components/known/report/ReportCta'
+import AuthModal from '@/components/known/AuthModal'
 import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
 import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
@@ -51,7 +55,7 @@ interface StoredSession {
   patternShown?: PatternRecord
   revealedFacets?: string[]
   patternContents?: PatternContentEntry[]
-  branchResponses?: { environment?: { answers: unknown[]; completed?: boolean } }
+  branchResponses?: { [branch: string]: { answers: unknown[]; completed?: boolean } | undefined }
   // Generated relationship insights, reused while `signature` (the
   // contributing facet:direction pairs) still matches. Failures never stored.
   relationshipInsights?: CachedInsight[]
@@ -270,9 +274,15 @@ export default function ReportPage() {
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook).
   const [isPaid, setIsPaidState] = useState(false)
-  // "Track this" picks from the paid redesign; the practice link opens Manage with them.
+  // "Add to practice" picks from the paid redesign; the practice link opens Manage with them.
   const [practicePicks, setPracticePicks] = useState<string[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  // NEXT_PUBLIC_REPORT_CTA: a started, unfinished branch; the sign-in the
+  // bar's practice button opens when signed out; what the bar watches.
+  const [branchInProgress, setBranchInProgress] = useState<Branch | null>(null)
+  const [ctaAuthOpen, setCtaAuthOpen] = useState(false)
+  const firstSectionRef = useRef<HTMLElement>(null)
+  const ctaPanelRef = useRef<HTMLElement>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
   const [paywallInitialView, setPaywallInitialView] = useState<'payment' | 'checkout'>('payment')
@@ -345,6 +355,7 @@ export default function ReportPage() {
     const total = responses.length
     setTotalAnswered(total)
     setRing1Complete(total >= 120)
+    setBranchInProgress(branchInProgressFrom(session.branchResponses, Object.keys(BRANCH_ROUTES) as Branch[]))
 
     const pcArray = Array.isArray(session.patternContents) ? session.patternContents : []
     const envPc    = pcArray.find(e => e.branch === 'environment')    ?? null
@@ -638,6 +649,42 @@ export default function ReportPage() {
       ? { leftText: suggestion.reason, rightLabel: branchButtonLabel, onSelect: () => handleGatedNav(nextBranchHref!) }
       : { leftText: "There's more underneath this.", rightLabel: 'Keep discovering →', onSelect: () => handleGatedNav('/assessment') }
 
+  // ── Next step: closing panel and sticky bar (NEXT_PUBLIC_REPORT_CTA) ─────────
+  // The suggested branch first, then every other branch not done yet, so a
+  // paid user can always choose where to go next.
+  const ctaRanked: Branch[] = [
+    ...qualifyingBranches.map((b) => b.branch),
+    ...(suggestion ? [suggestion.branch] : []),
+    ...(Object.keys(BRANCH_ROUTES) as Branch[]),
+  ].filter((b, i, all) => !completedBranches.includes(b) && all.indexOf(b) === i)
+  const ctaSuggestionFacets = qualifyingBranches[0]?.contributingFacets ?? suggestion?.contributingFacets ?? []
+  const cta = reportCta({
+    isSample: false,
+    isPaid,
+    revealed: ring1Entries.length,
+    ring1Complete,
+    branchInProgress: branchInProgress && !completedBranches.includes(branchInProgress) ? branchInProgress : null,
+    suggestion: ctaRanked[0] ?? null,
+    otherBranches: ctaRanked.slice(1),
+    exploreLabel: (b) => BRANCH_EXPLORE_LABELS[b],
+  })
+  const ctaText = ctaCopy(cta, {
+    answered: totalAnswered,
+    revealed: ring1Entries.length,
+    suggestionWords: ctaSuggestionFacets.map((f) => ring1Entries.find((e) => e.facet === f)?.traitWord).filter((w): w is string => !!w).slice(0, 2),
+  })
+  const practiceHref = REPORT_PAID_V2 && isPaid && isAuthenticated ? manageHref(practicePicks, mostPronounced(paidTraits).map((t) => t.facet)) : '/practice'
+  function handleCta(a: CtaAction) {
+    switch (a.kind) {
+      case 'start': router.push('/onboarding'); return
+      case 'continue': handleGatedNav(a.branch ? BRANCH_ROUTES[a.branch] : '/assessment'); return
+      case 'unlock': setPaywallOpen(true); return
+      case 'explore': handleGatedNav(BRANCH_ROUTES[a.branch]); return
+      case 'practice': if (isAuthenticated) router.push(practiceHref); else setCtaAuthOpen(true); return
+    }
+  }
+  const ctaBarHidden = useCtaBarHidden(firstSectionRef, ctaPanelRef, paywallOpen || ctaAuthOpen)
+
   // ── Optional-branch section content ──────────────────────────────────────────
   // Each is only ever called for a branch that's actually in orderedOptionalBranches
   // (i.e. already completed), so there's no "locked" fallback to render here.
@@ -837,7 +884,9 @@ export default function ReportPage() {
 
       <style dangerouslySetInnerHTML={{ __html: reportCSS }} />
       <SiteNav />
-      {stickyBar && <StickyBar {...stickyBar} />}
+      {REPORT_CTA
+        ? hasContent && <ReportCtaBar cta={cta} copy={ctaText} onAction={handleCta} hidden={ctaBarHidden} />
+        : stickyBar && <StickyBar {...stickyBar} />}
 
       <div style={{ background: cream, minHeight: '100vh', paddingTop: NAV_H }}>
         <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 22px 64px' }}>
@@ -856,7 +905,7 @@ export default function ReportPage() {
           </div>
 
           {/* ── Branch 1: Who you are (always first) ─────────── */}
-          <section style={{ textAlign: 'center' }}>
+          <section ref={firstSectionRef} style={{ textAlign: 'center' }}>
             {isUnlocked && (
               <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>
               Who you are
@@ -901,7 +950,17 @@ export default function ReportPage() {
           ))}
 
           {/* ── What's next: trails whichever section was completed most recently ── */}
-          {hasContent && (
+          {hasContent && REPORT_CTA && (
+            <>
+              <SectionDivider marker="What's next" />
+              {cta.state !== 'paid-done' && (
+                <PracticeCard isAuthenticated={isAuthenticated} href={practiceHref === '/practice' ? undefined : practiceHref} label="Go to your practice" />
+              )}
+              <ReportCtaPanel cta={cta} copy={ctaText} onAction={handleCta} panelRef={ctaPanelRef} />
+              <AuthModal isOpen={ctaAuthOpen} onClose={() => setCtaAuthOpen(false)} onSuccess={() => setCtaAuthOpen(false)} context="save-progress" returnPath="/practice" />
+            </>
+          )}
+          {hasContent && !REPORT_CTA && (
             <>
               <WhatsnextDivider />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

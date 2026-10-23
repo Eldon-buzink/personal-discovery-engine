@@ -104,7 +104,7 @@ function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
       ) : content.body && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{content.body}</p>}
       {insight && <p style={{ ...type.body, color: '#8C8A83', maxWidth: 420, margin: '14px auto 0' }}>{insight}</p>}
       <TraitEvidence key={t.facet} t={t} hue={hue} responses={responses} footer={<Ai />} />
-      {paid && <button type="button" className="cf-track">[LAB COPY] Track this</button>}
+      {paid && <button type="button" className="cf-track">Add to practice</button>}
     </div>
   )
 }

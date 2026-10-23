@@ -56,7 +56,7 @@ const viewSlug = (v: string) => (v === 'overview' ? 'overview' : CLUSTER_SLUGS[v
 const slugView = (s: string | null) => (s === 'overview' ? 'overview' : Object.keys(CLUSTER_SLUGS).find((k) => CLUSTER_SLUGS[k] === s) ?? null)
 
 export function PaidFirstSection({ traits, responses, relationships, insightFor, renderPending, onPicksChange }: {
-  /** Called when "Track this" changes the picks (the report's practice link uses them). */
+  /** Called when "Add to practice" changes the picks (the report's practice link uses them). */
   onPicksChange?: (picks: string[]) => void
   /** Revealed Ring 1 traits. */
   traits: ReportTrait[]
@@ -69,13 +69,13 @@ export function PaidFirstSection({ traits, responses, relationships, insightFor,
   renderPending: (t: ReportTrait) => ReactNode
 }) {
   const [mobile, setMobile] = useState(false)
-  // "Track this": traits marked for the practice, confirmed later on Manage.
+  // "Add to practice": traits marked for the practice, confirmed later on Manage.
   const [picks, setPicks] = useState<string[]>([])
   const [pickNote, setPickNote] = useState<string | null>(null)
   useEffect(() => { const p = readPicks(); setPicks(p); onPicksChange?.(p) }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const toggleTrack = (facet: string) => {
+  const toggleAdd = (facet: string) => {
     const r = togglePick(picks, facet)
-    setPickNote(r.atCap ? `You can follow ${ACTIVE_FACET_CAP} traits at a time. Remove one first to add this one.` : null)
+    setPickNote(r.atCap ? `You can add up to ${ACTIVE_FACET_CAP} traits to your practice at a time. Remove one first to add this one.` : null)
     if (r.atCap) return
     setPicks(r.picks); writePicks(r.picks); onPicksChange?.(r.picks)
   }
@@ -274,11 +274,11 @@ export function PaidFirstSection({ traits, responses, relationships, insightFor,
             ) : (c.body ?? c.where_it_shows_up) && <p style={{ ...type.body, color: soft, maxWidth: 420, margin: '0 auto 8px' }}>{c.body ?? c.where_it_shows_up}</p>}
             {rel && relText && <p style={{ ...type.body, color: '#8C8A83', maxWidth: 420, margin: '14px auto 0' }}>{relText} {evidenceSentence(rel)}</p>}
             <TraitEvidence key={t.facet} t={t} hue={t.colour} responses={responses} hasAnswers={!!(c.body || c.shows_up)} footer={<p style={{ ...type.meta, margin: '8px 0 0' }}>{AI_LINE}</p>} />
-            <button type="button" className="pf-pill" aria-pressed={picks.includes(t.facet)} onClick={() => toggleTrack(t.facet)}>
-              {picks.includes(t.facet) ? 'Tracking ✓' : 'Track this'}
+            <button type="button" className="pf-pill" aria-pressed={picks.includes(t.facet)} onClick={() => toggleAdd(t.facet)}>
+              {picks.includes(t.facet) ? 'Added to practice ✓' : 'Add to practice'}
             </button>
             {pickNote && <p role="status" style={{ ...type.meta, margin: '8px auto 0', maxWidth: 360 }}>{pickNote}</p>}
-            {picks.includes(t.facet) && !pickNote && <p style={{ ...type.meta, margin: '8px auto 0', maxWidth: 360 }}>Added to your practice picks. You confirm them on Manage your practice.</p>}
+            {picks.includes(t.facet) && !pickNote && <p style={{ ...type.meta, margin: '8px auto 0', maxWidth: 360 }}>Added to your practice. It starts once you confirm it on Manage your practice.</p>}
           </>
         ) : renderPending(t)}
       </div>

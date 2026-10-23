@@ -14,7 +14,7 @@
  * left out: in a real report they are written live per person.
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
@@ -22,7 +22,10 @@ import { TraitCarousel, patternSubtitle, type CarouselTrait } from '@/components
 import { clusterLabel } from '@/lib/known/clusters'
 import { UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
 import EvidenceDialog from '@/components/known/EvidenceDialog'
-import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BranchSuggestionCard, PracticeCard, Ring1CompleteCard, WhatsnextDivider } from '@/components/known/ReportSections'
+import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BranchSuggestionCard, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
+import { reportCta } from '@/lib/known/reportCta'
+import { ctaCopy } from '@/lib/known/reportCtaCopy'
+import { ReportCtaBar, ReportCtaPanel, useCtaBarHidden } from '@/components/known/report/ReportCta'
 import { EXAMPLE_BANDS, EXAMPLE_CARDS, exampleResponses } from '@/lib/known/exampleReport'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { FACET_QUESTIONS } from '@/lib/known/ring1-questions'
@@ -86,6 +89,15 @@ export default function ExampleReportClient() {
   const paidRelationships = useMemo(() => Array.from(new Map(Array.from(winningRelationships(facets.map((f) => ({ facet: f.facet, traitWord: f.traitWord, direction: EXAMPLE_BANDS[f.facet], score: f.score })), 5).values()).map((r) => [r.id, r])).values()), [facets])
   const evidence = evidencePanelData(active.facet, EXAMPLE_BANDS[active.facet], responses, true)
 
+  // NEXT_PUBLIC_REPORT_CTA: the example is the not-started state, so the
+  // panel and bar both offer "Start free".
+  const firstSectionRef = useRef<HTMLElement>(null)
+  const ctaPanelRef = useRef<HTMLElement>(null)
+  const cta = reportCta({ isSample: true, isPaid: false, revealed: 30, ring1Complete: true, branchInProgress: null, suggestion: null, exploreLabel: (b) => BRANCH_EXPLORE_LABELS[b] })
+  const ctaText = ctaCopy(cta, { answered: 120, revealed: 30, suggestionWords: [] })
+  const ctaBarHidden = useCtaBarHidden(firstSectionRef, ctaPanelRef, false)
+  const onCta = () => router.push('/onboarding')
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: reportCSS }} />
@@ -108,7 +120,7 @@ export default function ExampleReportClient() {
           </div>
 
           {/* ── Who you are ──────────────────────────────── */}
-          <section style={{ textAlign: 'center' }}>
+          <section ref={firstSectionRef} style={{ textAlign: 'center' }}>
             <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>Who you are</p>
             {REPORT_PAID_V2 ? (
               <PaidFirstSection
@@ -138,6 +150,13 @@ export default function ExampleReportClient() {
           </section>
 
           {/* ── What's next ──────────────────────────────── */}
+          {REPORT_CTA ? (
+            <>
+              <SectionDivider marker="What's next" />
+              <ReportCtaPanel cta={cta} copy={ctaText} onAction={onCta} panelRef={ctaPanelRef} />
+            </>
+          ) : (
+          <>
           <WhatsnextDivider />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <PracticeCard isAuthenticated={false} href="/practice/example" />
@@ -152,6 +171,8 @@ export default function ExampleReportClient() {
               />
             )}
           </div>
+          </>
+          )}
 
           <div style={{ marginTop: 64, paddingTop: 28, borderTop: `1px solid ${line}`, textAlign: 'center' }}>
             <p style={{ ...type.meta }}>A living report. It grows as you keep exploring.</p>
@@ -159,6 +180,7 @@ export default function ExampleReportClient() {
         </div>
       </div>
       <SiteFooter />
+      {REPORT_CTA && <ReportCtaBar cta={cta} copy={ctaText} onAction={onCta} hidden={ctaBarHidden} />}
     </>
   )
 }

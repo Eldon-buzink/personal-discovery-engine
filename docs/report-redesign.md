@@ -9,6 +9,7 @@ Both flags are off by default, so the live report is unchanged until a flag is s
 |---|---|---|
 | `NEXT_PUBLIC_REPORT_FREE_CLUSTER=1` | free users on `/report` | five-blob visual (selected trait in the middle, the others around it) instead of the carousel |
 | `NEXT_PUBLIC_REPORT_PAID_V2=1` | paid users on `/report`, and `/report/example` | the cluster design below |
+| `NEXT_PUBLIC_REPORT_CTA=1` | everyone on `/report` and `/report/example` | one next step per state (`lib/known/reportCta.ts`, words in `reportCtaCopy.ts`): a closing panel with the moving colourful ring at the end of "What's next" and a sticky bar (`components/known/report/ReportCta.tsx`). Replaces the Keep discovering / Fully mapped card, the branch suggestion card and the old bar. Free users always see "Unlock the full picture"; paid users can choose any branch not done yet. |
 
 Never set the lab flags (`LAB_ROUTES`, `LAB_CONTENT_GENERATION`, `LAB_CONTENT_ALLOW_UNPAID`) on Vercel. Lab routes (`/report/lab/*`, `/landing-options`) 404 on any Vercel deployment regardless.
 
@@ -58,7 +59,7 @@ Never set the lab flags (`LAB_ROUTES`, `LAB_CONTENT_GENERATION`, `LAB_CONTENT_AL
 - Split card format: not yet used by the real card generation (`generateRing1Copy`).
 - The live branch card says "Your Assertiveness and Intellect came through strongly": internal facet names shown to users (branch suggestion copy, `lib/known/branchSuggestion.ts`).
 - With `NEXT_PUBLIC_REPORT_PAID_V2` off, `/report/example` still shows "This trait is part of Openness".
-- "Track this" (add to practice from a card) is not wired.
+- "Add to practice" on a card: picks are kept in the browser and confirmed on Manage (behind NEXT_PUBLIC_REPORT_PAID_V2).
 - Server-side storage for paid users: deferred (needs a table with row-level security, deletion with the account, export, privacy and terms changes).
 - Copy still marked `[LAB COPY]` in production code (needs sign-off before the flags go on): the cluster "about" lines, "In this group your answers lean most clearly toward …", "… sit near the middle", "Each trait runs between two ends…", "6 of your traits", "Where two of these pull apart", the tie note, "Based on the N traits you have so far". New unmarked UI words: "Showing:", "Open [trait]", "Back to …".
 - Pushing: preview branch only (`git push origin main:preview/report-lab`), never `main`, after checking Vercel Preview variables and deployment protection.

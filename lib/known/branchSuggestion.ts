@@ -246,7 +246,7 @@ function buildTargetedReason(branch: Branch, facets: string[]): string {
   return `Your ${facetList} came through strongly. It's worth seeing how that shows up in ${branchContext(branch)}.`;
 }
 
-function branchContext(branch: Branch): string {
+export function branchContext(branch: Branch): string {
   switch (branch) {
     case "relationships":
       return "how you connect with people";

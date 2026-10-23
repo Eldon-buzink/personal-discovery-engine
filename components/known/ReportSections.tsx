@@ -17,7 +17,7 @@ const line = '#E5E1D5'
 
 // ── Section dividers ──────────────────────────────────────────────────────────
 
-export function SectionDivider({ marker, body }: { marker?: string; body: string }) {
+export function SectionDivider({ marker, body = '' }: { marker?: string; body?: string }) {
   return (
     <div style={{ borderTop: `1px solid ${line}`, padding: '44px 0 28px', marginTop: 40, textAlign: 'center' }}>
       {marker && (

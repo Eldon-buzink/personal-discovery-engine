@@ -359,7 +359,7 @@ function DetailCard({ t, back }: { t: LabTrait; back: boolean }) {
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
         <button type="button" style={chip}>See what this is based on</button>
-        <button type="button" style={chip}>[LAB COPY] Track this</button>
+        <button type="button" style={chip}>Add to practice</button>
       </div>
     </div>
   )

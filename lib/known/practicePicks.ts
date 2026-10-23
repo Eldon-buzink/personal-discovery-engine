@@ -1,4 +1,4 @@
-// "Track this" on the report (NEXT_PUBLIC_REPORT_PAID_V2): the traits a user
+// "Add to practice" on the report (NEXT_PUBLIC_REPORT_PAID_V2): the traits a user
 // has marked for their practice, kept in this browser until they confirm
 // them on "Manage your practice". Nothing is activated here; activation and
 // the cap check stay in facetActivationClient.ts.
