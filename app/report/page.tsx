@@ -481,11 +481,12 @@ export default function ReportPage() {
         key: f.facet,
         traitWord: f.traitWord,
         hue: userCuratedHue(`ring1-pattern-${f.traitWord.toLowerCase()}`, f.hueOffset),
-        domain: domainOf(f.facet),
+        // No cluster grouping for free users (the carousel links same-cluster traits).
+        domain: isPaid ? domainOf(f.facet) : null,
       }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [strengthOrder],
+    [strengthOrder, isPaid],
   )
   const safeIdx = Math.min(activeIdx, Math.max(0, facets.length - 1))
   const activeFacet = facets[strengthOrder[safeIdx]] ?? null
@@ -818,7 +819,8 @@ export default function ReportPage() {
                         content={activeFacet.content}
                         hue={activeHue}
                         subtitle={patternSubtitle(activeFacet.hueOffset)}
-                        subtitleNote={domainNote(domainOf(activeFacet.facet)) ?? undefined}
+                        // Free users see no cluster language (and the cluster names are not final).
+                        subtitleNote={isPaid ? domainNote(domainOf(activeFacet.facet)) ?? undefined : undefined}
                         source={null}
                         variant="ring1"
                         insight={activeInsight}
