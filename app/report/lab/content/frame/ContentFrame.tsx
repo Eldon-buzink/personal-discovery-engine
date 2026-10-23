@@ -427,7 +427,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
         </div>
       )}
       <div className="cf-col">
-        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={q.sat ?? 'breathe'} labelsInside={q.lab !== 'out'} readability={(['none', 'light', 'halo', 'both'] as const).find((x) => x === q.read) ?? 'both'} />
+        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={q.sat ?? 'breathe'} labelsInside={q.lab !== 'out'} readability={(['none', 'light', 'halo', 'both'] as const).find((x) => x === q.read) ?? 'light'} />
       </div>
       {paid && view === 'overview' && !selectedTrait && ties > 5 && (
         <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>
