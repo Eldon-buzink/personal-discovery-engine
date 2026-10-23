@@ -195,7 +195,8 @@ export function PaidFirstSection({ traits, responses, relationships, insightFor,
       <div className="pf-text">
         <h2 style={{ ...type.traitWord, color: ink, margin: '0 0 2px' }}>What stands out</h2>
         <p style={{ ...type.meta, margin: '0 0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 999, background: hslCss(first.colour) }} /> Your most pronounced pattern: {first.word}
+          {/* "Your most pronounced pattern" only when one trait is clearly ahead; with a tie, just its name. */}
+          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 999, background: hslCss(first.colour) }} /> {ties > 1 ? first.word : `Your most pronounced pattern: ${first.word}`}
         </p>
         {c ? (
           <>
@@ -286,7 +287,7 @@ export function PaidFirstSection({ traits, responses, relationships, insightFor,
         <BlobCluster traits={shown} hueOf={hueOf} onSelect={select} overview={!selectedTrait} registerButton={register} satellites="breathe" labelsInside readability="light" />
       </div>
       {view === 'overview' && !selectedTrait && ties > TOP && (
-        <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>
+        <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>These are {Math.min(TOP, traits.length)} of the {ties} traits that stand out equally.</p>
       )}
       <div className="pf-under">{under}</div>
     </div>
