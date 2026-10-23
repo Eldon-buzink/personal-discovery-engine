@@ -30,7 +30,9 @@ import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
 import { FreeTraitCluster } from '@/components/known/report/FreeTraitCluster'
-import { REPORT_FREE_CLUSTER } from '@/lib/known/reportFlags'
+import { REPORT_FREE_CLUSTER, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
+import { PaidFirstSection, type ReportTrait } from '@/components/known/report/PaidFirstSection'
+import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
 import { BRANCH_DISPLAY_NAMES, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
@@ -518,6 +520,20 @@ export default function ReportPage() {
     return evidencePanelData(activeFacet.facet, direction, responseMap, !!activeFacet.content.body)
   })()
 
+  // Paid redesign (NEXT_PUBLIC_REPORT_PAID_V2): every revealed trait with its
+  // cluster colour, strength, direction and card; the fired relationships.
+  const paidTraits: ReportTrait[] = facets.map((f) => {
+    const score = facetScores[f.facet] ?? 3
+    const cluster = domainOf(f.facet) ?? 'Neuroticism'
+    const stored = ring1Entries.find((e) => e.facet === f.facet)?.scoreDirection
+    return {
+      facet: f.facet, word: f.traitWord, cluster, score, strength: traitStrength(score), revealIndex: f.hueOffset,
+      direction: stored ?? (score >= 3.5 ? 'high' : score >= 2.5 ? 'mid' : 'low'),
+      colour: CLUSTER_COLOURS[cluster], content: f.content,
+    }
+  })
+  const firedRelationships = Array.from(new Map(Array.from(relWinners.values()).map((r) => [r.id, r])).values())
+
   // The selected trait's card, under either visual.
   const strengthByKey = Object.fromEntries(facets.map((f) => [f.facet, traitStrength(facetScores[f.facet])]))
   const activeCard = (
@@ -841,7 +857,18 @@ export default function ReportPage() {
 
             {isUnlocked ? (
               <>
-                {REPORT_FREE_CLUSTER && !isPaid ? (
+                {REPORT_PAID_V2 && isPaid ? (
+                  <PaidFirstSection
+                    traits={paidTraits}
+                    responses={responseMap}
+                    relationships={firedRelationships}
+                    insightFor={(r) => relInsights.find((c) => c.id === r.id && c.signature === relationshipSignature(r))?.text}
+                    renderPending={(t) => {
+                      const f = facets.find((x) => x.facet === t.facet)
+                      return <PatternLoadingState traitWord={t.word} isLoading={true} failed={f?.copyFailed} onRetry={() => retryCopy(t.facet)} />
+                    }}
+                  />
+                ) : REPORT_FREE_CLUSTER && !isPaid ? (
                   <FreeTraitCluster traits={carouselTraits} strengths={strengthByKey} activeIdx={safeIdx} onSelect={setActiveIdx}>
                     {activeCard}
                   </FreeTraitCluster>
