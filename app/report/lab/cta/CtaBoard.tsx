@@ -66,7 +66,7 @@ function Block({ label, h }: { label: string; h: number }) {
 
 export function Bar({ cta, mobile }: { cta: Cta; mobile: boolean }) {
   return (
-    <div style={{ position: 'sticky', bottom: 0, marginTop: 24, background: 'rgba(247,244,237,0.96)', borderTop: `1px solid ${line}`, padding: '12px 16px' }}>
+    <div style={{ marginTop: 24, background: 'rgba(247,244,237,0.96)', borderTop: `1px solid ${line}`, padding: '12px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 12, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'center' }}>
         <p style={{ ...type.meta, color: soft, margin: 0, flex: 1, textAlign: mobile ? 'center' : 'left' }}>{BAR_LINE[cta.state]}</p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -94,7 +94,7 @@ export default function CtaBoard({ state, placement, mobile }: { state: CtaState
         <Block label="Footer note" h={40} />
       </div>
       <Bar cta={cta} mobile={mobile} />
-      <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 24px' }}>The bar is shown here for reference; on the page it hides while the panel is in view.</p>
+      <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 24px' }}>The sticky bar, shown at the end for reference. On the page it sits at the bottom of the screen and hides while the panel is in view.</p>
     </main>
   )
 }
