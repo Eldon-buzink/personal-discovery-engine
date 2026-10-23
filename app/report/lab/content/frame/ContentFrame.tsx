@@ -34,7 +34,7 @@ import { ShowingMenu } from '../../filter/ShowingMenu'
 import { MultiEvidence, TraitEvidence } from '../MultiEvidence'
 import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
 
-export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string; sl?: string; sat?: string }
+export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string; sl?: string; sat?: string; lab?: string }
 
 const ink = '#262420'
 const soft = '#56534D'
@@ -427,7 +427,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
         </div>
       )}
       <div className="cf-col">
-        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={(['none', 'breathe', 'soft', 'ring'] as const).find((x) => x === q.sat) ?? 'breathe'} />
+        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={(['none', 'breathe', 'soft', 'ring'] as const).find((x) => x === q.sat) ?? 'breathe'} labelsInside={q.lab === 'in'} />
       </div>
       {paid && view === 'overview' && !selectedTrait && ties > 5 && (
         <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>

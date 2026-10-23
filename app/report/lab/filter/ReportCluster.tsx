@@ -83,8 +83,10 @@ function layout(traits: FilterTrait[]): Placed[] {
 // - ring: a thin ring in the trait's colour, a cue that it can be tapped.
 export type SatelliteStyle = 'none' | 'breathe' | 'soft' | 'ring'
 
-export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton, satellites = 'none' }: {
+export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton, satellites = 'none', labelsInside = false }: {
   satellites?: SatelliteStyle
+  /** Outer names centred on their blob (like the centre) instead of under it. */
+  labelsInside?: boolean
   /** Nothing selected: equal blobs, names on them, no centre. */
   overview?: boolean
   registerButton?: (facet: string, el: HTMLButtonElement | null) => void
@@ -187,7 +189,9 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
                 ? { ...type.traitWord, fontSize: 30, color: inkFor(hueOf(p.t)) }
                 : overview
                   ? { ...type.traitWord, fontSize: 17, color: '#262420' }
-                  : { ...type.meta, color: '#56534D', top: '100%', transform: 'translate(-50%, 2px)' }}
+                  : labelsInside
+                    ? { ...type.traitWord, fontSize: 13, color: '#262420' }
+                    : { ...type.meta, color: '#56534D', top: '100%', transform: 'translate(-50%, 2px)' }}
             >
               {p.t.word}
             </span>

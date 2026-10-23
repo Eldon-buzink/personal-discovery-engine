@@ -17,6 +17,8 @@ const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
     { label: 'Breathe (slow, about 6%, staggered)', q: 'view=emotional-range&trait=easygoing&sat=breathe' },
     { label: 'Soft (lighter than the centre)', q: 'view=emotional-range&trait=easygoing&sat=soft' },
     { label: 'Ring (thin ring in the trait colour)', q: 'view=emotional-range&trait=easygoing&sat=ring' },
+    { label: 'Names inside the outer blobs (breathe)', q: 'view=emotional-range&trait=easygoing&sat=breathe&lab=in' },
+    { label: 'Names inside the outer blobs, longest names (Drive and discipline)', q: 'view=drive-and-discipline&trait=self-assured&sat=breathe&lab=in' },
   ] },
   { section: 'Overview (merged): nothing selected, Summary underneath', items: [
     { label: 'Overview', q: 'view=overview' },
