@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { checkRing1SplitCard, checkRing1SplitCardText, SHOWS_UP_OPENER_NOTE, STOCK_OPENER_NOTE } from './ring1Card'
+import { checkRing1SplitCard, checkRing1SplitCardText, CLOSER_NOTE, SHOWS_UP_OPENER_NOTE, STOCK_OPENER_NOTE } from './ring1Card'
 import { buildRing1Prompt, buildRing1PromptSplit } from './ring1Prompt'
 
 const good = {
@@ -35,6 +35,8 @@ test('split card: shape and hard rules', () => {
 })
 
 test('split card: soft rules become retry notes', () => {
+  const closer = checkRing1SplitCard({ ...good, shows_up: 'When there is a goal, you keep going. That drive keeps you moving.' }, IDS)
+  assert.ok(closer.ok && closer.violations.includes(CLOSER_NOTE))
   const opener = checkRing1SplitCard({ ...good, shows_up: 'It often shows up when there is a goal. You keep going.' }, IDS)
   assert.ok(opener.ok && opener.violations.includes(SHOWS_UP_OPENER_NOTE))
   const one = checkRing1SplitCard({ ...good, shows_up: 'When there is a goal to chase, you keep going.' }, IDS)

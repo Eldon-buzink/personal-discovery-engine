@@ -163,7 +163,7 @@ export const RING1_SPLIT_RULE = `- shows_up: 2-3 sentences of flowing prose with
 export const RING1_EXAMPLES_SPLIT = `Examples of the quality to aim for. Use your own wording, and vary how each part opens:
 
 Cautiousness, high
-{"trait_quote": "You like to think a decision all the way through before you commit.", "shows_up": "When a choice has to be made, you still want one more question answered first. That care tends to make your choices solid.", "tradeoff": "Waiting can mean missing the moment when acting sooner was the safer bet.", "tradeoff_from": ["A1"]}
+{"trait_quote": "You like to think a decision all the way through before you commit.", "shows_up": "When a choice has to be made, you still want one more question answered first. You weigh it until the choice feels solid.", "tradeoff": "Waiting can mean missing the moment when acting sooner was the safer bet.", "tradeoff_from": ["A1"]}
 
 Anxiety, mid
 {"trait_quote": "Worry shows up when something seems to matter, and stays quiet when it doesn't.", "shows_up": "Your answers sit in the middle, so the amount may change a lot from one situation to the next. Worry keeps you alert without running your day.", "tradeoff": "In the moment, it can be hard to tell which kind of worry you're feeling.", "tradeoff_from": ["A2"]}

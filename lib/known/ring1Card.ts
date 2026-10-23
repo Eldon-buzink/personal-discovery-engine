@@ -138,6 +138,9 @@ export const STOCK_OPENER_NOTE = 'Start the trade-off sentence plainly, without 
 // The opener every card used to share.
 const STOCK_SHOWS_UP_OPENER = /^it (often |usually |tends to )?shows?( up)?\b/i
 export const SHOWS_UP_OPENER_NOTE = 'Open shows_up with the situation or the behaviour itself, not "It often shows up".'
+// A closing sentence that only sums up ("That drive gives you…", "This keeps you…").
+const SUMMING_CLOSER = /^(that|this|these|those)\b/i
+export const CLOSER_NOTE = 'Drop the last sentence of shows_up: it sums up or restates a benefit. End on the behaviour.'
 
 /**
  * answerIds: the ids the prompt gave the answers (A1, A2). A trade-off must
@@ -166,6 +169,8 @@ export function checkRing1SplitCard(input: unknown, answerIds: readonly string[]
   if (tradeN === 2) violations.push('tradeoff has 2 sentences: write one.')
   if (card.tradeoff && STOCK_TRADEOFF_OPENER.test(card.tradeoff)) violations.push(STOCK_OPENER_NOTE)
   if (STOCK_SHOWS_UP_OPENER.test(card.shows_up)) violations.push(SHOWS_UP_OPENER_NOTE)
+  const showsSentences = splitSentences(card.shows_up)
+  if (showsSentences.length > 1 && SUMMING_CLOSER.test(showsSentences[showsSentences.length - 1].trim())) violations.push(CLOSER_NOTE)
   const text = [card.trait_quote, card.shows_up, card.tradeoff].filter(Boolean).join(' ')
   if (hasLabelledTradeoff(text)) return { ok: false, reason: 'labelled payoff/cost' }
   const lengths = checkSentenceLengths(text)
