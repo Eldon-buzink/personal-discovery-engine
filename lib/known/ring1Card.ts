@@ -116,7 +116,7 @@ export const RING1_CARD_SCHEMA_SPLIT = {
   type: 'object',
   properties: {
     trait_quote: { type: 'string', description: '1-2 sentences, second person, present tense.' },
-    shows_up: { type: 'string', description: '2-3 sentences: where it tends to show up and what it gives.' },
+    shows_up: { type: 'string', description: '2 sentences: where it tends to show up and what it gives.' },
     tradeoff: { type: 'string', description: "1 sentence on what the same behaviour can cost, or '' if no answer supports one." },
     tradeoff_from: { type: 'array', items: { type: 'string' }, description: 'The ids of the answers the trade-off follows from (A1, A2). Empty when tradeoff is empty.' },
   },
@@ -163,7 +163,7 @@ export function checkRing1SplitCard(input: unknown, answerIds: readonly string[]
   const violations: string[] = []
   const showsN = splitSentences(card.shows_up).length
   if (showsN > 4) return { ok: false, reason: `shows_up has ${showsN} sentences` }
-  if (showsN === 1 || showsN === 4) violations.push(`shows_up has ${showsN} sentences: write 2-3.`)
+  if (showsN !== 2) violations.push(`shows_up has ${showsN} sentences: write 2.`)
   const tradeN = card.tradeoff ? splitSentences(card.tradeoff).length : 0
   if (tradeN > 2) return { ok: false, reason: `tradeoff has ${tradeN} sentences` }
   if (tradeN === 2) violations.push('tradeoff has 2 sentences: write one.')
