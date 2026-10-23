@@ -117,13 +117,16 @@ export const RING1_CARD_SCHEMA_SPLIT = {
   properties: {
     trait_quote: { type: 'string', description: '1-2 sentences, second person, present tense.' },
     shows_up: { type: 'string', description: '2-3 sentences: where it tends to show up and what it gives.' },
-    tradeoff: { type: 'string', description: "1 sentence on what the same behaviour can cost, or '' if the answers don't support one." },
+    tradeoff: { type: 'string', description: "1 sentence on what the same behaviour can cost, or '' if no answer supports one." },
+    tradeoff_from: { type: 'array', items: { type: 'string' }, description: 'The ids of the answers the trade-off follows from (A1, A2). Empty when tradeoff is empty.' },
   },
-  required: ['trait_quote', 'shows_up', 'tradeoff'],
+  required: ['trait_quote', 'shows_up', 'tradeoff', 'tradeoff_from'],
   additionalProperties: false,
 }
 
-export type Ring1SplitCard = { trait_quote: string; shows_up: string; tradeoff: string }
+// tradeoff_from: the answer ids (A1, A2, in the order the answers were given)
+// the trade-off follows from; empty when there is no trade-off.
+export type Ring1SplitCard = { trait_quote: string; shows_up: string; tradeoff: string; tradeoff_from: string[] }
 
 export type Ring1SplitCardCheck =
   | { ok: true; card: Ring1SplitCard; violations: string[]; words: number }
@@ -136,13 +139,24 @@ export const STOCK_OPENER_NOTE = 'Start the trade-off sentence plainly, without 
 const STOCK_SHOWS_UP_OPENER = /^it (often |usually |tends to )?shows?( up)?\b/i
 export const SHOWS_UP_OPENER_NOTE = 'Open shows_up with the situation or the behaviour itself, not "It often shows up".'
 
-export function checkRing1SplitCard(input: unknown): Ring1SplitCardCheck {
+/**
+ * answerIds: the ids the prompt gave the answers (A1, A2). A trade-off must
+ * name at least one of them in tradeoff_from, or it is rejected; with no
+ * answers given (an excluded facet) the trade-off must be empty.
+ */
+export function checkRing1SplitCard(input: unknown, answerIds: readonly string[] = []): Ring1SplitCardCheck {
   if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' }
-  const { trait_quote, shows_up, tradeoff } = input as Record<string, unknown>
+  const { trait_quote, shows_up, tradeoff, tradeoff_from } = input as Record<string, unknown>
   if (typeof trait_quote !== 'string' || !trait_quote.trim()) return { ok: false, reason: 'trait_quote missing' }
   if (typeof shows_up !== 'string' || !shows_up.trim()) return { ok: false, reason: 'shows_up missing' }
   if (typeof tradeoff !== 'string') return { ok: false, reason: 'tradeoff missing' }
-  const card: Ring1SplitCard = { trait_quote: trait_quote.trim(), shows_up: shows_up.trim(), tradeoff: tradeoff.trim() }
+  const from = Array.isArray(tradeoff_from) ? tradeoff_from.filter((x): x is string => typeof x === 'string').map((x) => x.trim()) : []
+  if (tradeoff.trim()) {
+    if (from.length === 0) return { ok: false, reason: 'tradeoff with no answer it follows from' }
+    const unknown = from.find((x) => !answerIds.includes(x))
+    if (unknown) return { ok: false, reason: `tradeoff_from names an answer it was not given (${unknown})` }
+  }
+  const card: Ring1SplitCard = { trait_quote: trait_quote.trim(), shows_up: shows_up.trim(), tradeoff: tradeoff.trim(), tradeoff_from: tradeoff.trim() ? Array.from(new Set(from)) : [] }
   const violations: string[] = []
   const showsN = splitSentences(card.shows_up).length
   if (showsN > 4) return { ok: false, reason: `shows_up has ${showsN} sentences` }
@@ -164,16 +178,16 @@ export function checkRing1SplitCard(input: unknown): Ring1SplitCardCheck {
   return { ok: true, card, violations, words }
 }
 
-export function checkRing1SplitCardText(text: string): Ring1SplitCardCheck {
+export function checkRing1SplitCardText(text: string, answerIds: readonly string[] = []): Ring1SplitCardCheck {
   try {
-    return checkRing1SplitCard(JSON.parse(text))
+    return checkRing1SplitCard(JSON.parse(text), answerIds)
   } catch {
     return { ok: false, reason: 'not JSON' }
   }
 }
 
 export function finishRing1SplitCard(card: Ring1SplitCard): Ring1SplitCard {
-  return { trait_quote: fixPunctuation(card.trait_quote), shows_up: fixPunctuation(card.shows_up), tradeoff: fixPunctuation(card.tradeoff) }
+  return { ...card, trait_quote: fixPunctuation(card.trait_quote), shows_up: fixPunctuation(card.shows_up), tradeoff: fixPunctuation(card.tradeoff) }
 }
 
 // What to write to known_session.patternContents after a Ring 1 generation:

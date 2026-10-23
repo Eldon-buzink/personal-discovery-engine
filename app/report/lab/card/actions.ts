@@ -12,7 +12,7 @@ import { runModel, type LabRun } from '@/lib/lab/runModel'
 import { exampleResponses, EXAMPLE_BANDS } from '@/lib/known/exampleReport'
 import { evidenceFor, facetAnswers } from '@/lib/known/ring1Evidence'
 import { facetTraitWords } from '@/lib/known/scoring'
-import { RING1_SYSTEM_PROMPT, buildRing1Prompt, buildRing1PromptSplit } from '@/lib/known/ring1Prompt'
+import { RING1_SYSTEM_PROMPT, buildRing1Prompt, buildRing1PromptSplit, splitAnswerId } from '@/lib/known/ring1Prompt'
 import {
   RING1_CARD_SCHEMA, RING1_CARD_SCHEMA_SPLIT, checkRing1CardText, checkRing1SplitCardText, finishRing1Card, finishRing1SplitCard,
   type Ring1Card, type Ring1SplitCard,
@@ -36,7 +36,7 @@ export async function generateLabCardPair(facet: string): Promise<CardPair> {
       return c.ok ? { ok: true, value: finishRing1Card(c.card), violations: c.violations } : c
     }),
     runModel({ system: RING1_SYSTEM_PROMPT, prompt: buildRing1PromptSplit(facet, word, direction, evidence), schema: RING1_CARD_SCHEMA_SPLIT }, (text) => {
-      const c = checkRing1SplitCardText(text)
+      const c = checkRing1SplitCardText(text, evidence.map((_, i) => splitAnswerId(i)))
       return c.ok ? { ok: true, value: finishRing1SplitCard(c.card), violations: c.violations } : c
     }),
   ])
