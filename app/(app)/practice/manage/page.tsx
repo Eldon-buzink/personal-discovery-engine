@@ -9,6 +9,9 @@ import ManageRow from '@/components/known/practice/ManageRow'
 import { activateFacet, deactivateFacet } from '@/lib/known/facetActivationClient'
 import { fetchPracticeData, isActive, type PracticeData } from '@/lib/known/practiceData'
 import { type } from '@/lib/design/type'
+import { REPORT_PAID_V2 } from '@/lib/known/reportFlags'
+import { ACTIVE_FACET_CAP } from '@/lib/known/practiceConfig'
+import { writePicks } from '@/lib/known/practicePicks'
 
 interface ManageRow {
   facetId: string
@@ -52,6 +55,15 @@ export default function ManagePracticePage() {
   const [data, setData] = useState<PracticeData | null>(null)
   const [togglingFacet, setTogglingFacet] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  // From the report (NEXT_PUBLIC_REPORT_PAID_V2): ?pick=a,b,c shows those
+  // traits as suggestions. Nothing is switched on until "Start these".
+  const [pending, setPending] = useState<string[]>([])
+  const [confirming, setConfirming] = useState(false)
+  useEffect(() => {
+    if (!REPORT_PAID_V2) return
+    const raw = new URLSearchParams(window.location.search).get('pick')
+    if (raw) setPending(raw.split(',').map((x) => x.trim()).filter(Boolean).slice(0, ACTIVE_FACET_CAP))
+  }, [])
 
   // Returns whether the refresh succeeded — a toggle can succeed in the
   // database while this refetch fails on a transient network error; without
@@ -115,6 +127,25 @@ export default function ManagePracticePage() {
     setTogglingFacet(null)
   }
 
+  async function confirmPending(rows: ManageRow[]) {
+    if (!userId) return
+    setConfirming(true); setMessage(null)
+    const supabase = createClient()
+    const toStart = pending.filter((f) => rows.some((r) => r.facetId === f && !r.active))
+    let started = 0
+    for (const f of toStart) {
+      const result = await activateFacet(supabase, userId, f, 'base_assessment')
+      if (result.ok) { started++; continue }
+      setMessage(result.reason === 'cap'
+        ? `You can follow ${ACTIVE_FACET_CAP} traits at a time. ${started > 0 ? `${started} started. ` : ''}Turn one off to make room for the rest.`
+        : 'Something went wrong. Try again in a moment.')
+      break
+    }
+    await load(supabase, userId)
+    setPending([]); writePicks([])
+    setConfirming(false)
+  }
+
   if (isLoading || !data) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
@@ -124,6 +155,7 @@ export default function ManagePracticePage() {
   }
 
   const rows = buildManageRows(data)
+  const pendingRows = pending.filter((f) => rows.some((r) => r.facetId === f && !r.active))
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center" style={{ position: 'relative' }}>
@@ -150,6 +182,19 @@ export default function ManagePracticePage() {
         >
           {message}
         </p>
+      )}
+
+      {pendingRows.length > 0 && (
+        <div style={{ margin: '16px 28px 0 28px', padding: '14px 16px', borderRadius: 12, background: '#FFFFFF', border: '1px solid #E5E1D5' }}>
+          <p style={{ ...type.ui, margin: '0 0 4px' }}>Suggested from your report</p>
+          <p className="font-sans text-charcoal-soft" style={{ ...type.meta, margin: '0 0 10px' }}>
+            {pendingRows.map((f) => facetDisplayLabel(f)).join(', ')}. Nothing is switched on until you start them.
+          </p>
+          <button type="button" disabled={confirming} onClick={() => confirmPending(rows)} className="font-sans font-medium"
+            style={{ ...type.ui, minHeight: 44, padding: '0 16px', borderRadius: 10, border: 0, background: '#262420', color: '#F7F4ED', cursor: 'pointer' }}>
+            {confirming ? 'Starting…' : 'Start these'}
+          </button>
+        </div>
       )}
 
       <div style={{ padding: '22px 28px 0 28px', flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>

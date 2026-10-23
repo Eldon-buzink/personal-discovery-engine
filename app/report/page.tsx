@@ -31,7 +31,8 @@ import SiteFooter from '@/components/known/SiteFooter'
 import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
 import { FreeTraitCluster } from '@/components/known/report/FreeTraitCluster'
 import { REPORT_CTA, REPORT_FREE_CLUSTER, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
-import { PaidFirstSection, type ReportTrait } from '@/components/known/report/PaidFirstSection'
+import { PaidFirstSection, mostPronounced, type ReportTrait } from '@/components/known/report/PaidFirstSection'
+import { manageHref } from '@/lib/known/practicePicks'
 import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
 import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
@@ -269,6 +270,8 @@ export default function ReportPage() {
   // Paywall — see lib/known/paywall.ts. isPaid is read from Supabase
   // (public.users, written only by the Stripe webhook).
   const [isPaid, setIsPaidState] = useState(false)
+  // "Track this" picks from the paid redesign; the practice link opens Manage with them.
+  const [practicePicks, setPracticePicks] = useState<string[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
@@ -868,6 +871,7 @@ export default function ReportPage() {
                     responses={responseMap}
                     relationships={firedRelationships}
                     insightFor={(r) => relInsights.find((c) => c.id === r.id && c.signature === relationshipSignature(r))?.text}
+                    onPicksChange={setPracticePicks}
                     renderPending={(t) => {
                       const f = facets.find((x) => x.facet === t.facet)
                       return <PatternLoadingState traitWord={t.word} isLoading={true} failed={f?.copyFailed} onRetry={() => retryCopy(t.facet)} />
@@ -901,7 +905,7 @@ export default function ReportPage() {
             <>
               <WhatsnextDivider />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <PracticeCard isAuthenticated={isAuthenticated} />
+                <PracticeCard isAuthenticated={isAuthenticated} href={REPORT_PAID_V2 && isPaid && isAuthenticated ? manageHref(practicePicks, mostPronounced(paidTraits).map((t) => t.facet)) : undefined} />
 
                 {ring1Complete ? (
                   <Ring1CompleteCard />
