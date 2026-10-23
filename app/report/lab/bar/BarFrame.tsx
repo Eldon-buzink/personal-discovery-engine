@@ -53,7 +53,7 @@ function copyFor(state: BarState) {
       title: '[LAB COPY] Finish your first ring', body: '[LAB COPY] 18 traits to go. Your practice can start now with the ones you have.',
     }
     case 'paid-done': return {
-      bar: branch.reason || '[LAB COPY] Your first ring is complete.', primary: `Start ${branch.label}`, secondary: 'Practice',
+      bar: branch.reason || '[LAB COPY] Your first ring is complete.', primary: `Explore ${branch.label.charAt(0).toLowerCase()}${branch.label.slice(1)}`, secondary: 'Practice',
       title: '[LAB COPY] Your first ring is complete', body: branch.reason || '[LAB COPY] Pick what to look at next.',
     }
   }
