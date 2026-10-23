@@ -86,9 +86,8 @@ function layout(traits: FilterTrait[]): Placed[] {
 export type SatelliteStyle = string
 
 // Readability of names on blobs: 'light' draws every blob at 70% so dark
-// text sits on a paler tint; 'halo' gives the text a soft cream glow;
-// 'both' does both.
-export type Readability = 'none' | 'light' | 'halo' | 'both'
+// text sits on a paler tint. No glow on the text.
+export type Readability = 'none' | 'light'
 
 export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton, satellites = 'none', labelsInside = false, readability = 'none' }: {
   readability?: Readability
@@ -170,7 +169,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
                 d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
                 fill={`url(#rc-g-${uid}-${colourKey(hueOf(p.t))})`}
                 filter={`url(#rc-f-${uid})`}
-                opacity={(readability === 'light' || readability === 'both' ? 0.7 : 1) * (!p.centre && has('soft') ? 0.6 : opacityOf && !overview ? opacityOf(p.t) : 1)}
+                opacity={(readability === 'light' ? 0.7 : 1) * (!p.centre && has('soft') ? 0.6 : opacityOf && !overview ? opacityOf(p.t) : 1)}
                 style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
               />
               {!p.centre && has('ring') && (
@@ -196,7 +195,6 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
             <span
               className="rc-label"
               data-moving={moving ? '1' : undefined}
-              data-halo={readability === 'halo' || readability === 'both' ? '1' : undefined}
               style={p.centre
                 ? { ...type.traitWord, fontSize: 30, color: readability === 'none' ? inkFor(hueOf(p.t)) : '#262420' }
                 : overview
@@ -222,6 +220,5 @@ const RC_CSS = `
   .rc-centre{cursor:default;}
   .rc-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;line-height:1.2;transition:opacity ${DUR_UI}ms ${EASE};}
   .rc-label[data-moving]{opacity:0;transition:none;}
-  .rc-label[data-halo]{text-shadow:0 0 6px rgba(247,244,237,0.95),0 0 14px rgba(247,244,237,0.8);}
   @media (prefers-reduced-motion: reduce){.rc-btn,.rc-move,.rc-label{transition:none !important;}}
 `
