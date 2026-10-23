@@ -3,18 +3,19 @@
 // A plain hue number still means today's blob colour (80% / 62%), so older
 // lab boards and the free users' per-trait hues render exactly as before.
 //
-// Palette 1, muted green, simulated (Machado 2009) minimum pairwise
-// CIEDE2000: normal 29.5, protan 20.3, deutan 12.9, tritan 16.2; weakest
-// against the cream 21.7 (the green).
+// Readable palette: dark text (#262420) on every blob centre at WCAG
+// contrast 4.6 or more. Simulated (Machado 2009) minimum pairwise CIEDE2000:
+// normal 26.5, protan 17.4, deutan 13.3, tritan 17.6; weakest against the
+// cream 15.2. (Palette 1 was darker and failed: 1.5 and 2.4 for dark text.)
 
 export type HSL = [number, number, number]
 
 export const CLUSTER_COLOURS: Record<string, HSL> = {
-  Neuroticism: [250, 70, 42],
-  Extraversion: [130, 55, 60],
-  Openness: [340, 55, 42],
-  Agreeableness: [200, 85, 42],
-  Conscientiousness: [20, 55, 52],
+  Neuroticism: [240, 65, 70],
+  Extraversion: [30, 45, 74],
+  Openness: [80, 65, 60],
+  Agreeableness: [190, 55, 62],
+  Conscientiousness: [350, 45, 62],
 }
 
 export type Colour = number | HSL

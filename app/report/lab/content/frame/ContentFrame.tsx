@@ -24,7 +24,7 @@ import { type } from '@/lib/design/type'
 import {
   bandOf, cardFor, clusterTraits, CLUSTERS, familyLabel, filterTraits, freeTraits, mostPronounced, relationshipsFor, topTieCount, topTraits, type FilterTrait,
 } from '@/lib/lab/filterLab'
-import { AI_LINE, CLUSTER_DESCRIPTIONS, clusterReadingEligible, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn } from '@/lib/lab/contentLab'
+import { AI_LINE, CLUSTER_ABOUT, CLUSTER_DESCRIPTIONS, CLUSTER_HOW_TO_READ, clusterReadingEligible, sendable, summaryEligible, SUMMARY_MIN_TRAITS, validateDrawsOn } from '@/lib/lab/contentLab'
 import { browserContentCache, contentKey, MAX_CONTENT_ATTEMPTS } from '@/lib/lab/contentCache'
 import { slugToFacet, slugToView, traitToSlug, viewToSlug } from '@/lib/lab/slugs'
 import type { ContentTension, ContentTrait } from '@/lib/lab/contentGeneration'
@@ -291,64 +291,20 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   const Dot = ({ t, size = 10 }: { t: FilterTrait; size?: number }) => (
     <span aria-hidden="true" style={{ display: 'inline-block', width: size, height: size, borderRadius: 999, background: hslCss(toHsl(hueOf(t))), flexShrink: 0 }} />
   )
+  // "What stands out": only the most pronounced pattern. The visual above
+  // already shows the other traits, so they are not listed again here.
   const whatStandsOut = () => {
-    const { first, next } = standout
+    const { first } = standout
     if (!first) return null
-    const partial = revealed.length < 30 ? <p style={{ ...type.meta, margin: '14px 0 0' }}>[LAB COPY] Based on the {revealed.length} traits you have so far.</p> : null
-    if (q.sl === '2') {
-      // Layout B: the main pattern larger and on its own, then a short labelled list.
-      return (
-        <div className="cf-text">
-          <h2 style={{ ...type.display3, color: ink, margin: '0 0 14px' }}>What stands out</h2>
-          <p style={{ ...type.meta, margin: '0 0 8px' }}>Your most pronounced pattern</p>
-          <button type="button" className="cf-standout-main" onClick={() => select(first.facet)}>
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-              <Dot t={first} size={12} />
-              <span style={{ ...type.traitWord, fontSize: 24, color: ink }}>{first.word}</span>
-            </span>
-            <span style={{ ...type.display4, color: soft, display: 'block' }}>{cardFor(first.facet).trait_quote}</span>
-          </button>
-          {next.length > 0 && (
-            <>
-              <p style={{ ...type.meta, margin: '22px 0 6px' }}>[LAB COPY] Also standing out</p>
-              <ul className="cf-standout-list">
-                {next.map((t) => (
-                  <li key={t.facet}>
-                    <button type="button" className="cf-head" onClick={() => select(t.facet)}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 4 }}><Dot t={t} /><span style={{ ...type.traitWord, fontSize: 17, color: ink }}>{t.word}</span></span>{' '}
-                      <span style={{ ...type.body, color: soft }}>{cardFor(t.facet).trait_quote}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {partial}
-        </div>
-      )
-    }
-    // Layout A: one column, the main pattern first, the next two under a hairline.
+    const c = cardFor(first.facet)
     return (
       <div className="cf-text">
-        <h2 style={{ ...type.display3, color: ink, margin: '0 0 14px' }}>What stands out</h2>
-        <ul className="cf-sumlist">
-          <li>
-            <p style={{ ...type.meta, margin: '0 0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Dot t={first} /> Your most pronounced pattern</p>
-            <button type="button" className="cf-head" onClick={() => select(first.facet)}>
-              <span style={{ ...type.traitWord, fontSize: 20, color: ink }}>{first.word}</span>{' '}
-              <span style={{ ...type.body, color: ink }}>{cardFor(first.facet).trait_quote}</span>
-            </button>
-          </li>
-          {next.map((t) => (
-            <li key={t.facet}>
-              <button type="button" className="cf-head" onClick={() => select(t.facet)}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 4 }}><Dot t={t} /><span style={{ ...type.traitWord, fontSize: 17, color: ink }}>{t.word}</span></span>{' '}
-                <span style={{ ...type.body, color: soft }}>{cardFor(t.facet).trait_quote}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        {partial}
+        <h2 style={{ ...type.display2, color: ink, margin: '0 0 2px' }}>What stands out</h2>
+        <p style={{ ...type.meta, margin: '0 0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Dot t={first} /> Your most pronounced pattern: {first.word}</p>
+        <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{c.trait_quote}</p>
+        {(c.shows_up ?? c.body) && <p style={{ ...type.body, color: soft, margin: '0 auto', maxWidth: 420 }}>{c.shows_up ?? c.body}</p>}
+        <button type="button" className="cf-track" onClick={() => select(first.facet)}>[LAB COPY] Open {first.word}</button>
+        {revealed.length < 30 && <p style={{ ...type.meta, margin: '14px 0 0' }}>[LAB COPY] Based on the {revealed.length} traits you have so far.</p>}
       </div>
     )
   }
@@ -386,8 +342,16 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   // the evidence pill for the traits shown), with the generated one-sentence
   // takeaway on top only when generation is on and it came back. The AI line
   // goes with the takeaway only.
+  // Built from the answers only: how many of the shown traits lean, how many sit in the middle.
+  const leaningLine = (ts: FilterTrait[]) => {
+    const k = ts.filter((t) => bandOf(t.facet) !== 'mid').length
+    const m = ts.length - k
+    if (k === 0) return `[LAB COPY] All ${ts.length} of these sit near the middle for you.`
+    if (m === 0) return `[LAB COPY] Your answers lean clearly one way on all ${ts.length} of these.`
+    return `[LAB COPY] Your answers lean clearly one way on ${k} of these ${ts.length}. The other ${m === 1 ? 'one sits' : `${m} sit`} near the middle.`
+  }
   const clusterBlock = (c: string) => {
-    const two = clusterIn.slice(0, 2)
+    const two = clusterIn.filter((t) => bandOf(t.facet) !== 'mid').slice(0, 8)
     const g = live && clusterGen.status === 'ready' && q.alt !== '1' ? clusterGen : null
     const sendableFacets = sendable(clusterIn).map((t) => t.facet)
     return (
@@ -398,8 +362,14 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
             <p style={{ ...type.meta, margin: '6px 0 0' }}>{AI_LINE}</p>
           </div>
         )}
-        <p style={{ ...type.body, color: soft, margin: '0 0 16px' }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
-        <Headlines traits={two} onPick={select} />
+        {/* Same structure as a trait card: title, a subtitle line, the lead sentence, then the body. */}
+        <h2 style={{ ...type.display2, color: ink, margin: '0 0 2px' }}>{familyLabel(c)}</h2>
+        <p style={{ ...type.meta, margin: '0 0 18px' }}>[LAB COPY] {clusterIn.length} of your traits</p>
+        <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
+        <p style={{ ...type.body, color: soft, margin: '0 auto 12px', maxWidth: 420 }}>{CLUSTER_ABOUT[c]}</p>
+        <p style={{ ...type.body, color: soft, margin: '0 auto', maxWidth: 420 }}>
+          {leaningLine(clusterIn)} {CLUSTER_HOW_TO_READ}
+        </p>
         {clusterTension && (
           <div className="cf-tension">
             <p style={{ ...type.ui, color: ink, margin: '0 0 4px' }}>[LAB COPY] Where two of these pull apart</p>

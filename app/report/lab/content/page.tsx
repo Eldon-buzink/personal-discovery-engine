@@ -7,11 +7,11 @@ import { CLUSTER_DESCRIPTIONS } from '@/lib/lab/contentLab'
 export const metadata = buildMetadata({ path: '/report/lab/content', title: 'Report lab: content | Bearing', description: 'Report lab, content per selection.', noindex: true })
 
 const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
-  { section: 'What stands out (no generation): pick a layout', items: [
-    { label: 'Layout A, one column: 30 traits', q: 'view=overview&sl=1' },
-    { label: 'Layout A, one column: 12 traits', q: 'view=overview&sl=1&n=12' },
-    { label: 'Layout B, main pattern larger, then a short list: 30 traits', q: 'view=overview&sl=2' },
-    { label: 'Layout B, main pattern larger, then a short list: 12 traits', q: 'view=overview&sl=2&n=12' },
+  { section: 'What stands out, and a cluster selected (no generation)', items: [
+    { label: 'Overview: 30 traits', q: 'view=overview' },
+    { label: 'Overview: 12 traits', q: 'view=overview&n=12' },
+    { label: 'Emotional range', q: 'view=emotional-range' },
+    { label: 'Drive and discipline (with the tension box)', q: 'view=drive-and-discipline' },
   ] },
   { section: 'Overview (merged): nothing selected, Summary underneath', items: [
     { label: 'Overview', q: 'view=overview' },

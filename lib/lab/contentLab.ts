@@ -25,6 +25,17 @@ export const CONTENT_EXCLUDED_FACETS: readonly string[] = RELATIONSHIP_EXCLUDED_
 
 export interface DescriptionDraft { text: string; covers: { phrase: string; facet: string }[] }
 
+// The longer copy under a cluster's title: what the group is about, from
+// its six facets, and how to read it. Static, the same for everyone.
+export const CLUSTER_ABOUT: Record<string, string> = {
+  Neuroticism: '[LAB COPY] This group is about the harder feelings, like worry, anger and low mood, and how you deal with stress and urges.',
+  Extraversion: '[LAB COPY] This group is about your energy around other people: how quickly you warm up, how much company you want, and how full and lively you like your days.',
+  Openness: '[LAB COPY] This group is about what draws you in: ideas, art and beauty, your own feelings, new experiences, and how you see old rules and traditions.',
+  Agreeableness: '[LAB COPY] This group is about how you deal with people: how much you trust them, how plainly you speak, how you handle conflict, and how much their troubles move you.',
+  Conscientiousness: '[LAB COPY] This group is about how you get things done: how sure you feel, how you keep things in order, how you keep your word, and how you push toward goals.',
+}
+export const CLUSTER_HOW_TO_READ = '[LAB COPY] Each trait runs between two ends, and neither end is better. Tap a trait to see where your answers put you.'
+
 export const CLUSTER_DESCRIPTIONS: Record<string, [DescriptionDraft, DescriptionDraft]> = {
   Neuroticism: [
     {

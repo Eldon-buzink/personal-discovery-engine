@@ -18,7 +18,8 @@ const PALETTES: { name: string; note: string; cols: HSL[]; min: Record<string, n
   { name: 'Today', note: 'Hue only, 80% / 62%.', cols: [[235, 80, 62], [35, 80, 62], [290, 80, 62], [175, 80, 62], [8, 80, 62]], min: { normal: 21.8, protan: 4.2, deutan: 10.8, tritan: 15.4 }, cream: 5.3 },
   { name: 'Targeted fix', note: 'Curiosity to rose 335, Getting along to a deeper teal. Protan fixed; tritan breaks (rose and coral).', cols: [[235, 80, 62], [35, 80, 62], [335, 80, 62], [180, 70, 38], [8, 80, 62]], min: { normal: 21.6, protan: 14.8, deutan: 10.8, tritan: 3.9 }, cream: 23.3 },
   { name: 'Palette 1', note: 'Hues at least 40° apart, lightness varies.', cols: [[250, 70, 42], [130, 85, 52], [340, 55, 42], [200, 85, 42], [20, 55, 52]], min: { normal: 29.5, protan: 20.3, deutan: 17.4, tritan: 16.2 }, cream: 25.3 },
-  { name: 'Palette 1, muted green (picked)', note: 'Social energy at 130 / 55% / 60%.', cols: [[250, 70, 42], [130, 55, 60], [340, 55, 42], [200, 85, 42], [20, 55, 52]], min: { normal: 29.5, protan: 20.3, deutan: 12.9, tritan: 16.2 }, cream: 21.7 },
+  { name: 'Readable (proposed)', note: 'Dark text contrast 4.6 or more on every blob.', cols: [[240, 65, 70], [30, 45, 74], [80, 65, 60], [190, 55, 62], [350, 45, 62]], min: { normal: 26.5, protan: 17.4, deutan: 13.3, tritan: 17.6 }, cream: 15.2 },
+  { name: 'Palette 1, muted green (too dark for text)', note: 'Social energy at 130 / 55% / 60%.', cols: [[250, 70, 42], [130, 55, 60], [340, 55, 42], [200, 85, 42], [20, 55, 52]], min: { normal: 29.5, protan: 20.3, deutan: 12.9, tritan: 16.2 }, cream: 21.7 },
   { name: 'Palette 2', note: 'Highest minimum, but two blues told apart mainly by lightness.', cols: [[240, 55, 42], [90, 85, 52], [340, 70, 62], [230, 55, 72], [0, 55, 42]], min: { normal: 23.5, protan: 19.4, deutan: 22.4, tritan: 19.3 }, cream: 25.0 },
 ]
 
