@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { DUR_UI, EASE } from '@/lib/design/motion'
-import { FAMILY_HUES } from '@/lib/lab/filterLab'
+import { CLUSTER_COLOURS, hslCss } from '@/lib/lab/colours'
 
 const ink = '#262420'
 const soft = '#56534D'
@@ -47,7 +47,7 @@ export function RadioRow({ label, options, value, onChange, className, render, f
 }
 
 export const Dot = ({ cluster }: { cluster: string }) => (
-  <span aria-hidden="true" style={{ width: 9, height: 9, borderRadius: 999, background: `hsl(${FAMILY_HUES[cluster]},70%,60%)`, flexShrink: 0 }} />
+  <span aria-hidden="true" style={{ width: 9, height: 9, borderRadius: 999, background: hslCss(CLUSTER_COLOURS[cluster]), flexShrink: 0 }} />
 )
 
 export function ShowingMenu({ view, options, labelOf, onChange, mobile, startOpen }: {
@@ -65,7 +65,7 @@ export function ShowingMenu({ view, options, labelOf, onChange, mobile, startOpe
     if (open) (menuRef.current?.querySelector('[aria-checked="true"]') as HTMLElement | null)?.focus()
   }, [open])
   const close = () => { setOpen(false); btnRef.current?.focus() }
-  const chip = (v: string) => <>{FAMILY_HUES[v] !== undefined && <Dot cluster={v} />}<span>{labelOf(v)}</span></>
+  const chip = (v: string) => <>{CLUSTER_COLOURS[v] !== undefined && <Dot cluster={v} />}<span>{labelOf(v)}</span></>
   return (
     <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
       <style dangerouslySetInnerHTML={{ __html: SM_CSS }} />

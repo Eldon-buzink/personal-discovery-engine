@@ -29,7 +29,7 @@ const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
   { section: 'Clusters, alternative without generation: description + the two most pronounced headlines', items: [
     { label: 'Emotional range', q: 'view=emotional-range&alt=1' },
     { label: 'Social energy', q: 'view=social-energy&alt=1' },
-    { label: '[LAB COPY] Curiosity', q: 'view=curiosity&alt=1' },
+    { label: 'Ideas and experiences', q: 'view=ideas-and-experiences&alt=1' },
     { label: 'Getting along', q: 'view=getting-along&alt=1' },
     { label: 'Drive and discipline', q: 'view=drive-and-discipline&alt=1' },
   ] },

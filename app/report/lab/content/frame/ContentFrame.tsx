@@ -29,6 +29,7 @@ import { browserContentCache, contentKey, MAX_CONTENT_ATTEMPTS } from '@/lib/lab
 import { slugToFacet, slugToView, traitToSlug, viewToSlug } from '@/lib/lab/slugs'
 import type { ContentTension, ContentTrait } from '@/lib/lab/contentGeneration'
 import { ReportCluster } from '../../filter/ReportCluster'
+import type { Colour } from '@/lib/lab/colours'
 import { ShowingMenu } from '../../filter/ShowingMenu'
 import { MultiEvidence, TraitEvidence } from '../MultiEvidence'
 import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
@@ -76,7 +77,7 @@ function WithPointer({ text, pointer, onPick, href }: { text: string; pointer: {
 // The trait card, as the report's Ring 1 card without the tags, with the
 // cluster link (paid) under the subtitle and the AI line under the pill.
 function TraitCard({ t, hue, paid, responses, insight, onCluster }: {
-  t: FilterTrait; hue: number; paid: boolean; responses: Map<number, number>; insight?: string; onCluster: () => void
+  t: FilterTrait; hue: Colour; paid: boolean; responses: Map<number, number>; insight?: string; onCluster: () => void
 }) {
   const content = cardFor(t.facet)
   return (
@@ -389,8 +390,8 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
     )
   }
 
-  // Paid: hue = cluster (no steps within a cluster). Free: the live per-trait hues.
-  const hueOf = (t: FilterTrait) => (!paid ? t.traitHue : t.clusterHue)
+  // Paid: hue = cluster, a full colour from Palette 1 (no steps within a cluster). Free: the live per-trait hues.
+  const hueOf = (t: FilterTrait): Colour => (!paid ? t.traitHue : t.clusterColour)
   const shown = order.map((f) => byFacet.get(f)!).filter(Boolean)
   const selectedTrait = paid ? (selected ? byFacet.get(selected) : undefined) : shown[0]
   const relFor = (facet: string) => rels.find((r) => r.signals.some((x) => x.facet === facet))

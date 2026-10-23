@@ -30,8 +30,8 @@ export const FAMILY_HUES: Record<string, number> = {
 
 // User-facing family names. DOMAIN_LABELS on main, except "Openness", which
 // is a Big Five domain name: replaced here by a working label.
-export const LAB_OPENNESS_LABEL = '[LAB COPY] Curiosity'
-export const LAB_OPENNESS_ALTERNATIVES = ['[LAB COPY] Ideas and experiences', '[LAB COPY] Exploring']
+// Picked label for the Openness-facet cluster (DOMAIN_LABELS on main is unchanged).
+export const LAB_OPENNESS_LABEL = 'Ideas and experiences'
 export function familyLabel(family: string): string {
   return family === 'Openness' ? LAB_OPENNESS_LABEL : DOMAIN_LABELS[family] ?? family
 }

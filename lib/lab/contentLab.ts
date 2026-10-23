@@ -72,10 +72,10 @@ export const CLUSTER_DESCRIPTIONS: Record<string, [DescriptionDraft, Description
       ],
     },
     {
-      text: 'Imagination, a feel for art and beauty, noticing your own feelings, a taste for the new, enjoying ideas, and being ready to question tradition.',
+      text: 'Imagination, a feel for art and beauty, noticing and naming your own feelings, a taste for new experiences, enjoying ideas, and being ready to question tradition.',
       covers: [
         { phrase: 'imagination', facet: 'Imagination' }, { phrase: 'a feel for art and beauty', facet: 'Artistic Interests' },
-        { phrase: 'noticing your own feelings', facet: 'Emotionality' }, { phrase: 'a taste for the new', facet: 'Adventurousness' },
+        { phrase: 'noticing and naming your own feelings', facet: 'Emotionality' }, { phrase: 'a taste for new experiences', facet: 'Adventurousness' },
         { phrase: 'enjoying ideas', facet: 'Intellect' }, { phrase: 'ready to question tradition', facet: 'Liberalism' },
       ],
     },

@@ -17,6 +17,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { createPortal } from 'react-dom'
 import { type } from '@/lib/design/type'
 import type { FilterTrait } from '@/lib/lab/filterLab'
+import type { Colour } from '@/lib/lab/colours'
 import { MultiRows, SingleBody } from '../evidence/parts'
 
 export const MAX_EVIDENCE_ROWS = 8
@@ -49,7 +50,7 @@ function WithPill({ startOpen, footer, children }: { startOpen: boolean; footer?
 
 export function MultiEvidence({ traits, hueOf, onSeeTrait, startOpen = false, footer }: {
   traits: FilterTrait[]
-  hueOf: (t: FilterTrait) => number
+  hueOf: (t: FilterTrait) => Colour
   onSeeTrait: (facet: string) => void
   startOpen?: boolean
   /** Shown directly under the pill (the AI-written line). */
@@ -64,7 +65,7 @@ export function MultiEvidence({ traits, hueOf, onSeeTrait, startOpen = false, fo
   )
 }
 
-export function TraitEvidence({ t, hue, responses, startOpen = false, footer }: { t: FilterTrait; hue: number; responses: Map<number, number>; startOpen?: boolean; footer?: ReactNode }) {
+export function TraitEvidence({ t, hue, responses, startOpen = false, footer }: { t: FilterTrait; hue: Colour; responses: Map<number, number>; startOpen?: boolean; footer?: ReactNode }) {
   return (
     <WithPill startOpen={startOpen} footer={footer}>
       {() => <SingleBody t={t} hue={hue} responses={responses} />}

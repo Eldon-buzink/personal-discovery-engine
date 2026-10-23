@@ -7,7 +7,7 @@ import { DOMAIN_FACETS } from '@/lib/known/ring1-questions'
 export const CLUSTER_SLUGS: Record<string, string> = {
   Neuroticism: 'emotional-range',
   Extraversion: 'social-energy',
-  Openness: 'curiosity', // follows the [LAB COPY] working label
+  Openness: 'ideas-and-experiences',
   Agreeableness: 'getting-along',
   Conscientiousness: 'drive-and-discipline',
 }

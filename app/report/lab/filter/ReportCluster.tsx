@@ -18,7 +18,8 @@
 //   least 44px) are HTML on top.
 
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { blobGradientStops, buildPointMotionProfile, generateAnimatedBlobPath, hashSeed, useBlobAnimation } from '@/lib/blobs'
+import { buildPointMotionProfile, generateAnimatedBlobPath, hashSeed, useBlobAnimation } from '@/lib/blobs'
+import { blobStops, colourKey, inkFor, type Colour } from '@/lib/lab/colours'
 import { EASE, DUR_ENTER, DUR_UI, prefersReducedMotion } from '@/lib/design/motion'
 import { type } from '@/lib/design/type'
 import type { FilterTrait } from '@/lib/lab/filterLab'
@@ -83,7 +84,8 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
   opacityOf?: (t: FilterTrait) => number
   /** In place order: the first is the selected (centre) trait. */
   traits: FilterTrait[]
-  hueOf: (t: FilterTrait) => number
+  /** A full colour (hue, saturation, lightness) or a plain hue (today's 80% / 62%). */
+  hueOf: (t: FilterTrait) => Colour
   onSelect: (facet: string) => void
 }) {
   const uid = useId().replace(/:/g, '')
@@ -117,7 +119,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
     centreRef.current.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(centre.t.facet)!, 0.3, t))
   }, [centre?.t.facet, profiles], wrapRef, { respectReducedMotion: true })
 
-  const hues = Array.from(new Set(traits.map(hueOf)))
+  const colours = Array.from(new Map(traits.map((t) => [colourKey(hueOf(t)), hueOf(t)] as [string, Colour])).entries())
   const move: CSSProperties = { transition: `transform ${DUR_ENTER}ms ${EASE}` }
 
   return (
@@ -126,9 +128,9 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
       <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height={VB_H * s} style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
         <defs>
           <filter id={`rc-f-${uid}`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={BLUR} /></filter>
-          {hues.map((h) => (
-            <radialGradient key={h} id={`rc-g-${uid}-${h}`} cx="45%" cy="40%" r="70%">
-              {blobGradientStops(h, true).map((st, i) => <stop key={i} offset={st.offset} stopColor={st.color} stopOpacity={st.opacity} />)}
+          {colours.map(([key, h]) => (
+            <radialGradient key={key} id={`rc-g-${uid}-${key}`} cx="45%" cy="40%" r="70%">
+              {blobStops(h).map((st, i) => <stop key={i} offset={st.offset} stopColor={st.color} stopOpacity={st.opacity} />)}
             </radialGradient>
           ))}
         </defs>
@@ -137,7 +139,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
             <path
               ref={p.centre ? (el) => { centreRef.current = el } : undefined}
               d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
-              fill={`url(#rc-g-${uid}-${hueOf(p.t)})`}
+              fill={`url(#rc-g-${uid}-${colourKey(hueOf(p.t))})`}
               filter={`url(#rc-f-${uid})`}
               opacity={opacityOf && !overview ? opacityOf(p.t) : 1}
               style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
@@ -162,7 +164,7 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
               className="rc-label"
               data-moving={moving ? '1' : undefined}
               style={p.centre
-                ? { ...type.traitWord, fontSize: 30, color: `hsl(${hueOf(p.t)},45%,24%)` }
+                ? { ...type.traitWord, fontSize: 30, color: inkFor(hueOf(p.t)) }
                 : overview
                   ? { ...type.traitWord, fontSize: 17, color: '#262420' }
                   : { ...type.meta, color: '#56534D', top: '100%', transform: 'translate(-50%, 2px)' }}

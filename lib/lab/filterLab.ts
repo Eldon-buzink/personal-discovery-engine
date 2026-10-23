@@ -15,6 +15,7 @@ import { DOMAIN_FACETS, RING1_QUESTIONS } from '@/lib/known/ring1-questions'
 import { winningRelationships, type FiredRelationship } from '@/lib/known/relationships'
 import { domainOf, traitStrength } from '@/lib/known/traitOrder'
 import { FAMILY_HUES, familyLabel } from './reportLab'
+import { CLUSTER_COLOURS, type HSL } from './colours'
 
 export { familyLabel, FAMILY_HUES }
 export { LAB_PRACTICE_COUNT } from './reportLab'
@@ -32,6 +33,8 @@ export interface FilterTrait {
   revealIndex: number
   /** Hue = cluster (the lab's mapping). */
   clusterHue: number
+  /** Hue = cluster, as a full colour (Palette 1). */
+  clusterColour: HSL
   /** The live report's per-trait hue, for comparison. */
   traitHue: number
 }
@@ -73,6 +76,7 @@ export function filterTraits(): FilterTrait[] {
     return {
       facet, word, cluster, score, strength: traitStrength(score), revealIndex,
       clusterHue: FAMILY_HUES[cluster],
+      clusterColour: CLUSTER_COLOURS[cluster],
       traitHue: userCuratedHue(`ring1-pattern-${word.toLowerCase()}`, revealIndex),
     }
   })

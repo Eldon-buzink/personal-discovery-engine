@@ -11,21 +11,22 @@ import { answersHeading, evidencePanelData, itemCountLine } from '@/lib/known/ev
 import { facetTraitWords } from '@/lib/known/scoring'
 import { type } from '@/lib/design/type'
 import { bandOf, type FilterTrait } from '@/lib/lab/filterLab'
+import { colourKey, hslCss, toHsl, type Colour } from '@/lib/lab/colours'
 
 const ink = '#262420'
 const soft = '#56534D'
 export const hair = '#E5E1D5'
 const sep = { borderTop: `1px solid ${hair}` }
 
-export function Blob({ t, hue, size = 26 }: { t: FilterTrait; hue: number; size?: number }) {
+export function Blob({ t, hue, size = 26 }: { t: FilterTrait; hue: Colour; size?: number }) {
   const d = useMemo(() => generateAnimatedBlobPath(20, 20, 13, buildPointMotionProfile(hashSeed(`${t.word}-shape`), 9), 0.3, 0), [t.word])
-  const id = `eb-${t.facet.replace(/\W/g, '')}-${hue}`
+  const id = `eb-${t.facet.replace(/\W/g, '')}-${colourKey(hue)}`
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
       <defs>
         <radialGradient id={`${id}-g`} cx="45%" cy="40%" r="70%">
-          <stop offset="0%" stopColor={`hsl(${hue},80%,62%)`} stopOpacity="1" />
-          <stop offset="100%" stopColor={`hsl(${hue},70%,70%)`} stopOpacity="0.55" />
+          <stop offset="0%" stopColor={hslCss(toHsl(hue))} stopOpacity="1" />
+          <stop offset="100%" stopColor={hslCss(toHsl(hue), -10, 8)} stopOpacity="0.55" />
         </radialGradient>
         <filter id={`${id}-f`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" /></filter>
       </defs>
@@ -45,7 +46,7 @@ export function positionSentence(t: FilterTrait): string {
 }
 
 /** A quiet hairline with the blob at the user's end (or the middle) and the two end words under it. */
-export function Track({ t, hue }: { t: FilterTrait; hue: number }) {
+export function Track({ t, hue }: { t: FilterTrait; hue: Colour }) {
   const w = facetTraitWords(t.facet)!
   const band = bandOf(t.facet)
   return (
@@ -65,7 +66,7 @@ export function Track({ t, hue }: { t: FilterTrait; hue: number }) {
 const rowBtn: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', minHeight: 44, padding: '14px 4px', border: 0, background: 'none', cursor: 'pointer', textAlign: 'center' }
 
 /** Multi-trait panel body: two plain sentences, then one track row per trait (tap opens it). No answers. */
-export function MultiRows({ traits, hueOf, onPick }: { traits: FilterTrait[]; hueOf: (t: FilterTrait) => number; onPick?: (facet: string) => void }) {
+export function MultiRows({ traits, hueOf, onPick }: { traits: FilterTrait[]; hueOf: (t: FilterTrait) => Colour; onPick?: (facet: string) => void }) {
   return (
     <>
       <p style={{ ...type.body, color: soft, margin: 0 }}>[LAB COPY] This is based on {traits.length} of your traits, from your answers.</p>
@@ -85,7 +86,7 @@ export function MultiRows({ traits, hueOf, onPick }: { traits: FilterTrait[]; hu
 }
 
 /** Per-trait panel body: the statements sentence, the track and position sentence, the two answers, the statements line. */
-export function SingleBody({ t, hue, responses }: { t: FilterTrait; hue: number; responses: Map<number, number> }) {
+export function SingleBody({ t, hue, responses }: { t: FilterTrait; hue: Colour; responses: Map<number, number> }) {
   const data = evidencePanelData(t.facet, bandOf(t.facet), responses, true)
   const answers = data?.sensitive ? [] : data?.answers ?? []
   return (
