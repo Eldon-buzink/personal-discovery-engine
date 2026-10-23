@@ -148,7 +148,7 @@ export default function Solution() {
           <li>{check}Plain words, no jargon</li>
           <li>{check}See what each one is based on</li>
         </ul>
-        <Link href="/report/sample" className="sv-link sv-in" style={{ ['--d' as string]: '360ms' }}>See the full sample report {arrow}</Link>
+        <Link href="/report/example" className="sv-link sv-in" style={{ ['--d' as string]: '360ms' }}>See the full sample report {arrow}</Link>
       </div>
     </section>
   )

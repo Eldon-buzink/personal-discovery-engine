@@ -150,7 +150,7 @@ export default function HowItWorksJourney() {
               up in your days. You can see which of your answers each one is based on.
             </p>
             <Facts items={[`Your first ${REVEAL_CAP} patterns are free`, 'A one-time €49 unlocks all 30, plus five deeper assessments']} />
-            <Link href="/report/sample" className="hj-link">See the full sample report {arrow}</Link>
+            <Link href="/report/example" className="hj-link">See the full sample report {arrow}</Link>
           </Step>
 
           <Step

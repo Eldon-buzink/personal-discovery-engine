@@ -23,7 +23,7 @@ export default function FullAssessmentPreview() {
             <Link href="/onboarding">
               <button className="mk-btn">Start the full assessment</button>
             </Link>
-            <Link href="/report/sample" className="final-link">
+            <Link href="/report/example" className="final-link">
               See a sample report
             </Link>
           </div>

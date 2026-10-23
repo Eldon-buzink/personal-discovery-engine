@@ -964,7 +964,7 @@ export function FinalCtaSection({ startedUnfinished }: { startedUnfinished: bool
             <Link href={startedUnfinished ? '/assessment' : '/onboarding'}>
               <button className="mk-btn">{startedUnfinished ? 'Continue your assessment' : 'Start the assessment'}</button>
             </Link>
-            <Link href="/report/sample" className="final-link">
+            <Link href="/report/example" className="final-link">
               See a sample report
             </Link>
           </div>
@@ -1018,7 +1018,7 @@ export default function LandingPageClient() {
               <div className="bento-card" style={{ display:'flex', flexDirection:'column' }}>
                 <h3>Your patterns, made visible</h3>
                 <p>Each of your 30 facets gets a word and a description, so you see specific patterns instead of one label.</p>
-                <Link href="/report/sample" className="bento-example-link">See an example report</Link>
+                <Link href="/report/example" className="bento-example-link">See an example report</Link>
                 <div className="bento-cluster-canvas-wrap">
                   <BentoCluster />
                 </div>
