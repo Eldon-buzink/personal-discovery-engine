@@ -5,12 +5,12 @@
 **Type tokens** (`app/globals.css`, Tailwind theme, `lib/design/type.ts`). Use these, not raw sizes:
 
 - **display**: Newsreader regular, for headings. Four sizes (`display1` to `display4`).
-- **trait-word**: Newsreader italic 600, only for the user's own trait word (blob labels, the pattern name). The blob label is 30px.
+- **trait-word**: Newsreader italic 600, for the user's own trait word (blob labels, the pattern name) and for the titles that sit in the same place in the report's first section (a cluster name, "What stands out"). The blob label is 30px.
 - **body**: sans 16px, line-height 1.6.
 - **ui**: sans 14px medium, sentence case (buttons, chips, labels).
 - **meta**: sans 13px in the muted grey, `#8C8A83` (`text-muted`). Colour tokens stay as they are on main.
 
-**Italic only for trait words.** No other italics: no italic headline tails, quotes, one-liners or notes.
+**Italic only for trait words** (and the report titles above, which share their style). No other italics: no italic headline tails, quotes, one-liners or notes.
 
 **No eyebrows without information.** Remove a small label when the heading after it already says the same thing. When one is kept (a date range, a section name the heading lacks), it uses the meta token in sentence case: no uppercase, no letter-spacing.
 
