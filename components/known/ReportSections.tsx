@@ -116,16 +116,19 @@ export function BranchSuggestionCard({
   extraBranchLabels,
   isPaid,
   onSelect,
+  paidActionLabel,
 }: {
   branchLabel: string
   reason: string
   extraBranchLabels?: string[]
   isPaid: boolean
   onSelect: () => void
+  /** Paid button wording to use instead of "Start {branchLabel}" (NEXT_PUBLIC_REPORT_CTA). */
+  paidActionLabel?: string
 }) {
   const hasExtra = !!extraBranchLabels && extraBranchLabels.length > 0
   const ctaLabel = isPaid
-    ? `Start ${branchLabel} →`
+    ? `${paidActionLabel ?? `Start ${branchLabel}`} →`
     : hasExtra
     ? `Unlock ${branchLabel} and ${extraBranchLabels!.length} more →`
     : `Unlock ${branchLabel} →`
@@ -172,6 +175,17 @@ export const BRANCH_DISPLAY_NAMES: Record<Branch, string> = {
   energy:        'Your energy',
   working_style: 'Your working style',
   direction:     'Your direction',
+}
+
+// "Explore …" wording per branch (behind NEXT_PUBLIC_REPORT_CTA). Written
+// out, not lowercased from the display name: "How I connect" would read
+// "Explore your how I connect".
+export const BRANCH_EXPLORE_LABELS: Record<Branch, string> = {
+  environment:   'Explore your environment',
+  relationships: 'Explore how you connect',
+  energy:        'Explore your energy',
+  working_style: 'Explore your working style',
+  direction:     'Explore your direction',
 }
 
 export const BRANCH_ROUTES: Record<Branch, string> = {

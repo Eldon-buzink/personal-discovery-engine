@@ -30,10 +30,10 @@ import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
 import { TraitCarousel, domainNote, patternSubtitle } from '@/components/known/TraitCarousel'
 import { FreeTraitCluster } from '@/components/known/report/FreeTraitCluster'
-import { REPORT_FREE_CLUSTER, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
+import { REPORT_CTA, REPORT_FREE_CLUSTER, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
 import { PaidFirstSection, type ReportTrait } from '@/components/known/report/PaidFirstSection'
 import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
-import { BRANCH_DISPLAY_NAMES, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
+import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BRANCH_ROUTES, BranchSuggestionCard, ContinueRing1Card, PracticeCard, Ring1CompleteCard, SectionDivider, WhatsnextDivider } from '@/components/known/ReportSections'
 import type { CarouselTrait } from '@/components/known/TraitCarousel'
 import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder'
 import {
@@ -621,13 +621,18 @@ export default function ReportPage() {
   const nextBranchLabel = suggestion ? BRANCH_DISPLAY_NAMES[suggestion.branch] : undefined
   const nextBranchHref  = suggestion ? BRANCH_ROUTES[suggestion.branch]        : undefined
 
+  // One label for the suggested branch everywhere on the page (bar and card).
+  const paidExplore = (b: Branch) => (REPORT_CTA ? BRANCH_EXPLORE_LABELS[b] : undefined)
+  const branchButtonLabel = suggestion
+    ? `${isPaid ? paidExplore(suggestion.branch) ?? `Start ${nextBranchLabel}` : `Unlock ${nextBranchLabel}`} →`
+    : ''
   const stickyBar: { leftText: string; rightLabel: string; onSelect: () => void } | null =
     !isUnlocked || suggestion === null
       ? null
       : ring1Complete
-      ? { leftText: suggestion.reason, rightLabel: `${isPaid ? 'Start' : 'Unlock'} ${nextBranchLabel!} →`, onSelect: () => handleGatedNav(nextBranchHref!) }
+      ? { leftText: suggestion.reason, rightLabel: branchButtonLabel, onSelect: () => handleGatedNav(nextBranchHref!) }
       : suggestion.isTargeted
-      ? { leftText: suggestion.reason, rightLabel: `${isPaid ? 'Start' : 'Unlock'} ${nextBranchLabel!} →`, onSelect: () => handleGatedNav(nextBranchHref!) }
+      ? { leftText: suggestion.reason, rightLabel: branchButtonLabel, onSelect: () => handleGatedNav(nextBranchHref!) }
       : { leftText: "There's more underneath this.", rightLabel: 'Keep discovering →', onSelect: () => handleGatedNav('/assessment') }
 
   // ── Optional-branch section content ──────────────────────────────────────────
@@ -910,6 +915,7 @@ export default function ReportPage() {
                     reason={qualifyingBranches[0].reason}
                     extraBranchLabels={qualifyingBranches.slice(1).map((b) => BRANCH_DISPLAY_NAMES[b.branch])}
                     isPaid={isPaid}
+                    paidActionLabel={paidExplore(qualifyingBranches[0].branch)}
                     onSelect={() => handleGatedNav(BRANCH_ROUTES[qualifyingBranches[0].branch])}
                   />
                 ) : (
@@ -919,6 +925,7 @@ export default function ReportPage() {
                       onSelect={() => handleGatedNav(nextBranchHref)}
                       reason={suggestion.reason}
                       isPaid={isPaid}
+                      paidActionLabel={paidExplore(suggestion.branch)}
                     />
                   )
                 )}

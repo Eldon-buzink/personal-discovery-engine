@@ -8,3 +8,6 @@
 
 export const REPORT_FREE_CLUSTER = process.env.NEXT_PUBLIC_REPORT_FREE_CLUSTER === '1'
 export const REPORT_PAID_V2 = process.env.NEXT_PUBLIC_REPORT_PAID_V2 === '1'
+// - NEXT_PUBLIC_REPORT_CTA: the report's calls to action (button wording,
+//   sticky bar and closing panel per state).
+export const REPORT_CTA = process.env.NEXT_PUBLIC_REPORT_CTA === '1'

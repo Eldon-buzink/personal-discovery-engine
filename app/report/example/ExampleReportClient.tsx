@@ -21,7 +21,7 @@ import SiteFooter from '@/components/known/SiteFooter'
 import { TraitCarousel, domainNote, patternSubtitle, type CarouselTrait } from '@/components/known/TraitCarousel'
 import { UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
 import EvidenceDialog from '@/components/known/EvidenceDialog'
-import { BRANCH_DISPLAY_NAMES, BranchSuggestionCard, PracticeCard, Ring1CompleteCard, WhatsnextDivider } from '@/components/known/ReportSections'
+import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BranchSuggestionCard, PracticeCard, Ring1CompleteCard, WhatsnextDivider } from '@/components/known/ReportSections'
 import { EXAMPLE_BANDS, EXAMPLE_CARDS, exampleResponses } from '@/lib/known/exampleReport'
 import { computeFacetScore, getTraitWord } from '@/lib/known/scoring'
 import { FACET_QUESTIONS } from '@/lib/known/ring1-questions'
@@ -29,7 +29,7 @@ import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder
 import { evidencePanelData } from '@/lib/known/evidencePanel'
 import { suggestNextBranch } from '@/lib/known/branchSuggestion'
 import { type } from '@/lib/design/type'
-import { REPORT_PAID_V2 } from '@/lib/known/reportFlags'
+import { REPORT_CTA, REPORT_PAID_V2 } from '@/lib/known/reportFlags'
 import { PaidFirstSection, type ReportTrait } from '@/components/known/report/PaidFirstSection'
 import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
 import { winningRelationships } from '@/lib/known/relationships'
@@ -145,6 +145,7 @@ export default function ExampleReportClient() {
                 branchLabel={BRANCH_DISPLAY_NAMES[suggestion.branch]}
                 reason={suggestion.reason}
                 isPaid={true}
+                paidActionLabel={REPORT_CTA ? BRANCH_EXPLORE_LABELS[suggestion.branch] : undefined}
                 onSelect={() => router.push('/onboarding')}
               />
             )}
