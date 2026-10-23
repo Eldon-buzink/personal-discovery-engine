@@ -58,7 +58,7 @@ export function Ring1CompleteCard() {
 
 // Points people from the report to their practice. Practice needs an
 // account, so signed out it opens the save-progress sign-in first.
-export function PracticeCard({ isAuthenticated, href }: { isAuthenticated: boolean; href?: string }) {
+export function PracticeCard({ isAuthenticated, href, label = 'Go to your practice →' }: { isAuthenticated: boolean; href?: string; /** Button wording; the CTA flag drops the arrow to match the bar. */ label?: string }) {
   const router = useRouter()
   const [authOpen, setAuthOpen] = useState(false)
   return (
@@ -74,7 +74,7 @@ export function PracticeCard({ isAuthenticated, href }: { isAuthenticated: boole
           onClick={() => (href ? router.push(href) : isAuthenticated ? router.push('/practice') : setAuthOpen(true))}
           style={{ ...type.ui, background: charcoal, color: cream, borderRadius: 8, padding: '10px 18px', minHeight: 44, border: 'none', cursor: 'pointer' }}
         >
-          Go to your practice →
+          {label}
         </button>
       </div>
       <AuthModal

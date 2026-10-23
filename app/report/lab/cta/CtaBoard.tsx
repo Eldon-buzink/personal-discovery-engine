@@ -28,19 +28,19 @@ export const STATES: { state: CtaState; input: Partial<CtaInput> }[] = [
   { state: 'paid-done', input: { isPaid: true, revealed: 30, ring1Complete: true } },
 ]
 
-const BASE: CtaInput = { isSample: false, isPaid: false, revealed: 0, ring1Complete: false, branchInProgress: null, suggestion: null, exploreLabel: (b) => BRANCH_EXPLORE_LABELS[b] }
+export const BASE: CtaInput = { isSample: false, isPaid: false, revealed: 0, ring1Complete: false, branchInProgress: null, suggestion: null, exploreLabel: (b) => BRANCH_EXPLORE_LABELS[b] }
 
 // Panel copy per state: one headline and one line. No pricing claims.
-const PANEL: Record<CtaState, { title: string; line: string }> = {
+export const PANEL: Record<CtaState, { title: string; line: string }> = {
   'not-started': { title: '[LAB COPY] Your own report starts here', line: '[LAB COPY] Answer a few statements at your own pace. Your traits come into view one by one, and the first five are free.' },
-  'free-in-progress': { title: "[LAB COPY] There's more of you to find", line: '[LAB COPY] Every few answers bring another trait into view. The full picture then shows how they play out in how you connect, work and spend your energy.' },
+  'free-in-progress': { title: "[LAB COPY] There's more of you to find", line: "[LAB COPY] You've answered 16 of 120. Every few answers bring another trait into view, and the full picture shows how they play out in your life." },
   'free-locked': { title: '[LAB COPY] This is only the beginning', line: "[LAB COPY] Your first five traits are a start. The full picture adds the other 25, and five new parts of your life: your surroundings, how you connect, your energy, how you work and where you're headed." },
-  'paid-in-progress': { title: '[LAB COPY] Your picture is still filling in', line: '[LAB COPY] Your answers are saved. Pick up where you left off, or start another part whenever you like.' },
+  'paid-in-progress': { title: '[LAB COPY] Your picture is still filling in', line: '[LAB COPY] Your answers are saved. Pick up your working style where you left off, or start another part whenever you like.' },
   'paid-suggestion': { title: '[LAB COPY] Where to look next', line: "[LAB COPY] Take-charge and Analytical stand out in your answers. It's worth seeing how that shows up in the places you spend your days." },
   'paid-done': { title: "[LAB COPY] You've explored every part", line: '[LAB COPY] Your report keeps growing with you. Practice is where it turns into small changes, one day at a time.' },
 }
 
-const BAR_LINE: Record<CtaState, string> = {
+export const BAR_LINE: Record<CtaState, string> = {
   'not-started': '[LAB COPY] This is an example. Yours starts free, at your own pace.',
   'free-in-progress': '[LAB COPY] 3 traits so far. The next one is a few answers away.',
   'free-locked': "[LAB COPY] Five traits in, and there's so much more of you to see.",
@@ -49,8 +49,8 @@ const BAR_LINE: Record<CtaState, string> = {
   'paid-done': '[LAB COPY] Every part explored. Keep it going in practice.',
 }
 
-const Btn = ({ primary, small, children }: { primary?: boolean; small?: boolean; children: React.ReactNode }) => (
-  <button type="button" style={{ ...type.ui, minHeight: small ? 36 : 44, padding: small ? '0 14px' : '0 18px', borderRadius: 999, border: primary ? 0 : `1px solid ${line}`, background: primary ? ink : '#FFFFFF', color: primary ? '#F7F4ED' : ink, whiteSpace: 'nowrap', cursor: 'pointer' }}>{children}</button>
+const Btn = ({ primary, small, fill, children }: { primary?: boolean; small?: boolean; fill?: boolean; children: React.ReactNode }) => (
+  <button type="button" style={{ ...type.ui, minHeight: small ? 36 : 44, padding: small ? '0 14px' : fill ? '6px 12px' : '0 18px', borderRadius: 999, border: primary ? 0 : `1px solid ${line}`, background: primary ? ink : '#FFFFFF', color: primary ? '#F7F4ED' : ink, whiteSpace: fill ? 'normal' : 'nowrap', flex: fill ? '1 1 0' : undefined, minWidth: 0, cursor: 'pointer' }}>{children}</button>
 )
 
 // The same border as BranchSuggestionCard: a 2px gradient ring and a soft glow.
@@ -68,7 +68,7 @@ function RingFrame({ ring, children }: { ring: Ring; children: React.ReactNode }
   )
 }
 
-function Panel({ cta, ring }: { cta: Cta; ring: Ring }) {
+export function Panel({ cta, ring }: { cta: Cta; ring: Ring }) {
   const c = PANEL[cta.state]
   return (
     <section style={{ marginTop: 28 }}>
@@ -98,14 +98,14 @@ function Block({ label, h }: { label: string; h: number }) {
   return <div aria-hidden="true" style={{ height: h, borderRadius: 14, background: '#EFEBE2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8C8A83', fontSize: 13, marginTop: 12 }}>{label}</div>
 }
 
-export function Bar({ cta, mobile }: { cta: Cta; mobile: boolean }) {
+export function Bar({ cta, mobile, flush }: { cta: Cta; mobile: boolean; flush?: boolean }) {
   return (
-    <div style={{ marginTop: 24, background: 'rgba(247,244,237,0.96)', borderTop: `1px solid ${line}`, padding: '12px 16px' }}>
+    <div style={{ marginTop: flush ? 0 : 24, background: '#F7F4ED', borderTop: `1px solid ${line}`, padding: '12px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 12, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'center' }}>
         <p style={{ ...type.meta, color: soft, margin: 0, flex: 1, textAlign: mobile ? 'center' : 'left' }}>{BAR_LINE[cta.state]}</p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-          {cta.secondary && <Btn>{cta.secondary.label}</Btn>}
-          <Btn primary>{cta.primary.label}</Btn>
+          {cta.secondary && <Btn fill={mobile}>{cta.secondary.label}</Btn>}
+          <Btn primary fill={mobile && !!cta.secondary}>{cta.primary.label}</Btn>
         </div>
       </div>
     </div>
