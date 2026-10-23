@@ -34,7 +34,7 @@ import { ShowingMenu } from '../../filter/ShowingMenu'
 import { MultiEvidence, TraitEvidence } from '../MultiEvidence'
 import { generateLabClusterReading, generateLabSummary, type LabContentResult } from '../actions'
 
-export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string; sl?: string }
+export interface ContentQuery { f?: string; n?: string; st?: string; gen?: string; menu?: string; view?: string; trait?: string; ev?: string; alt?: string; sl?: string; sat?: string }
 
 const ink = '#262420'
 const soft = '#56534D'
@@ -299,7 +299,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
     const c = cardFor(first.facet)
     return (
       <div className="cf-text">
-        <h2 style={{ ...type.display2, color: ink, margin: '0 0 2px' }}>What stands out</h2>
+        <h2 style={{ ...type.display2, fontWeight: 600, color: ink, margin: '0 0 2px' }}>What stands out</h2>
         <p style={{ ...type.meta, margin: '0 0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Dot t={first} /> Your most pronounced pattern: {first.word}</p>
         <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{c.trait_quote}</p>
         {(c.shows_up ?? c.body) && <p style={{ ...type.body, color: soft, margin: '0 auto', maxWidth: 420 }}>{c.shows_up ?? c.body}</p>}
@@ -342,13 +342,23 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
   // the evidence pill for the traits shown), with the generated one-sentence
   // takeaway on top only when generation is on and it came back. The AI line
   // goes with the takeaway only.
-  // Built from the answers only: how many of the shown traits lean, how many sit in the middle.
-  const leaningLine = (ts: FilterTrait[]) => {
-    const k = ts.filter((t) => bandOf(t.facet) !== 'mid').length
-    const m = ts.length - k
-    if (k === 0) return `[LAB COPY] All ${ts.length} of these sit near the middle for you.`
-    if (m === 0) return `[LAB COPY] Your answers lean clearly one way on all ${ts.length} of these.`
-    return `[LAB COPY] Your answers lean clearly one way on ${k} of these ${ts.length}. The other ${m === 1 ? 'one sits' : `${m} sit`} near the middle.`
+  // A cluster summary without generation: which traits lean (and which way)
+  // and which sit near the middle, each name a link to that trait.
+  const TraitLink = ({ t }: { t: FilterTrait }) => (
+    <a href={cardHref(t.facet)} className="cf-inline" onClick={(e) => { e.preventDefault(); select(t.facet) }}>{t.word}</a>
+  )
+  const list = (ts: FilterTrait[]) => ts.map((t, i) => (
+    <span key={t.facet}>{i > 0 && (i === ts.length - 1 ? ' and ' : ', ')}<TraitLink t={t} /></span>
+  ))
+  const ClusterSummary = ({ ts }: { ts: FilterTrait[] }) => {
+    const lean = ts.filter((t) => bandOf(t.facet) !== 'mid')
+    const mid = ts.filter((t) => bandOf(t.facet) === 'mid')
+    return (
+      <>
+        {lean.length > 0 && <>[LAB COPY] In this group your answers lean most clearly toward {list(lean)}. </>}
+        {mid.length > 0 && <>{lean.length === 0 ? '[LAB COPY] All of these sit near the middle for you: ' : ''}{list(mid)}{lean.length > 0 ? (mid.length === 1 ? ' sits' : ' sit') + ' near the middle.' : '.'} </>}
+      </>
+    )
   }
   const clusterBlock = (c: string) => {
     const two = clusterIn.filter((t) => bandOf(t.facet) !== 'mid').slice(0, 8)
@@ -363,12 +373,12 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
           </div>
         )}
         {/* Same structure as a trait card: title, a subtitle line, the lead sentence, then the body. */}
-        <h2 style={{ ...type.display2, color: ink, margin: '0 0 2px' }}>{familyLabel(c)}</h2>
+        <h2 style={{ ...type.display2, fontWeight: 600, color: ink, margin: '0 0 2px' }}>{familyLabel(c)}</h2>
         <p style={{ ...type.meta, margin: '0 0 18px' }}>[LAB COPY] {clusterIn.length} of your traits</p>
         <p style={{ ...type.display4, color: soft, margin: '0 auto 20px', maxWidth: 420 }}>{CLUSTER_DESCRIPTIONS[c][1].text}</p>
         <p style={{ ...type.body, color: soft, margin: '0 auto 12px', maxWidth: 420 }}>{CLUSTER_ABOUT[c]}</p>
         <p style={{ ...type.body, color: soft, margin: '0 auto', maxWidth: 420 }}>
-          {leaningLine(clusterIn)} {CLUSTER_HOW_TO_READ}
+          <ClusterSummary ts={clusterIn} /> {CLUSTER_HOW_TO_READ}
         </p>
         {clusterTension && (
           <div className="cf-tension">
@@ -417,7 +427,7 @@ export default function ContentFrame({ q }: { q: ContentQuery }) {
         </div>
       )}
       <div className="cf-col">
-        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} />
+        <ReportCluster traits={shown} hueOf={hueOf} onSelect={select} overview={paid && !selectedTrait} registerButton={register} satellites={(['none', 'breathe', 'soft', 'ring'] as const).find((x) => x === q.sat) ?? 'breathe'} />
       </div>
       {paid && view === 'overview' && !selectedTrait && ties > 5 && (
         <p style={{ ...type.meta, textAlign: 'center', margin: '8px 0 0' }}>[LAB COPY] {ties} traits tie as most pronounced. Showing five: the ones you unlocked first.</p>

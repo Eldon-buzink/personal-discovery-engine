@@ -13,6 +13,11 @@ const BOARD: { section: string; items: { label: string; q: string }[] }[] = [
     { label: 'Emotional range', q: 'view=emotional-range' },
     { label: 'Drive and discipline (with the tension box)', q: 'view=drive-and-discipline' },
   ] },
+  { section: 'Outer blobs around a selected trait: three options', items: [
+    { label: 'Breathe (slow, about 6%, staggered)', q: 'view=emotional-range&trait=easygoing&sat=breathe' },
+    { label: 'Soft (lighter than the centre)', q: 'view=emotional-range&trait=easygoing&sat=soft' },
+    { label: 'Ring (thin ring in the trait colour)', q: 'view=emotional-range&trait=easygoing&sat=ring' },
+  ] },
   { section: 'Overview (merged): nothing selected, Summary underneath', items: [
     { label: 'Overview', q: 'view=overview' },
     { label: 'Overview, evidence panel open', q: 'view=overview&ev=1' },

@@ -19,7 +19,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { buildPointMotionProfile, generateAnimatedBlobPath, hashSeed, useBlobAnimation } from '@/lib/blobs'
-import { blobStops, colourKey, inkFor, type Colour } from '@/lib/lab/colours'
+import { blobStops, colourKey, hslCss, inkFor, toHsl, type Colour } from '@/lib/lab/colours'
 import { EASE, DUR_ENTER, DUR_UI, prefersReducedMotion } from '@/lib/design/motion'
 import { type } from '@/lib/design/type'
 import type { FilterTrait } from '@/lib/lab/filterLab'
@@ -76,7 +76,15 @@ function layout(traits: FilterTrait[]): Placed[] {
   ]
 }
 
-export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton }: {
+// How the blobs around the centre differ from it (lab options):
+// - breathe: each slowly grows and shrinks a little (about 6%, a 5 s cycle,
+//   staggered), on the shared blob clock; no extra loop. Still under reduced motion.
+// - soft: lighter (60% opacity), so the centre is the only solid blob.
+// - ring: a thin ring in the trait's colour, a cue that it can be tapped.
+export type SatelliteStyle = 'none' | 'breathe' | 'soft' | 'ring'
+
+export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, registerButton, satellites = 'none' }: {
+  satellites?: SatelliteStyle
   /** Nothing selected: equal blobs, names on them, no centre. */
   overview?: boolean
   registerButton?: (facet: string, el: HTMLButtonElement | null) => void
@@ -114,10 +122,17 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
 
   const profiles = useMemo(() => new Map(traits.map((t) => [t.facet, buildPointMotionProfile(hashSeed(`${t.word}-shape`), 9)])), [traits])
   const centre = placed.find((p) => p.centre)
+  const breathRefs = useRef<Record<string, SVGGElement | null>>({})
+  const breathing = satellites === 'breathe' && !overview
   useBlobAnimation((t) => {
-    if (!centre || !centreRef.current) return
-    centreRef.current.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(centre.t.facet)!, 0.3, t))
-  }, [centre?.t.facet, profiles], wrapRef, { respectReducedMotion: true })
+    if (centre && centreRef.current) centreRef.current.setAttribute('d', generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(centre.t.facet)!, 0.3, t))
+    if (!breathing) return
+    placed.forEach((p, i) => {
+      if (p.centre) return
+      const k = 1 + 0.06 * Math.sin((t / 5) * Math.PI * 2 + i * 1.3)
+      breathRefs.current[p.t.facet]?.setAttribute('transform', `scale(${k.toFixed(4)})`)
+    })
+  }, [centre?.t.facet, profiles, breathing, placed], wrapRef, { respectReducedMotion: true })
 
   const colours = Array.from(new Map(traits.map((t) => [colourKey(hueOf(t)), hueOf(t)] as [string, Colour])).entries())
   const move: CSSProperties = { transition: `transform ${DUR_ENTER}ms ${EASE}` }
@@ -136,14 +151,19 @@ export function ReportCluster({ traits, hueOf, onSelect, opacityOf, overview, re
         </defs>
         {placed.map((p) => (
           <g key={p.t.facet} className="rc-move" style={{ ...move, transform: `translate(${p.x}px, ${p.y}px) scale(${p.r / BASE_R})` }}>
-            <path
-              ref={p.centre ? (el) => { centreRef.current = el } : undefined}
-              d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
-              fill={`url(#rc-g-${uid}-${colourKey(hueOf(p.t))})`}
-              filter={`url(#rc-f-${uid})`}
-              opacity={opacityOf && !overview ? opacityOf(p.t) : 1}
-              style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
-            />
+            <g ref={(el) => { breathRefs.current[p.t.facet] = el }}>
+              <path
+                ref={p.centre ? (el) => { centreRef.current = el } : undefined}
+                d={generateAnimatedBlobPath(0, 0, BASE_R, profiles.get(p.t.facet)!, 0.3, 0)}
+                fill={`url(#rc-g-${uid}-${colourKey(hueOf(p.t))})`}
+                filter={`url(#rc-f-${uid})`}
+                opacity={!p.centre && !overview && satellites === 'soft' ? 0.6 : opacityOf && !overview ? opacityOf(p.t) : 1}
+                style={{ transition: `opacity ${DUR_ENTER}ms ${EASE}` }}
+              />
+              {!p.centre && !overview && satellites === 'ring' && (
+                <circle r={BASE_R * 1.05} fill="none" stroke={hslCss(toHsl(hueOf(p.t)), 0, -18)} strokeOpacity={0.55} strokeWidth={2.2 * (BASE_R / p.r)} />
+              )}
+            </g>
           </g>
         ))}
       </svg>
