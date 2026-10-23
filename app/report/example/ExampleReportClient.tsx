@@ -29,6 +29,10 @@ import { domainOf, orderByStrength, traitStrength } from '@/lib/known/traitOrder
 import { evidencePanelData } from '@/lib/known/evidencePanel'
 import { suggestNextBranch } from '@/lib/known/branchSuggestion'
 import { type } from '@/lib/design/type'
+import { REPORT_PAID_V2 } from '@/lib/known/reportFlags'
+import { PaidFirstSection, type ReportTrait } from '@/components/known/report/PaidFirstSection'
+import { CLUSTER_COLOURS } from '@/lib/known/blobColour'
+import { winningRelationships } from '@/lib/known/relationships'
 
 const charcoalSoft = '#56534D'
 const charcoal = '#262420'
@@ -73,6 +77,12 @@ export default function ExampleReportClient() {
     [facets, order],
   )
   const active = facets[order[activeIdx]]
+  // The paid redesign (NEXT_PUBLIC_REPORT_PAID_V2), on the same example data.
+  const paidTraits: ReportTrait[] = useMemo(() => facets.map((f) => {
+    const cluster = domainOf(f.facet) ?? 'Neuroticism'
+    return { facet: f.facet, word: f.traitWord, cluster, score: f.score, strength: traitStrength(f.score), revealIndex: f.hueOffset, direction: EXAMPLE_BANDS[f.facet], colour: CLUSTER_COLOURS[cluster], content: EXAMPLE_CARDS[f.facet] }
+  }), [facets])
+  const paidRelationships = useMemo(() => Array.from(new Map(Array.from(winningRelationships(facets.map((f) => ({ facet: f.facet, traitWord: f.traitWord, direction: EXAMPLE_BANDS[f.facet], score: f.score })), 5).values()).map((r) => [r.id, r])).values()), [facets])
   const evidence = evidencePanelData(active.facet, EXAMPLE_BANDS[active.facet], responses, true)
 
   return (
@@ -99,20 +109,30 @@ export default function ExampleReportClient() {
           {/* ── Who you are ──────────────────────────────── */}
           <section style={{ textAlign: 'center' }}>
             <p style={{ ...type.meta, marginBottom: 6, textAlign: 'center' }}>Who you are</p>
-            <TraitCarousel traits={carouselTraits} activeIdx={activeIdx} onSelect={setActiveIdx}>
-              <div style={{ marginTop: 12 }}>
-                <UnlockedContent
-                  traitWord={active.traitWord}
-                  content={EXAMPLE_CARDS[active.facet]}
-                  hue={hueOf(active)}
-                  subtitle={patternSubtitle(active.hueOffset)}
-                  subtitleNote={domainNote(domainOf(active.facet)) ?? undefined}
-                  source={null}
-                  variant="ring1"
-                  evidence={<EvidenceDialog key={active.facet} data={evidence} />}
-                />
-              </div>
-            </TraitCarousel>
+            {REPORT_PAID_V2 ? (
+              <PaidFirstSection
+                traits={paidTraits}
+                responses={responses}
+                relationships={paidRelationships}
+                insightFor={() => undefined}
+                renderPending={() => null}
+              />
+            ) : (
+              <TraitCarousel traits={carouselTraits} activeIdx={activeIdx} onSelect={setActiveIdx}>
+                <div style={{ marginTop: 12 }}>
+                  <UnlockedContent
+                    traitWord={active.traitWord}
+                    content={EXAMPLE_CARDS[active.facet]}
+                    hue={hueOf(active)}
+                    subtitle={patternSubtitle(active.hueOffset)}
+                    subtitleNote={domainNote(domainOf(active.facet)) ?? undefined}
+                    source={null}
+                    variant="ring1"
+                    evidence={<EvidenceDialog key={active.facet} data={evidence} />}
+                  />
+                </div>
+              </TraitCarousel>
+            )}
           </section>
 
           {/* ── What's next ──────────────────────────────── */}
