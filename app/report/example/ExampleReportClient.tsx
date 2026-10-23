@@ -18,7 +18,8 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SiteNav, { NAV_H } from '@/components/known/SiteNav'
 import SiteFooter from '@/components/known/SiteFooter'
-import { TraitCarousel, domainNote, patternSubtitle, type CarouselTrait } from '@/components/known/TraitCarousel'
+import { TraitCarousel, patternSubtitle, type CarouselTrait } from '@/components/known/TraitCarousel'
+import { clusterLabel } from '@/lib/known/clusters'
 import { UnlockedContent, userCuratedHue } from '@/components/known/ReportVisuals'
 import EvidenceDialog from '@/components/known/EvidenceDialog'
 import { BRANCH_DISPLAY_NAMES, BRANCH_EXPLORE_LABELS, BranchSuggestionCard, PracticeCard, Ring1CompleteCard, WhatsnextDivider } from '@/components/known/ReportSections'
@@ -125,7 +126,8 @@ export default function ExampleReportClient() {
                     content={EXAMPLE_CARDS[active.facet]}
                     hue={hueOf(active)}
                     subtitle={patternSubtitle(active.hueOffset)}
-                    subtitleNote={domainNote(domainOf(active.facet)) ?? undefined}
+                    // The user-facing cluster name (never the theory name "Openness").
+                    subtitleNote={domainOf(active.facet) ? `This trait is part of ${clusterLabel(domainOf(active.facet)!)}` : undefined}
                     source={null}
                     variant="ring1"
                     evidence={<EvidenceDialog key={active.facet} data={evidence} />}
