@@ -11,7 +11,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      // /api/og is the share image every page points to in og:image. It sits
+      // under /api/, so it needs its own allow; the longer rule wins.
+      allow: ['/', '/api/og'],
       disallow: ['/api/', '/assessment', '/report', '/auth/', '/onboarding', '/blob-demo', '/question-demo'],
     },
     sitemap: `${BASE_URL}/sitemap.xml`,
